@@ -244,8 +244,8 @@ Ember.Charts.ScatterComponent = Ember.Charts.ChartComponent.extend(
   # Tooltip Configuration
   # ----------------------------------------------------------------------------
 
-  tooltipXValueDisplayName: 'X Factor'
-  tooltipYValueDisplayName: 'Y Factor'
+  xValueDisplayName: 'X Factor'
+  yValueDisplayName: 'Y Factor'
 
   showDetails: Ember.computed ->
     (data, i, element) =>
@@ -258,9 +258,9 @@ Ember.Charts.ScatterComponent = Ember.Charts.ChartComponent.extend(
       formatXValue = @get 'formatXValue'
       formatYValue = @get 'formatYValue'
       content = "<span class=\"tip-label\">#{data.group}</span>"
-      content +="<span class=\"name\">#{@get('tooltipXValueDisplayName')}: </span>"
+      content +="<span class=\"name\">#{@get('xValueDisplayName')}: </span>"
       content +="<span class=\"value\">#{formatXValue(data.xValue)}</span><br/>"
-      content +="<span class=\"name\">#{@get('tooltipYValueDisplayName')}: </span>"
+      content +="<span class=\"name\">#{@get('yValueDisplayName')}: </span>"
       content +="<span class=\"value\">#{formatYValue(data.yValue)}</span>"
       @showTooltip(content, d3.event)
 
@@ -339,7 +339,8 @@ Ember.Charts.ScatterComponent = Ember.Charts.ChartComponent.extend(
   # Drawing Functions
   # ----------------------------------------------------------------------------
 
-  renderVars: ['xScale', 'yScale', 'dotShapeArea', 'finishedData']
+  renderVars: ['xScale', 'yScale', 'dotShapeArea', 'finishedData',
+    'xValueDisplayName', 'yValueDisplayName']
 
   drawChart: ->
     @updateTotalPointData()
@@ -445,14 +446,14 @@ Ember.Charts.ScatterComponent = Ember.Charts.ChartComponent.extend(
     # Update Axis Titles
     xAxisPadding = @get('labelHeightOffset') + @get('labelPadding')
     @get('xAxisTitle')
-      .text(@get 'tooltipXValueDisplayName')
+      .text(@get 'xValueDisplayName')
       .style('text-anchor', 'middle')
       .attr
         x: @get('graphicWidth')/2 + @get('labelWidthOffset')
         y: @get('graphicBottom') + xAxisPadding
 
     @get('yAxisTitle')
-      .text(@get 'tooltipYValueDisplayName')
+      .text(@get 'yValueDisplayName')
       .style('text-anchor', 'start')
       .attr
         y: 0

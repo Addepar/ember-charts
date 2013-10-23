@@ -12,11 +12,19 @@ App.EmberChartsScatterController = App.SlideController.extend
     @get('rawDataHash')[@get 'selectedData']
   .property 'selectedData', 'rawDataHash'
 
-  isShowingTotal: yes
+  isShowingTotal: no
+
+  xValueDisplayName: 'Risk'
+  yValueDisplayName: 'Return'
+
+  # A simple default portfolio total calculation by adding both factors. Often
+  # the portfolio total is a separate data source provided as a reference.
   totalPointData: Ember.computed ->
+    data = @get('data')
     group: 'Portfolio Total'
-    xValue: 5
-    yValue: 0
+    xValue: data.reduce( ((prev, d) -> prev + d.xValue), 0 )
+    yValue: data.reduce( ((prev, d) -> prev + d.yValue), 0 )
+  .property 'data'
 
   # Select which raw data we will pull from
   selectedData: 'groupedPercent'
