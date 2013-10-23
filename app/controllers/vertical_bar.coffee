@@ -4,6 +4,7 @@ App.EmberChartsVerticalBarController = App.SlideController.extend
   # Default Settings
   # ---------
 
+  betweenGroupPadding: 0
   withinGroupPadding: 0
   maxLabelHeight: 40
   stackBars: no
