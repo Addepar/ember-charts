@@ -415,7 +415,7 @@ Ember.Charts.VerticalBarComponent = Ember.Charts.ChartComponent.extend(
   # ----------------------------------------------------------------------------
 
   renderVars: ['xWithinGroupScale', 'xBetweenGroupScale', 'yScale',
-    'finishedData']
+    'finishedData', 'getSeriesColor']
 
   drawChart: ->
     @updateData()

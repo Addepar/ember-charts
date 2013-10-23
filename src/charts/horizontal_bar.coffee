@@ -236,7 +236,7 @@ Ember.Charts.HorizontalBarComponent = Ember.Charts.ChartComponent.extend(
   # Drawing Functions
   # ----------------------------------------------------------------------------
 
-  renderVars: ['barThickness', 'yScale', 'finishedData']
+  renderVars: ['barThickness', 'yScale', 'finishedData', 'colorRange']
 
   drawChart: ->
     @updateData()
