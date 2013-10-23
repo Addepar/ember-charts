@@ -1,0 +1,43 @@
+<div class="col-md-10 col-md-offset-2 left-border main-content-container">
+  <div class="chart-header">
+    <h2>Bubble Chart</h2>
+  </div>
+
+  <div class="example-container">
+    <div class="chart-container">
+      {{bubble-chart
+        data=data
+        selectedSeedColor=selectedSeedColor
+      }}
+    </div>
+  </div>
+
+  <div class="chart-controls bumper-30">
+    <div class="chart-controls-panel">
+      <ol>
+        <li>
+          <label>Data</label>
+          {{view Ember.Select
+           contentBinding="availableDataSets"
+           valueBinding="selectedData"
+           class="form-control"
+          }}
+        </li>
+        <li>
+          <label>Color</label>
+          {{view Ember.Select
+           contentBinding="seedColorNames"
+           valueBinding="selectedSeedColorName"
+           class="form-control"
+          }}
+        </li>
+      </ol>
+    </div>
+  </div>
+
+  <div class="chart-json">
+    <pre>
+      {{prettyPrintedData}}
+    </pre>
+  </div>
+</div>

@@ -1,0 +1,24 @@
+{
+  "name": "addepar-bootstrap",
+  "version": "0.0.1",
+  "main": "Gruntfile.js",
+  "scripts": {
+    "test": "grunt"
+  },
+  "repository": "",
+  "license": "MIT",
+  "devDependencies": {
+    "grunt": "0.4.0rc5",
+    "grunt-neuter": "~0.4.0",
+    "grunt-contrib-uglify": "~0.1.1rc5",
+    "grunt-contrib-coffee": "~0.4.0",
+    "grunt-contrib-jshint": "~0.1.1rc5",
+    "grunt-contrib-qunit": "~0.1.1rc5",
+    "grunt-ember-templates": "0.4.10",
+    "grunt-contrib-watch": "~0.2.0rc5",
+    "grunt-contrib-less": "~0.7.0",
+    "grunt-contrib-copy": "~0.4.1",
+    "grunt-contrib-clean": "~0.4.0",
+    "node-static": "*"
+  }
+}

@@ -1,0 +1,77 @@
+<div class="col-md-10 col-md-offset-2 left-border main-content-container">
+  <div class="chart-header">
+    <h2>Horizontal Bar Chart</h2>
+  </div>
+
+  <div class="example-container">
+    <div class="chart-container">
+      {{horizontal-bar-chart
+        minBarThickness=minBarThickness
+        maxBarThickness=maxBarThickness
+        selectedSeedColor=selectedSeedColor
+        data=data
+        selectedSortType=selectedSortType
+      }}
+    </div>
+  </div>
+
+  <div class="row bumper-30">
+    <div class="col-md-6">
+      <h4>Ember Bindings</h4>
+
+      <div class="form-horizontal">
+        <div class="form-group">
+          <label class="col-lg-4 control-label">Data</label>
+          <div class="col-lg-8">
+            {{view Ember.Select
+              contentBinding="availableDataSets"
+              valueBinding="selectedData"
+              class="form-control"
+            }}
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="col-lg-4 control-label">Sorting</label>
+          <div class="col-lg-8">
+            {{view Ember.Select
+              contentBinding="sortTypes"
+              valueBinding="selectedSortType"
+              class="form-control"
+            }}
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="col-lg-4 control-label">Color</label>
+          <div class="col-lg-8">
+            {{view Ember.Select
+              contentBinding="seedColorNames"
+              valueBinding="selectedSeedColorName"
+              class="form-control"
+            }}
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="col-lg-4 control-label">Min Bar Thickness</label>
+          <div class="col-lg-8">
+            {{view App.ScrubberComponent  min=20 max=200 step=10 valueBinding=minBarThickness}}
+            <span class="help-block">Min Thickness: {{minBarThickness}}</span>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="col-lg-4 control-label">Max Bar Thickness</label>
+          <div class="col-lg-8">
+            {{view App.ScrubberComponent min=20 max=200 step=10 valueBinding=maxBarThickness}}
+            <span class="help-block">Max Thickness: {{maxBarThickness}}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-6">
+      <h4>JSON Data</h4>
+      <div class="chart-json">
+<pre>{{prettyPrintedData}}</pre>
+      </div>
+    </div>
+  </div>
+</div>
