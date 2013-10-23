@@ -6,7 +6,7 @@ App.EmberChartsPieController = App.SlideController.extend
 
   maxNumberOfSlices: 8
   minSlicePercent: 2
-  maxRadius: 1000
+  maxRadius: 100
 
   # ---------
   # Data Selection
