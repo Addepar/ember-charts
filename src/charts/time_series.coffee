@@ -145,6 +145,29 @@ Ember.Charts.TimeSeriesComponent = Ember.Charts.ChartComponent.extend(
   # Grouped/Stacked Bar Scales
   # ----------------------------------------------------------------------------
 
+  # Unit of time between bar samples
+  timeDelta: Ember.computed ->
+    groupedBarData = @get 'groupedBarData'
+    if Ember.isEmpty(groupedBarData) or groupedBarData.get('length') < 2
+      return 'month'
+
+    startTime = groupedBarData[0][0].time
+    endTime = groupedBarData[1][0].time
+    diffTimeDays = (endTime - startTime) / (24*60*60*1000)
+
+    # Some fuzzy bar interval computation, I just picked 2 day buffer
+    if diffTimeDays > 351
+      'year'
+    else if diffTimeDays > 33
+      'quarter'
+    else if diffTimeDays > 9
+      'month'
+    else if diffTimeDays > 3
+      'week'
+    else
+      'day'
+  .property 'groupedBarData'
+
   barDataExtent: Ember.computed ->
     timeDelta = @get 'timeDelta'
     groupedBarData = @get 'groupedBarData'

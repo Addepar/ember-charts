@@ -67,7 +67,6 @@ App.EmberChartsTimeSeriesController = App.SlideController.extend
     'month',
     'year'
   ]
-  timeDelta: 'month'
 
   tickIntervals: [
     'weeks',
