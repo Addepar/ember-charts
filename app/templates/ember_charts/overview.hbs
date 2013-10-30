@@ -1,7 +1,11 @@
 <div class="col-md-10 col-md-offset-2 left-border main-content-container">
   <h1>Ember Charts</h1>
-  <p class="elevated">A beautiful and easily extensible chart suite built with D3.js and Ember.js</p>
-  <div class="row ember-charts-examples">
+  <p class="elevated">A charting library built with the
+  Ember.js and d3.js frameworks. It includes time series, bar, pie, and
+  scatter charts which are easy to extend and modify. The out-of-the-box
+  behavior these chart components represents our thoughts on best
+  practices in chart interactivity and presentation.</p>
+  <div>
     {{#linkTo 'emberCharts.time_series'}}
       <div class="col-md-4">
         <h4>Time Series</h4>
@@ -32,12 +36,6 @@
         <img class="preview-box" src="img/preview_chart_scatter.png" />
       </div>
     {{/linkTo}}
-    {{!-- {{#linkTo 'emberCharts.bubble'}}
-      <div class="col-md-4">
-        <h4>Bubble Chart</h4>
-        <img class="preview-box" src="img/preview_chart_bubble.png" />
-      </div>
-    {{/linkTo}} --}}
   </div>
 
   <hr>
@@ -45,7 +43,14 @@
     <div class="col-md-6">
       <h3>Features</h3>
       <ul class="styled">
-        <li>Coming soon.</li>
+        <li>Highly customizable and extensible.</li>
+        <li>Rich with features - add legends, labels, tooltips, and
+        mouseover effects.</li>
+        <li>Robust & polished - weird data will not cause your charts to
+        break.</li>
+        <li>Roll your own charts by extending our ChartComponent class -
+        get labels, automatic resizing, and reasonable defaults for
+        margins, padding, etc.</li>
       </ul>
     </div>
     <div class="col-md-6">
