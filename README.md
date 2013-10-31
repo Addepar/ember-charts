@@ -1,6 +1,6 @@
 Ember Charts by Addepar
 =============================================
 
-### Getting started
+[Getting Started](http://addepar.github.io/#/ember-charts/overview)
 
-  * Coming soon.
+[Documentation](http://addepar.github.io/#/ember-charts/documentation)
