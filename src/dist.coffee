@@ -1,6 +1,9 @@
 require 'build/src/charts/templates'
 
 Ember.Charts = Ember.Namespace.create()
+Ember.Charts.VERSION = '0.0.1'
+
+Ember.libraries?.register 'Ember Charts', Ember.Charts.VERSION
 
 require 'build/src/charts/helpers'
 require 'build/src/charts/colorable'
