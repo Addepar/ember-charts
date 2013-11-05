@@ -1,5 +1,6 @@
-Ember.Charts.ChartComponent = Ember.Component.extend(
-  Ember.Charts.Colorable, Ember.AddeparMixins.ResizeHandlerMixin,
+Ember.Charts.ChartComponent =
+Ember.Component.extend Ember.Charts.Colorable,
+Ember.AddeparMixins.ResizeHandlerMixin,
   templateName: 'chart'
   classNames: ['chart-frame', 'scroll-y']
 
@@ -102,13 +103,16 @@ Ember.Charts.ChartComponent = Ember.Component.extend(
   # magic of concatenatedProperties any class that overrides the variable
   # renderVars will actually just be appending names to the list
   renderVars: ['finishedData', 'width', 'height', 'margin']
+
   init: ->
     @_super()
     # TODO(tony): Since we are adding observers manually we also need to remove
     # them manually on willDelete or something like that
     for renderVar in @get('renderVars').uniq()
-      @addObserver renderVar, =>
-        Ember.run.once this, @get('draw')
+      @addObserver renderVar, => Ember.run.once this, @get('draw')
+      # We want to explicitly get the renderVar to ensure that observer willl
+      # fire. If we do not do this, observers may or maynot fire
+      @get renderVar
 
   didInsertElement: ->
     @_super()
@@ -133,5 +137,3 @@ Ember.Charts.ChartComponent = Ember.Component.extend(
       @clearChart()
     else
       @drawChart()
-
-)
