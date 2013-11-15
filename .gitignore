@@ -1,7 +1,6 @@
 node_modules/
 gh_pages/
 build/
-dist/
 .DS_Store
 *.swo
 *.swp
