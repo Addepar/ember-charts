@@ -129,8 +129,8 @@ Ember.Charts.Legend = Ember.Mixin.create
   # ----------------------------------------------------------------------------
 
   showLegendDetails: Ember.computed ->
+    return Ember.K unless @get('isInteractive')
     (data, i, element) =>
-
       # Do hover detail style stuff here
       d3.select(element).classed('hovered', yes)
       if data.selector
@@ -146,16 +146,18 @@ Ember.Charts.Legend = Ember.Mixin.create
         content +="<span class=\"name\">#{@get('tooltipYValueDisplayName')}: </span>"
         content +="<span class=\"value\">#{formatYValue(data.yValue)}</span>"
       @showTooltip(content, d3.event)
+  .property 'isInteractive'
 
   hideLegendDetails: Ember.computed ->
+    return Ember.K unless @get('isInteractive')
     (data, i, element) =>
       # Undo hover style stuff
       d3.select(element).classed('hovered', no)
       if data.selector
         @get('viewport').selectAll(data.selector).classed('hovered', no)
-
       # Hide Tooltip
       @hideTooltip()
+  .property 'isInteractive'
 
   # ----------------------------------------------------------------------------
   # Drawing Functions

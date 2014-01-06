@@ -21,7 +21,7 @@ Ember.Charts.BubbleComponent = Ember.Charts.ChartComponent.extend(
   # repel.
   # Dividing by 8 scales down the charge to be
   # appropriate for the visualization dimensions.
-  charge: Ember.computed -> 
+  charge: Ember.computed ->
     (d) -> -Math.pow(d.radius, 2.0) / 8
 
   # Getters for formatting human-readable labels from provided data
@@ -33,6 +33,7 @@ Ember.Charts.BubbleComponent = Ember.Charts.ChartComponent.extend(
   # ----------------------------------------------------------------------------
 
   showDetails: Ember.computed ->
+    return Ember.K unless @get('isInteractive')
     (data, i, element) =>
 
       # Do hover detail style stuff here
@@ -46,14 +47,16 @@ Ember.Charts.BubbleComponent = Ember.Charts.ChartComponent.extend(
       content +="<span class=\"name\">#{@get 'tooltipValueDisplayName'}: </span>"
       content +="<span class=\"value\">#{formatValue(data.value)}</span>"
       @showTooltip(content, d3.event)
+  .property 'isInteractive'
 
   hideDetails: Ember.computed ->
+    return Ember.K unless @get('isInteractive')
     (data, i, element) =>
       # Undo hover style stuff
       d3.select(element).classed('hovered', no)
-
       # Hide Tooltip
       @hideTooltip()
+  .property 'isInteractive'
 
   # ----------------------------------------------------------------------------
   # Data

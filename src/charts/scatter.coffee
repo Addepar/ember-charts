@@ -71,7 +71,7 @@ Ember.Charts.ScatterComponent = Ember.Charts.ChartComponent.extend(
   # ----------------------------------------------------------------------------
   # Layout
   # ----------------------------------------------------------------------------
-  # TODO(tony): Consider making logic for whether we are showing the title or 
+  # TODO(tony): Consider making logic for whether we are showing the title or
   # not and then axis mixin will calculate axis offset that will be added
   axisTitleHeightOffset: Ember.computed ->
     @get('axisTitleHeight') + @get('labelPadding')
@@ -248,8 +248,8 @@ Ember.Charts.ScatterComponent = Ember.Charts.ChartComponent.extend(
   yValueDisplayName: 'Y Factor'
 
   showDetails: Ember.computed ->
+    return Ember.K unless @get('isInteractive')
     (data, i, element) =>
-
       # Do hover detail style stuff here
       d3.select(element).classed('hovered', yes)
       # TODO(tony): handle legend hover
@@ -263,14 +263,17 @@ Ember.Charts.ScatterComponent = Ember.Charts.ChartComponent.extend(
       content +="<span class=\"name\">#{@get('yValueDisplayName')}: </span>"
       content +="<span class=\"value\">#{formatYValue(data.yValue)}</span>"
       @showTooltip(content, d3.event)
+  .property 'isInteractive'
 
   hideDetails: Ember.computed ->
+    return Ember.K unless @get('isInteractive')
     (data, i, element) =>
       # Undo hover style stuff
       d3.select(element).classed('hovered', no)
 
       # Hide Tooltip
       @hideTooltip()
+  .property 'isInteractive'
 
   # ----------------------------------------------------------------------------
   # Styles

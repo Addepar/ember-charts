@@ -261,6 +261,7 @@ Ember.Charts.VerticalBarComponent = Ember.Charts.ChartComponent.extend(
   # ----------------------------------------------------------------------------
 
   showDetails: Ember.computed ->
+    return Ember.K unless @get('isInteractive')
     (data, i, element) =>
 
       # Specify whether we are on an individual bar or group
@@ -285,8 +286,10 @@ Ember.Charts.VerticalBarComponent = Ember.Charts.ChartComponent.extend(
         # Just hovering over single bar
         addValueLine data
       @showTooltip(content, d3.event)
+  .property 'isInteractive'
 
   hideDetails: Ember.computed ->
+    return Ember.K unless @get('isInteractive')
     (data, i, element) =>
 
       # if we exited the group label undo for the group
@@ -297,6 +300,7 @@ Ember.Charts.VerticalBarComponent = Ember.Charts.ChartComponent.extend(
 
       # Hide Tooltip
       @hideTooltip()
+  .property 'isInteractive'
 
 
   # ----------------------------------------------------------------------------

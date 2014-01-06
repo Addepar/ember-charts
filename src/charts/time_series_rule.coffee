@@ -155,17 +155,17 @@ Ember.Charts.HasTimeSeriesRule = Ember.Mixin.create
     # We have to do this partly so that the rule renders first and is always in
     # the back
     @get('hideRule')()
-    d3.select(@$('svg')[0])
-      .on 'mousemove', =>
-        # Check if we are still in an area where we have valid
-        # time-series data and should show a rule, i.e., we are within the
-        # domain/range of the data
-        if @get 'isEventWithinValidRange'
-          @get('showRule')()
-          Ember.run this, @get('updateRule')
-          Ember.run this, @get('updateLineMarkers')
-        else
-          @get('hideRule')()
+    d3.select(@$('svg')[0]).on 'mousemove', =>
+      return unless @get('isInteractive')
+      # Check if we are still in an area where we have valid
+      # time-series data and should show a rule, i.e., we are within the
+      # domain/range of the data
+      if @get 'isEventWithinValidRange'
+        @get('showRule')()
+        Ember.run this, @get('updateRule')
+        Ember.run this, @get('updateLineMarkers')
+      else
+        @get('hideRule')()
 
   isRuleShown: no
   # Since the rule is shown and hidden when each line is moused over

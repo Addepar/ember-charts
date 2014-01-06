@@ -126,8 +126,8 @@ Ember.Charts.HorizontalBarComponent = Ember.Charts.ChartComponent.extend(
   # ----------------------------------------------------------------------------
 
   showDetails: Ember.computed ->
+    return Ember.K unless @get('isInteractive')
     (data, i, element) =>
-
       # Do hover detail style stuff here
       d3.select(element).classed('hovered', yes)
 
@@ -139,14 +139,16 @@ Ember.Charts.HorizontalBarComponent = Ember.Charts.ChartComponent.extend(
       content +="<span class=\"name\">#{@get 'tooltipValueDisplayName'}: </span>"
       content +="<span class=\"value\">#{formatValue(data.value)}</span>"
       @showTooltip(content, d3.event)
+  .property 'isInteractive'
 
   hideDetails: Ember.computed ->
+    return Ember.K unless @get('isInteractive')
     (data, i, element) =>
       # Undo hover style stuff
       d3.select(element).classed('hovered', no)
-
       # Hide Tooltip
       @hideTooltip()
+  .property 'isInteractive'
 
   # ----------------------------------------------------------------------------
   # Styles
