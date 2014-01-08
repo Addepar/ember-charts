@@ -133,5 +133,6 @@ Ember.Charts.ChartComponent = Ember.Component.extend(
       @clearChart()
     else
       @drawChart()
+      @$().trigger('embercharts.updated')
 
 )
