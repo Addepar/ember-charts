@@ -1,0 +1,34 @@
+{
+  "name": "ember-charts",
+  "version": "0.1.0",
+  "homepage": "http://addepar.github.io/#/ember-charts/overview",
+  "authors": [
+    "Addepar"
+  ],
+  "main": [
+    "dist/ember-charts.css",
+    "dist/ember-charts.js"
+  ],
+  "description": "A beautiful and easily extensible chart suite built with D3.js and Ember.js",
+  "keywords": [
+    "ember",
+    "charts",
+    "d3"
+  ],
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests",
+    "app",
+    "build",
+    "dependencies",
+    "example.js",
+    "package.json"
+  ],
+  "dependencies": {
+    "lodash": "~2.4.1",
+    "d3": "~3.4.1"
+  }
+}
