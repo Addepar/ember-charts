@@ -1,7 +1,5 @@
 # Dependencies
 require 'dependencies/bootstrap/js/bootstrap'
-require 'dependencies/ember-addepar-mixins/resize_handler'
-require 'dependencies/ember-addepar-mixins/style_bindings'
 require 'dist/ember-charts'
 
 window.App = Ember.Application.create

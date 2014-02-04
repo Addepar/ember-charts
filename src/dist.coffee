@@ -1,4 +1,6 @@
 require 'build/src/charts/templates'
+require 'dependencies/ember-addepar-mixins/resize_handler'
+require 'dependencies/ember-addepar-mixins/style_bindings'
 
 Ember.Charts = Ember.Namespace.create()
 Ember.Charts.VERSION = '0.0.1'
