@@ -1,6 +1,8 @@
+bower_components/
 node_modules/
 gh_pages/
 build/
+.idea/
 .DS_Store
 *.swo
 *.swp
