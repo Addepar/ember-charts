@@ -10,22 +10,24 @@ var _ref;
 Ember.TEMPLATES["chart"] = Ember.Handlebars.template(function anonymous(Handlebars,depth0,helpers,partials,data) {
 this.compilerInfo = [4,'>= 1.0.0'];
 helpers = this.merge(helpers, Ember.Handlebars.helpers); data = data || {};
-  var buffer = '', hashContexts, hashTypes, escapeExpression=this.escapeExpression;
+  var buffer = '', stack1, hashContexts, hashTypes, options, helperMissing=helpers.helperMissing, escapeExpression=this.escapeExpression;
 
 
   data.buffer.push("<svg ");
   hashContexts = {'width': depth0,'height': depth0};
   hashTypes = {'width': "STRING",'height': "STRING"};
-  data.buffer.push(escapeExpression(helpers.bindAttr.call(depth0, {hash:{
+  options = {hash:{
     'width': ("outerWidth"),
     'height': ("outerHeight")
-  },contexts:[],types:[],hashContexts:hashContexts,hashTypes:hashTypes,data:data})));
+  },contexts:[],types:[],hashContexts:hashContexts,hashTypes:hashTypes,data:data};
+  data.buffer.push(escapeExpression(((stack1 = helpers['bind-attr'] || depth0['bind-attr']),stack1 ? stack1.call(depth0, options) : helperMissing.call(depth0, "bind-attr", options))));
   data.buffer.push(">\n  <g class=\"chart-viewport\" ");
   hashContexts = {'transform': depth0};
   hashTypes = {'transform': "STRING"};
-  data.buffer.push(escapeExpression(helpers.bindAttr.call(depth0, {hash:{
+  options = {hash:{
     'transform': ("transformViewport")
-  },contexts:[],types:[],hashContexts:hashContexts,hashTypes:hashTypes,data:data})));
+  },contexts:[],types:[],hashContexts:hashContexts,hashTypes:hashTypes,data:data};
+  data.buffer.push(escapeExpression(((stack1 = helpers['bind-attr'] || depth0['bind-attr']),stack1 ? stack1.call(depth0, options) : helperMissing.call(depth0, "bind-attr", options))));
   data.buffer.push("></g>\n</svg>\n");
   return buffer;
   
@@ -867,7 +869,7 @@ Ember.Charts.PieLegend = Ember.Mixin.create({
 
 
 Ember.Charts.ChartComponent = Ember.Component.extend(Ember.Charts.Colorable, Ember.AddeparMixins.ResizeHandlerMixin, {
-  templateName: 'chart',
+  layoutName: 'chart',
   classNames: ['chart-frame', 'scroll-y'],
   horizontalMargin: 30,
   verticalMargin: 30,
