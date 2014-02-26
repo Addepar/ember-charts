@@ -1298,7 +1298,7 @@ Ember.Charts.PieComponent = Ember.Charts.ChartComponent.extend(Ember.Charts.PieL
     return _.sortBy(data, this.get('sortFunction'));
   }).property('filteredData', 'sortFunc'),
   sortedDataWithOther: Ember.computed(function() {
-    var data, lowPercentIndex, maxNumberOfSlices, minNumberOfSlices, minSlicePercent, otherItems, otherSlice, overflowSlices, slicesLeft,
+    var data, lastItem, lowPercentIndex, maxNumberOfSlices, minNumberOfSlices, minSlicePercent, otherItems, otherSlice, overflowSlices, slicesLeft,
       _this = this;
     data = _.cloneDeep(this.get('sortedData')).reverse();
     maxNumberOfSlices = this.get('maxNumberOfSlices');
@@ -1321,9 +1321,12 @@ Ember.Charts.PieComponent = Ember.Charts.ChartComponent.extend(Ember.Charts.PieL
         return otherSlice.percent += d.percent;
       });
       if (otherSlice.percent < minSlicePercent) {
-        lowPercentIndex -= 1;
-        otherItems.push(data[lowPercentIndex]);
-        otherSlice.percent += data[lowPercentIndex].percent;
+        lastItem = data[lowPercentIndex - 1];
+        if (lastItem.percent < minSlicePercent) {
+          lowPercentIndex -= 1;
+          otherItems.push(lastItem);
+          otherSlice.percent += lastItem.percent;
+        }
       }
     }
     if (otherSlice.percent > 0) {

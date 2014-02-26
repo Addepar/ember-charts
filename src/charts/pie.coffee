@@ -93,9 +93,11 @@ Ember.Charts.PieComponent = Ember.Charts.ChartComponent.extend(
         otherSlice.percent += d.percent
       # Ensure Other slice is larger than minSlicePercent
       if otherSlice.percent < minSlicePercent
-        lowPercentIndex -= 1
-        otherItems.push data[lowPercentIndex]
-        otherSlice.percent += data[lowPercentIndex].percent
+        lastItem = data[lowPercentIndex - 1]
+        if lastItem.percent < minSlicePercent
+          lowPercentIndex -= 1
+          otherItems.push lastItem
+          otherSlice.percent += lastItem.percent
 
     # Reduce max number of slices that we can have if we now have an other slice
     maxNumberOfSlices -= 1 if otherSlice.percent > 0
