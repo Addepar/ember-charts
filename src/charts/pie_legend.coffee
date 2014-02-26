@@ -84,7 +84,7 @@ Ember.Charts.PieLegend = Ember.Mixin.create
 
     # Bind hover state to the legend
     otherSlice = @get('viewport').select('.other-slice')
-    unless otherSlice.empty()
+    if @get('isInteractive') and not otherSlice.empty()
       legend.on('mouseover', ->
         otherSlice.classed('hovered', yes)
         legend.classed('hovered', yes)

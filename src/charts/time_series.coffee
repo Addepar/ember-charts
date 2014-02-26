@@ -355,6 +355,7 @@ Ember.Charts.TimeSeriesComponent = Ember.Charts.ChartComponent.extend(
   # ----------------------------------------------------------------------------
 
   showDetails: Ember.computed ->
+    return Ember.K unless @get('isInteractive')
     (data, i, element) =>
 
       # Do hover detail style stuff here
@@ -375,14 +376,17 @@ Ember.Charts.TimeSeriesComponent = Ember.Charts.ChartComponent.extend(
         # Just hovering over single bar
         addValueLine data
       @showTooltip(content, d3.event)
+  .property 'isInteractive'
 
   hideDetails: Ember.computed ->
+    return Ember.K unless @get('isInteractive')
     (data, i, element) =>
       # Undo hover style stuff
       d3.select(element).classed('hovered', no)
 
       # Hide Tooltip
       @hideTooltip()
+  .property 'isInteractive'
 
   # ----------------------------------------------------------------------------
   # Styles

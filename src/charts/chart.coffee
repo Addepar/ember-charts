@@ -2,6 +2,7 @@ Ember.Charts.ChartComponent = Ember.Component.extend(
   Ember.Charts.Colorable, Ember.AddeparMixins.ResizeHandlerMixin,
   templateName: 'chart'
   classNames: ['chart-frame', 'scroll-y']
+  isInteractive: yes
 
   # ----------------------------------------------------------------------------
   # Layout
@@ -101,7 +102,7 @@ Ember.Charts.ChartComponent = Ember.Component.extend(
   # Every chart will trigger a redraw when these variables change, through the
   # magic of concatenatedProperties any class that overrides the variable
   # renderVars will actually just be appending names to the list
-  renderVars: ['finishedData', 'width', 'height', 'margin']
+  renderVars: ['finishedData', 'width', 'height', 'margin', 'isInteractive']
   init: ->
     @_super()
     # TODO(tony): Since we are adding observers manually we also need to remove
