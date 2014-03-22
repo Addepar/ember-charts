@@ -48,7 +48,6 @@ if ((_ref = Ember.libraries) != null) {
 
 (function() {
 
-
 Ember.Charts.Helpers = Ember.Namespace.create({
   groupBy: function(obj, getter) {
     var group, index, key, result, value, _i, _ref;
@@ -100,7 +99,6 @@ Ember.Charts.Helpers = Ember.Namespace.create({
 })();
 
 (function() {
-
 
 Ember.Charts.Colorable = Ember.Mixin.create({
   selectedSeedColor: 'rgb(65, 65, 65)',
@@ -173,7 +171,6 @@ Ember.Charts.Colorable = Ember.Mixin.create({
 
 (function() {
 
-
 Ember.Charts.AxesMixin = Ember.Mixin.create({
   minXTicks: 3,
   minYTicks: 3,
@@ -194,7 +191,6 @@ Ember.Charts.AxesMixin = Ember.Mixin.create({
 })();
 
 (function() {
-
 
 Ember.Charts.FloatingTooltipMixin = Ember.Mixin.create({
   tooltipId: Ember.computed(function() {
@@ -257,7 +253,6 @@ Ember.Charts.FloatingTooltipMixin = Ember.Mixin.create({
 })();
 
 (function() {
-
 
 Ember.Charts.HasTimeSeriesRule = Ember.Mixin.create({
   lineMarkerTolerance: 60 * 1000,
@@ -406,7 +401,6 @@ Ember.Charts.HasTimeSeriesRule = Ember.Mixin.create({
 
 (function() {
 
-
 Ember.Charts.TimeSeriesLabeler = Ember.Mixin.create({
   selectedInterval: 'M',
   maxNumberOfLabels: 10,
@@ -428,6 +422,9 @@ Ember.Charts.TimeSeriesLabeler = Ember.Mixin.create({
         case 'weeks':
         case 'W':
           return this.weeksBetween(start, stop);
+        case 'seconds':
+        case 'S':
+          return this.secondsBetween(start, stop);
       }
     }).call(this);
     if (labelledTicks.length < 2) {
@@ -492,6 +489,14 @@ Ember.Charts.TimeSeriesLabeler = Ember.Mixin.create({
       return !(i % skip);
     });
   },
+  secondsBetween: function(start, stop, skip) {
+    if (skip == null) {
+      skip = 1;
+    }
+    return d3.time.seconds(start, stop).filter(function(d, i) {
+      return !(i % skip);
+    });
+  },
   labelledWeeks: function(start, stop) {
     var skipVal, weeks;
     weeks = this.weeksBetween(start, stop);
@@ -528,6 +533,11 @@ Ember.Charts.TimeSeriesLabeler = Ember.Mixin.create({
       case 'days':
       case 'D':
         return d3.time.days;
+      case 'seconds':
+      case 'S':
+        return function(start, stop) {
+          return _this.labelledSeconds(start, stop);
+        };
       default:
         return d3.time.years;
     }
@@ -566,6 +576,9 @@ Ember.Charts.TimeSeriesLabeler = Ember.Mixin.create({
       case 'days':
       case 'D':
         return d3.time.format('%a');
+      case 'seconds':
+      case 'S':
+        return d3.time.format('%M : %S');
       default:
         return d3.time.format('%Y');
     }
@@ -576,7 +589,6 @@ Ember.Charts.TimeSeriesLabeler = Ember.Mixin.create({
 })();
 
 (function() {
-
 
 Ember.Charts.Legend = Ember.Mixin.create({
   legendTopPadding: 10,
@@ -783,7 +795,6 @@ Ember.Charts.Legend = Ember.Mixin.create({
 
 (function() {
 
-
 Ember.Charts.PieLegend = Ember.Mixin.create({
   legendVerticalPadding: 30,
   legendHorizontalPadding: Ember.computed(function() {
@@ -873,7 +884,6 @@ Ember.Charts.PieLegend = Ember.Mixin.create({
 })();
 
 (function() {
-
 
 Ember.Charts.ChartComponent = Ember.Component.extend(Ember.Charts.Colorable, Ember.AddeparMixins.ResizeHandlerMixin, {
   templateName: 'chart',
@@ -973,7 +983,6 @@ Ember.Charts.ChartComponent = Ember.Component.extend(Ember.Charts.Colorable, Emb
 })();
 
 (function() {
-
 
 Ember.Charts.HorizontalBarComponent = Ember.Charts.ChartComponent.extend(Ember.Charts.FloatingTooltipMixin, {
   classNames: ['chart-horizontal-bar'],
@@ -1247,7 +1256,6 @@ Ember.Handlebars.helper('horizontal-bar-chart', Ember.Charts.HorizontalBarCompon
 })();
 
 (function() {
-
 
 Ember.Charts.PieComponent = Ember.Charts.ChartComponent.extend(Ember.Charts.PieLegend, Ember.Charts.FloatingTooltipMixin, {
   classNames: ['chart-pie'],
@@ -1594,7 +1602,6 @@ Ember.Handlebars.helper('pie-chart', Ember.Charts.PieComponent);
 })();
 
 (function() {
-
 
 Ember.Charts.VerticalBarComponent = Ember.Charts.ChartComponent.extend(Ember.Charts.Legend, Ember.Charts.FloatingTooltipMixin, Ember.Charts.AxesMixin, {
   classNames: ['chart-vertical-bar'],
@@ -2102,7 +2109,6 @@ Ember.Handlebars.helper('vertical-bar-chart', Ember.Charts.VerticalBarComponent)
 
 (function() {
 
-
 Ember.Charts.ScatterComponent = Ember.Charts.ChartComponent.extend(Ember.Charts.Legend, Ember.Charts.FloatingTooltipMixin, Ember.Charts.AxesMixin, {
   classNames: ['chart-scatter'],
   formatXValue: d3.format('.2s'),
@@ -2489,7 +2495,6 @@ Ember.Handlebars.helper('scatter-chart', Ember.Charts.ScatterComponent);
 })();
 
 (function() {
-
 
 Ember.Charts.TimeSeriesComponent = Ember.Charts.ChartComponent.extend(Ember.Charts.Legend, Ember.Charts.TimeSeriesLabeler, Ember.Charts.FloatingTooltipMixin, Ember.Charts.HasTimeSeriesRule, Ember.Charts.AxesMixin, {
   classNames: ['chart-time-series'],
@@ -3183,7 +3188,6 @@ Ember.Handlebars.helper('time-series-chart', Ember.Charts.TimeSeriesComponent);
 })();
 
 (function() {
-
 
 Ember.Charts.BubbleComponent = Ember.Charts.ChartComponent.extend(Ember.Charts.FloatingTooltipMixin, {
   classNames: ['chart-bubble'],

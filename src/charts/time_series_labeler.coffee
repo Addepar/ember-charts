@@ -28,6 +28,7 @@ Ember.Charts.TimeSeriesLabeler = Ember.Mixin.create
       when 'quarters', 'Q' then d3.time.months(start, stop, 3)
       when 'months', 'M' then @monthsBetween(start, stop)
       when 'weeks' , 'W'  then @weeksBetween(start, stop)
+      when 'seconds', 'S' then @secondsBetween(start, stop)
 
     return 0 if (labelledTicks.length < 2)
 
@@ -92,6 +93,9 @@ Ember.Charts.TimeSeriesLabeler = Ember.Mixin.create
   weeksBetween: (start, stop, skip = 1) ->
     d3.time.weeks(start, stop).filter((d, i) -> !(i % skip))
 
+  secondsBetween: (start, stop, skip = 1) ->
+    d3.time.seconds(start, stop).filter((d, i) -> !(i % skip))
+
   # the weeks which should be labelled
   labelledWeeks: (start, stop) ->
     weeks = @weeksBetween(start, stop)
@@ -114,6 +118,7 @@ Ember.Charts.TimeSeriesLabeler = Ember.Mixin.create
       when 'months', 'M' then ((start, stop) => @labelledMonths(start, stop))
       when 'weeks' , 'W'  then ((start, stop) => @labelledWeeks(start, stop))
       when 'days' , 'D' then d3.time.days
+      when 'seconds', 'S' then ((start, stop) => @labelledSeconds(start, stop))
       else d3.time.years
   .property 'maxNumberOfLabels', 'selectedInterval'
 
@@ -137,6 +142,7 @@ Ember.Charts.TimeSeriesLabeler = Ember.Mixin.create
       when 'months' , 'M' then d3.time.format("%b '%y")
       when 'weeks' , 'W'  then d3.time.format('%-m/%-d/%y')
       when 'days' , 'D' then d3.time.format('%a')
+      when 'seconds' , 'S' then d3.time.format('%M : %S')
       else d3.time.format('%Y')
   .property 'selectedInterval'
 
