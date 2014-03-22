@@ -1267,6 +1267,7 @@ Ember.Charts.PieComponent = Ember.Charts.ChartComponent.extend(Ember.Charts.PieL
     return 0.25 * this.get('outerWidth');
   }).property('outerWidth'),
   maxRadius: 2000,
+  innerRadius: 0,
   sortFunction: Ember.computed(function() {
     switch (this.get('selectedSortType')) {
       case 'value':
@@ -1403,6 +1404,9 @@ Ember.Charts.PieComponent = Ember.Charts.ChartComponent.extend(Ember.Charts.PieL
   labelRadius: Ember.computed(function() {
     return this.get('radius') + this.get('labelPadding');
   }).property('radius', 'labelPadding'),
+  proportialInnerRadius: Ember.computed(function() {
+    return this.get('innerRadius') * this.get('radius');
+  }).property('innerRadius', 'radius'),
   getSliceColor: Ember.computed(function() {
     var _this = this;
     return function(d, i) {
@@ -1465,7 +1469,7 @@ Ember.Charts.PieComponent = Ember.Charts.ChartComponent.extend(Ember.Charts.PieL
   }).property('marginLeft', 'marginTop', 'width', 'height'),
   arc: Ember.computed(function() {
     var arc;
-    return arc = d3.svg.arc().outerRadius(this.get('radius')).innerRadius(0);
+    return arc = d3.svg.arc().outerRadius(this.get('radius')).innerRadius(this.get('proportialInnerRadius'));
   }).property('radius'),
   pie: Ember.computed(function() {
     return d3.layout.pie().startAngle(this.get('startOffset')).endAngle(this.get('startOffset') + Math.PI * 2).sort(null).value(function(d) {

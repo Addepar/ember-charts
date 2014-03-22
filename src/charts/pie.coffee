@@ -27,6 +27,9 @@ Ember.Charts.PieComponent = Ember.Charts.ChartComponent.extend(
   # Essentially we don't want a maximum radius
   maxRadius: 2000
 
+  # Inner radius proportional to the radius
+  innerRadius: 0
+
   # ----------------------------------------------------------------------------
   # Data
   # ----------------------------------------------------------------------------
@@ -173,6 +176,11 @@ Ember.Charts.PieComponent = Ember.Charts.ChartComponent.extend(
     @get('radius') + @get('labelPadding')
   .property 'radius', 'labelPadding'
 
+  # Inner radius relative to radius to create a donut graphic
+  proportialInnerRadius: Ember.computed ->
+    @get('innerRadius') * @get('radius')
+  .property 'innerRadius', 'radius'
+
   # ----------------------------------------------------------------------------
   # Color Configuration
   # ----------------------------------------------------------------------------
@@ -252,7 +260,7 @@ Ember.Charts.PieComponent = Ember.Charts.ChartComponent.extend(
   arc: Ember.computed ->
     arc = d3.svg.arc()
       .outerRadius(@get 'radius')
-      .innerRadius(0)
+      .innerRadius(@get 'proportialInnerRadius')
   .property 'radius'
 
   # Pie layout function starting with the largest slice at zero degrees or
