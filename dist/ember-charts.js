@@ -885,7 +885,7 @@ Ember.Charts.PieLegend = Ember.Mixin.create({
 
 (function() {
 
-Ember.Charts.ChartComponent = Ember.Component.extend(Ember.Charts.Colorable, Ember.AddeparMixins.ResizeHandlerMixin, {
+Ember.Charts.ChartComponent = Ember.Component.extend(Ember.Charts.Colorable, {
   templateName: 'chart',
   classNames: ['chart-frame', 'scroll-y'],
   isInteractive: true,
