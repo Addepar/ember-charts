@@ -17,15 +17,27 @@ Ember.Charts.Colorable = Ember.Mixin.create
 
   colorRange: Ember.computed ->
     seedColor = @get 'selectedSeedColor'
-    interpolate = d3.interpolateRgb(seedColor, 'rgb(255,255,255)')
-    minTintRGB = interpolate(@get 'minimumTint')
-    maxTintRGB = interpolate(@get 'maximumTint')
-    [ d3.rgb(minTintRGB), d3.rgb(maxTintRGB) ]
-  .property 'selectedSeedColor', 'minimumTint', 'maximumTint'
+    @get('getColorRange')(seedColor)
+  .property 'selectedSeedColor', 'getColorRange'
+
+  getColorRange: Ember.computed ->
+    (seedColor) =>
+      interpolate = d3.interpolateRgb(seedColor, 'rgb(255,255,255)')
+      minTintRGB = interpolate(@get 'minimumTint')
+      maxTintRGB = interpolate(@get 'maximumTint')
+      [ d3.rgb(minTintRGB), d3.rgb(maxTintRGB) ]
+  .property 'minimumTint', 'maximumTint'
 
   colorScale: Ember.computed ->
-    @get('colorScaleType')().range(@get 'colorRange')
-  .property 'colorRange', 'colorScaleType'
+    seedColor = @get 'selectedSeedColor'
+    @get('getColorScale')(seedColor)
+  .property 'selectedSeedColor', 'getColorScale'
+
+  getColorScale: Ember.computed ->
+    (seedColor) =>
+      colorRange = @get('getColorRange')(seedColor)
+      @get('colorScaleType')().range(colorRange)
+  .property 'getColorRange', 'colorScaleType'
 
   secondaryMinimumTint: 0.4
   secondaryMaximumTint: 0.85
@@ -62,12 +74,18 @@ Ember.Charts.Colorable = Ember.Mixin.create
   numColorSeries: 1
   getSeriesColor: Ember.computed ->
     numColorSeries = @get 'numColorSeries'
+    selectedSeedColor = @get 'selectedSeedColor'
     (d, i) =>
+      seedColor = d.color or selectedSeedColor
+      colorRange = @get('getColorRange')(seedColor)
+      colorScale = @get('getColorScale')(seedColor)
+
       if numColorSeries is 1
-        @get('colorRange')[0]
+        colorRange[0]
       else
-        @get('colorScale') i / (numColorSeries - 1)
-  .property 'numColorSeries', 'colorRange', 'colorScale'
+        colorScale(i / (numColorSeries - 1))
+  .property 'numColorSeries', 'getColorRange', 'getColorScale',
+    'selectedSeedColor'
 
   numSecondaryColorSeries: 1
   getSecondarySeriesColor: Ember.computed ->

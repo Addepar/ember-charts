@@ -168,6 +168,8 @@ Ember.Charts.HorizontalBarComponent = Ember.Charts.ChartComponent.extend(
     height: @get('barThickness')
     'stroke-width': 0
     style: (d) =>
+      return "fill:#{d.color}" if d.color
+
       if d.value < 0
         color = @get('mostTintedColor')
       else

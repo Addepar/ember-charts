@@ -61,6 +61,7 @@ Ember.Charts.PieComponent = Ember.Charts.ChartComponent.extend(
     return [] if total is 0
 
     data = data.map (d) ->
+      color: d.color
       label: d.label
       value: d.value
       percent: d3.round( 100 * d.value / total )
@@ -179,6 +180,8 @@ Ember.Charts.PieComponent = Ember.Charts.ChartComponent.extend(
 
   getSliceColor: Ember.computed ->
     (d, i) =>
+      return d.data.color if d.data?.color
+
       numSlices = @get 'numSlices'
       # Data is sorted ascending so need to reverse to pick color
       index = numSlices - i - 1
