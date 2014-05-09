@@ -79,6 +79,7 @@ Ember.Charts.VerticalBarComponent = Ember.Charts.ChartComponent.extend(
           value: d.value
           group: d.group
           label: d.label
+          color: d.color
         group: groupName
         values: values
         stackedValues: stackedValues

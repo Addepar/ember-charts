@@ -112,16 +112,33 @@ Ember.Charts.Colorable = Ember.Mixin.create({
   colorScaleType: d3.scale.linear,
   renderVars: ['colorScale'],
   colorRange: Ember.computed(function() {
-    var interpolate, maxTintRGB, minTintRGB, seedColor;
+    var seedColor;
     seedColor = this.get('selectedSeedColor');
-    interpolate = d3.interpolateRgb(seedColor, 'rgb(255,255,255)');
-    minTintRGB = interpolate(this.get('minimumTint'));
-    maxTintRGB = interpolate(this.get('maximumTint'));
-    return [d3.rgb(minTintRGB), d3.rgb(maxTintRGB)];
-  }).property('selectedSeedColor', 'minimumTint', 'maximumTint'),
+    return this.get('getColorRange')(seedColor);
+  }).property('selectedSeedColor', 'getColorRange'),
+  getColorRange: Ember.computed(function() {
+    var _this = this;
+    return function(seedColor) {
+      var interpolate, maxTintRGB, minTintRGB;
+      interpolate = d3.interpolateRgb(seedColor, 'rgb(255,255,255)');
+      minTintRGB = interpolate(_this.get('minimumTint'));
+      maxTintRGB = interpolate(_this.get('maximumTint'));
+      return [d3.rgb(minTintRGB), d3.rgb(maxTintRGB)];
+    };
+  }).property('minimumTint', 'maximumTint'),
   colorScale: Ember.computed(function() {
-    return this.get('colorScaleType')().range(this.get('colorRange'));
-  }).property('colorRange', 'colorScaleType'),
+    var seedColor;
+    seedColor = this.get('selectedSeedColor');
+    return this.get('getColorScale')(seedColor);
+  }).property('selectedSeedColor', 'getColorScale'),
+  getColorScale: Ember.computed(function() {
+    var _this = this;
+    return function(seedColor) {
+      var colorRange;
+      colorRange = _this.get('getColorRange')(seedColor);
+      return _this.get('colorScaleType')().range(colorRange);
+    };
+  }).property('getColorRange', 'colorScaleType'),
   secondaryMinimumTint: 0.4,
   secondaryMaximumTint: 0.85,
   secondaryColorScaleType: d3.scale.linear,
@@ -144,17 +161,23 @@ Ember.Charts.Colorable = Ember.Mixin.create({
   }).property('colorRange.@each'),
   numColorSeries: 1,
   getSeriesColor: Ember.computed(function() {
-    var numColorSeries,
+    var numColorSeries, selectedSeedColor,
       _this = this;
     numColorSeries = this.get('numColorSeries');
+    selectedSeedColor = this.get('selectedSeedColor');
     return function(d, i) {
+      var colorRange, colorScale, seedColor;
+      seedColor = d.color || selectedSeedColor;
+      colorRange = _this.get('getColorRange')(seedColor);
+      colorScale = _this.get('getColorScale')(seedColor);
       if (numColorSeries === 1) {
-        return _this.get('colorRange')[0];
+        return colorRange[0];
       } else {
-        return _this.get('colorScale')(i / (numColorSeries - 1));
+        return colorScale(i / (numColorSeries - 1));
       }
     };
-  }).property('numColorSeries', 'colorRange', 'colorScale'),
+  }).property('numColorSeries', 'getColorRange', 'getColorScale')
+}, 'selectedSeedColor', {
   numSecondaryColorSeries: 1,
   getSecondarySeriesColor: Ember.computed(function() {
     var numSecondaryColorSeries,
@@ -1136,6 +1159,9 @@ Ember.Charts.HorizontalBarComponent = Ember.Charts.ChartComponent.extend(Ember.C
       'stroke-width': 0,
       style: function(d) {
         var color;
+        if (d.color) {
+          return "fill:" + d.color;
+        }
         if (d.value < 0) {
           color = _this.get('mostTintedColor');
         } else {
@@ -1327,6 +1353,7 @@ Ember.Charts.PieComponent = Ember.Charts.ChartComponent.extend(Ember.Charts.PieL
     }
     data = data.map(function(d) {
       return {
+        color: d.color,
         label: d.label,
         value: d.value,
         percent: d3.round(100 * d.value / total)
@@ -1421,7 +1448,10 @@ Ember.Charts.PieComponent = Ember.Charts.ChartComponent.extend(Ember.Charts.PieL
   getSliceColor: Ember.computed(function() {
     var _this = this;
     return function(d, i) {
-      var index, numSlices;
+      var index, numSlices, _ref;
+      if ((_ref = d.data) != null ? _ref.color : void 0) {
+        return d.data.color;
+      }
       numSlices = _this.get('numSlices');
       index = numSlices - i - 1;
       if (numSlices !== 1) {
@@ -1681,7 +1711,8 @@ Ember.Charts.VerticalBarComponent = Ember.Charts.ChartComponent.extend(Ember.Cha
               y1: y0 += Math.max(d.value, 0),
               value: d.value,
               group: d.group,
-              label: d.label
+              label: d.label,
+              color: d.color
             });
           }
           return _results1;
