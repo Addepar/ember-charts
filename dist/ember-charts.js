@@ -202,7 +202,7 @@ Ember.Charts.Colorable = Ember.Mixin.create({
 Ember.Charts.AxesMixin = Ember.Mixin.create({
   minXTicks: 3,
   minYTicks: 3,
-  tickSpacing: 40,
+  tickSpacing: 50,
   numXTicks: Ember.computed(function() {
     var calculatedTicks;
     calculatedTicks = Math.floor(this.get('graphicWidth') / this.get('tickSpacing'));

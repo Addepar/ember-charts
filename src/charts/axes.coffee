@@ -11,7 +11,7 @@ Ember.Charts.AxesMixin = Ember.Mixin.create
   minYTicks: 3
 
   # Approximate number of pixels between ticks on axes
-  tickSpacing: 40
+  tickSpacing: 50
 
   # Approximate number of ticks on the X axis
   numXTicks: Ember.computed ->
