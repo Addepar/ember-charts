@@ -83,6 +83,7 @@ Ember.Charts.PieComponent = Ember.Charts.ChartComponent.extend(
     lowPercentIndex = _.indexOf data, _.find(data, (d) =>
       d.percent < minSlicePercent
     )
+
     # Guard against not finding any slices below the threshold
     if lowPercentIndex < 0
       lowPercentIndex = data.length
@@ -111,9 +112,14 @@ Ember.Charts.PieComponent = Ember.Charts.ChartComponent.extend(
         otherSlice.percent += d.percent
       slicesLeft = _.first slicesLeft, maxNumberOfSlices
 
-    slicesLeft.push(otherSlice) if otherSlice.percent > 0
-    return slicesLeft.reverse()
+    # only push other slice if there is more than one other item
+    if otherItems.length is 1
+      slicesLeft.push(otherItems[0])
+    else if otherSlice.percent > 0
+      slicesLeft.push(otherSlice)
 
+    # make slices appear in descending order
+    return slicesLeft.reverse()
   .property 'sortedData', 'maxNumberOfSlices', 'minSlicePercent'
 
   otherData: Ember.computed ->
