@@ -414,7 +414,7 @@ Ember.Charts.TimeSeriesComponent = Ember.Charts.ChartComponent.extend(
     class: (d,i) -> "grouping-#{i}"
     'stroke-width': 0
     width: @get('stackWidth')
-    x: (d) => xTimeScale d.x + @get('barLeftOffset') * @get('barWidth')
+    x: (d) => xTimeScale d.x + @get('barLeftOffset') * @get('paddedStackWidth')
     y: (d) => yScale(d.y1) + @get('zeroDisplacement')
     height: (d) -> yScale(d.y0) - yScale(d.y1)
   .property 'xTimeScale', 'yScale', 'stackWidth', 'zeroDisplacement', 'barLeftOffset'
@@ -428,7 +428,7 @@ Ember.Charts.TimeSeriesComponent = Ember.Charts.ChartComponent.extend(
     'stroke-width': 0
     width: @get('barWidth')
     x: (d) =>
-      xGroupScale(d.label) + xTimeScale(d.time) + @get('barLeftOffset') * @get('barWidth')
+      xGroupScale(d.label) + xTimeScale(d.time) + @get('barLeftOffset') * @get('paddedGroupWidth')
     y: (d) ->
       if d.value > 0
         yScale(d.value)
