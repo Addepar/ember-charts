@@ -34,6 +34,9 @@ Ember.Charts.TimeSeriesComponent = Ember.Charts.ChartComponent.extend(
   # Space between bar groups, as fraction of total bar + padding space
   barGroupPadding: 0.25
 
+  # Bar left offset, as fraction of width of bar
+  barLeftOffset: 0.0
+
   # ----------------------------------------------------------------------------
   # Data
   # ----------------------------------------------------------------------------
@@ -411,10 +414,10 @@ Ember.Charts.TimeSeriesComponent = Ember.Charts.ChartComponent.extend(
     class: (d,i) -> "grouping-#{i}"
     'stroke-width': 0
     width: @get('stackWidth')
-    x: (d) -> xTimeScale d.x
+    x: (d) => xTimeScale d.x + @get('barLeftOffset') * @get('barWidth')
     y: (d) => yScale(d.y1) + @get('zeroDisplacement')
     height: (d) -> yScale(d.y0) - yScale(d.y1)
-  .property 'xTimeScale', 'yScale', 'stackWidth', 'zeroDisplacement'
+  .property 'xTimeScale', 'yScale', 'stackWidth', 'zeroDisplacement', 'barLeftOffset'
 
   groupedBarAttrs: Ember.computed ->
     xTimeScale = @get 'xTimeScale'
@@ -424,8 +427,8 @@ Ember.Charts.TimeSeriesComponent = Ember.Charts.ChartComponent.extend(
     class: (d,i) -> "grouping-#{i}"
     'stroke-width': 0
     width: @get('barWidth')
-    x: (d) ->
-      xGroupScale(d.label) + xTimeScale(d.time)
+    x: (d) =>
+      xGroupScale(d.label) + xTimeScale(d.time) + @get('barLeftOffset') * @get('barWidth')
     y: (d) ->
       if d.value > 0
         yScale(d.value)
@@ -438,8 +441,7 @@ Ember.Charts.TimeSeriesComponent = Ember.Charts.ChartComponent.extend(
         Math.abs(yScale(zeroLine) - yScale(d.value)) - zeroDisplacement
       else
         Math.abs(yScale(d.value) - yScale(zeroLine)) - zeroDisplacement
-  .property('xTimeScale', 'xGroupScale', 'barWidth', 'yScale',
-    'zeroDisplacement')
+  .property 'xTimeScale', 'xGroupScale', 'barWidth', 'yScale', 'zeroDisplacement', 'barLeftOffset'
 
   line: Ember.computed ->
     d3.svg.line()
@@ -586,7 +588,7 @@ Ember.Charts.TimeSeriesComponent = Ember.Charts.ChartComponent.extend(
   # Drawing Functions
   # ----------------------------------------------------------------------------
 
-  renderVars: ['getLabelledTicks', 'xGroupScale', 'xTimeScale', 'yScale']
+  renderVars: ['barLeftOffset', 'getLabelledTicks', 'xGroupScale', 'xTimeScale', 'yScale']
 
   drawChart: ->
     @updateRule()
