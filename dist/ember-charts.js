@@ -2946,7 +2946,7 @@ Ember.Charts.TimeSeriesComponent = Ember.Charts.ChartComponent.extend(Ember.Char
       'stroke-width': 0,
       width: this.get('stackWidth'),
       x: function(d) {
-        return xTimeScale(d.x + _this.get('barLeftOffset') * _this.get('barWidth'));
+        return xTimeScale(d.x + _this.get('barLeftOffset') * _this.get('paddedStackWidth'));
       },
       y: function(d) {
         return yScale(d.y1) + _this.get('zeroDisplacement');
@@ -2970,7 +2970,7 @@ Ember.Charts.TimeSeriesComponent = Ember.Charts.ChartComponent.extend(Ember.Char
       'stroke-width': 0,
       width: this.get('barWidth'),
       x: function(d) {
-        return xGroupScale(d.label) + xTimeScale(d.time) + _this.get('barLeftOffset') * _this.get('barWidth');
+        return xGroupScale(d.label) + xTimeScale(d.time) + _this.get('barLeftOffset') * _this.get('paddedGroupWidth');
       },
       y: function(d) {
         if (d.value > 0) {
