@@ -2557,6 +2557,7 @@ Ember.Charts.TimeSeriesComponent = Ember.Charts.ChartComponent.extend(Ember.Char
   yAxisFromZero: false,
   barPadding: 0,
   barGroupPadding: 0.25,
+  barLeftOffset: 0.0,
   groupedLineData: Ember.computed(function() {
     var groupName, groups, lineData, values, _results,
       _this = this;
@@ -2945,7 +2946,7 @@ Ember.Charts.TimeSeriesComponent = Ember.Charts.ChartComponent.extend(Ember.Char
       'stroke-width': 0,
       width: this.get('stackWidth'),
       x: function(d) {
-        return xTimeScale(d.x);
+        return xTimeScale(d.x + _this.get('barLeftOffset') * _this.get('barWidth'));
       },
       y: function(d) {
         return yScale(d.y1) + _this.get('zeroDisplacement');
@@ -2954,7 +2955,7 @@ Ember.Charts.TimeSeriesComponent = Ember.Charts.ChartComponent.extend(Ember.Char
         return yScale(d.y0) - yScale(d.y1);
       }
     };
-  }).property('xTimeScale', 'yScale', 'stackWidth', 'zeroDisplacement'),
+  }).property('xTimeScale', 'yScale', 'stackWidth', 'zeroDisplacement', 'barLeftOffset'),
   groupedBarAttrs: Ember.computed(function() {
     var xGroupScale, xTimeScale, yScale, zeroDisplacement,
       _this = this;
@@ -2969,7 +2970,7 @@ Ember.Charts.TimeSeriesComponent = Ember.Charts.ChartComponent.extend(Ember.Char
       'stroke-width': 0,
       width: this.get('barWidth'),
       x: function(d) {
-        return xGroupScale(d.label) + xTimeScale(d.time);
+        return xGroupScale(d.label) + xTimeScale(d.time) + _this.get('barLeftOffset') * _this.get('barWidth');
       },
       y: function(d) {
         if (d.value > 0) {
@@ -2984,7 +2985,7 @@ Ember.Charts.TimeSeriesComponent = Ember.Charts.ChartComponent.extend(Ember.Char
         return Math.max(0, d.value > zeroLine ? Math.abs(yScale(zeroLine) - yScale(d.value)) - zeroDisplacement : Math.abs(yScale(d.value) - yScale(zeroLine)) - zeroDisplacement);
       }
     };
-  }).property('xTimeScale', 'xGroupScale', 'barWidth', 'yScale', 'zeroDisplacement'),
+  }).property('xTimeScale', 'xGroupScale', 'barWidth', 'yScale', 'zeroDisplacement', 'barLeftOffset'),
   line: Ember.computed(function() {
     var _this = this;
     return d3.svg.line().x(function(d) {
@@ -3146,7 +3147,7 @@ Ember.Charts.TimeSeriesComponent = Ember.Charts.ChartComponent.extend(Ember.Char
       return yAxis;
     }
   }).volatile(),
-  renderVars: ['getLabelledTicks', 'xGroupScale', 'xTimeScale', 'yScale'],
+  renderVars: ['barLeftOffset', 'getLabelledTicks', 'xGroupScale', 'xTimeScale', 'yScale'],
   drawChart: function() {
     this.updateRule();
     this.updateBarData();
