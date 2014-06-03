@@ -1,32 +1,40 @@
 Ember.Charts.FloatingTooltipMixin = Ember.Mixin.create
   # ----------------------------------------------------------------------------
-  # Interface
+  # API -- inputs
+  #
+  # elementId: the id of the object we're attaching the tooltip to
   # ----------------------------------------------------------------------------
-  tooltipId: Ember.computed ->
-    @get('elementId') + '_tooltip'
-
+  elementId: null
   tooltipWidth: 40
-
   tooltipValueDisplayName: 'Value'
 
   showTooltip: (content, event) ->
-    $ttid = @get '$tooltip'
+    $ttid = @_getTooltip()
     $ttid.html(content)
     $ttid.show()
-    @updatePosition(event)
+    @_updateTooltipPosition(event)
 
   hideTooltip: ->
-    @get('$tooltip').hide()
+    @_getTooltip().hide()
 
-  updatePosition: (event) ->
-    $tooltipId = @get '$tooltip'
+  # ----------------------------------------------------------------------------
+  # Private Methods
+  # ----------------------------------------------------------------------------
+  _tooltipId: Ember.computed ->
+    @get('elementId') + '_tooltip'
+
+  _getTooltip: ->
+    $("##{@get '_tooltipId'}")
+
+  _updateTooltipPosition: (event) ->
+    $tooltip = @_getTooltip()
     # Offset the tooltip away from the mouse position
     xOffset = 10
     yOffset = 10
 
     # Get tooltip width/height
-    width = $tooltipId.width()
-    height = $tooltipId.height()
+    width = $tooltip.width()
+    height = $tooltip.height()
 
     # Get top/left coordinates of scrolled window
     windowScrollTop = $(window).scrollTop()
@@ -36,8 +44,7 @@ Ember.Charts.FloatingTooltipMixin = Ember.Mixin.create
     curX = event.clientX + windowScrollLeft
     curY = event.clientY + windowScrollTop
 
-
-    tooltipLeft = curX +
+    tooltipLeftOffset =
       if (curX - windowScrollLeft + xOffset*2 + width) > $(window).width()
         # Not enough room to put tooltip to the right of the cursor
         - (width + xOffset*2)
@@ -45,13 +52,17 @@ Ember.Charts.FloatingTooltipMixin = Ember.Mixin.create
         # Offset the tooltip to the right
         xOffset
 
-    tooltipTop = curY +
+    tooltipLeft = curX + tooltipLeftOffset
+
+    tooltipTopOffset =
       if (curY - windowScrollTop + yOffset*2 + height) > $(window).height()
         # Not enough room to put tooltip to the below the cursor
         - (height + yOffset*2)
       else
         # Offset the tooltip below the cursor
         yOffset
+
+    tooltipTop = curY + tooltipTopOffset
 
     # Tooltip must be a minimum offset away from the left/top position
     minTooltipLeft = windowScrollLeft + xOffset
@@ -60,7 +71,7 @@ Ember.Charts.FloatingTooltipMixin = Ember.Mixin.create
     tooltipTop = minTooltipTop if tooltipTop < windowScrollTop + yOffset
 
     # Place tooltip
-    $tooltipId.css('top', tooltipTop + 'px').css('left', tooltipLeft + 'px')
+    $tooltip.css('top', tooltipTop + 'px').css('left', tooltipLeft + 'px')
 
   # ----------------------------------------------------------------------------
   # Internal
@@ -68,18 +79,9 @@ Ember.Charts.FloatingTooltipMixin = Ember.Mixin.create
 
   didInsertElement: ->
     @_super()
-    $("body").append("<div class='chart-float-tooltip' id='#{@get 'tooltipId'}'></div>")
+    $("body").append("<div class='chart-float-tooltip' id='#{@get '_tooltipId'}'></div>")
     @hideTooltip()
 
   willDestroyElement: ->
     @_super()
-    @get('$tooltip').remove()
-
-  widthDidChange: ->
-    @get('$tooltip').css('width', @get('tooltipWidth'))
-  , 'tooltipWidth'
-
-  $tooltip: Ember.computed ->
-    $("##{@get 'tooltipId'}")
-  .volatile()
-
+    @_getTooltip().remove()
