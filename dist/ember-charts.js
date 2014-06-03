@@ -200,6 +200,8 @@ Ember.Charts.Colorable = Ember.Mixin.create({
 
 
 Ember.Charts.AxesMixin = Ember.Mixin.create({
+  graphicWidth: null,
+  graphicHeight: null,
   minXTicks: 3,
   minYTicks: 3,
   tickSpacing: 50,
@@ -285,31 +287,113 @@ Ember.Charts.FloatingTooltipMixin = Ember.Mixin.create({
 
 
 Ember.Charts.HasTimeSeriesRule = Ember.Mixin.create({
-  lineMarkerTolerance: 60 * 1000,
-  mousePosition: Ember.computed(function() {
+  xRange: null,
+  yRange: null,
+  hasLineData: null,
+  showDetails: null,
+  hideDetails: null,
+  updateLineMarkers: function() {
+    var hideDetails, lineMarkers, showDetails;
+    showDetails = this.get('showDetails');
+    hideDetails = this.get('hideDetails');
+    lineMarkers = this._lineMarkers();
+    lineMarkers.enter().append('path').on("mouseover", function(d, i) {
+      return showDetails(d, i, this);
+    }).on("mouseout", function(d, i) {
+      return hideDetails(d, i, this);
+    }).attr({
+      "class": 'line-marker',
+      fill: this.get('getLineColor'),
+      d: d3.svg.symbol().size(50).type('circle')
+    });
+    lineMarkers.exit().remove();
+    lineMarkers.attr({
+      transform: function(d) {
+        return "translate(" + d.x + "," + d.y + ")";
+      }
+    });
+    return lineMarkers.style({
+      'stroke-width': function(d) {
+        return d3.select(d.path).attr('stroke-width');
+      }
+    });
+  },
+  updateRule: function() {
+    var x, zeroDisplacement;
+    zeroDisplacement = 1;
+    x = (this._mousePosition() || [0])[0];
+    return this.get('rule').attr({
+      x1: x,
+      x2: x,
+      y0: 0,
+      y1: this.get('graphicHeight') - zeroDisplacement
+    });
+  },
+  rule: Ember.computed(function() {
+    var rule;
+    rule = this.get('viewport').select('.rule');
+    if (rule.empty()) {
+      return this.get('viewport').insert('line', '.series').style('stroke-width', 1.5).attr('class', 'rule');
+    } else {
+      return rule;
+    }
+  }).volatile(),
+  _lineMarkers: function() {
+    return this.get('viewport').selectAll('.line-marker').data(this._lineMarkerData());
+  },
+  didInsertElement: function() {
+    var _this = this;
+    this._super();
+    this.hideRule();
+    return d3.select(this.$('svg')[0]).on('mousemove', function() {
+      if (!_this.get('isInteractive')) {
+        return;
+      }
+      if (_this._isEventWithinValidRange()) {
+        _this.showRule();
+        Ember.run(_this, _this.get('updateRule'));
+        return Ember.run(_this, _this.get('updateLineMarkers'));
+      } else {
+        return _this.hideRule();
+      }
+    });
+  },
+  showRule: function() {
+    if (!this.get('hasLineData')) {
+      return;
+    }
+    this.get('rule').style('stroke-width', 1.5);
+    return this._lineMarkers().style('opacity', 1);
+  },
+  hideRule: function() {
+    this.get('rule').style('stroke-width', 1.5);
+    return this._lineMarkers().style('opacity', 1);
+  },
+  _lineMarkerTolerance: 60 * 1000,
+  _mousePosition: function() {
     if (!d3.event) {
       return null;
     }
     return d3.mouse(this.get('$viewport'));
-  }).volatile(),
-  isEventWithinValidRange: Ember.computed(function() {
+  },
+  _isEventWithinValidRange: function() {
     var inX, inY, x, xRange, y, yRange, _ref;
     xRange = this.get('xRange');
     yRange = this.get('yRange');
-    _ref = this.get('mousePosition'), x = _ref[0], y = _ref[1];
+    _ref = this._mousePosition(), x = _ref[0], y = _ref[1];
     inX = (d3.min(xRange) < x && x < d3.max(xRange));
     inY = (d3.min(yRange) < y && y < d3.max(yRange));
     return inX && inY;
-  }).volatile(),
-  lineMarkerData: Ember.computed(function() {
+  },
+  _lineMarkerData: function() {
     var invXScale, invYScale, lineMarkerTolerance, markerData, mousePosition, timeX;
-    mousePosition = this.get('mousePosition');
+    mousePosition = this._mousePosition();
     if (Ember.isEmpty(mousePosition)) {
       return [];
     }
     invXScale = this.get('xTimeScale').invert;
     invYScale = this.get('yScale').invert;
-    lineMarkerTolerance = this.get('lineMarkerTolerance');
+    lineMarkerTolerance = this.get('_lineMarkerTolerance');
     timeX = invXScale(mousePosition[0]);
     markerData = [];
     this.get('viewport').selectAll('path.line').each(function(d, i) {
@@ -339,91 +423,7 @@ Ember.Charts.HasTimeSeriesRule = Ember.Mixin.create({
       });
     });
     return markerData;
-  }).volatile(),
-  rule: Ember.computed(function() {
-    var rule;
-    rule = this.get('viewport').select('.rule');
-    if (rule.empty()) {
-      return this.get('viewport').insert('line', '.series').style('stroke-width', 0).attr('class', 'rule');
-    } else {
-      return rule;
-    }
-  }).volatile(),
-  lineMarkers: Ember.computed(function() {
-    return this.get('viewport').selectAll('.line-marker').data(this.get('lineMarkerData'));
-  }).volatile(),
-  updateLineMarkers: function() {
-    var hideDetails, lineMarkers, showDetails;
-    showDetails = this.get('showDetails');
-    hideDetails = this.get('hideDetails');
-    lineMarkers = this.get('lineMarkers');
-    lineMarkers.enter().append('path').on("mouseover", function(d, i) {
-      return showDetails(d, i, this);
-    }).on("mouseout", function(d, i) {
-      return hideDetails(d, i, this);
-    }).attr({
-      "class": 'line-marker',
-      fill: this.get('getLineColor'),
-      d: d3.svg.symbol().size(50).type('circle')
-    });
-    lineMarkers.exit().remove();
-    lineMarkers.attr({
-      transform: function(d) {
-        return "translate(" + d.x + "," + d.y + ")";
-      }
-    });
-    return lineMarkers.style({
-      'stroke-width': function(d) {
-        return d3.select(d.path).attr('stroke-width');
-      }
-    });
-  },
-  updateRule: function() {
-    var x, zeroDisplacement;
-    zeroDisplacement = 1;
-    x = (this.get('mousePosition') || [0])[0];
-    return this.get('rule').attr({
-      x1: x,
-      x2: x,
-      y0: 0,
-      y1: this.get('graphicHeight') - zeroDisplacement
-    });
-  },
-  didInsertElement: function() {
-    var _this = this;
-    this._super();
-    this.get('hideRule')();
-    return d3.select(this.$('svg')[0]).on('mousemove', function() {
-      if (!_this.get('isInteractive')) {
-        return;
-      }
-      if (_this.get('isEventWithinValidRange')) {
-        _this.get('showRule')();
-        Ember.run(_this, _this.get('updateRule'));
-        return Ember.run(_this, _this.get('updateLineMarkers'));
-      } else {
-        return _this.get('hideRule')();
-      }
-    });
-  },
-  isRuleShown: false,
-  showRule: Ember.computed(function() {
-    var _this = this;
-    return function(d) {
-      if (!_this.get('hasLineData')) {
-        return;
-      }
-      _this.get('rule').style('stroke-width', 1.5);
-      return _this.get('lineMarkers').style('opacity', 1);
-    };
-  }),
-  hideRule: Ember.computed(function() {
-    var _this = this;
-    return function(d) {
-      _this.get('rule').style('stroke-width', 0);
-      return _this.get('lineMarkers').style('opacity', 0);
-    };
-  })
+  }
 });
 
 
