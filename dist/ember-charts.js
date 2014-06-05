@@ -409,7 +409,6 @@ Ember.Charts.HasTimeSeriesRule = Ember.Mixin.create({
   xRange: null,
   yRange: null,
   xTimeScale: null,
-  hasLineData: null,
   showDetails: null,
   hideDetails: null,
   getLineColor: null,
@@ -440,56 +439,20 @@ Ember.Charts.HasTimeSeriesRule = Ember.Mixin.create({
       }
     });
   },
-  updateRule: function() {
-    var x, zeroDisplacement;
-    zeroDisplacement = 1;
-    x = (this._mousePosition() || [0])[0];
-    return this._getRule().attr({
-      x1: x,
-      x2: x,
-      y0: 0,
-      y1: this.get('graphicHeight') - zeroDisplacement
-    });
-  },
-  _getRule: function() {
-    var rule;
-    rule = this.get('viewport').select('.rule');
-    if (rule.empty()) {
-      return this.get('viewport').insert('line', '.series').style('stroke-width', 1.5).attr('class', 'rule');
-    } else {
-      return rule;
-    }
-  },
   _getLineMarkers: function() {
     return this.get('viewport').selectAll('.line-marker').data(this._lineMarkerData());
   },
   didInsertElement: function() {
     var _this = this;
     this._super();
-    this._hideRule();
     return d3.select(this.$('svg')[0]).on('mousemove', function() {
       if (!_this.get('isInteractive')) {
         return;
       }
       if (_this._isEventWithinValidRange()) {
-        _this._showRule();
-        Ember.run(_this, _this.get('updateRule'));
         return Ember.run(_this, _this.get('updateLineMarkers'));
-      } else {
-        return _this._hideRule();
       }
     });
-  },
-  _showRule: function() {
-    if (!this.get('hasLineData')) {
-      return;
-    }
-    this._getRule().style('stroke-width', 1.5);
-    return this._getLineMarkers().style('opacity', 1);
-  },
-  _hideRule: function() {
-    this._getRule().style('stroke-width', 0);
-    return this._getLineMarkers().style('opacity', 0);
   },
   _lineMarkerTolerance: 60 * 1000,
   _mousePosition: function() {
@@ -2689,6 +2652,16 @@ Ember.Charts.TimeSeriesComponent = Ember.Charts.ChartComponent.extend(Ember.Char
   barPadding: 0,
   barGroupPadding: 0.25,
   barLeftOffset: 0.0,
+  finishedData: Ember.computed(function() {
+    return {
+      lineData: this.get('_groupedLineData'),
+      groupedBarData: this.get('_groupedBarData')
+    };
+  }).property('_groupedLineData.@each.values', '_groupedBarData.@each'),
+  hasNoData: Ember.computed(function() {
+    return !this.get('_hasBarData') && !this.get('_hasLineData');
+  }).property('_hasBarData', '_hasLineData'),
+  legendChartPadding: Ember.computed.alias('labelHeightOffset'),
   _getLabelOrDefault: function(datum) {
     var _ref;
     return ((_ref = datum.label) != null ? _ref.toString() : void 0) || this.get('ungroupedSeriesName');
@@ -2710,7 +2683,7 @@ Ember.Charts.TimeSeriesComponent = Ember.Charts.ChartComponent.extend(Ember.Char
     }
     return _results;
   }).property('lineData.@each', 'ungroupedSeriesName'),
-  groupedBarData: Ember.computed(function() {
+  _groupedBarData: Ember.computed(function() {
     var barData, barGroupsByTime, barTimes, g, groups, label, timePoint;
     barData = this.get('barData');
     if (Ember.isEmpty(barData)) {
@@ -2752,22 +2725,12 @@ Ember.Charts.TimeSeriesComponent = Ember.Charts.ChartComponent.extend(Ember.Char
     barGroups = Ember.Charts.Helpers.groupBy(barData, this._getLabelOrDefault);
     return _.keys(barGroups);
   }).property('barData.@each', 'ungroupedSeriesName'),
-  finishedData: Ember.computed(function() {
-    return {
-      lineData: this.get('_groupedLineData'),
-      groupedBarData: this.get('groupedBarData')
-    };
-  }).property('_groupedLineData.@each.values', 'groupedBarData.@each'),
-  hasNoData: Ember.computed(function() {
-    return !(this.get('hasBarData') || this.get('hasLineData'));
-  }).property('hasBarData', 'hasLineData'),
-  hasLineData: Ember.computed(function() {
+  _hasLineData: Ember.computed(function() {
     return !Ember.isEmpty(this.get('lineData'));
   }).property('lineData'),
-  hasBarData: Ember.computed(function() {
+  _hasBarData: Ember.computed(function() {
     return !Ember.isEmpty(this.get('barData'));
   }).property('barData'),
-  legendChartPadding: Ember.computed.alias('labelHeightOffset'),
   graphicLeft: Ember.computed.alias('labelWidthOffset'),
   graphicWidth: Ember.computed(function() {
     return this.get('width') - this.get('labelWidthOffset');
@@ -2776,14 +2739,15 @@ Ember.Charts.TimeSeriesComponent = Ember.Charts.ChartComponent.extend(Ember.Char
     return this.get('height') - this.get('legendHeight') - this.get('legendChartPadding');
   }).property('height', 'legendHeight', 'legendChartPadding'),
   timeDelta: Ember.computed(function() {
-    var diffTimeDays, endTime, groupedBarData, startTime;
-    groupedBarData = this.get('groupedBarData');
+    var diffTimeDays, firstBarTime, groupedBarData, oneDayInSeconds, secondBarTime;
+    groupedBarData = this.get('_groupedBarData');
     if (Ember.isEmpty(groupedBarData) || groupedBarData.get('length') < 2) {
       return 'month';
     }
-    startTime = groupedBarData[0][0].time;
-    endTime = groupedBarData[1][0].time;
-    diffTimeDays = (endTime - startTime) / (24 * 60 * 60 * 1000);
+    firstBarTime = groupedBarData[0][0].time;
+    secondBarTime = groupedBarData[1][0].time;
+    oneDayInSeconds = 24 * 60 * 60 * 1000;
+    diffTimeDays = (secondBarTime - firstBarTime) / oneDayInSeconds;
     if (diffTimeDays > 351) {
       return 'year';
     } else if (diffTimeDays > 33) {
@@ -2795,22 +2759,24 @@ Ember.Charts.TimeSeriesComponent = Ember.Charts.ChartComponent.extend(Ember.Char
     } else {
       return 'day';
     }
-  }).property('groupedBarData'),
+  }).property('_groupedBarData'),
   barDataExtent: Ember.computed(function() {
-    var endTime, endTimeGroup, groupedBarData, paddedEnd, paddedStart, startTime, startTimeGroup, timeDelta;
+    var endTime, first, groupedBarData, last, paddedEnd, paddedStart, startTime, timeDelta, timeIntervalType, timeOffset;
     timeDelta = this.get('timeDelta');
-    groupedBarData = this.get('groupedBarData');
+    groupedBarData = this.get('_groupedBarData');
     if (Ember.isEmpty(groupedBarData)) {
       return [new Date(), new Date()];
     }
-    startTimeGroup = groupedBarData[0];
-    startTime = startTimeGroup[0].time;
-    endTimeGroup = groupedBarData[groupedBarData.length - 1];
-    endTime = endTimeGroup[0].time;
-    paddedStart = timeDelta === 'quarter' ? +startTime / 2 + d3.time['month'].offset(startTime, -3) / 2 : +startTime / 2 + d3.time[timeDelta].offset(startTime, -1) / 2;
-    paddedEnd = timeDelta === 'quarter' ? +endTime / 2 + d3.time['month'].offset(endTime, 3) / 2 : +endTime / 2 + d3.time[timeDelta].offset(endTime, 1) / 2;
+    first = _.first(groupedBarData);
+    last = _.last(groupedBarData);
+    startTime = first[0].time;
+    endTime = last[0].time;
+    timeIntervalType = timeDelta === 'quarter' ? 'month' : timeDelta;
+    timeOffset = timeDelta === 'quarter' ? 3 : 1;
+    paddedStart = startTime.getTime() / 2 + d3.time[timeIntervalType].offset(startTime, -timeOffset) / 2;
+    paddedEnd = endTime.getTime() / 2 + d3.time[timeIntervalType].offset(endTime, timeOffset) / 2;
     return [new Date(paddedStart), new Date(paddedEnd)];
-  }).property('timeDelta', 'groupedBarData.@each'),
+  }).property('timeDelta', '_groupedBarData.@each'),
   xBetweenGroupDomain: Ember.computed.alias('barDataExtent'),
   xWithinGroupDomain: Ember.computed.alias('_barGroups'),
   barWidth: Ember.computed(function() {
@@ -2858,20 +2824,20 @@ Ember.Charts.TimeSeriesComponent = Ember.Charts.ChartComponent.extend(Ember.Char
   maxNumberOfLabels: Ember.computed.alias('numXTicks'),
   xDomain: Ember.computed(function() {
     var maxOfGroups, maxOfSeries, minOfGroups, minOfSeries, _ref, _ref1;
-    if (!this.get('hasBarData')) {
+    if (!this.get('_hasBarData')) {
       return this.get('xWithinSeriesDomain');
     }
-    if (!this.get('hasLineData')) {
+    if (!this.get('_hasLineData')) {
       return this.get('xBetweenGroupDomain');
     }
     _ref = this.get('xBetweenGroupDomain'), minOfGroups = _ref[0], maxOfGroups = _ref[1];
     _ref1 = this.get('xWithinSeriesDomain'), minOfSeries = _ref1[0], maxOfSeries = _ref1[1];
     return [Math.min(minOfGroups, minOfSeries), Math.max(maxOfGroups, maxOfSeries)];
-  }).property('xBetweenGroupDomain', 'xWithinSeriesDomain', 'hasBarData', 'hasLineData'),
+  }).property('xBetweenGroupDomain', 'xWithinSeriesDomain', '_hasBarData', '_hasLineData'),
   yDomain: Ember.computed(function() {
     var groupData, hasBarData, hasLineData, lineData, max, maxOfGroups, maxOfSeries, min, minOfGroups, minOfSeries;
     lineData = this.get('_groupedLineData');
-    groupData = this.get('groupedBarData');
+    groupData = this.get('_groupedBarData');
     maxOfSeries = d3.max(lineData, function(d) {
       return d3.max(d.values, function(dd) {
         return dd.value;
@@ -2892,8 +2858,8 @@ Ember.Charts.TimeSeriesComponent = Ember.Charts.ChartComponent.extend(Ember.Char
         return dd.value;
       });
     });
-    hasBarData = this.get('hasBarData');
-    hasLineData = this.get('hasLineData');
+    hasBarData = this.get('_hasBarData');
+    hasLineData = this.get('_hasLineData');
     if (!hasBarData) {
       min = minOfSeries;
       max = maxOfSeries;
@@ -2916,7 +2882,7 @@ Ember.Charts.TimeSeriesComponent = Ember.Charts.ChartComponent.extend(Ember.Char
       }
     }
     return [min, max];
-  }).property('_groupedLineData', 'groupedBarData', 'hasBarData', 'hasLineData', 'yAxisFromZero'),
+  }).property('_groupedLineData', '_groupedBarData', '_hasBarData', '_hasLineData', 'yAxisFromZero'),
   yRange: Ember.computed(function() {
     return [this.get('graphicTop') + this.get('graphicHeight'), this.get('graphicTop')];
   }).property('graphicTop', 'graphicHeight'),
@@ -3134,7 +3100,7 @@ Ember.Charts.TimeSeriesComponent = Ember.Charts.ChartComponent.extend(Ember.Char
     return this.get('viewport').selectAll('.bars').remove();
   },
   groups: Ember.computed(function() {
-    return this.get('viewport').selectAll('.bars').data(this.get('groupedBarData'));
+    return this.get('viewport').selectAll('.bars').data(this.get('_groupedBarData'));
   }).volatile(),
   removeAllSeries: function() {
     return this.get('viewport').selectAll('.series').remove();
@@ -3162,7 +3128,6 @@ Ember.Charts.TimeSeriesComponent = Ember.Charts.ChartComponent.extend(Ember.Char
   }).volatile(),
   renderVars: ['barLeftOffset', 'getLabelledTicks', 'xGroupScale', 'xTimeScale', 'yScale'],
   drawChart: function() {
-    this.updateRule();
     this.updateBarData();
     this.updateLineData();
     this.updateLineMarkers();

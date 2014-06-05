@@ -84,7 +84,6 @@ Ember.Charts.ChartComponent = Ember.Component.extend(
     @get('graphicLeft') + @get('graphicWidth')
   .property 'graphicLeft', 'graphicWidth'
 
-
   # ----------------------------------------------------------------------------
   # Data
   # ----------------------------------------------------------------------------

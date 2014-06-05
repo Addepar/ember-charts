@@ -24,7 +24,6 @@ Ember.Charts.HasTimeSeriesRule = Ember.Mixin.create
   xRange: null
   yRange: null
   xTimeScale: null
-  hasLineData: null
   showDetails: null
   hideDetails: null
   getLineColor: null
@@ -59,37 +58,9 @@ Ember.Charts.HasTimeSeriesRule = Ember.Mixin.create
       'stroke-width': (d) ->
         d3.select(d.path).attr('stroke-width')
 
-  updateRule: ->
-    # Get the position at which to locate the rule, relative to the chart
-    # viewport (which encloses the chart graphic). Displace the end of the
-    # rule so it does not overlap with the x-axis
-    zeroDisplacement = 1
-
-    # Update volatile computed properties by calling their getters; also,
-    # set the location of the rule to the current x-position of the mouse
-    [x,] = @_mousePosition() or [0]
-    @_getRule().attr
-      x1: x
-      x2: x
-      y0: 0
-      y1: @get('graphicHeight') - zeroDisplacement
-
   # ----------------------------------------------------------------------
   # Selections
   # ----------------------------------------------------------------------
-
-  # Volatile computed property returning a selection containing the line
-  # element for the rule. If the rule does not exist, create it, and make
-  # it hidden by default
-  _getRule: ->
-    rule = @get('viewport').select('.rule')
-    if rule.empty()
-      return @get('viewport')
-        .insert('line', '.series')
-        .style('stroke-width', 1.5)
-        .attr('class', 'rule')
-    else
-      return rule
 
   # Returns a selection containing the line markers, which binds the line
   # marker data upon each update
@@ -100,36 +71,16 @@ Ember.Charts.HasTimeSeriesRule = Ember.Mixin.create
   # Event Bindings
   # ----------------------------------------------------------------------
 
-  # Bind event handlers to the viewport to keep the position of the rule
-  # and line markers up to date. Responsibility for showing and hiding
-  # the rule and lineMarkers is delegated to the chart, which should call
-  # showRule and hideRule below to control their visibility.
+  # Bind event handlers to the viewport to keep the position of line
+  # markers up to date. Responsibility for showing and hiding
+  # the lineMarkers is delegated to the chart.
   didInsertElement: ->
     @_super()
-    # We have to do this partly so that the rule renders first and is always in
-    # the back
-    @_hideRule()
     d3.select(@$('svg')[0]).on 'mousemove', =>
       return unless @get('isInteractive')
-      # Check if we are still in an area where we have valid
-      # time-series data and should show a rule, i.e., we are within the
-      # domain/range of the data
+      # Check if we are within the domain/range of the data
       if @_isEventWithinValidRange()
-        @_showRule()
-        Ember.run this, @get('updateRule')
         Ember.run this, @get('updateLineMarkers')
-      else
-        @_hideRule()
-
-  # Since the rule is shown and hidden when each line is moused over
-  _showRule: ->
-    return unless @get('hasLineData')
-    @_getRule().style('stroke-width', 1.5)
-    @_getLineMarkers().style('opacity', 1)
-
-  _hideRule: ->
-    @_getRule().style('stroke-width', 0)
-    @_getLineMarkers().style('opacity', 0)
 
   # ----------------------------------------------------------------------
   # Private Methods -- Data
