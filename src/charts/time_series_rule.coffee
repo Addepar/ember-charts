@@ -12,25 +12,32 @@ Ember.Charts.HasTimeSeriesRule = Ember.Mixin.create
   # will be displayed
   # xRange: the range of positions of the chart in the x dimension
   # yRange: the range of positions of the chart in the y dimension
-  # hasLineData: if the mixing in class has line data
+  # xTimeScale: a mapping from time to x position
+  # hasLineData: specifies if the mixing in class has line data
   # showDetails: function to be called on mouseing over the line marker
   # hideDetails: function to be called on mouseing out of the line marker
+  # getLineColor: function which returns a line color, used for fill
+  # color of markers
+  # graphicHeight: height of graphic containing lines
+  # isInteractive: specifies whether the chart is interactive
   # ----------------------------------------------------------------------
   xRange: null
   yRange: null
+  xTimeScale: null
   hasLineData: null
   showDetails: null
   hideDetails: null
+  getLineColor: null
+  graphicHeight: null
 
   # ----------------------------------------------------------------------
   # Drawing Functions
   # ----------------------------------------------------------------------
 
   updateLineMarkers: ->
-    # Keep entering and exiting lines updated
-    showDetails = @get 'showDetails'
-    hideDetails = @get 'hideDetails'
-    lineMarkers = @_lineMarkers()
+    lineMarkers = @_getLineMarkers()
+    showDetails = @get('showDetails')
+    hideDetails = @get('hideDetails')
 
     lineMarkers.enter()
       .append('path')
@@ -40,12 +47,14 @@ Ember.Charts.HasTimeSeriesRule = Ember.Mixin.create
         class: 'line-marker'
         fill: @get 'getLineColor'
         d: d3.svg.symbol().size(50).type('circle')
+
     lineMarkers.exit().remove()
 
     # Update the line marker icons with the latest position data
     lineMarkers.attr
       transform: (d) ->
         "translate(#{d.x},#{d.y})"
+
     lineMarkers.style
       'stroke-width': (d) ->
         d3.select(d.path).attr('stroke-width')
@@ -59,7 +68,7 @@ Ember.Charts.HasTimeSeriesRule = Ember.Mixin.create
     # Update volatile computed properties by calling their getters; also,
     # set the location of the rule to the current x-position of the mouse
     [x,] = @_mousePosition() or [0]
-    @get('rule').attr
+    @_getRule().attr
       x1: x
       x2: x
       y0: 0
@@ -72,7 +81,7 @@ Ember.Charts.HasTimeSeriesRule = Ember.Mixin.create
   # Volatile computed property returning a selection containing the line
   # element for the rule. If the rule does not exist, create it, and make
   # it hidden by default
-  rule: Ember.computed ->
+  _getRule: ->
     rule = @get('viewport').select('.rule')
     if rule.empty()
       return @get('viewport')
@@ -81,11 +90,10 @@ Ember.Charts.HasTimeSeriesRule = Ember.Mixin.create
         .attr('class', 'rule')
     else
       return rule
-  .volatile()
 
-  # Volatile computed property returning a selection containing the line
-  # markers, which binds the line marker data upon each update
-  _lineMarkers: ->
+  # Returns a selection containing the line markers, which binds the line
+  # marker data upon each update
+  _getLineMarkers: ->
     @get('viewport').selectAll('.line-marker').data(@_lineMarkerData())
 
   # ----------------------------------------------------------------------
@@ -100,28 +108,28 @@ Ember.Charts.HasTimeSeriesRule = Ember.Mixin.create
     @_super()
     # We have to do this partly so that the rule renders first and is always in
     # the back
-    @hideRule()
+    @_hideRule()
     d3.select(@$('svg')[0]).on 'mousemove', =>
       return unless @get('isInteractive')
       # Check if we are still in an area where we have valid
       # time-series data and should show a rule, i.e., we are within the
       # domain/range of the data
       if @_isEventWithinValidRange()
-        @showRule()
+        @_showRule()
         Ember.run this, @get('updateRule')
         Ember.run this, @get('updateLineMarkers')
       else
-        @hideRule()
+        @_hideRule()
 
   # Since the rule is shown and hidden when each line is moused over
-  showRule: ->
+  _showRule: ->
     return unless @get('hasLineData')
-    @get('rule').style('stroke-width', 1.5)
-    @_lineMarkers().style('opacity', 1)
+    @_getRule().style('stroke-width', 1.5)
+    @_getLineMarkers().style('opacity', 1)
 
-  hideRule: ->
-    @get('rule').style('stroke-width', 1.5)
-    @_lineMarkers().style('opacity', 1)
+  _hideRule: ->
+    @_getRule().style('stroke-width', 0)
+    @_getLineMarkers().style('opacity', 0)
 
   # ----------------------------------------------------------------------
   # Private Methods -- Data
@@ -160,7 +168,6 @@ Ember.Charts.HasTimeSeriesRule = Ember.Mixin.create
 
     markerData = []
     @get('viewport').selectAll('path.line').each (d,i) ->
-
       # Count up the number of bisections, stopping after bisecting
       # maxIterations number of times. In case the bisection does not
       # converge, stop after 25 iterations, which should be enough for any

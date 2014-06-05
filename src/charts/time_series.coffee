@@ -5,6 +5,18 @@ Ember.Charts.TimeSeriesComponent = Ember.Charts.ChartComponent.extend(
   classNames: ['chart-time-series']
 
   # ----------------------------------------------------------------------------
+  # API -- inputs
+  #
+  # lineData, barData:
+  # Both data sets need to be in the following format:
+  # [{label: ..., time: ..., value: ...}, {...}, ...]
+  # Line data will be grouped by label, while bar data is grouped by
+  # time and then label
+  # ----------------------------------------------------------------------------
+  lineData: null
+  barData: null
+
+  # ----------------------------------------------------------------------------
   # Time Series Chart Options
   # ----------------------------------------------------------------------------
 
@@ -16,10 +28,6 @@ Ember.Charts.TimeSeriesComponent = Ember.Charts.ChartComponent.extend(
 
   # Data without group will be merged into a group with this name
   ungroupedSeriesName: 'Other'
-
-  # If stackBars is no then it stacks bars, otherwise it groups them
-  # horizontally. Stacking discards negative data.
-  stackBars: no
 
   # Use basis interpolation? Smooths lines but may prevent extrema from being
   # displayed
@@ -41,79 +49,53 @@ Ember.Charts.TimeSeriesComponent = Ember.Charts.ChartComponent.extend(
   # Data
   # ----------------------------------------------------------------------------
 
-  groupedLineData: Ember.computed ->
+  _getLabelOrDefault: (datum) ->
+    datum.label?.toString() or @get('ungroupedSeriesName')
+
+
+  # Puts lineData in a new format.
+  # Resulting format is [{group: ..., values: ...}] where values are the
+  # lineData values for that group.
+  _groupedLineData: Ember.computed ->
     lineData = @get 'lineData'
     return [] if Ember.isEmpty lineData
 
-    groups = Ember.Charts.Helpers.groupBy lineData, (d) =>
-      d.label ? @get('ungroupedSeriesName')
+    groups = Ember.Charts.Helpers.groupBy lineData, @_getLabelOrDefault
     for groupName, values of groups
       group: groupName
       values: values
-
   .property 'lineData.@each', 'ungroupedSeriesName'
 
+  # puts barData in a new format.
+  # Resulting format: [[{group: ..., time: ..., value: ..., label:
+  # ...}, ...], [...]] where each internal array is an array of hashes
+  # at the same time
   groupedBarData: Ember.computed ->
     barData = @get 'barData'
     return [] if Ember.isEmpty barData
 
-    barTimes = Ember.Charts.Helpers.groupBy barData, (d) -> +d.time
+    # returns map from time to array of bar hashes
+    barTimes = Ember.Charts.Helpers.groupBy barData, (d) -> d.time.getTime()
     barGroupsByTime = for timePoint, groups of barTimes
-      # TODO: this doesn't need a groupBy since each key should be unique
-      grps = Ember.Charts.Helpers.groupBy groups, (d) =>
-        d.label ? @get('ungroupedSeriesName')
-      for g,v of grps
-        group: g
-        time: v[0].time
-        value: v[0].value
-        label: v[0].label
-
+      for g in groups
+        label = @_getLabelOrDefault(g)
+        group: label, time: g.time, value: g.value, label: label
   .property 'barData.@each', 'ungroupedSeriesName'
 
-  barGroups: Ember.computed ->
+  _barGroups: Ember.computed ->
     barData = @get 'barData'
     return [] if Ember.isEmpty barData
-    barGroups = Ember.Charts.Helpers.groupBy barData, (d) =>
-        d.label ? @get('ungroupedSeriesName')
-    for groupName, values of barGroups
-      groupName
+    barGroups = Ember.Charts.Helpers.groupBy barData, @_getLabelOrDefault
+    _.keys(barGroups)
   .property 'barData.@each', 'ungroupedSeriesName'
-
-  stackedBarData: Ember.computed ->
-    barData = @get 'barData'
-    return [] if Ember.isEmpty barData
-
-    barTimes = Ember.Charts.Helpers.groupBy barData, (d) -> +d.time
-    barGroupsByTime = for timePoint, groups of barTimes
-      # TODO: this doesn't need a groupBy since each key should be unique
-      # TODO: this also needs to deal with the case where some time points are
-      # missing groups
-      Ember.Charts.Helpers.groupBy groups, (d) =>
-        d.label ? @get('ungroupedSeriesName')
-
-    for g in barGroupsByTime
-      y0 = 0
-      stackedValues = for groupName, d of g
-        time = d?[0]?.time
-        value = d?[0]?.value
-        group: groupName
-        x: time
-        y0: y0
-        y1: y0 += Math.max(value, 0)
-      stackedValues: stackedValues
-      totalValue: y0
-
-  .property 'barData', 'ungroupedSeriesName'
 
   # Combine all data for testing purposes
   finishedData: Ember.computed ->
-    lineData: @get('groupedLineData')
+    lineData: @get('_groupedLineData')
     groupedBarData: @get('groupedBarData')
-    stackedBarData: @get('stackedBarData')
   .property(
-    'groupedLineData.@each.values',
-    'groupedBarData.@each',
-    'stackedBarData.@each')
+    '_groupedLineData.@each.values',
+    'groupedBarData.@each')
 
   hasNoData: Ember.computed ->
     !(@get('hasBarData') or @get('hasLineData'))
@@ -196,29 +178,15 @@ Ember.Charts.TimeSeriesComponent = Ember.Charts.ChartComponent.extend(
     [ new Date(paddedStart), new Date(paddedEnd) ]
   .property 'timeDelta', 'groupedBarData.@each'
 
-  individualBarLabels: Ember.computed.alias 'barGroups'
-
-  # The time range over which all bar groups/bar stacks are drawn
+  # The time range over which all bar groups are drawn
   xBetweenGroupDomain: Ember.computed.alias 'barDataExtent'
 
   # The range of labels assigned within each group
-  xWithinGroupDomain: Ember.computed.alias 'individualBarLabels'
+  xWithinGroupDomain: Ember.computed.alias '_barGroups'
 
   # The space (in pixels) allocated to each bar, including padding
   barWidth: Ember.computed ->
     @get('xGroupScale').rangeBand()
-  .property 'xGroupScale'
-
-  # The space (in pixels) allocated to each stack, including padding
-  # This is separate from paddedGroupWidth because padding is calculated
-  # differently
-  stackWidth: Ember.computed ->
-    @get('paddedStackWidth') * (1 - @get('barGroupPadding'))
-  .property 'paddedStackWidth', 'barGroupPadding'
-
-  paddedStackWidth: Ember.computed ->
-    [start,end] = @get('xGroupScale').rangeExtent()
-    end - start
   .property 'xGroupScale'
 
   paddedGroupWidth: Ember.computed ->
@@ -238,18 +206,18 @@ Ember.Charts.TimeSeriesComponent = Ember.Charts.ChartComponent.extend(
   # ----------------------------------------------------------------------------
 
   lineSeriesNames: Ember.computed ->
-    data = @get 'groupedLineData'
+    data = @get '_groupedLineData'
     return [] if Ember.isEmpty(data)
     data.map (d) -> d.group
-  .property 'groupedLineData'
+  .property '_groupedLineData'
 
   lineDataExtent: Ember.computed ->
-    data = @get 'groupedLineData'
+    data = @get '_groupedLineData'
     return [new Date(), new Date()] if Ember.isEmpty(data)
     extents = data.getEach('values').map (series) ->
       d3.extent series.map((d) -> d.time)
     [d3.min(extents, (e) -> e[0]), d3.max(extents, (e) -> e[1])]
-  .property 'groupedLineData.@each.values'
+  .property '_groupedLineData.@each.values'
 
   # The set of all time series
   xBetweenSeriesDomain: Ember.computed.alias 'lineSeriesNames'
@@ -279,39 +247,32 @@ Ember.Charts.TimeSeriesComponent = Ember.Charts.ChartComponent.extend(
   # Largest and smallest values in line and bar data
   # Use raw bar data instead of doubly grouped hashes in groupedBarData
   yDomain: Ember.computed ->
-    lineData = @get 'groupedLineData'
-    stackData = @get 'stackedBarData'
+    lineData = @get '_groupedLineData'
     groupData = @get 'groupedBarData'
 
     maxOfSeries = d3.max lineData, (d) -> d3.max(d.values, (dd) -> dd.value)
     minOfSeries = d3.min lineData, (d) -> d3.min(d.values, (dd) -> dd.value)
-    minOfStacks = d3.min stackData, (d) -> d.totalValue
-    maxOfStacks = d3.max stackData, (d) -> d.totalValue
     maxOfGroups = d3.max groupData, (d) -> d3.max(d, (dd) -> dd.value)
     minOfGroups = d3.min groupData, (d) -> d3.min(d, (dd) -> dd.value)
 
     hasBarData = @get 'hasBarData'
     hasLineData = @get 'hasLineData'
-    stackBars = @get 'stackBars'
 
     # Find the extent of whatever data is drawn on the graph,
-    # e.g. max of only line data, or max of line and stacked-bar data
+    # e.g. max of only line data, or max of line
     if !hasBarData
       min = minOfSeries
       max = maxOfSeries
     else if !hasLineData
-      min = if stackBars then minOfStacks else minOfGroups
-      max = if stackBars then maxOfStacks else maxOfGroups
-    else if stackBars
-      min = Math.min(minOfSeries, minOfStacks)
-      max = Math.max(maxOfSeries, maxOfStacks)
+      min = minOfGroups
+      max = maxOfGroups
     else
       min = Math.min(minOfGroups, minOfSeries)
       max = Math.max(maxOfGroups, maxOfSeries)
 
     # Ensure the extent contains zero if that is desired. If all values in
     # the y-domain are equal, assign it a range so data can be displayed
-    if stackBars or @get('yAxisFromZero') or min is max
+    if @get('yAxisFromZero') or min is max
       if max < 0
         return [ min, 0 ]
       if min > 0
@@ -320,8 +281,8 @@ Ember.Charts.TimeSeriesComponent = Ember.Charts.ChartComponent.extend(
         return [ -1, 1 ]
     return [ min, max ]
 
-  .property('groupedLineData', 'stackedBarData', 'groupedBarData',
-    'hasBarData', 'hasLineData', 'stackBars', 'yAxisFromZero')
+  .property('_groupedLineData', 'groupedBarData',
+    'hasBarData', 'hasLineData', 'yAxisFromZero')
 
   yRange: Ember.computed ->
     [ @get('graphicTop') + @get('graphicHeight'), @get('graphicTop') ]
@@ -399,25 +360,8 @@ Ember.Charts.TimeSeriesComponent = Ember.Charts.ChartComponent.extend(
   zeroDisplacement: 1
 
   groupAttrs: Ember.computed ->
-    transform: (d) =>
-      if @get('stackBars')
-        dx = -@get('stackWidth')/2
-      else
-        dx = -@get('paddedGroupWidth')/2
-      dy = 0
-      "translate(#{dx},#{dy})"
-  .property 'stackBars', 'stackWidth', 'paddedGroupWidth'
-
-  stackedBarAttrs: Ember.computed ->
-    xTimeScale = @get 'xTimeScale'
-    yScale = @get 'yScale'
-    class: (d,i) -> "grouping-#{i}"
-    'stroke-width': 0
-    width: @get('stackWidth')
-    x: (d) => xTimeScale d.x + @get('barLeftOffset') * @get('paddedStackWidth')
-    y: (d) => yScale(d.y1) + @get('zeroDisplacement')
-    height: (d) -> yScale(d.y0) - yScale(d.y1)
-  .property 'xTimeScale', 'yScale', 'stackWidth', 'zeroDisplacement', 'barLeftOffset'
+    transform: (d) => "translate(#{-@get('paddedGroupWidth')/2},0)"
+  .property 'paddedGroupWidth'
 
   groupedBarAttrs: Ember.computed ->
     xTimeScale = @get 'xTimeScale'
@@ -550,18 +494,14 @@ Ember.Charts.TimeSeriesComponent = Ember.Charts.ChartComponent.extend(
     @get('viewport').selectAll('.bars').remove()
 
   groups: Ember.computed ->
-    if @get('stackBars')
-      barData = @get 'stackedBarData'
-    else
-      barData = @get 'groupedBarData'
-    @get('viewport').selectAll('.bars').data(barData)
+    @get('viewport').selectAll('.bars').data(@get 'groupedBarData')
   .volatile()
 
   removeAllSeries: ->
     @get('viewport').selectAll('.series').remove()
 
   series: Ember.computed ->
-    @get('viewport').selectAll('.series').data(@get 'groupedLineData')
+    @get('viewport').selectAll('.series').data(@get '_groupedLineData')
   .volatile()
 
   xAxis: Ember.computed ->
@@ -657,28 +597,18 @@ Ember.Charts.TimeSeriesComponent = Ember.Charts.ChartComponent.extend(
       .attr('class', 'bars')
     groups.exit().remove()
 
-    if @get('stackBars')
-      subdata = (d) -> d.stackedValues
-    else
-      subdata = (d) -> d
-
-    bars = groups.selectAll('rect').data(subdata)
+    bars = groups.selectAll('rect').data((d) -> d)
     bars.enter().append('rect')
       .on("mouseover", (d,i) -> showDetails(d,i,this))
       .on("mouseout", (d,i) -> hideDetails(d,i,this))
     bars.exit().remove()
 
   updateBarGraphic: ->
-    if @get('stackBars')
-      barAttrs = @get 'stackedBarAttrs'
-    else
-      barAttrs = @get 'groupedBarAttrs'
-
     groups = @get 'groups'
     groups.attr(@get 'groupAttrs')
     groups.selectAll('rect')
       .style('fill', @get 'getSecondarySeriesColor')
-      .attr(barAttrs)
+      .attr(@get 'groupedBarAttrs')
 
   updateLineData: ->
     # Always remove the previous lines, this allows us to maintain the
