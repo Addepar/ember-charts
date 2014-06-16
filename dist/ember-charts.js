@@ -937,7 +937,7 @@ Ember.Charts.ChartComponent = Ember.Component.extend(Ember.Charts.Colorable, Emb
     return this.get('outerWidth') - this.get('marginLeft') - this.get('marginRight');
   }).property('outerWidth', 'marginLeft', 'marginRight'),
   height: Ember.computed(function() {
-    return this.get('outerHeight') - this.get('marginBottom') - this.get('marginTop');
+    return Math.max(1, this.get('outerHeight') - this.get('marginBottom') - this.get('marginTop'));
   }).property('outerHeight', 'marginBottom', 'marginTop'),
   $viewport: Ember.computed(function() {
     return this.$('.chart-viewport')[0];
