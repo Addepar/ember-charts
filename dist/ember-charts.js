@@ -843,13 +843,14 @@ Ember.Charts.PieLegend = Ember.Mixin.create({
     return this.get('maxLabelHeight') + this.get('legendVerticalPadding') * 2;
   }).property('maxLabelHeight', 'legendVerticalPadding'),
   legendAttrs: Ember.computed(function() {
-    var dx, dy;
+    var dx, dy, offsetToLegend;
     dx = 0;
-    dy = this.get('outerHeight') / 2;
+    offsetToLegend = 0.15 * (this.get('marginBottom')) - (this.get('marginTop')) / 2;
+    dy = this.get('outerHeight') / 2 + offsetToLegend;
     return {
       transform: "translate(" + dx + ", " + dy + ")"
     };
-  }).property('outerHeight'),
+  }).property('outerHeight', 'marginTop', 'marginBottom'),
   legendLabelAttrs: Ember.computed(function() {
     return {
       style: "text-anchor:middle;",
@@ -1428,8 +1429,15 @@ Ember.Charts.PieComponent = Ember.Charts.ChartComponent.extend(Ember.Charts.PieL
     return this.get('legendHeight');
   }).property('legendHeight'),
   marginTop: Ember.computed(function() {
-    return 0.3 * this.get('marginBottom');
-  }).property('marginBottom'),
+    var dataLength, finishedData;
+    finishedData = this.get('finishedData');
+    dataLength = finishedData.length;
+    if (finishedData.length > 2 && finishedData[dataLength - 3].percent + finishedData[dataLength - 2].percent < 15) {
+      return this.get('marginBottom');
+    } else {
+      return 0.3 * this.get('marginBottom');
+    }
+  }).property('marginBottom', 'finishedData'),
   numSlices: Ember.computed.alias('finishedData.length'),
   startOffset: Ember.computed(function() {
     var data, sum;
