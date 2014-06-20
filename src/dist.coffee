@@ -1,7 +1,7 @@
 require 'build/src/charts/templates'
 
 Ember.Charts = Ember.Namespace.create()
-Ember.Charts.VERSION = '0.0.1'
+Ember.Charts.VERSION = '0.1.0'
 
 Ember.libraries?.register 'Ember Charts', Ember.Charts.VERSION
 

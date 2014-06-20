@@ -163,7 +163,5 @@ module.exports = (grunt) ->
     grunt.file.write "test/runner.html", grunt.template.process(tmpl, renderingContext)
 
   grunt.registerTask "build_docs", [ "coffee", "emberTemplates", "neuter", "less"]
-  if env is "dev"
-    grunt.registerTask "default", [ "replace", "build_docs", "copy", "usebanner", "watch" ]
-  else
-    grunt.registerTask "default", [ ]
+  grunt.registerTask "default", [ "replace", "build_docs", "copy", "usebanner", "watch" ]
+  grunt.registerTask "dist", [ "replace", "build_docs", "copy", "usebanner" ]
