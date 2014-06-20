@@ -1,5 +1,5 @@
 /*!
-* ember-charts v0.0.1
+* ember-charts v0.1.0
 * Copyright 2012-2014 Addepar Inc.
 * See LICENSE.
 */
@@ -44,7 +44,7 @@ helpers = this.merge(helpers, Ember.Handlebars.helpers); data = data || {};
 
 Ember.Charts = Ember.Namespace.create();
 
-Ember.Charts.VERSION = '0.0.1';
+Ember.Charts.VERSION = '0.1.0';
 
 if ((_ref = Ember.libraries) != null) {
   _ref.register('Ember Charts', Ember.Charts.VERSION);
