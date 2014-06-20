@@ -45,10 +45,15 @@ Ember.Charts.PieLegend = Ember.Mixin.create
   legendAttrs: Ember.computed ->
     dx = 0
     # This will leave a bit of padding due to the fact that marginBottom is
-    # larger than bottom top which centers the pie above the middle of the chart
-    dy = @get('outerHeight') / 2
+    # larger than marginTop which centers the pie above the middle of the chart
+    # Note(edward): The marginBottom is not larger than marginTop when there may
+    # be labels at the top.
+    # In the default case where marginTop is 0.3 * marginBottom, the below
+    # evaluates to 0.
+    offsetToLegend = 0.15 * (@get 'marginBottom') - (@get 'marginTop') / 2
+    dy = @get('outerHeight') / 2 + offsetToLegend
     transform: "translate(#{dx}, #{dy})"
-  .property 'outerHeight'
+  .property 'outerHeight', 'marginTop', 'marginBottom'
 
   legendLabelAttrs: Ember.computed ->
     style: "text-anchor:middle;"

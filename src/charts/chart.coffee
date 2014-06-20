@@ -28,7 +28,7 @@ Ember.Charts.ChartComponent = Ember.Component.extend(
   .property 'outerWidth', 'marginLeft', 'marginRight'
 
   height: Ember.computed ->
-    @get('outerHeight') - @get('marginBottom') - @get('marginTop')
+    Math.max 1, @get('outerHeight') - @get('marginBottom') - @get('marginTop')
   .property 'outerHeight', 'marginBottom', 'marginTop'
 
   # Hierarchy of chart view is:
