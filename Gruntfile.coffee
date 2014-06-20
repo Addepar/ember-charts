@@ -6,6 +6,8 @@ module.exports = (grunt) ->
   env = grunt.option("env") or "dev"
 
   grunt.initConfig
+    pkg: grunt.file.readJSON 'package.json'
+
     clean:
       target: ['build', 'dist' , 'gh_pages']
 
@@ -91,6 +93,31 @@ module.exports = (grunt) ->
         files: [ "app/index.html" ]
         tasks: [ "copy" ]
 
+    replace:
+      global_version:
+        src: ['VERSION']
+        overwrite: true
+        replacements: [
+          from: /.*\..*\..*/
+          to: '<%=pkg.version%>'
+        ]
+      main_coffee_version:
+        src: ['src/dist.coffee']
+        overwrite: true
+        replacements: [
+          from: /Ember.Charts.VERSION = '.*\..*\..*'/
+          to: "Ember.Charts.VERSION = '<%=pkg.version%>'"
+        ]
+
+    usebanner:
+      dist:
+        options:
+          banner: '/*!\n* <%=pkg.name %> v<%=pkg.version%>\n' +
+            '* Copyright 2012-<%=grunt.template.today("yyyy")%> Addepar Inc.\n' +
+            '* See LICENSE.\n*/'
+        files:
+          src: ['dist/*']
+
     ###
       Reads the projects .jshintrc file and applies coding
       standards. Doesn't lint the dependencies or test
@@ -120,6 +147,8 @@ module.exports = (grunt) ->
   grunt.loadNpmTasks "grunt-contrib-less"
   grunt.loadNpmTasks "grunt-contrib-copy"
   grunt.loadNpmTasks "grunt-contrib-clean"
+  grunt.loadNpmTasks "grunt-text-replace"
+  grunt.loadNpmTasks "grunt-banner"
 
   ###
     A task to build the test runner html file that get place in
@@ -135,6 +164,6 @@ module.exports = (grunt) ->
 
   grunt.registerTask "build_docs", [ "coffee", "emberTemplates", "neuter", "less"]
   if env is "dev"
-    grunt.registerTask "default", [ "build_docs", "copy", "watch" ]
+    grunt.registerTask "default", [ "replace", "build_docs", "copy", "usebanner", "watch" ]
   else
     grunt.registerTask "default", [ ]
