@@ -10,8 +10,8 @@ Ember.Charts.ScatterComponent = Ember.Charts.ChartComponent.extend(
   # Getters for formatting human-readable labels from provided data
   formatXValue: d3.format('.2s')
   formatYValue: d3.format('.2s')
-  formatXValueLong: d3.format(',.r')
-  formatYValueLong: d3.format(',.r')
+  formatXValueLong: d3.format(',.2f')
+  formatYValueLong: d3.format(',.2f')
 
   # Size of each icon on the scatter plot
   dotRadius: 7

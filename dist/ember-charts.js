@@ -1023,7 +1023,7 @@ Ember.Charts.ChartComponent = Ember.Component.extend(Ember.Charts.Colorable, Emb
 Ember.Charts.HorizontalBarComponent = Ember.Charts.ChartComponent.extend(Ember.Charts.FloatingTooltipMixin, {
   classNames: ['chart-horizontal-bar'],
   formatValue: d3.format('.2s'),
-  formatValueLong: d3.format(',.r'),
+  formatValueLong: d3.format(',.2f'),
   selectedSortType: 'value',
   defaultOuterHeight: 500,
   labelWidth: Ember.computed(function() {
@@ -1300,7 +1300,7 @@ Ember.Handlebars.helper('horizontal-bar-chart', Ember.Charts.HorizontalBarCompon
 Ember.Charts.PieComponent = Ember.Charts.ChartComponent.extend(Ember.Charts.PieLegend, Ember.Charts.FloatingTooltipMixin, {
   classNames: ['chart-pie'],
   formatValue: d3.format('.2s'),
-  formatValueLong: d3.format(',.r'),
+  formatValueLong: d3.format(',.2f'),
   minSlicePercent: 5,
   maxNumberOfSlices: 8,
   labelWidth: Ember.computed(function() {
@@ -1660,7 +1660,7 @@ Ember.Handlebars.helper('pie-chart', Ember.Charts.PieComponent);
 Ember.Charts.VerticalBarComponent = Ember.Charts.ChartComponent.extend(Ember.Charts.Legend, Ember.Charts.FloatingTooltipMixin, Ember.Charts.AxesMixin, {
   classNames: ['chart-vertical-bar'],
   formatValue: d3.format('.2s'),
-  formatValueLong: d3.format(',.r'),
+  formatValueLong: d3.format(',.2f'),
   ungroupedSeriesName: 'Other',
   stackBars: false,
   withinGroupPadding: 0,
@@ -2169,8 +2169,8 @@ Ember.Charts.ScatterComponent = Ember.Charts.ChartComponent.extend(Ember.Charts.
   classNames: ['chart-scatter'],
   formatXValue: d3.format('.2s'),
   formatYValue: d3.format('.2s'),
-  formatXValueLong: d3.format(',.r'),
-  formatYValueLong: d3.format(',.r'),
+  formatXValueLong: d3.format(',.2f'),
+  formatYValueLong: d3.format(',.2f'),
   dotRadius: 7,
   dotShapeArea: Ember.computed(function() {
     return Math.pow(this.get('dotRadius'), 2);
@@ -2558,7 +2558,7 @@ Ember.Charts.TimeSeriesComponent = Ember.Charts.ChartComponent.extend(Ember.Char
   formatTime: d3.time.format('%Y-%m-%d'),
   formatTimeLong: d3.time.format('%a %b %-d, %Y'),
   formatValue: d3.format('.2s'),
-  formatValueLong: d3.format(',.r'),
+  formatValueLong: d3.format(',.2f'),
   ungroupedSeriesName: 'Other',
   stackBars: false,
   interpolate: false,
@@ -3257,7 +3257,7 @@ Ember.Charts.BubbleComponent = Ember.Charts.ChartComponent.extend(Ember.Charts.F
     };
   }),
   formatValue: d3.format('.2s'),
-  formatValueLong: d3.format(',.r'),
+  formatValueLong: d3.format(',.2f'),
   showDetails: Ember.computed(function() {
     var _this = this;
     if (!this.get('isInteractive')) {
