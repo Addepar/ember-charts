@@ -129,7 +129,7 @@ Ember.Charts.ChartComponent = Ember.Component.extend(
 
   # Remove previous drawing
   draw: ->
-    return unless @get('state') is 'inDOM'
+    return unless @get('_state') or= @get('state') is 'inDOM'
     if @get('hasNoData')
       @clearChart()
     else
