@@ -12,6 +12,121 @@ var _ref;
 
 (function() {
 
+Ember.AddeparMixins = Ember.AddeparMixins || Ember.Namespace.create();
+
+Ember.AddeparMixins.ResizeHandlerMixin = Ember.Mixin.create({
+  resizeEndDelay: 200,
+  resizing: false,
+  onResizeStart: Ember.K,
+  onResizeEnd: Ember.K,
+  onResize: Ember.K,
+  endResize: Ember.computed(function() {
+    return function(event) {
+      if (this.isDestroyed) {
+        return;
+      }
+      this.set('resizing', false);
+      return typeof this.onResizeEnd === "function" ? this.onResizeEnd(event) : void 0;
+    };
+  }),
+  handleWindowResize: function(event) {
+    if (!this.get('resizing')) {
+      this.set('resizing', true);
+      if (typeof this.onResizeStart === "function") {
+        this.onResizeStart(event);
+      }
+    }
+    if (typeof this.onResize === "function") {
+      this.onResize(event);
+    }
+    return Ember.run.debounce(this, this.get('endResize'), event, this.get('resizeEndDelay'));
+  },
+  didInsertElement: function() {
+    this._super();
+    return this._setupDocumentHandlers();
+  },
+  willDestroyElement: function() {
+    this._removeDocumentHandlers();
+    return this._super();
+  },
+  _setupDocumentHandlers: function() {
+    if (this._resizeHandler) {
+      return;
+    }
+    this._resizeHandler = jQuery.proxy(this.get('handleWindowResize'), this);
+    return jQuery(window).on("resize." + this.elementId, this._resizeHandler);
+  },
+  _removeDocumentHandlers: function() {
+    jQuery(window).off("resize." + this.elementId, this._resizeHandler);
+    return this._resizeHandler = null;
+  }
+});
+
+
+})();
+
+(function() {
+
+Ember.AddeparMixins = Ember.AddeparMixins || Ember.Namespace.create();
+
+Ember.AddeparMixins.StyleBindingsMixin = Ember.Mixin.create({
+  concatenatedProperties: ['styleBindings'],
+  attributeBindings: ['style'],
+  unitType: 'px',
+  createStyleString: function(styleName, property) {
+    var value;
+    value = this.get(property);
+    if (value === void 0) {
+      return;
+    }
+    if (Ember.typeOf(value) === 'number') {
+      value = value + this.get('unitType');
+    }
+    return "" + styleName + ":" + value + ";";
+  },
+  applyStyleBindings: function() {
+    var lookup, properties, styleBindings, styleComputed, styles,
+      _this = this;
+    styleBindings = this.styleBindings;
+    if (!styleBindings) {
+      return;
+    }
+    lookup = {};
+    styleBindings.forEach(function(binding) {
+      var property, style, tmp;
+      tmp = binding.split(':');
+      property = tmp[0];
+      style = tmp[1];
+      lookup[style || property] = property;
+    });
+    styles = Ember.keys(lookup);
+    properties = styles.map(function(style) {
+      return lookup[style];
+    });
+    styleComputed = Ember.computed(function() {
+      var styleString, styleTokens;
+      styleTokens = styles.map(function(style) {
+        return _this.createStyleString(style, lookup[style]);
+      });
+      styleString = styleTokens.join('');
+      if (styleString.length !== 0) {
+        return styleString;
+      }
+    });
+    styleComputed.property.apply(styleComputed, properties);
+    return Ember.defineProperty(this, 'style', styleComputed);
+  },
+  init: function() {
+    this.applyStyleBindings();
+    return this._super();
+  }
+});
+
+
+})();
+
+(function() {
+
 Ember.TEMPLATES["chart"] = Ember.Handlebars.template(function anonymous(Handlebars,depth0,helpers,partials,data) {
 this.compilerInfo = [4,'>= 1.0.0'];
 helpers = this.merge(helpers, Ember.Handlebars.helpers); data = data || {};
@@ -1008,9 +1123,7 @@ Ember.Charts.ChartComponent = Ember.Component.extend(Ember.Charts.Colorable, Emb
     return this.$('.chart-viewport').children().remove();
   },
   draw: function() {
-    if (this.get('state') !== 'inDOM') {
-      return;
-    }
+    return this('_state') || this('state') === 'inDOM';
     if (this.get('hasNoData')) {
       return this.clearChart();
     } else {
