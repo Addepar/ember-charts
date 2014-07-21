@@ -3,7 +3,7 @@ require 'dependencies/ember-addepar-mixins/resize_handler'
 require 'dependencies/ember-addepar-mixins/style_bindings'
 
 Ember.Charts = Ember.Namespace.create()
-Ember.Charts.VERSION = '0.1.0'
+Ember.Charts.VERSION = '0.2.0'
 
 Ember.libraries?.register 'Ember Charts', Ember.Charts.VERSION
 
