@@ -1,5 +1,5 @@
 # Dependencies
-require 'dependencies/bootstrap/js/bootstrap'
+require 'vendor/bootstrap/js/bootstrap'
 require 'dist/ember-charts'
 
 window.App = Ember.Application.create

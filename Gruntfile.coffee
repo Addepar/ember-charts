@@ -66,6 +66,15 @@ module.exports = (grunt) ->
           {expand: true, cwd: 'app/assets/img/', src: ['**'],  dest: 'gh_pages/img'}
         ]
 
+    # https://github.com/yatskevich/grunt-bower-task
+    bower:
+      install:
+        options:
+          targetDir: 'vendor'
+          layout: 'byComponent'
+          verbose: true
+          copy: false
+
     ###
       Watch files for changes.
 
@@ -137,6 +146,7 @@ module.exports = (grunt) ->
     build_test_runner_file:
       all: [ "test/**/*_test.js" ]
 
+  grunt.loadNpmTasks "grunt-bower-task"
   grunt.loadNpmTasks "grunt-contrib-uglify"
   grunt.loadNpmTasks "grunt-contrib-jshint"
   grunt.loadNpmTasks "grunt-contrib-qunit"
@@ -162,6 +172,7 @@ module.exports = (grunt) ->
       files: @filesSrc.map (fileSrc) -> fileSrc.replace "test/", ""
     grunt.file.write "test/runner.html", grunt.template.process(tmpl, renderingContext)
 
-  grunt.registerTask "build_docs", [ "coffee", "emberTemplates", "neuter", "less"]
+  grunt.registerTask "build_docs", [ "bower", "coffee", "emberTemplates", "neuter", "less"]
   grunt.registerTask "default", [ "replace", "build_docs", "copy", "usebanner", "watch" ]
   grunt.registerTask "dist", [ "replace", "build_docs", "copy", "usebanner" ]
+

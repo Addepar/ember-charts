@@ -1,9 +1,8 @@
-bower_components/
-node_modules/
-gh_pages/
 build/
+gh_pages/
+node_modules/
+vendor/
 .idea/
 .DS_Store
 *.swo
 *.swp
-.DS_Store
