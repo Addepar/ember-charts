@@ -1123,7 +1123,7 @@ Ember.Charts.ChartComponent = Ember.Component.extend(Ember.Charts.Colorable, Emb
     return this.$('.chart-viewport').children().remove();
   },
   draw: function() {
-    if (this.get('state') !== 'inDOM') {
+    if ((this._state || this.state) !== "inDOM") {
       return;
     }
     if (this.get('hasNoData')) {
