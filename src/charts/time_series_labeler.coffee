@@ -46,7 +46,7 @@ Ember.Charts.TimeSeriesLabeler = Ember.Mixin.create
   #  This is the set of ticks on which labels appear.
   labelledTicks: Ember.computed ->
     domain = @get 'xDomain'
-    @_getLabelledTicks(domain[0], domain[1])
+    @get('getLabelledTicks')(domain[0], domain[1])
   .property 'xDomain'
 
   # the years which should be labelled
@@ -110,7 +110,7 @@ Ember.Charts.TimeSeriesLabeler = Ember.Mixin.create
 
   # Returns the function which returns the labelled intervals between
   # start and stop for the selected interval.
-  _getLabelledTicks: ->
+  getLabelledTicks: Ember.computed ->
     switch @get 'selectedInterval'
       when 'years', 'Y' then ((start, stop) => @labelledYears(start, stop))
       when 'quarters', 'Q' then ((start, stop) => @labelledQuarters(start,stop))
@@ -119,6 +119,7 @@ Ember.Charts.TimeSeriesLabeler = Ember.Mixin.create
       when 'days' , 'D' then d3.time.days
       when 'seconds', 'S' then ((start, stop) => @labelledSeconds(start, stop))
       else d3.time.years
+  .property 'maxNumberOfLabels', 'selectedInterval'
 
   quarterFormat: (d) ->
     prefix =
