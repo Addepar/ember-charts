@@ -558,7 +558,7 @@ Ember.Charts.TimeSeriesLabeler = Ember.Mixin.create({
   labelledTicks: Ember.computed(function() {
     var domain;
     domain = this.get('xDomain');
-    return this._getLabelledTicks(domain[0], domain[1]);
+    return this.get('getLabelledTicks')(domain[0], domain[1]);
   }).property('xDomain'),
   labelledYears: function(start, stop) {
     var skipVal, years;
@@ -623,7 +623,7 @@ Ember.Charts.TimeSeriesLabeler = Ember.Mixin.create({
       return weeks;
     }
   },
-  _getLabelledTicks: function() {
+  getLabelledTicks: Ember.computed(function() {
     var _this = this;
     switch (this.get('selectedInterval')) {
       case 'years':
@@ -657,7 +657,7 @@ Ember.Charts.TimeSeriesLabeler = Ember.Mixin.create({
       default:
         return d3.time.years;
     }
-  },
+  }).property('maxNumberOfLabels', 'selectedInterval'),
   quarterFormat: function(d) {
     var prefix, suffix;
     prefix = (function() {
