@@ -558,7 +558,7 @@ Ember.Charts.TimeSeriesLabeler = Ember.Mixin.create({
   labelledTicks: Ember.computed(function() {
     var domain;
     domain = this.get('xDomain');
-    return this._getLabelledTicks(domain[0], domain[1]);
+    return this.get('getLabelledTicks')(domain[0], domain[1]);
   }).property('xDomain'),
   labelledYears: function(start, stop) {
     var skipVal, years;
@@ -623,7 +623,7 @@ Ember.Charts.TimeSeriesLabeler = Ember.Mixin.create({
       return weeks;
     }
   },
-  _getLabelledTicks: function() {
+  getLabelledTicks: Ember.computed(function() {
     var _this = this;
     switch (this.get('selectedInterval')) {
       case 'years':
@@ -657,7 +657,7 @@ Ember.Charts.TimeSeriesLabeler = Ember.Mixin.create({
       default:
         return d3.time.years;
     }
-  },
+  }).property('maxNumberOfLabels', 'selectedInterval'),
   quarterFormat: function(d) {
     var prefix, suffix;
     prefix = (function() {
@@ -2667,12 +2667,15 @@ Ember.Charts.TimeSeriesComponent = Ember.Charts.ChartComponent.extend(Ember.Char
     return ((_ref = datum.label) != null ? _ref.toString() : void 0) || this.get('ungroupedSeriesName');
   },
   _groupedLineData: Ember.computed(function() {
-    var groupName, groups, lineData, values, _results;
+    var groupName, groups, lineData, values, _results,
+      _this = this;
     lineData = this.get('lineData');
     if (Ember.isEmpty(lineData)) {
       return [];
     }
-    groups = Ember.Charts.Helpers.groupBy(lineData, this._getLabelOrDefault);
+    groups = Ember.Charts.Helpers.groupBy(lineData, function(datum) {
+      return _this._getLabelOrDefault(datum);
+    });
     _results = [];
     for (groupName in groups) {
       values = groups[groupName];
@@ -2717,12 +2720,15 @@ Ember.Charts.TimeSeriesComponent = Ember.Charts.ChartComponent.extend(Ember.Char
     }).call(this);
   }).property('barData.@each', 'ungroupedSeriesName'),
   _barGroups: Ember.computed(function() {
-    var barData, barGroups;
+    var barData, barGroups,
+      _this = this;
     barData = this.get('barData');
     if (Ember.isEmpty(barData)) {
       return [];
     }
-    barGroups = Ember.Charts.Helpers.groupBy(barData, this._getLabelOrDefault);
+    barGroups = Ember.Charts.Helpers.groupBy(barData, function(datum) {
+      return _this._getLabelOrDefault(datum);
+    });
     return _.keys(barGroups);
   }).property('barData.@each', 'ungroupedSeriesName'),
   _hasLineData: Ember.computed(function() {
@@ -2970,7 +2976,8 @@ Ember.Charts.TimeSeriesComponent = Ember.Charts.ChartComponent.extend(Ember.Char
         return Math.max(0, d.value > zeroLine ? Math.abs(yScale(zeroLine) - yScale(d.value)) - zeroDisplacement : Math.abs(yScale(d.value) - yScale(zeroLine)) - zeroDisplacement);
       }
     };
-  }).property('xTimeScale', 'xGroupScale', 'barWidth', 'yScale', 'zeroDisplacement', 'barLeftOffset'),
+  }).property('xTimeScale', 'xGroupScale', 'barWidth', 'yScale')
+}, 'zeroDisplacement', 'barLeftOffset', {
   line: Ember.computed(function() {
     var _this = this;
     return d3.svg.line().x(function(d) {
@@ -3142,7 +3149,7 @@ Ember.Charts.TimeSeriesComponent = Ember.Charts.ChartComponent.extend(Ember.Char
   },
   updateAxes: function() {
     var gXAxis, gYAxis, graphicHeight, graphicLeft, graphicTop, xAxis, yAxis;
-    xAxis = d3.svg.axis().scale(this.get('xTimeScale')).orient('bottom').ticks(this.get('getLabelledTicks')).tickSubdivide(this.get('numberOfMinorTicks')).tickFormat(this.get('formattedTime')).tickSize(6, 3, 0);
+    xAxis = d3.svg.axis().scale(this.get('xTimeScale')).orient('bottom').ticks(this.get('getLabelledTicks')).tickSubdivide(this.get('numberOfMinorTicks')).tickSize(6, 3, 0);
     yAxis = d3.svg.axis().scale(this.get('yScale')).orient('right').ticks(this.get('numYTicks')).tickSize(this.get('graphicWidth')).tickFormat(this.get('formatValue'));
     graphicTop = this.get('graphicTop');
     graphicHeight = this.get('graphicHeight');
