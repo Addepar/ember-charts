@@ -7,7 +7,6 @@ App.EmberChartsTimeSeriesController = App.SlideController.extend
   barPadding: 0
   barGroupPadding: 0.25
   barLeftOffset: 0.0
-  stackBars: no
   yAxisFromZero: no
 
   # ---------
