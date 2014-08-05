@@ -82,7 +82,8 @@ Ember.Charts.TimeSeriesComponent = Ember.Charts.ChartComponent.extend(
     lineData = @get 'lineData'
     return [] if Ember.isEmpty lineData
 
-    groups = Ember.Charts.Helpers.groupBy lineData, @_getLabelOrDefault
+    groups = Ember.Charts.Helpers.groupBy lineData, (datum) =>
+      @_getLabelOrDefault(datum)
     for groupName, values of groups
       group: groupName
       values: values
@@ -107,7 +108,8 @@ Ember.Charts.TimeSeriesComponent = Ember.Charts.ChartComponent.extend(
   _barGroups: Ember.computed ->
     barData = @get 'barData'
     return [] if Ember.isEmpty barData
-    barGroups = Ember.Charts.Helpers.groupBy barData, @_getLabelOrDefault
+    barGroups = Ember.Charts.Helpers.groupBy barData, (datum) =>
+      @_getLabelOrDefault(datum)
     _.keys(barGroups)
   .property 'barData.@each', 'ungroupedSeriesName'
 
@@ -180,14 +182,16 @@ Ember.Charts.TimeSeriesComponent = Ember.Charts.ChartComponent.extend(
     # in order to make room for bars
     timeIntervalType = if timeDelta is 'quarter' then 'month' else timeDelta
     timeOffset = if timeDelta is 'quarter' then 3 else 1
-  
+
     # the reason we add half of the startTime/endTime is that we cannot
     # call d3.time[timeIntervalType].offset(startTime, -timeOffset/2),
     # so we have to put the divisor on the outside the expression
     paddedStart =
-      startTime.getTime()/2 + d3.time[timeIntervalType].offset(startTime, -timeOffset)/2
+      startTime.getTime()/2 +
+      d3.time[timeIntervalType].offset(startTime, -timeOffset)/2
     paddedEnd =
-      endTime.getTime()/2 + d3.time[timeIntervalType].offset(endTime, timeOffset)/2
+      endTime.getTime()/2 +
+      d3.time[timeIntervalType].offset(endTime, timeOffset)/2
     [ new Date(paddedStart), new Date(paddedEnd) ]
   .property 'timeDelta', '_groupedBarData.@each'
 
@@ -385,7 +389,8 @@ Ember.Charts.TimeSeriesComponent = Ember.Charts.ChartComponent.extend(
     'stroke-width': 0
     width: @get('barWidth')
     x: (d) =>
-      xGroupScale(d.label) + xTimeScale(d.time) + @get('barLeftOffset') * @get('paddedGroupWidth')
+      xGroupScale(d.label) + xTimeScale(d.time) +
+        @get('barLeftOffset') * @get('paddedGroupWidth')
     y: (d) ->
       if d.value > 0
         yScale(d.value)
@@ -398,7 +403,8 @@ Ember.Charts.TimeSeriesComponent = Ember.Charts.ChartComponent.extend(
         Math.abs(yScale(zeroLine) - yScale(d.value)) - zeroDisplacement
       else
         Math.abs(yScale(d.value) - yScale(zeroLine)) - zeroDisplacement
-  .property 'xTimeScale', 'xGroupScale', 'barWidth', 'yScale', 'zeroDisplacement', 'barLeftOffset'
+  .property 'xTimeScale', 'xGroupScale', 'barWidth', 'yScale',
+    'zeroDisplacement', 'barLeftOffset'
 
   line: Ember.computed ->
     d3.svg.line()
@@ -541,7 +547,8 @@ Ember.Charts.TimeSeriesComponent = Ember.Charts.ChartComponent.extend(
   # Drawing Functions
   # ----------------------------------------------------------------------------
 
-  renderVars: ['barLeftOffset', 'getLabelledTicks', 'xGroupScale', 'xTimeScale', 'yScale']
+  renderVars: ['barLeftOffset', 'getLabelledTicks', 'xGroupScale', 'xTimeScale',
+    'yScale']
 
   drawChart: ->
     @updateBarData()
@@ -556,14 +563,13 @@ Ember.Charts.TimeSeriesComponent = Ember.Charts.ChartComponent.extend(
       @clearLegend()
 
   updateAxes: ->
-
     xAxis = d3.svg.axis()
       .scale(@get 'xTimeScale')
       .orient('bottom')
       .ticks(@get 'getLabelledTicks')
       .tickSubdivide(@get 'numberOfMinorTicks')
       .tickFormat(@get 'formattedTime')
-      .tickSize(6, 3, 0)
+      .tickSize(6, 3)
 
     yAxis = d3.svg.axis()
       .scale(@get 'yScale')
@@ -642,4 +648,4 @@ Ember.Charts.TimeSeriesComponent = Ember.Charts.ChartComponent.extend(
       .attr(@get 'lineAttrs')
 )
 
-Ember.Handlebars.helper('time-series-chart', Ember.Charts.TimeSeriesComponent)
+Ember.Handlebars.helper 'time-series-chart', Ember.Charts.TimeSeriesComponent
