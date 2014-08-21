@@ -301,7 +301,10 @@ Ember.Charts.VerticalBarComponent = Ember.Charts.ChartComponent.extend(
       d3.select(element).classed('hovered', yes)
 
       # Show tooltip
-      content = "<span class=\"tip-label\">#{data.group}</span>"
+      if data.group
+        content = "<span class=\"tip-label\">#{data.group}</span>"
+      else
+        content = ''
 
       formatLabel = @get 'formatLabel'
       addValueLine = (d) ->

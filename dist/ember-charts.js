@@ -2049,7 +2049,11 @@ Ember.Charts.VerticalBarComponent = Ember.Charts.ChartComponent.extend(Ember.Cha
       isGroup = Ember.isArray(data.values);
       element = isGroup ? element.parentNode.parentNode : element;
       d3.select(element).classed('hovered', true);
-      content = "<span class=\"tip-label\">" + data.group + "</span>";
+      if (data.group) {
+        content = "<span class=\"tip-label\">" + data.group + "</span>";
+      } else {
+        content = '';
+      }
       formatLabel = _this.get('formatLabel');
       addValueLine = function(d) {
         content += "<span class=\"name\">" + d.label + ": </span>";
