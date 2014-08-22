@@ -144,4 +144,3 @@ Ember.Charts.TimeSeriesLabeler = Ember.Mixin.create
       when 'seconds' , 'S' then d3.time.format('%M : %S')
       else d3.time.format('%Y')
   .property 'selectedInterval'
-

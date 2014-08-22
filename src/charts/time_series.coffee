@@ -82,7 +82,8 @@ Ember.Charts.TimeSeriesComponent = Ember.Charts.ChartComponent.extend(
     lineData = @get 'lineData'
     return [] if Ember.isEmpty lineData
 
-    groups = Ember.Charts.Helpers.groupBy lineData, @_getLabelOrDefault
+    groups = Ember.Charts.Helpers.groupBy lineData, (datum) =>
+      @_getLabelOrDefault(datum)
     for groupName, values of groups
       group: groupName
       values: values
@@ -107,7 +108,8 @@ Ember.Charts.TimeSeriesComponent = Ember.Charts.ChartComponent.extend(
   _barGroups: Ember.computed ->
     barData = @get 'barData'
     return [] if Ember.isEmpty barData
-    barGroups = Ember.Charts.Helpers.groupBy barData, @_getLabelOrDefault
+    barGroups = Ember.Charts.Helpers.groupBy barData, (datum) =>
+      @_getLabelOrDefault(datum)
     _.keys(barGroups)
   .property 'barData.@each', 'ungroupedSeriesName'
 
@@ -567,7 +569,7 @@ Ember.Charts.TimeSeriesComponent = Ember.Charts.ChartComponent.extend(
       .ticks(@get 'getLabelledTicks')
       .tickSubdivide(@get 'numberOfMinorTicks')
       .tickFormat(@get 'formattedTime')
-      .tickSize(6, 3, 0)
+      .tickSize(6, 3)
 
     yAxis = d3.svg.axis()
       .scale(@get 'yScale')
