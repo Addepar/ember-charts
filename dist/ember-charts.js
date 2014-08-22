@@ -2687,7 +2687,7 @@ Ember.Charts.TimeSeriesComponent = Ember.Charts.ChartComponent.extend(Ember.Char
     return _results;
   }).property('lineData.@each', 'ungroupedSeriesName'),
   _groupedBarData: Ember.computed(function() {
-    var barData, barGroupsByTime, barTimes, g, groups, label, timePoint;
+    var barData, barGroupsByTime, barTimes, drawTime, g, groups, label, labelTime, timePoint;
     barData = this.get('barData');
     if (Ember.isEmpty(barData)) {
       return [];
@@ -2706,11 +2706,14 @@ Ember.Charts.TimeSeriesComponent = Ember.Charts.ChartComponent.extend(Ember.Char
           for (_i = 0, _len = groups.length; _i < _len; _i++) {
             g = groups[_i];
             label = this._getLabelOrDefault(g);
+            labelTime = g.time;
+            drawTime = this._transformCenter(g.time);
             _results1.push({
               group: label,
-              time: g.time,
+              time: drawTime,
               value: g.value,
-              label: label
+              label: label,
+              labelTime: labelTime
             });
           }
           return _results1;
@@ -2718,7 +2721,51 @@ Ember.Charts.TimeSeriesComponent = Ember.Charts.ChartComponent.extend(Ember.Char
       }
       return _results;
     }).call(this);
-  }).property('barData.@each', 'ungroupedSeriesName'),
+  }).property('barData.@each', 'ungroupedSeriesName', 'barLeftOffset'),
+  _transformCenter: function(time) {
+    var delta, offset;
+    delta = this._getTimeDeltaFromSelectedInterval();
+    offset = this.get('barLeftOffset');
+    if (offset !== 0) {
+      time = this._padTimeWithIntervalMultiplier(time, delta, offset);
+    }
+    return time;
+  },
+  _getTimeDeltaFromSelectedInterval: function() {
+    switch (this.get('selectedInterval')) {
+      case 'years':
+      case 'Y':
+        return 'year';
+      case 'quarters':
+      case 'Q':
+        return 'quarter';
+      case 'months':
+      case 'M':
+        return 'month';
+      case 'weeks':
+      case 'W':
+        return 'week';
+      case 'seconds':
+      case 'S':
+        return 'second';
+    }
+  },
+  _padTimeForward: function(time, delta) {
+    return this._padTimeWithIntervalMultiplier(time, delta, 0.5);
+  },
+  _padTimeBackward: function(time, delta) {
+    return this._padTimeWithIntervalMultiplier(time, delta, -0.5);
+  },
+  _padTimeWithIntervalMultiplier: function(time, delta, multiplier) {
+    var intervalType, offsetDelta, period;
+    if (time != null) {
+      intervalType = delta === 'quarter' ? 'month' : delta;
+      period = delta === 'quarter' ? 3 : 1;
+      offsetDelta = d3.time[intervalType].offset(time, period) - time.getTime();
+      time = offsetDelta * multiplier + time.getTime();
+    }
+    return new Date(time);
+  },
   _barGroups: Ember.computed(function() {
     var barData, barGroups,
       _this = this;
@@ -2767,7 +2814,7 @@ Ember.Charts.TimeSeriesComponent = Ember.Charts.ChartComponent.extend(Ember.Char
     }
   }).property('_groupedBarData'),
   barDataExtent: Ember.computed(function() {
-    var endTime, first, groupedBarData, last, paddedEnd, paddedStart, startTime, timeDelta, timeIntervalType, timeOffset;
+    var endTime, first, groupedBarData, last, paddedEnd, paddedStart, startTime, timeDelta;
     timeDelta = this.get('timeDelta');
     groupedBarData = this.get('_groupedBarData');
     if (Ember.isEmpty(groupedBarData)) {
@@ -2775,12 +2822,10 @@ Ember.Charts.TimeSeriesComponent = Ember.Charts.ChartComponent.extend(Ember.Char
     }
     first = _.first(groupedBarData);
     last = _.last(groupedBarData);
-    startTime = first[0].time;
-    endTime = last[0].time;
-    timeIntervalType = timeDelta === 'quarter' ? 'month' : timeDelta;
-    timeOffset = timeDelta === 'quarter' ? 3 : 1;
-    paddedStart = startTime.getTime() / 2 + d3.time[timeIntervalType].offset(startTime, -timeOffset) / 2;
-    paddedEnd = endTime.getTime() / 2 + d3.time[timeIntervalType].offset(endTime, timeOffset) / 2;
+    startTime = new Date(first[0].time);
+    endTime = new Date(last[0].time);
+    paddedStart = this._padTimeBackward(startTime, timeDelta);
+    paddedEnd = this._padTimeForward(endTime, timeDelta);
     return [new Date(paddedStart), new Date(paddedEnd)];
   }).property('timeDelta', '_groupedBarData.@each'),
   xBetweenGroupDomain: Ember.computed.alias('barDataExtent'),
@@ -2912,9 +2957,10 @@ Ember.Charts.TimeSeriesComponent = Ember.Charts.ChartComponent.extend(Ember.Char
       return Ember.K;
     }
     return function(data, i, element) {
-      var addValueLine, content, formatValue;
+      var addValueLine, content, formatValue, time;
       d3.select(element).classed('hovered', true);
-      content = "<span class=\"tip-label\">" + (_this.get('formatTime')(data.time)) + "</span>";
+      time = data.labelTime != null ? data.labelTime : data.time;
+      content = "<span class=\"tip-label\">" + (_this.get('formatTime')(time)) + "</span>";
       formatValue = _this.get('formatValue');
       addValueLine = function(d) {
         content += "<span class=\"name\">" + d.group + ": </span>";
@@ -2961,7 +3007,7 @@ Ember.Charts.TimeSeriesComponent = Ember.Charts.ChartComponent.extend(Ember.Char
       'stroke-width': 0,
       width: this.get('barWidth'),
       x: function(d) {
-        return xGroupScale(d.label) + xTimeScale(d.time) + _this.get('barLeftOffset') * _this.get('paddedGroupWidth');
+        return xGroupScale(d.label) + xTimeScale(d.time);
       },
       y: function(d) {
         if (d.value > 0) {
@@ -3149,7 +3195,7 @@ Ember.Charts.TimeSeriesComponent = Ember.Charts.ChartComponent.extend(Ember.Char
   },
   updateAxes: function() {
     var gXAxis, gYAxis, graphicHeight, graphicLeft, graphicTop, xAxis, yAxis;
-    xAxis = d3.svg.axis().scale(this.get('xTimeScale')).orient('bottom').ticks(this.get('getLabelledTicks')).tickSubdivide(this.get('numberOfMinorTicks')).tickSize(6, 3, 0);
+    xAxis = d3.svg.axis().scale(this.get('xTimeScale')).orient('bottom').ticks(this.get('getLabelledTicks')).tickSubdivide(this.get('numberOfMinorTicks')).tickFormat(this.get('formattedTime')).tickSize(6, 3);
     yAxis = d3.svg.axis().scale(this.get('yScale')).orient('right').ticks(this.get('numYTicks')).tickSize(this.get('graphicWidth')).tickFormat(this.get('formatValue'));
     graphicTop = this.get('graphicTop');
     graphicHeight = this.get('graphicHeight');
