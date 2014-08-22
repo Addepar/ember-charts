@@ -25,8 +25,7 @@ Ember.Charts.BubbleComponent = Ember.Charts.ChartComponent.extend(
     (d) -> -Math.pow(d.radius, 2.0) / 8
 
   # Getters for formatting human-readable labels from provided data
-  formatValue: d3.format('.2s')
-  formatValueLong: d3.format(',.r')
+  formatLabel: d3.format(',.2f')
 
   # ----------------------------------------------------------------------------
   # Tooltip Configuration
@@ -40,12 +39,12 @@ Ember.Charts.BubbleComponent = Ember.Charts.ChartComponent.extend(
       d3.select(element).classed('hovered', yes)
 
       # Show tooltip
-      formatValue = @get 'formatValue'
+      formatLabel = @get 'formatLabel'
       # Line 1
       content = "<span class=\"tip-label\">#{data.label}</span>"
       # Line 2
       content +="<span class=\"name\">#{@get 'tooltipValueDisplayName'}: </span>"
-      content +="<span class=\"value\">#{formatValue(data.value)}</span>"
+      content +="<span class=\"value\">#{formatLabel(data.value)}</span>"
       @showTooltip(content, d3.event)
   .property 'isInteractive'
 

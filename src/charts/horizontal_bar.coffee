@@ -7,8 +7,7 @@ Ember.Charts.HorizontalBarComponent = Ember.Charts.ChartComponent.extend(
   # ----------------------------------------------------------------------------
 
   # Getters for formatting human-readable labels from provided data
-  formatValue: d3.format('.2s')
-  formatValueLong: d3.format(',.r')
+  formatLabel: d3.format(',.2f')
 
   # Sort key for the data
   selectedSortType: 'value'
@@ -132,12 +131,12 @@ Ember.Charts.HorizontalBarComponent = Ember.Charts.ChartComponent.extend(
       d3.select(element).classed('hovered', yes)
 
       # Show tooltip
-      formatValue = @get 'formatValue'
+      formatLabel = @get 'formatLabel'
       # Line 1
       content = "<span class=\"tip-label\">#{data.label}</span>"
       # Line 2
       content +="<span class=\"name\">#{@get 'tooltipValueDisplayName'}: </span>"
-      content +="<span class=\"value\">#{formatValue(data.value)}</span>"
+      content +="<span class=\"value\">#{formatLabel(data.value)}</span>"
       @showTooltip(content, d3.event)
   .property 'isInteractive'
 
@@ -273,7 +272,7 @@ Ember.Charts.HorizontalBarComponent = Ember.Charts.ChartComponent.extend(
       .attr(@get 'barAttrs')
 
     valueLabels = groups.select('text.value')
-      .text((d) => @get('formatValue') d.value)
+      .text((d) => @get('formatLabel') d.value)
       .attr(@get 'valueLabelAttrs')
 
     labelWidth = @get 'labelWidth'

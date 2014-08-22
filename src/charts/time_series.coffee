@@ -24,8 +24,7 @@ Ember.Charts.TimeSeriesComponent = Ember.Charts.ChartComponent.extend(
   # Getters for formatting human-readable labels from provided data
   formatTime: d3.time.format('%Y-%m-%d')
   formatTimeLong: d3.time.format('%a %b %-d, %Y')
-  formatValue: d3.format('.2s')
-  formatValueLong: d3.format(',.r')
+  formatLabel: d3.format(',.2f')
 
   # Data without group will be merged into a group with this name
   ungroupedSeriesName: 'Other'
@@ -366,6 +365,17 @@ Ember.Charts.TimeSeriesComponent = Ember.Charts.ChartComponent.extend(
   .property('xWithinGroupDomain', 'paddedGroupWidth',
     'barPadding', 'barGroupPadding')
 
+  # Override axis mix-in min and max values to listen to the scale's domain
+  minAxisValue: Ember.computed ->
+    yScale = @get 'yScale'
+    yScale.domain()[0]
+  .property 'yScale'
+
+  maxAxisValue: Ember.computed ->
+    yScale = @get 'yScale'
+    yScale.domain()[1]
+  .property 'yScale'
+
   # ----------------------------------------------------------------------------
   # Tooltip Configuration
   # ----------------------------------------------------------------------------
@@ -382,10 +392,10 @@ Ember.Charts.TimeSeriesComponent = Ember.Charts.ChartComponent.extend(
       time = if data.labelTime? then data.labelTime else data.time
       content = "<span class=\"tip-label\">#{@get('formatTime')(time)}</span>"
 
-      formatValue = @get 'formatValue'
+      formatLabel = @get 'formatLabel'
       addValueLine = (d) ->
         content +="<span class=\"name\">#{d.group}: </span>"
-        content += "<span class=\"value\">#{formatValue(d.value)}</span><br/>"
+        content += "<span class=\"value\">#{formatLabel(d.value)}</span><br/>"
       if Ember.isArray(data.values)
         # Display all bar details if hovering over axis label
         data.values.forEach addValueLine
@@ -611,7 +621,7 @@ Ember.Charts.TimeSeriesComponent = Ember.Charts.ChartComponent.extend(
       .orient('right')
       .ticks(@get 'numYTicks')
       .tickSize(@get 'graphicWidth')
-      .tickFormat(@get 'formatValue')
+      .tickFormat(@get 'formatValueAxis')
 
     graphicTop = @get 'graphicTop'
     graphicHeight = @get 'graphicHeight'
