@@ -28,8 +28,15 @@ Ember.Charts.TimeSeriesComponent = Ember.Charts.ChartComponent.extend(
   # Getters for formatting human-readable labels from provided data
   formatTime: d3.time.format('%Y-%m-%d')
   formatTimeLong: d3.time.format('%a %b %-d, %Y')
-  formatValue: d3.format('.2s')
-  formatValueLong: d3.format(',.r')
+  formatLabel: d3.format(',.2f')
+
+  formatYAxis: Ember.computed ->
+    # Base the format prefix on largest value (e.g. if we cross from hundreds
+    # of thousands into millions, use millions)
+    prefix = d3.formatPrefix @get('yDomain')[1]
+    formatter = (value) ->
+      "#{prefix.scale(value)}#{prefix.symbol}"
+  .property 'yScale', 'yDomain', 'numYTicks'
 
   # Data without group will be merged into a group with this name
   ungroupedSeriesName: 'Other'
@@ -393,7 +400,7 @@ Ember.Charts.TimeSeriesComponent = Ember.Charts.ChartComponent.extend(
       time = if data.labelTime? then data.labelTime else data.time
       content = "<span class=\"tip-label\">#{@get('formatTime')(time)}</span>"
 
-      formatValue = @get 'formatValue'
+      formatValue = @get 'formatLabel'
       addValueLine = (d) ->
         content +="<span class=\"name\">#{d.group}: </span>"
         content += "<span class=\"value\">#{formatValue(d.value)}</span><br/>"
@@ -623,7 +630,7 @@ Ember.Charts.TimeSeriesComponent = Ember.Charts.ChartComponent.extend(
       .orient('right')
       .ticks(@get 'numYTicks')
       .tickSize(@get 'graphicWidth')
-      .tickFormat(@get 'formatValue')
+      .tickFormat(@get 'formatYAxis')
 
     graphicTop = @get 'graphicTop'
     graphicHeight = @get 'graphicHeight'

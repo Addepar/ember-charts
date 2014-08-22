@@ -6,8 +6,7 @@ Ember.Charts.PieComponent = Ember.Charts.ChartComponent.extend(
   # ----------------------------------------------------------------------------
 
   # Getters for formatting human-readable labels from provided data
-  formatValue: d3.format('.2s')
-  formatValueLong: d3.format(',.r')
+  formatLabel: d3.format(',.2f')
 
   # The smallest slices will be combined into an "Other" slice until no slice is
   # smaller than minSlicePercent. "Other" is also guaranteed to be larger than
@@ -234,7 +233,7 @@ Ember.Charts.PieComponent = Ember.Charts.ChartComponent.extend(
         @get('viewport').select('.legend').classed('hovered', yes)
       else
         # Show tooltip when not on hover
-        formatValue = @get 'formatValue'
+        formatValue = @get 'formatLabel'
         # Line 1
         content = "<span class=\"tip-label\">#{data.label}</span>"
         # Line 2
