@@ -12,6 +12,7 @@ Ember.Charts.TimeSeriesComponent = Ember.Charts.ChartComponent.extend(
   # [{label: ..., time: ..., value: ...}, {...}, ...]
   # Line data will be grouped by label, while bar data is grouped by
   # time and then label
+  #
   # ----------------------------------------------------------------------------
   lineData: null
   barData: null
@@ -102,8 +103,53 @@ Ember.Charts.TimeSeriesComponent = Ember.Charts.ChartComponent.extend(
     barGroupsByTime = for timePoint, groups of barTimes
       for g in groups
         label = @_getLabelOrDefault(g)
-        group: label, time: g.time, value: g.value, label: label
-  .property 'barData.@each', 'ungroupedSeriesName'
+        labelTime = g.time
+        drawTime = @_transformCenter(g.time)
+        group: label, time: drawTime, value: g.value, label: label, \
+          labelTime: labelTime
+  .property 'barData.@each', 'ungroupedSeriesName', 'barLeftOffset'
+
+  # Transforms the center of the bar graph for the drawing based on the
+  # specified barLeftOffset
+  _transformCenter: (time) ->
+    delta = @_getTimeDeltaFromSelectedInterval()
+    offset = @get 'barLeftOffset'
+    unless offset is 0
+      time = @_padTimeWithIntervalMultiplier time, delta, offset
+    time
+
+  # Since selected interval and time delta don't use the same naming convention
+  # this converts the selected interval to the time delta convention for the
+  # padding functions.
+  _getTimeDeltaFromSelectedInterval: () ->
+    switch @get('selectedInterval')
+      when 'years', 'Y' then 'year'
+      when 'quarters', 'Q' then 'quarter'
+      when 'months', 'M' then 'month'
+      when 'weeks' , 'W'  then 'week'
+      when 'seconds', 'S' then 'second'
+
+  # Given a time, returns the time plus half an interval
+  _padTimeForward: (time, delta) ->
+    @_padTimeWithIntervalMultiplier(time, delta, 0.5)
+
+  # Given a time, returns the time minus half an interval
+  _padTimeBackward: (time, delta) ->
+    @_padTimeWithIntervalMultiplier(time, delta, -0.5)
+
+  # Because of the complexities of what will and won't work with this method,
+  # it's not very safe to call. Instead, call _padTimeForward or
+  # _padTimeBackward. This method exists to remove code duplication from those.
+  _padTimeWithIntervalMultiplier: (time, delta, multiplier) ->
+    if time?
+      intervalType = if delta is 'quarter' then 'month' else delta
+      period = if delta is 'quarter' then 3 else 1
+
+      # Since d3 offset does not support non-integer offsets or direct querying
+      # of the offset delta, compute it.
+      offsetDelta = d3.time[intervalType].offset(time, period) - time.getTime()
+      time = offsetDelta * multiplier + time.getTime()
+    new Date(time)
 
   _barGroups: Ember.computed ->
     barData = @get 'barData'
@@ -175,23 +221,12 @@ Ember.Charts.TimeSeriesComponent = Ember.Charts.ChartComponent.extend(
 
     first = _.first(groupedBarData)
     last = _.last(groupedBarData)
-    startTime = first[0].time
-    endTime = last[0].time
+    startTime = new Date(first[0].time)
+    endTime = new Date(last[0].time)
 
-    # pad extent by half a group interval at the beginning and end
-    # in order to make room for bars
-    timeIntervalType = if timeDelta is 'quarter' then 'month' else timeDelta
-    timeOffset = if timeDelta is 'quarter' then 3 else 1
-
-    # the reason we add half of the startTime/endTime is that we cannot
-    # call d3.time[timeIntervalType].offset(startTime, -timeOffset/2),
-    # so we have to put the divisor on the outside the expression
-    paddedStart =
-      startTime.getTime()/2 +
-      d3.time[timeIntervalType].offset(startTime, -timeOffset)/2
-    paddedEnd =
-      endTime.getTime()/2 +
-      d3.time[timeIntervalType].offset(endTime, timeOffset)/2
+    # Add the padding needed for the edges of the bar
+    paddedStart = @_padTimeBackward(startTime, timeDelta)
+    paddedEnd = @_padTimeForward(endTime, timeDelta)
     [ new Date(paddedStart), new Date(paddedEnd) ]
   .property 'timeDelta', '_groupedBarData.@each'
 
@@ -343,8 +378,9 @@ Ember.Charts.TimeSeriesComponent = Ember.Charts.ChartComponent.extend(
       d3.select(element).classed('hovered', yes)
       # TODO(tony): handle legend hover
 
-      # Show tooltip
-      content = "<span class=\"tip-label\">#{@get('formatTime')(data.time)}</span>"
+      # Show tooltip. Use overridden label time if one exists.
+      time = if data.labelTime? then data.labelTime else data.time
+      content = "<span class=\"tip-label\">#{@get('formatTime')(time)}</span>"
 
       formatValue = @get 'formatValue'
       addValueLine = (d) ->
@@ -389,8 +425,7 @@ Ember.Charts.TimeSeriesComponent = Ember.Charts.ChartComponent.extend(
     'stroke-width': 0
     width: @get('barWidth')
     x: (d) =>
-      xGroupScale(d.label) + xTimeScale(d.time) +
-        @get('barLeftOffset') * @get('paddedGroupWidth')
+      xGroupScale(d.label) + xTimeScale(d.time)
     y: (d) ->
       if d.value > 0
         yScale(d.value)
