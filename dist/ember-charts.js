@@ -519,6 +519,7 @@ Ember.Charts.HasTimeSeriesRule = Ember.Mixin.create({
 
 Ember.Charts.TimeSeriesLabeler = Ember.Mixin.create({
   selectedInterval: 'M',
+  intervalLabelPosition: 'end',
   maxNumberOfLabels: 10,
   numberOfMinorTicks: Ember.computed(function() {
     var allTicks, findTick, firstIndex, labelledTicks, secondIndex, start, stop, _ref;
@@ -561,7 +562,16 @@ Ember.Charts.TimeSeriesLabeler = Ember.Mixin.create({
     return this.get('getLabelledTicks')(domain[0], domain[1]);
   }).property('xDomain'),
   labelledYears: function(start, stop) {
-    var skipVal, years;
+    var labelPosition, skipVal, years;
+    labelPosition = this.get('intervalLabelPosition');
+    if (labelPosition === 'start') {
+      start.setYear(start.getYear() + 1);
+      stop.setYear(stop.getYear() + 1);
+    }
+    if (labelPosition === 'end') {
+      start.setYear(start.getYear() - 1);
+      stop.setYear(stop.getYear() - 1);
+    }
     years = d3.time.years(start, stop);
     if (years.length > this.get('maxNumberOfLabels')) {
       skipVal = Math.ceil(years.length / this.get('maxNumberOfLabels'));
@@ -571,7 +581,16 @@ Ember.Charts.TimeSeriesLabeler = Ember.Mixin.create({
     }
   },
   labelledQuarters: function(start, stop) {
-    var quarters;
+    var labelPosition, quarters;
+    labelPosition = this.get('intervalLabelPosition');
+    if (labelPosition === 'start') {
+      start.setMonth(start.getMonth() + 3);
+      stop.setMonth(stop.getMonth() + 3);
+    }
+    if (labelPosition === 'end') {
+      start.setMonth(start.getMonth() - 3);
+      stop.setMonth(stop.getMonth() - 3);
+    }
     quarters = d3.time.months(start, stop, 3);
     if (quarters.length > this.get('maxNumberOfLabels')) {
       return this.labelledYears(start, stop);
@@ -588,7 +607,17 @@ Ember.Charts.TimeSeriesLabeler = Ember.Mixin.create({
     });
   },
   labelledMonths: function(start, stop) {
-    var months, skipVal;
+    var labelPosition, months, quarters, skipVal;
+    labelPosition = this.get('intervalLabelPosition');
+    if (labelPosition === 'start') {
+      start.setMonth(start.getMonth() + 1);
+      stop.setMonth(stop.getMonth() + 1);
+    }
+    if (labelPosition === 'end') {
+      start.setMonth(start.getMonth() - 1);
+      stop.setMonth(stop.getMonth() - 1);
+    }
+    quarters = d3.time.months(start, stop, 3);
     months = this.monthsBetween(start, stop);
     if (months.length > this.get('maxNumberOfLabels')) {
       skipVal = Math.ceil(months.length / this.get('maxNumberOfLabels'));
@@ -3149,7 +3178,7 @@ Ember.Charts.TimeSeriesComponent = Ember.Charts.ChartComponent.extend(Ember.Char
   },
   updateAxes: function() {
     var gXAxis, gYAxis, graphicHeight, graphicLeft, graphicTop, xAxis, yAxis;
-    xAxis = d3.svg.axis().scale(this.get('xTimeScale')).orient('bottom').ticks(this.get('getLabelledTicks')).tickSubdivide(this.get('numberOfMinorTicks')).tickSize(6, 3, 0);
+    xAxis = d3.svg.axis().scale(this.get('xTimeScale')).orient('bottom').ticks(this.get('getLabelledTicks')).tickSubdivide(this.get('numberOfMinorTicks')).tickFormat(this.get('formattedTime')).tickSize(6, 3);
     yAxis = d3.svg.axis().scale(this.get('yScale')).orient('right').ticks(this.get('numYTicks')).tickSize(this.get('graphicWidth')).tickFormat(this.get('formatValue'));
     graphicTop = this.get('graphicTop');
     graphicHeight = this.get('graphicHeight');

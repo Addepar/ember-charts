@@ -6,6 +6,10 @@ Ember.Charts.TimeSeriesLabeler = Ember.Mixin.create
   # years, months, weeks, days
   selectedInterval: 'M'
 
+  # If the selected interval is being computed by startpoint or endpoint
+  # instead of the default midpoint, this value should reflect it.
+  intervalLabelPosition: 'end'
+
   # The maximum number of labels which will appear on the x axis of the
   # chart. If there would be more labels than this (e.g. if you are
   # charting 13 intervals or more) then we use the "labelled" functions
@@ -51,7 +55,18 @@ Ember.Charts.TimeSeriesLabeler = Ember.Mixin.create
 
   # the years which should be labelled
   labelledYears: (start, stop) ->
-    years = d3.time.years(start, stop)
+    labelPosition = @get 'intervalLabelPosition'
+    axisStart = new Date(start)
+    axisEnd = new Date(stop)
+    if labelPosition is 'start'
+      axisStart.setYear(start.getYear() + 1)
+      axisStop.setYear(stop.getYear() + 1)
+
+    if labelPosition is 'end'
+      axisStart.setYear(start.getYear() - 1)
+      axisStop.setYear(stop.getYear() - 1)
+
+    years = d3.time.years(axisStart, axisStop)
 
     # if we have too many labelled years then we reduce to the maximum
     # number of years labelled such that they are uniformly distributed
@@ -64,11 +79,23 @@ Ember.Charts.TimeSeriesLabeler = Ember.Mixin.create
 
   # the quarters which should be labelled
   labelledQuarters: (start, stop) ->
-    quarters = d3.time.months(start, stop, 3)
+    labelPosition = @get 'intervalLabelPosition'
+    axisStart = new Date(start)
+    axisEnd = new Date(stop)
+    if labelPosition is 'start'
+      axisStart.setMonth(start.getMonth() + 3)
+      axisStop.setMonth(stop.getMonth() + 3)
+
+    if labelPosition is 'end'
+      axisStart.setMonth(start.getMonth() - 3)
+      axisStop.setMonth(stop.getMonth() - 3)
+
+    quarters = d3.time.months(axisStart, axisStop, 3)
 
     # if we have too many quarters then we only display quarter labels
     # on years
     if quarters.length > @get('maxNumberOfLabels')
+      # Don't use axis values here as labelledYears will recompute them
       @labelledYears(start, stop)
     else
       quarters
@@ -78,7 +105,18 @@ Ember.Charts.TimeSeriesLabeler = Ember.Mixin.create
 
   # the months which should be labelled
   labelledMonths: (start, stop) ->
-    months = @monthsBetween(start, stop)
+    labelPosition = @get 'intervalLabelPosition'
+    axisStart = new Date(start)
+    axisEnd = new Date(stop)
+    if labelPosition is 'start'
+      axisStart.setMonth(start.getMonth() + 1)
+      axisStop.setMonth(stop.getMonth() + 1)
+
+    if labelPosition is 'end'
+      axisStart.setMonth(start.getMonth() - 1)
+      axisStop.setMonth(stop.getMonth() - 1)
+
+    months = @monthsBetween(axisStart, axisStop)
 
     # if we have too many months then we reduce to the maximum number of
     # months labelled such that they are uniformly distributed in the
