@@ -12,9 +12,14 @@ Ember.Charts.TimeSeriesComponent = Ember.Charts.ChartComponent.extend(
   # [{label: ..., time: ..., value: ...}, {...}, ...]
   # Line data will be grouped by label, while bar data is grouped by
   # time and then label
+  #
+  # barCentering: When passing bar data, this specifies whether the timepoint
+  # should coorespond to the start, middle, or end of the bar drawn. Options are
+  # 'start', 'middle', and 'end'. Default is 'middle'
   # ----------------------------------------------------------------------------
   lineData: null
   barData: null
+  barCentering: 'middle'
 
   # ----------------------------------------------------------------------------
   # Time Series Chart Options
@@ -102,8 +107,58 @@ Ember.Charts.TimeSeriesComponent = Ember.Charts.ChartComponent.extend(
     barGroupsByTime = for timePoint, groups of barTimes
       for g in groups
         label = @_getLabelOrDefault(g)
-        group: label, time: g.time, value: g.value, label: label
+        labelTime = g.time
+        drawTime = @_transformCenter(g.time)
+        group: label, time: drawTime, value: g.value, label: label, \
+          labelTime: labelTime
   .property 'barData.@each', 'ungroupedSeriesName'
+
+  # Transforms the center of the bar graph for the drawing based on what
+  # barCentering option has been passed. If the data should be the endpoint for
+  # the line, move it back half an interval, if it should be the startpoint,
+  # move it forward half an interval, if center, center stays the same
+  _transformCenter: (time) ->
+    delta = @_getTimeDeltaFromSelectedInterval()
+    if @get('barCentering') is 'end'
+      time = @_padTimeBackward time, delta
+    else if @get('barCentering') is 'start'
+      time = @_padTimeForward time, delta
+    time
+
+  # Since selected interval and time delta don't use the same naming convention
+  # this converts the selected interval to the time delta convention for the
+  # padding functions.
+  _getTimeDeltaFromSelectedInterval: () ->
+    switch @get('selectedInterval')
+      when 'years', 'Y' then 'year'
+      when 'quarters', 'Q' then 'quarter'
+      when 'months', 'M' then 'month'
+      when 'weeks' , 'W'  then 'week'
+      when 'seconds', 'S' then 'second'
+
+  # Given a time, returns the time plus half an interval
+  _padTimeForward: (time, delta) ->
+    @_padTimeWithHalfIntervalMultiplier(time, delta, 1)
+
+  # Given a time, returns the time minus half an interval
+  _padTimeBackward: (time, delta) ->
+    @_padTimeWithHalfIntervalMultiplier(time, delta, -1)
+
+  # Because of the complexities of what will and won't work with this method,
+  # it's not very safe to call. Instead, call _padTimeForward or
+  # _padTimeBackward. This method exists to remove code duplication from those.
+  _padTimeWithHalfIntervalMultiplier: (time, delta, multiplier) ->
+    if time?
+      timeIntervalType = if delta is 'quarter' then 'month' else delta
+      timeOffset = if delta is 'quarter' then 3 else 1
+      timeOffset = multiplier * timeOffset
+
+      # the reason we add half of the startTime/endTime is that we cannot
+      # call d3.time[timeIntervalType].offset(startTime, -timeOffset/2),
+      # so we have to put the divisor on the outside the expression
+      time = time.getTime()/2 +
+      d3.time[timeIntervalType].offset(time, timeOffset)/2
+    new Date(time)
 
   _barGroups: Ember.computed ->
     barData = @get 'barData'
@@ -170,28 +225,19 @@ Ember.Charts.TimeSeriesComponent = Ember.Charts.ChartComponent.extend(
 
   barDataExtent: Ember.computed ->
     timeDelta = @get 'timeDelta'
+    intervalDelta = @_getTimeDeltaFromSelectedInterval()
     groupedBarData = @get '_groupedBarData'
     return [new Date(), new Date()] if Ember.isEmpty(groupedBarData)
 
     first = _.first(groupedBarData)
     last = _.last(groupedBarData)
-    startTime = first[0].time
-    endTime = last[0].time
+    startTime = new Date(first[0].time)
+    endTime = new Date(last[0].time)
+    barCentering = @get 'barCentering'
 
-    # pad extent by half a group interval at the beginning and end
-    # in order to make room for bars
-    timeIntervalType = if timeDelta is 'quarter' then 'month' else timeDelta
-    timeOffset = if timeDelta is 'quarter' then 3 else 1
-
-    # the reason we add half of the startTime/endTime is that we cannot
-    # call d3.time[timeIntervalType].offset(startTime, -timeOffset/2),
-    # so we have to put the divisor on the outside the expression
-    paddedStart =
-      startTime.getTime()/2 +
-      d3.time[timeIntervalType].offset(startTime, -timeOffset)/2
-    paddedEnd =
-      endTime.getTime()/2 +
-      d3.time[timeIntervalType].offset(endTime, timeOffset)/2
+    # Add the padding needed for the edges of the bar
+    paddedStart = @_padTimeBackward(startTime, timeDelta)
+    paddedEnd = @_padTimeForward(endTime, timeDelta)
     [ new Date(paddedStart), new Date(paddedEnd) ]
   .property 'timeDelta', '_groupedBarData.@each'
 
@@ -344,7 +390,7 @@ Ember.Charts.TimeSeriesComponent = Ember.Charts.ChartComponent.extend(
       # TODO(tony): handle legend hover
 
       # Show tooltip
-      content = "<span class=\"tip-label\">#{@get('formatTime')(data.time)}</span>"
+      content = "<span class=\"tip-label\">#{@get('formatTime')(data.labelTime)}</span>"
 
       formatValue = @get 'formatValue'
       addValueLine = (d) ->
