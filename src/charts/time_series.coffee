@@ -29,6 +29,7 @@ Ember.Charts.TimeSeriesComponent = Ember.Charts.ChartComponent.extend(
   formatTime: d3.time.format('%Y-%m-%d')
   formatTimeLong: d3.time.format('%a %b %-d, %Y')
   formatValue: d3.format('.2s')
+  formatLabel: d3.format(',.2f')
   formatValueLong: d3.format(',.r')
 
   # Data without group will be merged into a group with this name
@@ -392,7 +393,7 @@ Ember.Charts.TimeSeriesComponent = Ember.Charts.ChartComponent.extend(
       # Show tooltip
       content = "<span class=\"tip-label\">#{@get('formatTime')(data.labelTime)}</span>"
 
-      formatValue = @get 'formatValue'
+      formatValue = @get 'formatLabel'
       addValueLine = (d) ->
         content +="<span class=\"name\">#{d.group}: </span>"
         content += "<span class=\"value\">#{formatValue(d.value)}</span><br/>"

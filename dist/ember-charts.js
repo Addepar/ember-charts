@@ -2646,6 +2646,7 @@ Ember.Charts.TimeSeriesComponent = Ember.Charts.ChartComponent.extend(Ember.Char
   formatTime: d3.time.format('%Y-%m-%d'),
   formatTimeLong: d3.time.format('%a %b %-d, %Y'),
   formatValue: d3.format('.2s'),
+  formatLabel: d3.format(',.2f'),
   formatValueLong: d3.format(',.r'),
   ungroupedSeriesName: 'Other',
   interpolate: false,
@@ -2964,7 +2965,7 @@ Ember.Charts.TimeSeriesComponent = Ember.Charts.ChartComponent.extend(Ember.Char
       var addValueLine, content, formatValue;
       d3.select(element).classed('hovered', true);
       content = "<span class=\"tip-label\">" + (_this.get('formatTime')(data.labelTime)) + "</span>";
-      formatValue = _this.get('formatValue');
+      formatValue = _this.get('formatLabel');
       addValueLine = function(d) {
         content += "<span class=\"name\">" + d.group + ": </span>";
         return content += "<span class=\"value\">" + (formatValue(d.value)) + "</span><br/>";
