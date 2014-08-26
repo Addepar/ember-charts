@@ -2645,9 +2645,15 @@ Ember.Charts.TimeSeriesComponent = Ember.Charts.ChartComponent.extend(Ember.Char
   barCentering: 'middle',
   formatTime: d3.time.format('%Y-%m-%d'),
   formatTimeLong: d3.time.format('%a %b %-d, %Y'),
-  formatValue: d3.format('.2s'),
   formatLabel: d3.format(',.2f'),
   formatValueLong: d3.format(',.r'),
+  formatYAxis: Ember.computed(function() {
+    var formatter, prefix;
+    prefix = d3.formatPrefix(this.get('yDomain')[1]);
+    return formatter = function(value) {
+      return "" + (prefix.scale(value)) + prefix.symbol;
+    };
+  }).property('yScale', 'yDomain', 'numYTicks'),
   ungroupedSeriesName: 'Other',
   interpolate: false,
   yAxisFromZero: false,
@@ -3200,7 +3206,7 @@ Ember.Charts.TimeSeriesComponent = Ember.Charts.ChartComponent.extend(Ember.Char
   updateAxes: function() {
     var gXAxis, gYAxis, graphicHeight, graphicLeft, graphicTop, xAxis, yAxis;
     xAxis = d3.svg.axis().scale(this.get('xTimeScale')).orient('bottom').ticks(this.get('getLabelledTicks')).tickSubdivide(this.get('numberOfMinorTicks')).tickFormat(this.get('formattedTime')).tickSize(6, 3);
-    yAxis = d3.svg.axis().scale(this.get('yScale')).orient('right').ticks(this.get('numYTicks')).tickSize(this.get('graphicWidth')).tickFormat(this.get('formatValue'));
+    yAxis = d3.svg.axis().scale(this.get('yScale')).orient('right').ticks(this.get('numYTicks')).tickSize(this.get('graphicWidth')).tickFormat(this.get('formatYAxis'));
     graphicTop = this.get('graphicTop');
     graphicHeight = this.get('graphicHeight');
     gXAxis = this.get('xAxis').attr({
