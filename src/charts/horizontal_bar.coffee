@@ -7,8 +7,16 @@ Ember.Charts.HorizontalBarComponent = Ember.Charts.ChartComponent.extend(
   # ----------------------------------------------------------------------------
 
   # Getters for formatting human-readable labels from provided data
-  formatValue: d3.format('.2s')
+  formatValue: d3.format(',.2f')
   formatValueLong: d3.format(',.r')
+
+  formatAxisValue: Ember.computed ->
+    # Base the format prefix on largest value (e.g. if we cross from hundreds
+    # of thousands into millions, use millions)
+    prefix = d3.formatPrefix @get('yDomain')[1]
+    formatter = (value) ->
+      "#{prefix.scale(value)}#{prefix.symbol}"
+  .property 'yScale', 'yDomain', 'numYTicks'
 
   # Sort key for the data
   selectedSortType: 'value'
@@ -273,7 +281,7 @@ Ember.Charts.HorizontalBarComponent = Ember.Charts.ChartComponent.extend(
       .attr(@get 'barAttrs')
 
     valueLabels = groups.select('text.value')
-      .text((d) => @get('formatValue') d.value)
+      .text((d) => @get('formatAxisValue') d.value)
       .attr(@get 'valueLabelAttrs')
 
     labelWidth = @get 'labelWidth'

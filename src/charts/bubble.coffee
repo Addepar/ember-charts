@@ -25,7 +25,7 @@ Ember.Charts.BubbleComponent = Ember.Charts.ChartComponent.extend(
     (d) -> -Math.pow(d.radius, 2.0) / 8
 
   # Getters for formatting human-readable labels from provided data
-  formatValue: d3.format('.2s')
+  formatValue: d3.format(',.2f')
   formatValueLong: d3.format(',.r')
 
   # ----------------------------------------------------------------------------
