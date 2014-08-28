@@ -233,12 +233,12 @@ Ember.Charts.PieComponent = Ember.Charts.ChartComponent.extend(
         @get('viewport').select('.legend').classed('hovered', yes)
       else
         # Show tooltip when not on hover
-        formatValue = @get 'formatLabel'
+        formatLabel = @get 'formatLabel'
         # Line 1
         content = "<span class=\"tip-label\">#{data.label}</span>"
         # Line 2
         content +="<span class=\"name\">#{@get 'tooltipValueDisplayName'}: </span>"
-        content +="<span class=\"value\">#{formatValue(data.value)}</span>"
+        content +="<span class=\"value\">#{formatLabel(data.value)}</span>"
         @showTooltip(content, d3.event)
   .property 'isInteractive'
 

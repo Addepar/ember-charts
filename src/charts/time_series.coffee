@@ -30,14 +30,6 @@ Ember.Charts.TimeSeriesComponent = Ember.Charts.ChartComponent.extend(
   formatTimeLong: d3.time.format('%a %b %-d, %Y')
   formatLabel: d3.format(',.2f')
 
-  formatYAxis: Ember.computed ->
-    # Base the format prefix on largest value (e.g. if we cross from hundreds
-    # of thousands into millions, use millions)
-    prefix = d3.formatPrefix @get('yDomain')[1]
-    formatter = (value) ->
-      "#{prefix.scale(value)}#{prefix.symbol}"
-  .property 'yScale', 'yDomain', 'numYTicks'
-
   # Data without group will be merged into a group with this name
   ungroupedSeriesName: 'Other'
 
@@ -384,6 +376,17 @@ Ember.Charts.TimeSeriesComponent = Ember.Charts.ChartComponent.extend(
   .property('xWithinGroupDomain', 'paddedGroupWidth',
     'barPadding', 'barGroupPadding')
 
+  # Override axis mix-in min and max values to listen to the scale's domain
+  minAxisValue: Ember.computed ->
+    yScale = @get 'yScale'
+    yScale.domain()[0]
+  .property 'yScale'
+
+  maxAxisValue: Ember.computed ->
+    yScale = @get 'yScale'
+    yScale.domain()[1]
+  .property 'yScale'
+
   # ----------------------------------------------------------------------------
   # Tooltip Configuration
   # ----------------------------------------------------------------------------
@@ -400,10 +403,10 @@ Ember.Charts.TimeSeriesComponent = Ember.Charts.ChartComponent.extend(
       time = if data.labelTime? then data.labelTime else data.time
       content = "<span class=\"tip-label\">#{@get('formatTime')(time)}</span>"
 
-      formatValue = @get 'formatLabel'
+      formatLabel = @get 'formatLabel'
       addValueLine = (d) ->
         content +="<span class=\"name\">#{d.group}: </span>"
-        content += "<span class=\"value\">#{formatValue(d.value)}</span><br/>"
+        content += "<span class=\"value\">#{formatLabel(d.value)}</span><br/>"
       if Ember.isArray(data.values)
         # Display all bar details if hovering over axis label
         data.values.forEach addValueLine
@@ -630,7 +633,7 @@ Ember.Charts.TimeSeriesComponent = Ember.Charts.ChartComponent.extend(
       .orient('right')
       .ticks(@get 'numYTicks')
       .tickSize(@get 'graphicWidth')
-      .tickFormat(@get 'formatYAxis')
+      .tickFormat(@get 'formatValueAxis')
 
     graphicTop = @get 'graphicTop'
     graphicHeight = @get 'graphicHeight'
