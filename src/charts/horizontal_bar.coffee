@@ -131,12 +131,12 @@ Ember.Charts.HorizontalBarComponent = Ember.Charts.ChartComponent.extend(
       d3.select(element).classed('hovered', yes)
 
       # Show tooltip
-      formatValue = @get 'formatLabel'
+      formatLabel = @get 'formatLabel'
       # Line 1
       content = "<span class=\"tip-label\">#{data.label}</span>"
       # Line 2
       content +="<span class=\"name\">#{@get 'tooltipValueDisplayName'}: </span>"
-      content +="<span class=\"value\">#{formatValue(data.value)}</span>"
+      content +="<span class=\"value\">#{formatLabel(data.value)}</span>"
       @showTooltip(content, d3.event)
   .property 'isInteractive'
 

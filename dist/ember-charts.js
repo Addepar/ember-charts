@@ -325,6 +325,8 @@ Ember.Charts.AxesMixin = Ember.Mixin.create({
   minXTicks: 3,
   minYTicks: 3,
   tickSpacing: 50,
+  minAxisValue: 0,
+  maxAxisValue: 0,
   numXTicks: Ember.computed(function() {
     var calculatedTicks;
     calculatedTicks = Math.floor(this.get('graphicWidth') / this.get('tickSpacing'));
@@ -334,7 +336,15 @@ Ember.Charts.AxesMixin = Ember.Mixin.create({
     var calculatedTicks;
     calculatedTicks = Math.floor(this.get('graphicHeight') / this.get('tickSpacing'));
     return Math.max(calculatedTicks, this.get('minYTicks'));
-  }).property('graphicHeight', 'tickSpacing', 'minYTicks')
+  }).property('graphicHeight', 'tickSpacing', 'minYTicks'),
+  formatValueAxis: Ember.computed(function() {
+    var formatter, magnitude, prefix;
+    magnitude = Math.max(Math.abs(this.get('minAxisValue')), Math.abs(this.get('maxAxisValue')));
+    prefix = d3.formatPrefix(magnitude);
+    return formatter = function(value) {
+      return "" + (prefix.scale(value)) + prefix.symbol;
+    };
+  }).property('minAxisValue', 'maxAxisValue')
 });
 
 
@@ -1200,12 +1210,12 @@ Ember.Charts.HorizontalBarComponent = Ember.Charts.ChartComponent.extend(Ember.C
       return Ember.K;
     }
     return function(data, i, element) {
-      var content, formatValue;
+      var content, formatLabel;
       d3.select(element).classed('hovered', true);
-      formatValue = _this.get('formatLabel');
+      formatLabel = _this.get('formatLabel');
       content = "<span class=\"tip-label\">" + data.label + "</span>";
       content += "<span class=\"name\">" + (_this.get('tooltipValueDisplayName')) + ": </span>";
-      content += "<span class=\"value\">" + (formatValue(data.value)) + "</span>";
+      content += "<span class=\"value\">" + (formatLabel(data.value)) + "</span>";
       return _this.showTooltip(content, d3.event);
     };
   }).property('isInteractive'),
@@ -1743,13 +1753,6 @@ Ember.Handlebars.helper('pie-chart', Ember.Charts.PieComponent);
 Ember.Charts.VerticalBarComponent = Ember.Charts.ChartComponent.extend(Ember.Charts.Legend, Ember.Charts.FloatingTooltipMixin, Ember.Charts.AxesMixin, {
   classNames: ['chart-vertical-bar'],
   formatLabel: d3.format(',.2f'),
-  formatYAxis: Ember.computed(function() {
-    var formatter, prefix;
-    prefix = d3.formatPrefix(this.get('yDomain')[1]);
-    return formatter = function(value) {
-      return "" + (prefix.scale(value)) + prefix.symbol;
-    };
-  }).property('yScale', 'yDomain', 'numYTicks'),
   ungroupedSeriesName: 'Other',
   stackBars: false,
   withinGroupPadding: 0,
@@ -1950,6 +1953,12 @@ Ember.Charts.VerticalBarComponent = Ember.Charts.ChartComponent.extend(Ember.Cha
     }
     return d3.scale.ordinal().domain(this.get('xBetweenGroupDomain')).rangeRoundBands([0, this.get('graphicWidth')], betweenGroupPadding / 2, betweenGroupPadding / 2);
   }).property('isGrouped', 'stackBars', 'graphicWidth', 'labelWidth', 'xBetweenGroupDomain', 'betweenGroupPadding'),
+  _valueAxisScaleDidChange: Ember.observer(function() {
+    var yScale;
+    yScale = this.get('yScale');
+    this.set('minAxisValue', yScale.domain()[0]);
+    return this.set('maxAxisValue', yScale.domain()[1]);
+  }).observes('yScale'),
   numColorSeries: Ember.computed.alias('individualBarLabels.length'),
   hasLegend: Ember.computed(function() {
     return this.get('stackBars') || this.get('isGrouped') && this.get('legendItems.length') > 1;
@@ -1977,15 +1986,15 @@ Ember.Charts.VerticalBarComponent = Ember.Charts.ChartComponent.extend(Ember.Cha
       return Ember.K;
     }
     return function(data, i, element) {
-      var addValueLine, content, formatValue, isGroup;
+      var addValueLine, content, formatLabel, isGroup;
       isGroup = Ember.isArray(data.values);
       element = isGroup ? element.parentNode.parentNode : element;
       d3.select(element).classed('hovered', true);
       content = "<span class=\"tip-label\">" + data.group + "</span>";
-      formatValue = _this.get('formatLabel');
+      formatLabel = _this.get('formatLabel');
       addValueLine = function(d) {
         content += "<span class=\"name\">" + d.label + ": </span>";
-        return content += "<span class=\"value\">" + (formatValue(d.value)) + "</span><br/>";
+        return content += "<span class=\"value\">" + (formatLabel(d.value)) + "</span><br/>";
       };
       if (isGroup) {
         data.values.forEach(addValueLine);
@@ -2219,7 +2228,7 @@ Ember.Charts.VerticalBarComponent = Ember.Charts.ChartComponent.extend(Ember.Cha
   },
   updateAxes: function() {
     var gYAxis, graphicLeft, graphicTop, yAxis;
-    yAxis = d3.svg.axis().scale(this.get('yScale')).orient('right').ticks(this.get('numYTicks')).tickSize(this.get('graphicWidth')).tickFormat(this.get('formatYAxis'));
+    yAxis = d3.svg.axis().scale(this.get('yScale')).orient('right').ticks(this.get('numYTicks')).tickSize(this.get('graphicWidth')).tickFormat(this.get('formatValueAxis'));
     graphicTop = this.get('graphicTop');
     graphicLeft = this.get('graphicLeft');
     gYAxis = this.get('yAxis').attr({
@@ -2648,13 +2657,6 @@ Ember.Charts.TimeSeriesComponent = Ember.Charts.ChartComponent.extend(Ember.Char
   formatTime: d3.time.format('%Y-%m-%d'),
   formatTimeLong: d3.time.format('%a %b %-d, %Y'),
   formatLabel: d3.format(',.2f'),
-  formatYAxis: Ember.computed(function() {
-    var formatter, prefix;
-    prefix = d3.formatPrefix(this.get('yDomain')[1]);
-    return formatter = function(value) {
-      return "" + (prefix.scale(value)) + prefix.symbol;
-    };
-  }).property('yScale', 'yDomain', 'numYTicks'),
   ungroupedSeriesName: 'Other',
   interpolate: false,
   yAxisFromZero: false,
@@ -2963,20 +2965,26 @@ Ember.Charts.TimeSeriesComponent = Ember.Charts.ChartComponent.extend(Ember.Char
   xGroupScale: Ember.computed(function() {
     return d3.scale.ordinal().domain(this.get('xWithinGroupDomain')).rangeRoundBands([0, this.get('paddedGroupWidth')], this.get('barPadding') / 2, this.get('barGroupPadding') / 2);
   }).property('xWithinGroupDomain', 'paddedGroupWidth', 'barPadding', 'barGroupPadding'),
+  _valueAxisScaleDidChange: Ember.observer(function() {
+    var yScale;
+    yScale = this.get('yScale');
+    this.set('minAxisValue', yScale.domain()[0]);
+    return this.set('maxAxisValue', yScale.domain()[1]);
+  }).observes('yScale'),
   showDetails: Ember.computed(function() {
     var _this = this;
     if (!this.get('isInteractive')) {
       return Ember.K;
     }
     return function(data, i, element) {
-      var addValueLine, content, formatValue, time;
+      var addValueLine, content, formatLabel, time;
       d3.select(element).classed('hovered', true);
       time = data.labelTime != null ? data.labelTime : data.time;
       content = "<span class=\"tip-label\">" + (_this.get('formatTime')(time)) + "</span>";
-      formatValue = _this.get('formatLabel');
+      formatLabel = _this.get('formatLabel');
       addValueLine = function(d) {
         content += "<span class=\"name\">" + d.group + ": </span>";
-        return content += "<span class=\"value\">" + (formatValue(d.value)) + "</span><br/>";
+        return content += "<span class=\"value\">" + (formatLabel(d.value)) + "</span><br/>";
       };
       if (Ember.isArray(data.values)) {
         data.values.forEach(addValueLine);
@@ -3208,7 +3216,7 @@ Ember.Charts.TimeSeriesComponent = Ember.Charts.ChartComponent.extend(Ember.Char
   updateAxes: function() {
     var gXAxis, gYAxis, graphicHeight, graphicLeft, graphicTop, xAxis, yAxis;
     xAxis = d3.svg.axis().scale(this.get('xTimeScale')).orient('bottom').ticks(this.get('getLabelledTicks')).tickSubdivide(this.get('numberOfMinorTicks')).tickFormat(this.get('formattedTime')).tickSize(6, 3);
-    yAxis = d3.svg.axis().scale(this.get('yScale')).orient('right').ticks(this.get('numYTicks')).tickSize(this.get('graphicWidth')).tickFormat(this.get('formatYAxis'));
+    yAxis = d3.svg.axis().scale(this.get('yScale')).orient('right').ticks(this.get('numYTicks')).tickSize(this.get('graphicWidth')).tickFormat(this.get('formatValueAxis'));
     graphicTop = this.get('graphicTop');
     graphicHeight = this.get('graphicHeight');
     gXAxis = this.get('xAxis').attr({
