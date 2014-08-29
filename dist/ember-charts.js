@@ -707,19 +707,18 @@ Ember.Charts.TimeSeriesLabeler = Ember.Mixin.create({
     }
   }).property('maxNumberOfLabels', 'selectedInterval'),
   quarterFormat: function(d) {
-    var prefix, suffix;
-    prefix = (function() {
-      switch (d.getMonth() % 12) {
-        case 0:
-          return 'Q1';
-        case 3:
-          return 'Q2';
-        case 6:
-          return 'Q3';
-        case 9:
-          return 'Q4';
-      }
-    })();
+    var month, prefix, suffix;
+    month = d.getMonth() % 12;
+    prefix = "";
+    if (month < 3) {
+      prefix = 'Q1';
+    } else if (month < 6) {
+      prefix = 'Q2';
+    } else if (month < 9) {
+      prefix = 'Q3';
+    } else {
+      prefix = 'Q4';
+    }
     suffix = d3.time.format('%Y')(d);
     return prefix + ' ' + suffix;
   },
