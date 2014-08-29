@@ -528,6 +528,7 @@ Ember.Charts.HasTimeSeriesRule = Ember.Mixin.create({
 
 
 Ember.Charts.TimeSeriesLabeler = Ember.Mixin.create({
+  isCenteredAxis: Ember.computed.alias('_hasBarData'),
   selectedInterval: 'M',
   maxNumberOfLabels: 10,
   numberOfMinorTicks: Ember.computed(function() {
@@ -566,10 +567,47 @@ Ember.Charts.TimeSeriesLabeler = Ember.Mixin.create({
     return secondIndex - firstIndex - 1;
   }).property('xDomain', 'selectedInterval'),
   labelledTicks: Ember.computed(function() {
-    var domain;
+    var count, domain, interval, tick, ticks, _i, _len, _results;
     domain = this.get('xDomain');
-    return this.get('getLabelledTicks')(domain[0], domain[1]);
+    ticks = this.get('getLabelledTicks')(domain[0], domain[1]);
+    if (!this.get('isCenteredAxis')) {
+      return ticks;
+    } else {
+      count = 1;
+      interval = (function() {
+        switch (this.get('selectedInterval')) {
+          case 'years':
+          case 'Y':
+            return 'year';
+          case 'quarters':
+          case 'Q':
+            return 'quarter';
+          case 'months':
+          case 'M':
+            return 'month';
+          case 'weeks':
+          case 'W':
+            return 'week';
+          case 'seconds':
+          case 'S':
+            return 'second';
+        }
+      }).call(this);
+      if (interval === 'quarter') {
+        count = 3;
+        interval = 'month';
+      }
+      _results = [];
+      for (_i = 0, _len = ticks.length; _i < _len; _i++) {
+        tick = ticks[_i];
+        _results.push(this._advanceMiddle(tick, interval, count));
+      }
+      return _results;
+    }
   }).property('xDomain'),
+  _advanceMiddle: function(time, interval, count) {
+    return new Date((time = time.getTime() / 2 + d3.time[interval].offset(time, count) / 2));
+  },
   labelledYears: function(start, stop) {
     var skipVal, years;
     years = d3.time.years(start, stop);
@@ -3223,7 +3261,7 @@ Ember.Charts.TimeSeriesComponent = Ember.Charts.ChartComponent.extend(Ember.Char
   },
   updateAxes: function() {
     var gXAxis, gYAxis, graphicHeight, graphicLeft, graphicTop, xAxis, yAxis;
-    xAxis = d3.svg.axis().scale(this.get('xTimeScale')).orient('bottom').ticks(this.get('getLabelledTicks')).tickSubdivide(this.get('numberOfMinorTicks')).tickFormat(this.get('formattedTime')).tickSize(6, 3);
+    xAxis = d3.svg.axis().scale(this.get('xTimeScale')).orient('bottom').tickValues(this.get('labelledTicks')).tickSubdivide(this.get('numberOfMinorTicks')).tickFormat(this.get('formattedTime')).tickSize(6, 3);
     yAxis = d3.svg.axis().scale(this.get('yScale')).orient('right').ticks(this.get('numYTicks')).tickSize(this.get('graphicWidth')).tickFormat(this.get('formatValueAxis'));
     graphicTop = this.get('graphicTop');
     graphicHeight = this.get('graphicHeight');

@@ -623,7 +623,7 @@ Ember.Charts.TimeSeriesComponent = Ember.Charts.ChartComponent.extend(
     xAxis = d3.svg.axis()
       .scale(@get 'xTimeScale')
       .orient('bottom')
-      .ticks(@get 'getLabelledTicks')
+      .tickValues(@get 'labelledTicks')
       .tickSubdivide(@get 'numberOfMinorTicks')
       .tickFormat(@get 'formattedTime')
       .tickSize(6, 3)

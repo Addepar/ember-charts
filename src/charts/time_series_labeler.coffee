@@ -2,6 +2,9 @@
 # Provides @formattedTime. Depends on @xDomain and @selectedInterval.
 Ember.Charts.TimeSeriesLabeler = Ember.Mixin.create
 
+  # When set redraw where the axes go
+  isCenteredAxis: Ember.computed.alias '_hasBarData'
+
   # Interval for ticks on time axis can be:
   # years, months, weeks, days
   selectedInterval: 'M'
@@ -46,8 +49,25 @@ Ember.Charts.TimeSeriesLabeler = Ember.Mixin.create
   #  This is the set of ticks on which labels appear.
   labelledTicks: Ember.computed ->
     domain = @get 'xDomain'
-    @get('getLabelledTicks')(domain[0], domain[1])
+    ticks = @get('getLabelledTicks')(domain[0], domain[1])
+    unless @get 'isCenteredAxis'
+      ticks
+    else
+      count = 1
+      interval = switch @get('selectedInterval')
+        when 'years', 'Y' then 'year'
+        when 'quarters', 'Q' then 'quarter'
+        when 'months', 'M' then 'month'
+        when 'weeks' , 'W'  then 'week'
+        when 'seconds', 'S' then 'second'
+      if interval is 'quarter'
+        count = 3
+        interval = 'month'
+      (@_advanceMiddle(tick, interval, count) for tick in ticks)
   .property 'xDomain'
+
+  _advanceMiddle: (time, interval, count) ->
+    new Date (time = time.getTime()/2 + d3.time[interval].offset(time, count)/2)
 
   # the years which should be labelled
   labelledYears: (start, stop) ->
