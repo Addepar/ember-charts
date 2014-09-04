@@ -3087,8 +3087,7 @@ Ember.Charts.TimeSeriesComponent = Ember.Charts.ChartComponent.extend(Ember.Char
         return Math.max(0, d.value > zeroLine ? Math.abs(yScale(zeroLine) - yScale(d.value)) - zeroDisplacement : Math.abs(yScale(d.value) - yScale(zeroLine)) - zeroDisplacement);
       }
     };
-  }).property('xTimeScale', 'xGroupScale', 'barWidth', 'yScale')
-}, 'zeroDisplacement', 'barLeftOffset', {
+  }).property('xTimeScale', 'xGroupScale', 'barWidth', 'yScale', 'zeroDisplacement', 'barLeftOffset'),
   line: Ember.computed(function() {
     var _this = this;
     return d3.svg.line().x(function(d) {

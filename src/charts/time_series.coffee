@@ -460,8 +460,8 @@ Ember.Charts.TimeSeriesComponent = Ember.Charts.ChartComponent.extend(
         Math.abs(yScale(zeroLine) - yScale(d.value)) - zeroDisplacement
       else
         Math.abs(yScale(d.value) - yScale(zeroLine)) - zeroDisplacement
-  .property 'xTimeScale', 'xGroupScale', 'barWidth', 'yScale',
-    'zeroDisplacement', 'barLeftOffset'
+  .property( 'xTimeScale', 'xGroupScale', 'barWidth', 'yScale',
+    'zeroDisplacement', 'barLeftOffset' )
 
   line: Ember.computed ->
     d3.svg.line()
