@@ -1154,7 +1154,9 @@ Ember.Charts.ChartComponent = Ember.Component.extend(Ember.Charts.Colorable, Emb
 
 Ember.Charts.HorizontalBarComponent = Ember.Charts.ChartComponent.extend(Ember.Charts.FloatingTooltipMixin, {
   classNames: ['chart-horizontal-bar'],
-  formatLabel: d3.format(',.2f'),
+  formatLabel: d3.format(',.4r'),
+  formatValue: d3.format(',.2f'),
+  formatValueLong: d3.format(',.2f'),
   selectedSortType: 'value',
   defaultOuterHeight: 500,
   labelWidth: Ember.computed(function() {
@@ -1247,12 +1249,14 @@ Ember.Charts.HorizontalBarComponent = Ember.Charts.ChartComponent.extend(Ember.C
       return Ember.K;
     }
     return function(data, i, element) {
-      var content, formatLabel;
+      var content, formatLabel, formattedLabel;
       d3.select(element).classed('hovered', true);
       formatLabel = _this.get('formatLabel');
       content = "<span class=\"tip-label\">" + data.label + "</span>";
       content += "<span class=\"name\">" + (_this.get('tooltipValueDisplayName')) + ": </span>";
-      content += "<span class=\"value\">" + (formatLabel(data.value)) + "</span>";
+      debugger;
+      formattedLabel = formatLabel(data.value);
+      content += "<span class=\"value\">" + formattedLabel + "</span>";
       return _this.showTooltip(content, d3.event);
     };
   }).property('isInteractive'),
