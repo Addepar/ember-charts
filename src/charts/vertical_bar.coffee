@@ -10,6 +10,10 @@ Ember.Charts.VerticalBarComponent = Ember.Charts.ChartComponent.extend(
   # Getters for formatting human-readable labels from provided data
   formatLabel: d3.format(',.2f')
 
+  # Sort key for the data. Defaults to none, can be set to "value" to sort by
+  # values. If data is grouped, sort by the first value in the group.
+  selectedSortType: 'none'
+
   # Data without group will be merged into a group with this name
   ungroupedSeriesName: 'Other'
 
@@ -47,11 +51,25 @@ Ember.Charts.VerticalBarComponent = Ember.Charts.ChartComponent.extend(
 
   # Aggregates objects provided in `data` in a dictionary, keyed by group names
   groupedData: Ember.computed ->
-    data = @get 'data'
+    data = @get 'sortedData'
     return [] if Ember.isEmpty data
     Ember.Charts.Helpers.groupBy data, (d) =>
       d.group ? @get('ungroupedSeriesName')
-  .property 'data.@each', 'ungroupedSeriesName'
+  .property 'sortedData', 'ungroupedSeriesName'
+
+  sortedData: Ember.computed ->
+    type = @get 'selectedSortType'
+    data = @get 'data'
+    # First sort the data if applicable
+    if type is 'value'
+      data = data.sort (a, b) ->
+        # Sort decending. In future, might be worth breaking this out into a
+        # configurable option
+        if a.value < b.value then 1
+        else if a.value > b.value then -1
+        else 0
+    data
+  .property 'selectedSortType', 'data.@each'
 
   groupNames: Ember.computed ->
     for groupName, values of @get('groupedData')
@@ -101,12 +119,12 @@ Ember.Charts.VerticalBarComponent = Ember.Charts.ChartComponent.extend(
       return [] if Ember.isEmpty @get('data')
       # If we have grouped data and do not have stackBars turned on, split the
       # data up so it gets drawn in separate groups and labeled
-      for d in @get('data')
+      for d in @get('sortedData')
         group: d.label
         values: [d]
   # TODO(tony): Need to have stacked bars as a dependency here and the
   # calculation be outside of this
-  .property 'groupedData', 'isGrouped', 'stackBars'
+  .property 'groupedData', 'isGrouped', 'stackBars', 'sortedData'
 
   # ----------------------------------------------------------------------------
   # Layout
