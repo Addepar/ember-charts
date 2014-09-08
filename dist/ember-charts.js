@@ -1790,6 +1790,7 @@ Ember.Handlebars.helper('pie-chart', Ember.Charts.PieComponent);
 Ember.Charts.VerticalBarComponent = Ember.Charts.ChartComponent.extend(Ember.Charts.Legend, Ember.Charts.FloatingTooltipMixin, Ember.Charts.AxesMixin, {
   classNames: ['chart-vertical-bar'],
   formatLabel: d3.format(',.2f'),
+  selectedSortType: 'none',
   ungroupedSeriesName: 'Other',
   stackBars: false,
   withinGroupPadding: 0,
@@ -1805,7 +1806,7 @@ Ember.Charts.VerticalBarComponent = Ember.Charts.ChartComponent.extend(Ember.Cha
   groupedData: Ember.computed(function() {
     var data,
       _this = this;
-    data = this.get('data');
+    data = this.get('sortedData');
     if (Ember.isEmpty(data)) {
       return [];
     }
@@ -1813,7 +1814,24 @@ Ember.Charts.VerticalBarComponent = Ember.Charts.ChartComponent.extend(Ember.Cha
       var _ref;
       return (_ref = d.group) != null ? _ref : _this.get('ungroupedSeriesName');
     });
-  }).property('data.@each', 'ungroupedSeriesName'),
+  }).property('sortedData', 'ungroupedSeriesName'),
+  sortedData: Ember.computed(function() {
+    var data, type;
+    type = this.get('selectedSortType');
+    data = this.get('data');
+    if (type === 'value') {
+      data = data.sort(function(a, b) {
+        if (a.value < b.value) {
+          return 1;
+        } else if (a.value > b.value) {
+          return -1;
+        } else {
+          return 0;
+        }
+      });
+    }
+    return data;
+  }).property('selectedSortType', 'data.@each'),
   groupNames: Ember.computed(function() {
     var groupName, values, _ref, _results;
     _ref = this.get('groupedData');
@@ -1892,7 +1910,7 @@ Ember.Charts.VerticalBarComponent = Ember.Charts.ChartComponent.extend(Ember.Cha
       if (Ember.isEmpty(this.get('data'))) {
         return [];
       }
-      _ref1 = this.get('data');
+      _ref1 = this.get('sortedData');
       _results1 = [];
       for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
         d = _ref1[_i];
@@ -1903,7 +1921,7 @@ Ember.Charts.VerticalBarComponent = Ember.Charts.ChartComponent.extend(Ember.Cha
       }
       return _results1;
     }
-  }).property('groupedData', 'isGrouped', 'stackBars'),
+  }).property('groupedData', 'isGrouped', 'stackBars', 'sortedData'),
   labelHeightOffset: Ember.computed(function() {
     var labelSize;
     labelSize = this.get('_shouldRotateLabels') ? this.get('maxLabelHeight') : this.get('labelHeight');
