@@ -158,13 +158,9 @@ Ember.Charts.TimeSeriesComponent = Ember.Charts.ChartComponent.extend(
     _.keys(barGroups)
   .property 'barData.@each', 'ungroupedSeriesName'
 
-  _hasLineData: Ember.computed ->
-    !Ember.isEmpty(@get 'lineData')
-  .property 'lineData'
+  _hasLineData: Ember.computed.notEmpty 'lineData'
 
-  _hasBarData: Ember.computed ->
-    !Ember.isEmpty(@get 'barData')
-  .property 'barData'
+  _hasBarData: Ember.computed.notEmpty 'barData'
 
   # ----------------------------------------------------------------------------
   # Layout
@@ -467,7 +463,7 @@ Ember.Charts.TimeSeriesComponent = Ember.Charts.ChartComponent.extend(
   # 4th line: ~1px, 66% tinted, dotted
   # 5th line: ~3px, 33% tinted, solid
   # 6th line: ~3px, 33% tinted, dotted
-  getLineColor: Ember.computed ->
+  lineColorFn: Ember.computed ->
     (d,i) =>
       getSeriesColor = @get 'getSeriesColor'
       switch i
@@ -484,7 +480,7 @@ Ember.Charts.TimeSeriesComponent = Ember.Charts.ChartComponent.extend(
     line = @get 'line'
     class: (d,i) -> "line series-#{i}"
     d: (d) -> line d.values
-    stroke: @get 'getLineColor'
+    stroke: @get 'lineColorFn'
     'stroke-width': (d, i) =>
       switch i
         when 0 then 2

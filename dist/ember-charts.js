@@ -421,7 +421,7 @@ Ember.Charts.HasTimeSeriesRule = Ember.Mixin.create({
   xTimeScale: null,
   showDetails: null,
   hideDetails: null,
-  getLineColor: null,
+  lineColorFn: null,
   graphicHeight: null,
   updateLineMarkers: function() {
     var hideDetails, lineMarkers, showDetails;
@@ -434,7 +434,7 @@ Ember.Charts.HasTimeSeriesRule = Ember.Mixin.create({
       return hideDetails(d, i, this);
     }).attr({
       "class": 'line-marker',
-      fill: this.get('getLineColor'),
+      fill: this.get('lineColorFn'),
       d: d3.svg.symbol().size(50).type('circle')
     });
     lineMarkers.exit().remove();
@@ -569,7 +569,7 @@ Ember.Charts.TimeSeriesLabeler = Ember.Mixin.create({
   labelledTicks: Ember.computed(function() {
     var count, domain, interval, tick, ticks, _i, _len, _results;
     domain = this.get('xDomain');
-    ticks = this.get('getLabelledTicks')(domain[0], domain[1]);
+    ticks = this.get('tickLabelerFn')(domain[0], domain[1]);
     if (!this.get('centerAxisLabels')) {
       return ticks;
     } else {
@@ -671,7 +671,7 @@ Ember.Charts.TimeSeriesLabeler = Ember.Mixin.create({
       return weeks;
     }
   },
-  getLabelledTicks: Ember.computed(function() {
+  tickLabelerFn: Ember.computed(function() {
     var _this = this;
     switch (this.get('selectedInterval')) {
       case 'years':
@@ -2847,12 +2847,8 @@ Ember.Charts.TimeSeriesComponent = Ember.Charts.ChartComponent.extend(Ember.Char
     });
     return _.keys(barGroups);
   }).property('barData.@each', 'ungroupedSeriesName'),
-  _hasLineData: Ember.computed(function() {
-    return !Ember.isEmpty(this.get('lineData'));
-  }).property('lineData'),
-  _hasBarData: Ember.computed(function() {
-    return !Ember.isEmpty(this.get('barData'));
-  }).property('barData'),
+  _hasLineData: Ember.computed.notEmpty('lineData'),
+  _hasBarData: Ember.computed.notEmpty('barData'),
   graphicLeft: Ember.computed.alias('labelWidthOffset'),
   graphicWidth: Ember.computed(function() {
     return this.get('width') - this.get('labelWidthOffset');
@@ -3110,7 +3106,7 @@ Ember.Charts.TimeSeriesComponent = Ember.Charts.ChartComponent.extend(Ember.Char
       return _this.get('yScale')(d.value);
     }).interpolate(this.get('interpolate') ? 'basis' : 'linear');
   }).property('xTimeScale', 'yScale', 'interpolate'),
-  getLineColor: Ember.computed(function() {
+  lineColorFn: Ember.computed(function() {
     var _this = this;
     return function(d, i) {
       var getSeriesColor;
@@ -3145,7 +3141,7 @@ Ember.Charts.TimeSeriesComponent = Ember.Charts.ChartComponent.extend(Ember.Char
       d: function(d) {
         return line(d.values);
       },
-      stroke: this.get('getLineColor'),
+      stroke: this.get('lineColorFn'),
       'stroke-width': function(d, i) {
         switch (i) {
           case 0:
