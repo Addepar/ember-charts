@@ -50,7 +50,7 @@ Ember.Charts.TimeSeriesLabeler = Ember.Mixin.create
   #  This is the set of ticks on which labels appear.
   labelledTicks: Ember.computed ->
     domain = @get 'xDomain'
-    ticks = @get('getLabelledTicks')(domain[0], domain[1])
+    ticks = @get('tickLabelerFn')(domain[0], domain[1])
     unless @get 'centerAxisLabels'
       ticks
     else
@@ -131,7 +131,7 @@ Ember.Charts.TimeSeriesLabeler = Ember.Mixin.create
 
   # Returns the function which returns the labelled intervals between
   # start and stop for the selected interval.
-  getLabelledTicks: Ember.computed ->
+  tickLabelerFn: Ember.computed ->
     switch @get 'selectedInterval'
       when 'years', 'Y' then ((start, stop) => @labelledYears(start, stop))
       when 'quarters', 'Q' then ((start, stop) => @labelledQuarters(start,stop))

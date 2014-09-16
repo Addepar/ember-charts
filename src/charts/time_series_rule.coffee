@@ -16,7 +16,7 @@ Ember.Charts.HasTimeSeriesRule = Ember.Mixin.create
   # hasLineData: specifies if the mixing in class has line data
   # showDetails: function to be called on mouseing over the line marker
   # hideDetails: function to be called on mouseing out of the line marker
-  # getLineColor: function which returns a line color, used for fill
+  # lineColorFn: function which returns a line color, used for fill
   # color of markers
   # graphicHeight: height of graphic containing lines
   # isInteractive: specifies whether the chart is interactive
@@ -26,7 +26,7 @@ Ember.Charts.HasTimeSeriesRule = Ember.Mixin.create
   xTimeScale: null
   showDetails: null
   hideDetails: null
-  getLineColor: null
+  lineColorFn: null
   graphicHeight: null
 
   # ----------------------------------------------------------------------
@@ -44,7 +44,7 @@ Ember.Charts.HasTimeSeriesRule = Ember.Mixin.create
       .on("mouseout", (d,i) -> hideDetails(d,i,this))
       .attr
         class: 'line-marker'
-        fill: @get 'getLineColor'
+        fill: @get 'lineColorFn'
         d: d3.svg.symbol().size(50).type('circle')
 
     lineMarkers.exit().remove()
