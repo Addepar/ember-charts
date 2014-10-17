@@ -10,9 +10,9 @@ Ember.Charts.VerticalBarComponent = Ember.Charts.ChartComponent.extend(
   # Getters for formatting human-readable labels from provided data
   formatLabel: d3.format(',.2f')
 
-  # Sort key for the data. Defaults to none, can be set to "value" to sort by
-  # values. If data is grouped, sort by the first value in the group.
-  selectedSortType: 'none'
+  # Sort key for the data. When sorting by value with grouped bars, 
+  # sort by the first value in the group.
+  selectedSortType: 'value'
 
   # Data without group will be merged into a group with this name
   ungroupedSeriesName: 'Other'
@@ -58,17 +58,18 @@ Ember.Charts.VerticalBarComponent = Ember.Charts.ChartComponent.extend(
   .property 'sortedData', 'ungroupedSeriesName'
 
   sortedData: Ember.computed ->
-    type = @get 'selectedSortType'
-    data = @get 'data'
-    # First sort the data if applicable
-    if type is 'value'
-      data = data.sort (a, b) ->
-        # Sort decending. In future, might be worth breaking this out into a
-        # configurable option
-        if a.value < b.value then 1
-        else if a.value > b.value then -1
-        else 0
-    data
+    data = @get('data')
+    return [] if Ember.isEmpty(data)
+
+    sortType = @get 'selectedSortType'
+    sortFunc = switch sortType
+      when 'value' then (d) => -d.value
+      when 'label' then (d) => d.label
+    comparator = (a,b) ->
+      if sortFunc(a) < sortFunc(b) then -1
+      else if sortFunc(a) > sortFunc(b) then 1
+      else 0
+    data.sort(comparator)
   .property 'selectedSortType', 'data.@each'
 
   groupNames: Ember.computed ->
