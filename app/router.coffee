@@ -21,3 +21,12 @@ App.IndexRoute = Ember.Route.extend
 App.EmberChartsIndexRoute = Ember.Route.extend
   redirect: ->
     @transitionTo 'emberCharts.overview'
+
+App.EmberChartsOverviewRoute = Ember.Route.extend
+  activate: ->
+    controller = @controllerFor('emberCharts')
+    controller.set 'showLargeHero', yes
+
+  deactivate: ->
+    controller = @controllerFor('emberCharts')
+    controller.set 'showLargeHero', no

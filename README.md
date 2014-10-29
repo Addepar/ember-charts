@@ -7,7 +7,7 @@ best practices in chart interactivity and presentation.
 
 
 ## Demo and Documentation
-http://addepar.github.io/#/ember-charts/overview
+http://addepar.github.io/ember-charts/
 
 
 ## Getting Started
@@ -41,9 +41,11 @@ To view examples, start the node server. From the root directory:
 You can view the examples at http://localhost:8000/gh_pages.
 
 ## Dependencies
-* ember
-* lodash
 * d3
+* ember
+* jquery
+* jquery-ui
+* lodash
 
 ## Contributing
 
@@ -69,16 +71,25 @@ In a nutshell, this means:
 
 
 ### Maintainers
-Update version numbers and release using https://github.com/webpro/release-it. Install:
-```
-$ npm install -g release-it
-$ alias release="release-it"
-```
-Release process:
+Update version numbers and release using https://github.com/webpro/grunt-release-it:
+
 ```
 $ vim CHANGELOG.md
-$ release <options>
+$ grunt release-it:<options>
 ```
+
+By default, this will release a new patch version. Other suggested commands:
+
+```
+$ grunt release-it:minor
+$ grunt release-it:major
+$ grunt release-it:X.Y.Z
+```
+
+Ember Charts uses the "distribution repository" feature of `release-it` to push to
+the `gh-pages` branch and update documentation. When prompted, do NOT update the
+tag for the distribution repository. We'll streamline the release process a bit
+more soon.
 
 
 ## Copyright and License

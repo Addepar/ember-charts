@@ -1,10 +1,15 @@
 <div class="col-md-10 col-md-offset-2 left-border main-content-container">
-  <h1>Ember Charts</h1>
-  <p class="elevated">A charting library built with the
-  Ember.js and d3.js frameworks. It includes time series, bar, pie, and
-  scatter charts which are easy to extend and modify. The out-of-the-box
-  behavior these chart components represents our thoughts on best
-  practices in chart interactivity and presentation.</p>
+  <div class="row">
+    <div class="col-md-12">
+      <h1>Ember Charts</h1>
+      <p class="elevated">A charting library built with the
+      Ember.js and d3.js frameworks. It includes time series, bar, pie, and
+      scatter charts which are easy to extend and modify. The out-of-the-box
+      behavior these chart components represents our thoughts on best
+      practices in chart interactivity and presentation.</p>
+    </div>
+  </div>
+
   <div class="row ember-charts-examples">
     {{#link-to 'emberCharts.time_series'}}
       <div class="col-md-4">
@@ -56,9 +61,11 @@
     <div class="col-md-6">
       <h3>Dependencies</h3>
       <ul class="styled">
-        <li><a target="_BLANK" href="http://emberjs.com/">Ember.js</a></li>
         <li><a target="_BLANK" href="http://d3js.org/">D3.js</a></li>
+        <li><a target="_BLANK" href="http://emberjs.com/">Ember.js</a></li>
         <li><a target="_BLANK" href="http://lodash.com/">Lo-Dash.js</a></li>
+        <li><a target="_BLANK" href="http://jquery.com/">jQuery</a></li>
+        <li><a target="_BLANK" href="http://jqueryui.com/">jQuery UI</a></li>
       </ul>
     </div>
   </div>
@@ -68,7 +75,9 @@
       <hr>
       <h1>Getting Started</h1>
       <p>You will need <a target="_BLANK" href="http://nodejs.org/">node</a> installed as a development dependency.</p>
-      <p><a href="https://github.com/Addepar/ember-charts/">Clone it from Github</a> or <a href="https://github.com/Addepar/ember-charts/zipball/master">download the ZIP repo<a><p>
+      <p><a target="_BLANK"
+      href="https://github.com/Addepar/ember-charts/">Clone it from Github</a>
+      or <a target="_BLANK" href="https://github.com/Addepar/ember-charts/releases">download the ZIP repo</a></p>
       <div class="highlight">
 <pre><code>$ npm install -g grunt-cli
 $ npm install
@@ -79,16 +88,6 @@ $ node examples.js</code></pre>
     </div>
     <div class="col-md-6">
       <hr>
-      <h1>Changelog</h1>
-      <ul class="styled">
-        <li>v0.1 - October 21, 2013. Branch: <a target="_BLANK" href="https://github.com/Addepar/ember-charts/tree/master">Master →</a></li>
-      </ul>
-    </div>
-  </div>
-
-  <div class="row">
-    <div class="col-md-6">
-      <hr>
       <h1>Contributing</h1>
       <p>You can contribute to this project in one of two ways:
       <ul class="styled">
@@ -96,6 +95,17 @@ $ node examples.js</code></pre>
         <li>Clone the ember-charts repo, make some changes according to our development guidelines and issue a pull-request with your changes.</li>
       </ul>
       <p>We keep the ember-charts.js code to the minimum necessary, giving users as much control as possible.</p>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-6">
+      <hr>
+      <h1>Changelog</h1>
+      <p>The current version is 0.3.0.
+      <p>For the full list of changes, please see <a target="_BLANK"
+      href="https://github.com/Addepar/ember-charts/blob/master/CHANGELOG.md">CHANGELOG.md</a>.</p>
+      </ul>
     </div>
     <div class="col-md-6">
       <hr>

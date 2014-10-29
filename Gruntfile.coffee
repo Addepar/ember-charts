@@ -2,17 +2,32 @@
 # ember-todos-with-build-tools-tests-and-other-modern-conveniences
 module.exports = (grunt) ->
 
-  # env could be 'dev' or 'prod'
-  env = grunt.option("env") or "dev"
+  grunt.loadNpmTasks "grunt-bower-task"
+  grunt.loadNpmTasks "grunt-contrib-uglify"
+  grunt.loadNpmTasks "grunt-contrib-jshint"
+  grunt.loadNpmTasks "grunt-contrib-qunit"
+  grunt.loadNpmTasks "grunt-neuter"
+  grunt.loadNpmTasks "grunt-contrib-watch"
+  grunt.loadNpmTasks "grunt-ember-templates"
+  grunt.loadNpmTasks "grunt-contrib-coffee"
+  grunt.loadNpmTasks "grunt-contrib-less"
+  grunt.loadNpmTasks "grunt-contrib-copy"
+  grunt.loadNpmTasks "grunt-contrib-clean"
+  grunt.loadNpmTasks "grunt-text-replace"
+  grunt.loadNpmTasks "grunt-banner"
+  grunt.loadNpmTasks "grunt-release-it"
 
   grunt.initConfig
     pkg: grunt.file.readJSON 'package.json'
+    banner: '/*!\n* <%=pkg.name %> v<%=pkg.version%>\n' +
+            '* Copyright 2012-<%=grunt.template.today("yyyy")%> Addepar Inc.\n' +
+            '* See LICENSE.\n*/',
 
     clean:
       target: ['build', 'dist' , 'gh_pages']
 
     coffee:
-      dist:
+      src:
         options:
           bare: true
         expand: true
@@ -20,7 +35,7 @@ module.exports = (grunt) ->
         src: [ "**/*.coffee" ]
         dest: "build/src/"
         ext: ".js"
-      docs:
+      app:
         options:
           bare: true
         expand: true
@@ -44,10 +59,13 @@ module.exports = (grunt) ->
       "dist/ember-charts.js": "build/src/dist.js"
       "gh_pages/app.js": "build/app/app.js"
 
+    uglify:
+      "dist/ember-charts.min.js": "dist/ember-charts.js"
+
     less:
-      docs:
+      all:
         options:
-          yuicompress: env isnt "dev"
+          yuicompress: no
         files:
           "dist/ember-charts.css": "src/css/ember-charts.less"
           "gh_pages/css/app.css": "app/assets/css/app.less"
@@ -58,13 +76,14 @@ module.exports = (grunt) ->
     copy:
       gh_pages:
         files: [
+          {src: ['dist/css/ember-charts.css'], dest: 'gh_pages/css/ember-charts.css'},
           {src: ['app/index.html'], dest: 'gh_pages/index.html'},
-          {expand: true, flatten: true, cwd: 'dependencies/', src: ['**/*.js'], dest: 'gh_pages/lib'},
-          {expand: true, flatten: true, cwd: 'dependencies/', src: ['**/*.css'], dest: 'gh_pages/css'},
-          {expand: true, flatten: true, cwd: 'vendor/', src: ['**/*.js'], dest: 'gh_pages/lib'},
-          {expand: true, flatten: true, cwd: 'vendor/', src: ['**/*.css'], dest: 'gh_pages/css'},
-          {expand: true, cwd: 'dependencies/font-awesome/font/', src: ['**'], dest: 'gh_pages/font'},
-          {expand: true, cwd: 'app/assets/font/', src: ['**'], dest: 'gh_pages/font'},
+          {expand: true, cwd: 'dependencies/', src: ['**/*.js'], dest: 'gh_pages/lib'},
+          {expand: true, cwd: 'dependencies/', src: ['**/*.css'], dest: 'gh_pages/lib'},
+          {expand: true, cwd: 'vendor/', src: ['**/*.js'], dest: 'gh_pages/lib'},
+          {expand: true, cwd: 'vendor/', src: ['**/*.css'], dest: 'gh_pages/lib'},
+          {expand: true, cwd: 'dependencies/font-awesome/fonts/', src: ['**'], dest: 'gh_pages/lib/font-awesome/fonts'},
+          {expand: true, cwd: 'app/assets/font/', src: ['**'], dest: 'gh_pages/fonts'},
           {expand: true, cwd: 'app/assets/img/', src: ['**'],  dest: 'gh_pages/img'}
         ]
 
@@ -76,6 +95,51 @@ module.exports = (grunt) ->
           layout: 'byComponent'
           verbose: true
           copy: false
+
+    replace:
+      global_version:
+        src: ['VERSION']
+        overwrite: true
+        replacements: [
+          from: /.*\..*\..*/
+          to: '<%=pkg.version%>'
+        ]
+      main_coffee_version:
+        src: ['src/dist.coffee']
+        overwrite: true
+        replacements: [
+          from: /Ember.Charts.VERSION = '.*\..*\..*'/
+          to: "Ember.Charts.VERSION = '<%=pkg.version%>'"
+        ]
+      overview_page:
+        src: ['app/templates/ember_charts/overview.hbs']
+        overwrite: true,
+        replacements: [{
+          from: /The current version is .*\..*\..*./
+          to: "The current version is <%=pkg.version%>."
+        }]
+
+    usebanner:
+      js:
+        options:
+          banner: '<%=banner%>'
+        files:
+          src: ['dist/*.js']
+      css:
+        options:
+          banner: '<%=banner%>'
+        files:
+          src: ['dist/*.css']
+
+    ###
+      Reads the projects .jshintrc file and applies coding
+      standards. Doesn't lint the dependencies or test
+      support files.
+    ###
+    jshint:
+      all: ['Gruntfile.js', 'src/**/*.js', 'test/**/*.js', '!dependencies/*.*', '!test/support/*.*']
+      options:
+        jshintrc: ".jshintrc"
 
     ###
       Watch files for changes.
@@ -93,51 +157,19 @@ module.exports = (grunt) ->
         tasks: [ "default" ]
       code:
         files: [ "src/**/*.coffee", "app/**/*.coffee", "dependencies/**/*.js" ]
-        tasks: [ "coffee", "neuter" ]
+        tasks: [ "coffee", "neuter", "uglify", "usebanner:js" ]
       handlebars:
         files: [ "src/**/*.hbs", "app/**/*.hbs"]
-        tasks: [ "emberTemplates", "neuter" ]
+        tasks: [ "emberTemplates", "neuter", "uglify", "usebanner:js" ]
       less:
         files: [ "app/assets/**/*.less", "app/assets/**/*.cmss", "src/**/*.less" ]
-        tasks: ["less", "copy"]
+        tasks: [ "less", "copy", "usebanner:css" ]
       copy:
         files: [ "app/index.html" ]
         tasks: [ "copy" ]
-
-    replace:
-      global_version:
-        src: ['VERSION']
-        overwrite: true
-        replacements: [
-          from: /.*\..*\..*/
-          to: '<%=pkg.version%>'
-        ]
-      main_coffee_version:
-        src: ['src/dist.coffee']
-        overwrite: true
-        replacements: [
-          from: /Ember.Charts.VERSION = '.*\..*\..*'/
-          to: "Ember.Charts.VERSION = '<%=pkg.version%>'"
-        ]
-
-    usebanner:
-      dist:
-        options:
-          banner: '/*!\n* <%=pkg.name %> v<%=pkg.version%>\n' +
-            '* Copyright 2012-<%=grunt.template.today("yyyy")%> Addepar Inc.\n' +
-            '* See LICENSE.\n*/'
-        files:
-          src: ['dist/*']
-
-    ###
-      Reads the projects .jshintrc file and applies coding
-      standards. Doesn't lint the dependencies or test
-      support files.
-    ###
-    jshint:
-      all: ['Gruntfile.js', 'src/**/*.js', 'test/**/*.js', '!dependencies/*.*', '!test/support/*.*']
-      options:
-        jshintrc: ".jshintrc"
+      bower:
+        files: [ 'bower.json']
+        tasks: [ 'bower']
 
     ###
       Find all the <whatever>_test.js files in the test folder.
@@ -148,19 +180,19 @@ module.exports = (grunt) ->
     build_test_runner_file:
       all: [ "test/**/*_test.js" ]
 
-  grunt.loadNpmTasks "grunt-bower-task"
-  grunt.loadNpmTasks "grunt-contrib-uglify"
-  grunt.loadNpmTasks "grunt-contrib-jshint"
-  grunt.loadNpmTasks "grunt-contrib-qunit"
-  grunt.loadNpmTasks "grunt-neuter"
-  grunt.loadNpmTasks "grunt-contrib-watch"
-  grunt.loadNpmTasks "grunt-ember-templates"
-  grunt.loadNpmTasks "grunt-contrib-coffee"
-  grunt.loadNpmTasks "grunt-contrib-less"
-  grunt.loadNpmTasks "grunt-contrib-copy"
-  grunt.loadNpmTasks "grunt-contrib-clean"
-  grunt.loadNpmTasks "grunt-text-replace"
-  grunt.loadNpmTasks "grunt-banner"
+    "release-it":
+      options:
+        "pkgFiles": ["package.json", "bower.json"]
+        "commitMessage": "Release %s"
+        "tagName": "v%s"
+        "tagAnnotation": "Release %s"
+        "increment": "patch"
+        "buildCommand": "grunt dist"
+        "distRepo": "-b gh-pages git@github.com:Addepar/ember-charts"
+        "distStageDir": ".stage"
+        "distBase": "gh_pages"
+        "distFiles": ["**/*"]
+        "publish": false
 
   ###
     A task to build the test runner html file that get place in
@@ -174,7 +206,7 @@ module.exports = (grunt) ->
       files: @filesSrc.map (fileSrc) -> fileSrc.replace "test/", ""
     grunt.file.write "test/runner.html", grunt.template.process(tmpl, renderingContext)
 
-  grunt.registerTask "build_docs", [ "bower", "coffee", "emberTemplates", "neuter", "less"]
-  grunt.registerTask "default", [ "replace", "build_docs", "copy", "usebanner", "watch" ]
-  grunt.registerTask "dist", [ "replace", "build_docs", "copy", "usebanner" ]
+  grunt.registerTask "build_all", [ "coffee", "emberTemplates", "neuter" ]
 
+  grunt.registerTask "dist", [ "clean", "bower", "replace", "build_all", "less", "copy", "uglify", "usebanner" ]
+  grunt.registerTask "default", [ "dist", "watch" ]
