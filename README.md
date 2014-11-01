@@ -14,7 +14,7 @@ http://addepar.github.io/ember-charts/
 
 #### JS Bin Starter Kit
 
-http://emberjs.jsbin.com/rujate/1/edit
+http://emberjs.jsbin.com/rekawobugu/1/edit
 
 #### Installation
 
