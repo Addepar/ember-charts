@@ -1113,9 +1113,10 @@ Ember.Charts.ChartComponent = Ember.Component.extend(Ember.Charts.Colorable, Emb
     _results = [];
     for (_i = 0, _len = _ref.length; _i < _len; _i++) {
       renderVar = _ref[_i];
-      _results.push(this.addObserver(renderVar, function() {
+      this.addObserver(renderVar, function() {
         return Ember.run.once(_this, _this.get('draw'));
-      }));
+      });
+      _results.push(this.get(renderVar));
     }
     return _results;
   },

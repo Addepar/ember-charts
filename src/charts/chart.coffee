@@ -109,6 +109,9 @@ Ember.Charts.ChartComponent = Ember.Component.extend(
     for renderVar in @get('renderVars').uniq()
       @addObserver renderVar, =>
         Ember.run.once this, @get('draw')
+      # This is just to ensure that observers added above fire even
+      # if that renderVar is not consumed elsewhere.
+      @get(renderVar)
 
   didInsertElement: ->
     @_super()
