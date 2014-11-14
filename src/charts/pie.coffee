@@ -1,12 +1,11 @@
 Ember.Charts.PieComponent = Ember.Charts.ChartComponent.extend(
   Ember.Charts.PieLegend, Ember.Charts.FloatingTooltipMixin,
+  Ember.Charts.Formattable,
+
   classNames: ['chart-pie']
   # ----------------------------------------------------------------------------
   # Pie Chart Options
   # ----------------------------------------------------------------------------
-
-  # Getters for formatting human-readable labels from provided data
-  formatLabel: d3.format(',.2f')
 
   # The smallest slices will be combined into an "Other" slice until no slice is
   # smaller than minSlicePercent. "Other" is also guaranteed to be larger than
@@ -233,12 +232,12 @@ Ember.Charts.PieComponent = Ember.Charts.ChartComponent.extend(
         @get('viewport').select('.legend').classed('hovered', yes)
       else
         # Show tooltip when not on hover
-        formatLabel = @get 'formatLabel'
+        formatLabelFunction = @get 'formatLabelFunction'
         # Line 1
         content = "<span class=\"tip-label\">#{data.label}</span>"
         # Line 2
         content +="<span class=\"name\">#{@get 'tooltipValueDisplayName'}: </span>"
-        content +="<span class=\"value\">#{formatLabel(data.value)}</span>"
+        content +="<span class=\"value\">#{formatLabelFunction(data.value)}</span>"
         @showTooltip(content, d3.event)
   .property 'isInteractive'
 
@@ -268,7 +267,7 @@ Ember.Charts.PieComponent = Ember.Charts.ChartComponent.extend(
 
   # Arc drawing function for pie with specified radius
   arc: Ember.computed ->
-    arc = d3.svg.arc()
+    d3.svg.arc()
       .outerRadius(@get 'radius')
       .innerRadius(0)
   .property 'radius'

@@ -1,7 +1,7 @@
 Ember.Charts.TimeSeriesComponent = Ember.Charts.ChartComponent.extend(
   Ember.Charts.Legend, Ember.Charts.TimeSeriesLabeler,
   Ember.Charts.FloatingTooltipMixin, Ember.Charts.HasTimeSeriesRule,
-  Ember.Charts.AxesMixin,
+  Ember.Charts.AxesMixin, Ember.Charts.Formattable,
   classNames: ['chart-time-series']
 
   # ----------------------------------------------------------------------------
@@ -24,7 +24,6 @@ Ember.Charts.TimeSeriesComponent = Ember.Charts.ChartComponent.extend(
   # Getters for formatting human-readable labels from provided data
   formatTime: d3.time.format('%Y-%m-%d')
   formatTimeLong: d3.time.format('%a %b %-d, %Y')
-  formatLabel: d3.format(',.2f')
 
   # Data without group will be merged into a group with this name
   ungroupedSeriesName: 'Other'
@@ -388,10 +387,10 @@ Ember.Charts.TimeSeriesComponent = Ember.Charts.ChartComponent.extend(
       time = if data.labelTime? then data.labelTime else data.time
       content = "<span class=\"tip-label\">#{@get('formatTime')(time)}</span>"
 
-      formatLabel = @get 'formatLabel'
+      formatLabelFunction = @get 'formatLabelFunction'
       addValueLine = (d) ->
         content +="<span class=\"name\">#{d.group}: </span>"
-        content += "<span class=\"value\">#{formatLabel(d.value)}</span><br/>"
+        content += "<span class=\"value\">#{formatLabelFunction(d.value)}</span><br/>"
       if Ember.isArray(data.values)
         # Display all bar details if hovering over axis label
         data.values.forEach addValueLine

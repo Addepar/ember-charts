@@ -319,6 +319,19 @@ Ember.Charts.Colorable = Ember.Mixin.create({
 (function() {
 
 
+Ember.Charts.Formattable = Ember.Mixin.create({
+  formatLabelFunction: Ember.computed(function() {
+    return d3.format("," + (this.get('formatLabel')));
+  }).property('formatLabel'),
+  formatLabel: '.2f'
+});
+
+
+})();
+
+(function() {
+
+
 Ember.Charts.AxesMixin = Ember.Mixin.create({
   graphicWidth: null,
   graphicHeight: null,
@@ -1153,9 +1166,8 @@ Ember.Charts.ChartComponent = Ember.Component.extend(Ember.Charts.Colorable, Emb
 (function() {
 
 
-Ember.Charts.HorizontalBarComponent = Ember.Charts.ChartComponent.extend(Ember.Charts.FloatingTooltipMixin, {
+Ember.Charts.HorizontalBarComponent = Ember.Charts.ChartComponent.extend(Ember.Charts.FloatingTooltipMixin, Ember.Charts.Formattable, {
   classNames: ['chart-horizontal-bar'],
-  formatLabel: d3.format(',.2f'),
   selectedSortType: 'value',
   defaultOuterHeight: 500,
   labelWidth: Ember.computed(function() {
@@ -1250,7 +1262,7 @@ Ember.Charts.HorizontalBarComponent = Ember.Charts.ChartComponent.extend(Ember.C
     return function(data, i, element) {
       var content, formatLabel;
       d3.select(element).classed('hovered', true);
-      formatLabel = _this.get('formatLabel');
+      formatLabel = _this.get('formatLabelFunction');
       content = "<span class=\"tip-label\">" + data.label + "</span>";
       content += "<span class=\"name\">" + (_this.get('tooltipValueDisplayName')) + ": </span>";
       content += "<span class=\"value\">" + (formatLabel(data.value)) + "</span>";
@@ -1381,7 +1393,7 @@ Ember.Charts.HorizontalBarComponent = Ember.Charts.ChartComponent.extend(Ember.C
     return this.updateGraphic();
   },
   updateData: function() {
-    var entering, exiting, groups, hideDetails, showDetails;
+    var entering, groups, hideDetails, showDetails;
     groups = this.get('groups');
     showDetails = this.get('showDetails');
     hideDetails = this.get('hideDetails');
@@ -1393,18 +1405,18 @@ Ember.Charts.HorizontalBarComponent = Ember.Charts.ChartComponent.extend(Ember.C
     entering.append('rect');
     entering.append('text').attr('class', 'value');
     entering.append('text').attr('class', 'group');
-    return exiting = groups.exit().remove();
+    return groups.exit().remove();
   },
   updateAxes: function() {
     return this.get('yAxis').attr(this.get('axisAttrs'));
   },
   updateGraphic: function() {
-    var groupLabels, groups, labelTrimmer, labelWidth, valueLabels,
+    var groups, labelTrimmer, labelWidth,
       _this = this;
     groups = this.get('groups').attr(this.get('groupAttrs'));
     groups.select('rect').attr(this.get('barAttrs'));
-    valueLabels = groups.select('text.value').text(function(d) {
-      return _this.get('formatLabel')(d.value);
+    groups.select('text.value').text(function(d) {
+      return _this.get('formatLabelFunction')(d.value);
     }).attr(this.get('valueLabelAttrs'));
     labelWidth = this.get('labelWidth');
     labelTrimmer = Ember.Charts.Helpers.LabelTrimmer.create({
@@ -1415,7 +1427,7 @@ Ember.Charts.HorizontalBarComponent = Ember.Charts.ChartComponent.extend(Ember.C
         return d.label;
       }
     });
-    return groupLabels = groups.select('text.group').text(function(d) {
+    return groups.select('text.group').text(function(d) {
       return d.label;
     }).attr(this.get('groupLabelAttrs')).call(labelTrimmer.get('trim'));
   }
@@ -1429,9 +1441,8 @@ Ember.Handlebars.helper('horizontal-bar-chart', Ember.Charts.HorizontalBarCompon
 (function() {
 
 
-Ember.Charts.PieComponent = Ember.Charts.ChartComponent.extend(Ember.Charts.PieLegend, Ember.Charts.FloatingTooltipMixin, {
+Ember.Charts.PieComponent = Ember.Charts.ChartComponent.extend(Ember.Charts.PieLegend, Ember.Charts.FloatingTooltipMixin, Ember.Charts.Formattable, {
   classNames: ['chart-pie'],
-  formatLabel: d3.format(',.2f'),
   minSlicePercent: 5,
   maxNumberOfSlices: 8,
   labelWidth: Ember.computed(function() {
@@ -1611,16 +1622,16 @@ Ember.Charts.PieComponent = Ember.Charts.ChartComponent.extend(Ember.Charts.PieL
       return Ember.K;
     }
     return function(d, i, element) {
-      var content, data, formatLabel;
+      var content, data, formatLabelFunction;
       d3.select(element).classed('hovered', true);
       data = d.data;
       if (data._otherItems) {
         return _this.get('viewport').select('.legend').classed('hovered', true);
       } else {
-        formatLabel = _this.get('formatLabel');
+        formatLabelFunction = _this.get('formatLabelFunction');
         content = "<span class=\"tip-label\">" + data.label + "</span>";
         content += "<span class=\"name\">" + (_this.get('tooltipValueDisplayName')) + ": </span>";
-        content += "<span class=\"value\">" + (formatLabel(data.value)) + "</span>";
+        content += "<span class=\"value\">" + (formatLabelFunction(data.value)) + "</span>";
         return _this.showTooltip(content, d3.event);
       }
     };
@@ -1648,8 +1659,7 @@ Ember.Charts.PieComponent = Ember.Charts.ChartComponent.extend(Ember.Charts.PieL
     return "translate(" + cx + "," + cy + ")";
   }).property('marginLeft', 'marginTop', 'width', 'height'),
   arc: Ember.computed(function() {
-    var arc;
-    return arc = d3.svg.arc().outerRadius(this.get('radius')).innerRadius(0);
+    return d3.svg.arc().outerRadius(this.get('radius')).innerRadius(0);
   }).property('radius'),
   pie: Ember.computed(function() {
     return d3.layout.pie().startAngle(this.get('startOffset')).endAngle(this.get('startOffset') + Math.PI * 2).sort(null).value(function(d) {
@@ -1788,9 +1798,8 @@ Ember.Handlebars.helper('pie-chart', Ember.Charts.PieComponent);
 (function() {
 
 
-Ember.Charts.VerticalBarComponent = Ember.Charts.ChartComponent.extend(Ember.Charts.Legend, Ember.Charts.FloatingTooltipMixin, Ember.Charts.AxesMixin, {
+Ember.Charts.VerticalBarComponent = Ember.Charts.ChartComponent.extend(Ember.Charts.Legend, Ember.Charts.FloatingTooltipMixin, Ember.Charts.AxesMixin, Ember.Charts.Formattable, {
   classNames: ['chart-vertical-bar'],
-  formatLabel: d3.format(',.2f'),
   selectedSortType: 'none',
   ungroupedSeriesName: 'Other',
   stackBars: false,
@@ -2055,7 +2064,7 @@ Ember.Charts.VerticalBarComponent = Ember.Charts.ChartComponent.extend(Ember.Cha
       } else {
         content = '';
       }
-      formatLabel = _this.get('formatLabel');
+      formatLabel = _this.get('formatLabelFunction');
       addValueLine = function(d) {
         content += "<span class=\"name\">" + d.label + ": </span>";
         return content += "<span class=\"value\">" + (formatLabel(d.value)) + "</span><br/>";
@@ -2174,11 +2183,10 @@ Ember.Charts.VerticalBarComponent = Ember.Charts.ChartComponent.extend(Ember.Cha
     }
   }).volatile(),
   maxLabelWidth: Ember.computed(function() {
-    var maxLabelWidth;
     if (this.get('isGrouped') || this.get('stackBars')) {
-      return maxLabelWidth = this.get('groupWidth');
+      return this.get('groupWidth');
     } else {
-      return maxLabelWidth = this.get('barWidth');
+      return this.get('barWidth');
     }
   }).property('isGrouped', 'stackBars', 'groupWidth', 'barWidth'),
   _shouldRotateLabels: false,
@@ -2220,7 +2228,7 @@ Ember.Charts.VerticalBarComponent = Ember.Charts.ChartComponent.extend(Ember.Cha
     }
   },
   updateData: function() {
-    var bars, entering, exiting, groups, hideDetails, showDetails, subdata;
+    var bars, entering, groups, hideDetails, showDetails, subdata;
     groups = this.get('groups');
     showDetails = this.get('showDetails');
     hideDetails = this.get('hideDetails');
@@ -2230,7 +2238,7 @@ Ember.Charts.VerticalBarComponent = Ember.Charts.ChartComponent.extend(Ember.Cha
     }).on("mouseout", function(d, i) {
       return hideDetails(d, i, this);
     });
-    exiting = groups.exit().remove();
+    groups.exit().remove();
     if (this.get('stackBars')) {
       subdata = function(d) {
         return d.stackedValues;
@@ -2306,7 +2314,7 @@ Ember.Charts.VerticalBarComponent = Ember.Charts.ChartComponent.extend(Ember.Cha
     });
   },
   updateGraphic: function() {
-    var barAttrs, groups, labels;
+    var barAttrs, groups;
     groups = this.get('groups');
     if (this.get('stackBars')) {
       barAttrs = this.get('stackedBarAttrs');
@@ -2315,7 +2323,7 @@ Ember.Charts.VerticalBarComponent = Ember.Charts.ChartComponent.extend(Ember.Cha
     }
     groups.attr(this.get('groupAttrs'));
     groups.selectAll('rect').style('fill', this.get('getSeriesColor')).attr(barAttrs);
-    return labels = groups.select('g.groupLabel').attr(this.get('labelAttrs'));
+    return groups.select('g.groupLabel').attr(this.get('labelAttrs'));
   }
 });
 
@@ -2713,13 +2721,12 @@ Ember.Handlebars.helper('scatter-chart', Ember.Charts.ScatterComponent);
 (function() {
 
 
-Ember.Charts.TimeSeriesComponent = Ember.Charts.ChartComponent.extend(Ember.Charts.Legend, Ember.Charts.TimeSeriesLabeler, Ember.Charts.FloatingTooltipMixin, Ember.Charts.HasTimeSeriesRule, Ember.Charts.AxesMixin, {
+Ember.Charts.TimeSeriesComponent = Ember.Charts.ChartComponent.extend(Ember.Charts.Legend, Ember.Charts.TimeSeriesLabeler, Ember.Charts.FloatingTooltipMixin, Ember.Charts.HasTimeSeriesRule, Ember.Charts.AxesMixin, Ember.Charts.Formattable, {
   classNames: ['chart-time-series'],
   lineData: null,
   barData: null,
   formatTime: d3.time.format('%Y-%m-%d'),
   formatTimeLong: d3.time.format('%a %b %-d, %Y'),
-  formatLabel: d3.format(',.2f'),
   ungroupedSeriesName: 'Other',
   interpolate: false,
   yAxisFromZero: false,
@@ -3037,14 +3044,14 @@ Ember.Charts.TimeSeriesComponent = Ember.Charts.ChartComponent.extend(Ember.Char
       return Ember.K;
     }
     return function(data, i, element) {
-      var addValueLine, content, formatLabel, time;
+      var addValueLine, content, formatLabelFunction, time;
       d3.select(element).classed('hovered', true);
       time = data.labelTime != null ? data.labelTime : data.time;
       content = "<span class=\"tip-label\">" + (_this.get('formatTime')(time)) + "</span>";
-      formatLabel = _this.get('formatLabel');
+      formatLabelFunction = _this.get('formatLabelFunction');
       addValueLine = function(d) {
         content += "<span class=\"name\">" + d.group + ": </span>";
-        return content += "<span class=\"value\">" + (formatLabel(d.value)) + "</span><br/>";
+        return content += "<span class=\"value\">" + (formatLabelFunction(d.value)) + "</span><br/>";
       };
       if (Ember.isArray(data.values)) {
         data.values.forEach(addValueLine);

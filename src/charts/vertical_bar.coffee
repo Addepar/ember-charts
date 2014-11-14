@@ -1,14 +1,11 @@
 Ember.Charts.VerticalBarComponent = Ember.Charts.ChartComponent.extend(
   Ember.Charts.Legend, Ember.Charts.FloatingTooltipMixin,
-  Ember.Charts.AxesMixin,
+  Ember.Charts.AxesMixin, Ember.Charts.Formattable,
   classNames: ['chart-vertical-bar']
 
   # ----------------------------------------------------------------------------
   # Vertical Bar Chart Options
   # ----------------------------------------------------------------------------
-
-  # Getters for formatting human-readable labels from provided data
-  formatLabel: d3.format(',.2f')
 
   # Sort key for the data. Defaults to none, can be set to "value" to sort by
   # values. If data is grouped, sort by the first value in the group.
@@ -306,7 +303,7 @@ Ember.Charts.VerticalBarComponent = Ember.Charts.ChartComponent.extend(
       else
         content = ''
 
-      formatLabel = @get 'formatLabel'
+      formatLabel = @get 'formatLabelFunction'
       addValueLine = (d) ->
         content +="<span class=\"name\">#{d.label}: </span>"
         content += "<span class=\"value\">#{formatLabel(d.value)}</span><br/>"
@@ -416,9 +413,9 @@ Ember.Charts.VerticalBarComponent = Ember.Charts.ChartComponent.extend(
   # the unpadded group width or bar width depending on whether data is grouped
   maxLabelWidth: Ember.computed ->
     if @get('isGrouped') or @get('stackBars')
-      maxLabelWidth = @get 'groupWidth'
+      @get 'groupWidth'
     else
-      maxLabelWidth = @get 'barWidth'
+      @get 'barWidth'
   .property 'isGrouped', 'stackBars', 'groupWidth', 'barWidth'
 
   _shouldRotateLabels: no
@@ -474,7 +471,7 @@ Ember.Charts.VerticalBarComponent = Ember.Charts.ChartComponent.extend(
       .append('text')
       .on("mouseover", (d,i) -> showDetails(d,i,this))
       .on("mouseout", (d,i) -> hideDetails(d,i,this))
-    exiting = groups.exit().remove()
+    groups.exit().remove()
 
     if @get('stackBars')
       subdata = (d) -> d.stackedValues
@@ -553,7 +550,7 @@ Ember.Charts.VerticalBarComponent = Ember.Charts.ChartComponent.extend(
     groups.selectAll('rect')
       .style('fill', @get('getSeriesColor'))
       .attr(barAttrs)
-    labels = groups.select('g.groupLabel')
+    groups.select('g.groupLabel')
       .attr(@get 'labelAttrs')
 )
 

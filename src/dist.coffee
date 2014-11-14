@@ -9,6 +9,7 @@ Ember.libraries?.register 'Ember Charts', Ember.Charts.VERSION
 
 require 'build/src/charts/helpers'
 require 'build/src/charts/colorable'
+require 'build/src/charts/formattable'
 require 'build/src/charts/axes'
 require 'build/src/charts/floating_tooltip'
 require 'build/src/charts/time_series_rule'

@@ -1,14 +1,10 @@
 Ember.Charts.HorizontalBarComponent = Ember.Charts.ChartComponent.extend(
-  Ember.Charts.FloatingTooltipMixin,
+  Ember.Charts.FloatingTooltipMixin, Ember.Charts.Formattable,
   classNames: ['chart-horizontal-bar']
 
   # ----------------------------------------------------------------------------
   # Horizontal Bar Chart Options
   # ----------------------------------------------------------------------------
-
-  # Getters for formatting human-readable labels from provided data
-  formatLabel: d3.format(',.2f')
-
   # Sort key for the data
   selectedSortType: 'value'
 
@@ -131,7 +127,7 @@ Ember.Charts.HorizontalBarComponent = Ember.Charts.ChartComponent.extend(
       d3.select(element).classed('hovered', yes)
 
       # Show tooltip
-      formatLabel = @get 'formatLabel'
+      formatLabel = @get 'formatLabelFunction'
       # Line 1
       content = "<span class=\"tip-label\">#{data.label}</span>"
       # Line 2
@@ -259,7 +255,7 @@ Ember.Charts.HorizontalBarComponent = Ember.Charts.ChartComponent.extend(
     entering.append('text').attr('class', 'value')
     entering.append('text').attr('class', 'group')
 
-    exiting = groups.exit().remove()
+    groups.exit().remove()
 
   updateAxes: ->
     @get('yAxis').attr(@get 'axisAttrs')
@@ -271,8 +267,8 @@ Ember.Charts.HorizontalBarComponent = Ember.Charts.ChartComponent.extend(
     groups.select('rect')
       .attr(@get 'barAttrs')
 
-    valueLabels = groups.select('text.value')
-      .text((d) => @get('formatLabel') d.value)
+    groups.select('text.value')
+      .text((d) => @get('formatLabelFunction') d.value)
       .attr(@get 'valueLabelAttrs')
 
     labelWidth = @get 'labelWidth'
@@ -280,7 +276,7 @@ Ember.Charts.HorizontalBarComponent = Ember.Charts.ChartComponent.extend(
       getLabelSize: (d) -> labelWidth
       getLabelText: (d) -> d.label
 
-    groupLabels = groups.select('text.group')
+    groups.select('text.group')
       .text((d) => d.label)
       .attr(@get 'groupLabelAttrs')
       .call(labelTrimmer.get 'trim')
