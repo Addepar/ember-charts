@@ -1119,23 +1119,32 @@ Ember.Charts.ChartComponent = Ember.Component.extend(Ember.Charts.Colorable, Emb
   concatenatedProperties: ['renderVars'],
   renderVars: ['finishedData', 'width', 'height', 'margin', 'isInteractive'],
   init: function() {
-    var renderVar, _i, _len, _ref, _results,
-      _this = this;
+    var renderVar, _i, _len, _ref, _results;
     this._super();
     _ref = this.get('renderVars').uniq();
     _results = [];
     for (_i = 0, _len = _ref.length; _i < _len; _i++) {
       renderVar = _ref[_i];
-      this.addObserver(renderVar, function() {
-        return Ember.run.once(_this, _this.get('draw'));
-      });
+      this.addObserver(renderVar, this.drawOnce);
       _results.push(this.get(renderVar));
     }
     return _results;
   },
+  willDestroyElement: function() {
+    var renderVar, _i, _len, _ref;
+    _ref = this.get('renderVars').uniq();
+    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+      renderVar = _ref[_i];
+      this.removeObserver(renderVar, this, this.drawOnce);
+    }
+    return this._super();
+  },
   didInsertElement: function() {
     this._super();
     this._updateDimensions();
+    return this.drawOnce();
+  },
+  drawOnce: function() {
     return Ember.run.once(this, this.get('draw'));
   },
   onResizeEnd: function() {

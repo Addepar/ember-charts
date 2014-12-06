@@ -104,18 +104,24 @@ Ember.Charts.ChartComponent = Ember.Component.extend(
   renderVars: ['finishedData', 'width', 'height', 'margin', 'isInteractive']
   init: ->
     @_super()
-    # TODO(tony): Since we are adding observers manually we also need to remove
-    # them manually on willDelete or something like that
     for renderVar in @get('renderVars').uniq()
-      @addObserver renderVar, =>
-        Ember.run.once this, @get('draw')
+      @addObserver renderVar, @drawOnce
       # This is just to ensure that observers added above fire even
       # if that renderVar is not consumed elsewhere.
       @get(renderVar)
 
+  willDestroyElement: ->
+    for renderVar in @get('renderVars').uniq()
+      @removeObserver renderVar, this, @drawOnce
+
+    @_super()
+
   didInsertElement: ->
     @_super()
     @_updateDimensions()
+    @drawOnce()
+
+  drawOnce: ->
     Ember.run.once this, @get('draw')
 
   onResizeEnd: ->
