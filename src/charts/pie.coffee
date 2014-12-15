@@ -1,6 +1,6 @@
 Ember.Charts.PieComponent = Ember.Charts.ChartComponent.extend(
   Ember.Charts.PieLegend, Ember.Charts.FloatingTooltipMixin,
-  Ember.Charts.Formattable,
+  Ember.Charts.Formattable, Ember.Charts.SortableChartMixin,
 
   classNames: ['chart-pie']
   # ----------------------------------------------------------------------------
@@ -28,13 +28,6 @@ Ember.Charts.PieComponent = Ember.Charts.ChartComponent.extend(
   # ----------------------------------------------------------------------------
   # Data
   # ----------------------------------------------------------------------------
-
-  sortFunction: Ember.computed ->
-    switch @get 'selectedSortType'
-      when 'value' then (d) -> d.percent
-      when 'label' then (d) -> d.label
-      else (d) -> d.percent
-  .property 'selectedSortType'
 
   # Data with invalid/negative values removed
   filteredData: Ember.computed ->
@@ -64,8 +57,9 @@ Ember.Charts.PieComponent = Ember.Charts.ChartComponent.extend(
       value: d.value
       percent: d3.round( 100 * d.value / total )
 
-    _.sortBy data, @get('sortFunction')
-  .property 'filteredData', 'sortFunc'
+    key = @get 'sortKey'
+    data.sortBy key
+  .property 'filteredData', 'sortKey'
 
   # This takes the sorted slices that have percents calculated and returns
   # sorted slices that obey the "other" slice aggregation rules

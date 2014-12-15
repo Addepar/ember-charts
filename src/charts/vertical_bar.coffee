@@ -1,15 +1,12 @@
 Ember.Charts.VerticalBarComponent = Ember.Charts.ChartComponent.extend(
   Ember.Charts.Legend, Ember.Charts.FloatingTooltipMixin,
   Ember.Charts.AxesMixin, Ember.Charts.Formattable,
+  Ember.Charts.SortableChartMixin,
   classNames: ['chart-vertical-bar']
 
   # ----------------------------------------------------------------------------
   # Vertical Bar Chart Options
   # ----------------------------------------------------------------------------
-
-  # Sort key for the data. Defaults to none, can be set to "value" to sort by
-  # values. If data is grouped, sort by the first value in the group.
-  selectedSortType: 'none'
 
   # Data without group will be merged into a group with this name
   ungroupedSeriesName: 'Other'
@@ -53,20 +50,6 @@ Ember.Charts.VerticalBarComponent = Ember.Charts.ChartComponent.extend(
     Ember.Charts.Helpers.groupBy data, (d) =>
       d.group ? @get('ungroupedSeriesName')
   .property 'sortedData', 'ungroupedSeriesName'
-
-  sortedData: Ember.computed ->
-    type = @get 'selectedSortType'
-    data = @get 'data'
-    # First sort the data if applicable
-    if type is 'value'
-      data = data.sort (a, b) ->
-        # Sort decending. In future, might be worth breaking this out into a
-        # configurable option
-        if a.value < b.value then 1
-        else if a.value > b.value then -1
-        else 0
-    data
-  .property 'selectedSortType', 'data.@each'
 
   groupNames: Ember.computed ->
     for groupName, values of @get('groupedData')
