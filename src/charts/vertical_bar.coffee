@@ -59,7 +59,7 @@ Ember.Charts.VerticalBarComponent = Ember.Charts.ChartComponent.extend(
     data = @get 'data'
     # First sort the data if applicable
     if type is 'value'
-      data = data.sort (a, b) ->
+      data = data.slice().sort (a, b) ->
         # Sort decending. In future, might be worth breaking this out into a
         # configurable option
         if a.value < b.value then 1
