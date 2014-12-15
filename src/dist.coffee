@@ -17,6 +17,7 @@ require 'build/src/charts/time_series_labeler'
 require 'build/src/charts/legend'
 require 'build/src/charts/pie_legend'
 require 'build/src/charts/chart'
+require 'build/src/charts/sortable_chart_mixin'
 
 require 'build/src/charts/horizontal_bar'
 require 'build/src/charts/pie'

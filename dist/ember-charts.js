@@ -1175,9 +1175,28 @@ Ember.Charts.ChartComponent = Ember.Component.extend(Ember.Charts.Colorable, Emb
 (function() {
 
 
-Ember.Charts.HorizontalBarComponent = Ember.Charts.ChartComponent.extend(Ember.Charts.FloatingTooltipMixin, Ember.Charts.Formattable, {
+Ember.Charts.SortableChartMixin = Ember.Mixin.create({
+  sortKey: 'value',
+  sortedData: Ember.computed(function() {
+    var data, key;
+    data = this.get('data');
+    key = this.get('sortKey');
+    if (Ember.isEmpty(data)) {
+      return [];
+    } else {
+      return data.sortBy(key);
+    }
+  }).property('data.@each', 'sortKey')
+});
+
+
+})();
+
+(function() {
+
+
+Ember.Charts.HorizontalBarComponent = Ember.Charts.ChartComponent.extend(Ember.Charts.FloatingTooltipMixin, Ember.Charts.Formattable, Ember.Charts.SortableChartMixin, {
   classNames: ['chart-horizontal-bar'],
-  selectedSortType: 'value',
   defaultOuterHeight: 500,
   labelWidth: Ember.computed(function() {
     return 0.25 * this.get('outerWidth');
@@ -1186,37 +1205,6 @@ Ember.Charts.HorizontalBarComponent = Ember.Charts.ChartComponent.extend(Ember.C
   barPadding: 0.2,
   maxBarThickness: 60,
   minBarThickness: 20,
-  sortedData: Ember.computed(function() {
-    var comparator, data, sortFunc, sortType;
-    data = this.get('data');
-    if (Ember.isEmpty(data)) {
-      return [];
-    }
-    sortType = this.get('selectedSortType');
-    sortFunc = (function() {
-      var _this = this;
-      switch (sortType) {
-        case 'value':
-          return function(d) {
-            return -d.value;
-          };
-        case 'label':
-          return function(d) {
-            return d.label;
-          };
-      }
-    }).call(this);
-    comparator = function(a, b) {
-      if (sortFunc(a) < sortFunc(b)) {
-        return -1;
-      } else if (sortFunc(a) > sortFunc(b)) {
-        return 1;
-      } else {
-        return 0;
-      }
-    };
-    return data.sort(comparator);
-  }).property('data.@each', 'selectedSortType'),
   finishedData: Ember.computed.alias('sortedData'),
   minOuterHeight: Ember.computed(function() {
     var minBarSpace;
@@ -1450,7 +1438,7 @@ Ember.Handlebars.helper('horizontal-bar-chart', Ember.Charts.HorizontalBarCompon
 (function() {
 
 
-Ember.Charts.PieComponent = Ember.Charts.ChartComponent.extend(Ember.Charts.PieLegend, Ember.Charts.FloatingTooltipMixin, Ember.Charts.Formattable, {
+Ember.Charts.PieComponent = Ember.Charts.ChartComponent.extend(Ember.Charts.PieLegend, Ember.Charts.FloatingTooltipMixin, Ember.Charts.Formattable, Ember.Charts.SortableChartMixin, {
   classNames: ['chart-pie'],
   minSlicePercent: 5,
   maxNumberOfSlices: 8,
@@ -1458,22 +1446,6 @@ Ember.Charts.PieComponent = Ember.Charts.ChartComponent.extend(Ember.Charts.PieL
     return 0.25 * this.get('outerWidth');
   }).property('outerWidth'),
   maxRadius: 2000,
-  sortFunction: Ember.computed(function() {
-    switch (this.get('selectedSortType')) {
-      case 'value':
-        return function(d) {
-          return d.percent;
-        };
-      case 'label':
-        return function(d) {
-          return d.label;
-        };
-      default:
-        return function(d) {
-          return d.percent;
-        };
-    }
-  }).property('selectedSortType'),
   filteredData: Ember.computed(function() {
     var data;
     data = this.get('data');
@@ -1495,7 +1467,7 @@ Ember.Charts.PieComponent = Ember.Charts.ChartComponent.extend(Ember.Charts.PieL
     });
   }).property('data.@each'),
   sortedData: Ember.computed(function() {
-    var data, total;
+    var data, key, total;
     data = this.get('filteredData');
     total = data.reduce(function(p, child) {
       return child.value + p;
@@ -1511,8 +1483,9 @@ Ember.Charts.PieComponent = Ember.Charts.ChartComponent.extend(Ember.Charts.PieL
         percent: d3.round(100 * d.value / total)
       };
     });
-    return _.sortBy(data, this.get('sortFunction'));
-  }).property('filteredData', 'sortFunc'),
+    key = this.get('sortKey');
+    return data.sortBy(key);
+  }).property('filteredData', 'sortKey'),
   sortedDataWithOther: Ember.computed(function() {
     var data, lastItem, lowPercentIndex, maxNumberOfSlices, minNumberOfSlices, minSlicePercent, otherItems, otherSlice, overflowSlices, slicesLeft,
       _this = this;
@@ -1807,9 +1780,8 @@ Ember.Handlebars.helper('pie-chart', Ember.Charts.PieComponent);
 (function() {
 
 
-Ember.Charts.VerticalBarComponent = Ember.Charts.ChartComponent.extend(Ember.Charts.Legend, Ember.Charts.FloatingTooltipMixin, Ember.Charts.AxesMixin, Ember.Charts.Formattable, {
+Ember.Charts.VerticalBarComponent = Ember.Charts.ChartComponent.extend(Ember.Charts.Legend, Ember.Charts.FloatingTooltipMixin, Ember.Charts.AxesMixin, Ember.Charts.Formattable, Ember.Charts.SortableChartMixin, {
   classNames: ['chart-vertical-bar'],
-  selectedSortType: 'none',
   ungroupedSeriesName: 'Other',
   stackBars: false,
   withinGroupPadding: 0,
@@ -1834,23 +1806,6 @@ Ember.Charts.VerticalBarComponent = Ember.Charts.ChartComponent.extend(Ember.Cha
       return (_ref = d.group) != null ? _ref : _this.get('ungroupedSeriesName');
     });
   }).property('sortedData', 'ungroupedSeriesName'),
-  sortedData: Ember.computed(function() {
-    var data, type;
-    type = this.get('selectedSortType');
-    data = this.get('data');
-    if (type === 'value') {
-      data = data.sort(function(a, b) {
-        if (a.value < b.value) {
-          return 1;
-        } else if (a.value > b.value) {
-          return -1;
-        } else {
-          return 0;
-        }
-      });
-    }
-    return data;
-  }).property('selectedSortType', 'data.@each'),
   groupNames: Ember.computed(function() {
     var groupName, values, _ref, _results;
     _ref = this.get('groupedData');
