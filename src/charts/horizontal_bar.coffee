@@ -1,12 +1,11 @@
 Ember.Charts.HorizontalBarComponent = Ember.Charts.ChartComponent.extend(
   Ember.Charts.FloatingTooltipMixin, Ember.Charts.Formattable,
+  Ember.Charts.SortableChartMixin,
   classNames: ['chart-horizontal-bar']
 
   # ----------------------------------------------------------------------------
   # Horizontal Bar Chart Options
   # ----------------------------------------------------------------------------
-  # Sort key for the data
-  selectedSortType: 'value'
 
   # Minimum height of the whole chart, including padding
   defaultOuterHeight: 500
@@ -30,21 +29,6 @@ Ember.Charts.HorizontalBarComponent = Ember.Charts.ChartComponent.extend(
   # ----------------------------------------------------------------------------
   # Data
   # ----------------------------------------------------------------------------
-
-  sortedData: Ember.computed ->
-    data = @get('data')
-    return [] if Ember.isEmpty(data)
-
-    sortType = @get 'selectedSortType'
-    sortFunc = switch sortType
-      when 'value' then (d) => -d.value
-      when 'label' then (d) => d.label
-    comparator = (a,b) ->
-      if sortFunc(a) < sortFunc(b) then -1
-      else if sortFunc(a) > sortFunc(b) then 1
-      else 0
-    data.sort(comparator)
-  .property 'data.@each', 'selectedSortType'
 
   finishedData: Ember.computed.alias 'sortedData'
 
