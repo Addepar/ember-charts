@@ -1,6 +1,6 @@
 /*!
 * ember-charts v0.3.0
-* Copyright 2012-2014 Addepar Inc.
+* Copyright 2012-2015 Addepar Inc.
 * See LICENSE.
 */
 (function() {
@@ -562,6 +562,9 @@ Ember.Charts.TimeSeriesLabeler = Ember.Mixin.create({
         case 'weeks':
         case 'W':
           return this.weeksBetween(start, stop);
+        case 'hours':
+        case 'H':
+          return d3.time.hours(start, stop);
         case 'seconds':
         case 'S':
           return this.secondsBetween(start, stop);
@@ -601,6 +604,9 @@ Ember.Charts.TimeSeriesLabeler = Ember.Mixin.create({
           case 'weeks':
           case 'W':
             return 'week';
+          case 'hours':
+          case 'H':
+            return 'hour';
           case 'seconds':
           case 'S':
             return 'second';
@@ -710,6 +716,9 @@ Ember.Charts.TimeSeriesLabeler = Ember.Mixin.create({
       case 'days':
       case 'D':
         return d3.time.days;
+      case 'hours':
+      case 'H':
+        return d3.time.hours;
       case 'seconds':
       case 'S':
         return function(start, stop) {
@@ -752,6 +761,9 @@ Ember.Charts.TimeSeriesLabeler = Ember.Mixin.create({
       case 'days':
       case 'D':
         return d3.time.format('%a');
+      case 'hours':
+      case 'H':
+        return d3.time.format('%H');
       case 'seconds':
       case 'S':
         return d3.time.format('%M : %S');
