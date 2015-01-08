@@ -131,6 +131,24 @@ Ember.Charts.TimeSeriesLabeler = Ember.Mixin.create
     else
       weeks
 
+  labelledDays: (start, stop) ->
+    days = d3.time.days(start, stop)
+
+    if days.length > @get 'maxNumberOfLabels'
+      skipVal = Math.ceil(days.length / @get('maxNumberOfLabels'))
+      d3.time.days(start, stop).filter((d, i) -> !(i % skipVal))
+    else
+      days
+
+  labelledHours: (start, stop) ->
+    hours = d3.time.hours(start, stop)
+
+    if hours.length > @get 'maxNumberOfLabels'
+      skipVal = Math.ceil(hours.length / @get('maxNumberOfLabels'))
+      d3.time.hours(start, stop).filter((d, i) -> !(i % skipVal))
+    else
+      hours
+
   # Returns the function which returns the labelled intervals between
   # start and stop for the selected interval.
   tickLabelerFn: Ember.computed ->
@@ -139,8 +157,8 @@ Ember.Charts.TimeSeriesLabeler = Ember.Mixin.create
       when 'quarters', 'Q' then ((start, stop) => @labelledQuarters(start,stop))
       when 'months', 'M' then ((start, stop) => @labelledMonths(start, stop))
       when 'weeks' , 'W'  then ((start, stop) => @labelledWeeks(start, stop))
-      when 'days' , 'D' then d3.time.days
-      when 'hours' , 'H' then d3.time.hours
+      when 'days' , 'D' then ((start, stop) => @labelledDays(start, stop))
+      when 'hours' , 'H' then ((start, stop) => @labelledHours(start, stop))
       when 'seconds', 'S' then ((start, stop) => @labelledSeconds(start, stop))
       else d3.time.years
   .property 'maxNumberOfLabels', 'selectedInterval'

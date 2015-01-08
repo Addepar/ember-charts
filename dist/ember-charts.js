@@ -690,6 +690,30 @@ Ember.Charts.TimeSeriesLabeler = Ember.Mixin.create({
       return weeks;
     }
   },
+  labelledDays: function(start, stop) {
+    var days, skipVal;
+    days = d3.time.days(start, stop);
+    if (days.length > this.get('maxNumberOfLabels')) {
+      skipVal = Math.ceil(days.length / this.get('maxNumberOfLabels'));
+      return d3.time.days(start, stop).filter(function(d, i) {
+        return !(i % skipVal);
+      });
+    } else {
+      return days;
+    }
+  },
+  labelledHours: function(start, stop) {
+    var hours, skipVal;
+    hours = d3.time.hours(start, stop);
+    if (hours.length > this.get('maxNumberOfLabels')) {
+      skipVal = Math.ceil(hours.length / this.get('maxNumberOfLabels'));
+      return d3.time.hours(start, stop).filter(function(d, i) {
+        return !(i % skipVal);
+      });
+    } else {
+      return hours;
+    }
+  },
   tickLabelerFn: Ember.computed(function() {
     var _this = this;
     switch (this.get('selectedInterval')) {
@@ -715,10 +739,14 @@ Ember.Charts.TimeSeriesLabeler = Ember.Mixin.create({
         };
       case 'days':
       case 'D':
-        return d3.time.days;
+        return function(start, stop) {
+          return _this.labelledDays(start, stop);
+        };
       case 'hours':
       case 'H':
-        return d3.time.hours;
+        return function(start, stop) {
+          return _this.labelledHours(start, stop);
+        };
       case 'seconds':
       case 'S':
         return function(start, stop) {
