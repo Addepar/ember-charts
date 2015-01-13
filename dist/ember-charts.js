@@ -12,31 +12,20 @@ var _ref;
 
 (function() {
 
-Ember.TEMPLATES["chart"] = Ember.Handlebars.template(function anonymous(Handlebars,depth0,helpers,partials,data) {
-this.compilerInfo = [4,'>= 1.0.0'];
-helpers = this.merge(helpers, Ember.Handlebars.helpers); data = data || {};
-  var buffer = '', stack1, hashContexts, hashTypes, options, helperMissing=helpers.helperMissing, escapeExpression=this.escapeExpression;
-
-
+Ember.TEMPLATES["chart"] = Ember.Handlebars.template({"compiler":[6,">= 2.0.0-beta.1"],"main":function(depth0,helpers,partials,data) {
+  var escapeExpression=this.escapeExpression, buffer = '';
   data.buffer.push("<svg ");
-  hashContexts = {'width': depth0,'height': depth0};
-  hashTypes = {'width': "STRING",'height': "STRING"};
-  options = {hash:{
-    'width': ("outerWidth"),
-    'height': ("outerHeight")
-  },contexts:[],types:[],hashContexts:hashContexts,hashTypes:hashTypes,data:data};
-  data.buffer.push(escapeExpression(((stack1 = helpers['bind-attr'] || depth0['bind-attr']),stack1 ? stack1.call(depth0, options) : helperMissing.call(depth0, "bind-attr", options))));
+  data.buffer.push(escapeExpression(helpers['bind-attr'].call(depth0, {"name":"bind-attr","hash":{
+    'height': ("outerHeight"),
+    'width': ("outerWidth")
+  },"hashTypes":{'height': "STRING",'width': "STRING"},"hashContexts":{'height': depth0,'width': depth0},"types":[],"contexts":[],"data":data})));
   data.buffer.push(">\n  <g class=\"chart-viewport\" ");
-  hashContexts = {'transform': depth0};
-  hashTypes = {'transform': "STRING"};
-  options = {hash:{
+  data.buffer.push(escapeExpression(helpers['bind-attr'].call(depth0, {"name":"bind-attr","hash":{
     'transform': ("transformViewport")
-  },contexts:[],types:[],hashContexts:hashContexts,hashTypes:hashTypes,data:data};
-  data.buffer.push(escapeExpression(((stack1 = helpers['bind-attr'] || depth0['bind-attr']),stack1 ? stack1.call(depth0, options) : helperMissing.call(depth0, "bind-attr", options))));
+  },"hashTypes":{'transform': "STRING"},"hashContexts":{'transform': depth0},"types":[],"contexts":[],"data":data})));
   data.buffer.push("></g>\n</svg>\n");
   return buffer;
-  
-});
+},"useData":true});
 
 })();
 
