@@ -1561,8 +1561,12 @@ Ember.Charts.PieComponent = Ember.Charts.ChartComponent.extend(Ember.Charts.PieL
     return this.get('labelPadding') + this.get('labelWidth');
   }).property('labelPadding', 'labelWidth'),
   marginBottom: Ember.computed(function() {
-    return this.get('legendHeight');
-  }).property('legendHeight'),
+    if (this.get('hasLegend')) {
+      return this.get('legendHeight');
+    } else {
+      return Math.max(1, this.get('outerHeight') * .1);
+    }
+  }).property('legendHeight', 'hasLegend', 'outerHeight'),
   marginTop: Ember.computed(function() {
     var dataLength, finishedData;
     finishedData = this.get('finishedData');

@@ -135,10 +135,14 @@ Ember.Charts.PieComponent = Ember.Charts.ChartComponent.extend(
     @get('labelPadding') + @get('labelWidth')
   .property 'labelPadding', 'labelWidth'
 
-  # Bottom margin is equal to the total amount of space the legend might need
+  # Bottom margin is equal to the total amount of space the legend needs,
+  # or 10% of the viewport if there is no legend
   marginBottom: Ember.computed ->
-    @get('legendHeight')
-  .property 'legendHeight'
+    if @get 'hasLegend'
+      @get 'legendHeight'
+    else
+      Math.max 1, @get('outerHeight') * .1
+  .property 'legendHeight', 'hasLegend', 'outerHeight'
 
   # Top margin will only be a percentage of the bottom margin since we don't
   # have a legend there and would like the pie to lift to the top
