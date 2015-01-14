@@ -1682,11 +1682,24 @@ Ember.Charts.PieComponent = Ember.Charts.ChartComponent.extend(Ember.Charts.PieL
     };
   }).property('arc', 'getSliceColor'),
   labelAttrs: Ember.computed(function() {
-    var arc, labelRadius, lastXPos, lastYPos, mostTintedColor;
+    var arc, labelOverlap, labelRadius, mostTintedColor, usedLabelPositions;
     arc = this.get('arc');
     labelRadius = this.get('labelRadius');
-    lastXPos = 0;
-    lastYPos = 0;
+    usedLabelPositions = {
+      left: [],
+      right: []
+    };
+    labelOverlap = function(side, ypos, height) {
+      var pos, positions, _i, _len;
+      positions = usedLabelPositions[side];
+      for (_i = 0, _len = positions.length; _i < _len; _i++) {
+        pos = positions[_i];
+        if (Math.abs(ypos - pos) - height) {
+          return true;
+        }
+      }
+      return false;
+    };
     if (this.get('numSlices') > 1) {
       return {
         dy: '.35em',
@@ -1702,7 +1715,7 @@ Ember.Charts.PieComponent = Ember.Charts.ChartComponent.extend(Ember.Charts.PieL
           }
         },
         transform: function(d) {
-          var f, isSwitchingSides, labelHeight, labelXPos, labelYPos, labelsTooClose, x, y, _ref;
+          var f, labelHeight, labelXPos, labelYPos, side, x, y, _ref;
           _ref = arc.centroid(d), x = _ref[0], y = _ref[1];
           f = function(d) {
             return d / Math.sqrt(x * x + y * y) * labelRadius;
@@ -1710,17 +1723,15 @@ Ember.Charts.PieComponent = Ember.Charts.ChartComponent.extend(Ember.Charts.PieL
           labelXPos = f(x);
           labelYPos = f(y);
           labelHeight = this.getBBox().height;
-          isSwitchingSides = (lastXPos > 0 && 0 > labelXPos) || (lastXPos < 0 && 0 < labelXPos);
-          labelsTooClose = Math.abs(labelYPos - lastYPos) < labelHeight;
-          if (labelsTooClose && !isSwitchingSides) {
-            if (labelYPos < lastYPos) {
-              labelYPos = lastYPos - labelHeight;
+          side = labelYPos > 0 ? 'right' : 'left';
+          if (labelOverlap(side, labelYPos, labelHeight)) {
+            if (side === 'right') {
+              labelYPos = _.max(usedLabelPositions[side]) + labelHeight;
             } else {
-              labelYPos = lastYPos + labelHeight;
+              labelYPos = _.min(usedLabelPositions[side]) - labelHeight;
             }
           }
-          lastXPos = labelXPos;
-          lastYPos = labelYPos;
+          usedLabelPositions[side].push(labelYPos);
           return "translate(" + labelXPos + "," + labelYPos + ")";
         }
       };

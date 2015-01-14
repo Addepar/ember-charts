@@ -292,8 +292,17 @@ Ember.Charts.PieComponent = Ember.Charts.ChartComponent.extend(
   labelAttrs: Ember.computed ->
     arc = @get 'arc'
     labelRadius = @get 'labelRadius'
-    lastXPos = 0
-    lastYPos = 0
+    # these are the label regions that are already filled
+    usedLabelPositions =
+      left: []
+      right: []
+    # assumes height of all the labels are the same
+    labelOverlap = (side, ypos, height) ->
+      positions = usedLabelPositions[side]
+      for pos in positions
+        if Math.abs(ypos - pos) - height
+          return yes
+      no
     if @get('numSlices') > 1
       dy: '.35em'
       # Clear any special label styling that may have been set when only
@@ -318,15 +327,13 @@ Ember.Charts.PieComponent = Ember.Charts.ChartComponent.extend(
         labelXPos = f x
         labelYPos = f y
         labelHeight = @getBBox().height
-        isSwitchingSides = lastXPos > 0 > labelXPos or lastXPos < 0 < labelXPos
-        labelsTooClose = Math.abs(labelYPos - lastYPos) < labelHeight
-        if labelsTooClose and not isSwitchingSides
-          if labelYPos < lastYPos
-            labelYPos = lastYPos - labelHeight
+        side = if labelYPos > 0 then 'right' else 'left'
+        if labelOverlap(side, labelYPos, labelHeight)
+          if side is 'right'
+            labelYPos = _.max(usedLabelPositions[side]) + labelHeight
           else
-            labelYPos = lastYPos + labelHeight
-        lastXPos = labelXPos
-        lastYPos = labelYPos
+            labelYPos = _.min(usedLabelPositions[side]) - labelHeight
+        usedLabelPositions[side].push(labelYPos)
         "translate(#{labelXPos},#{labelYPos})"
     else
       # When there is only one label, position it in the middle of the chart.
