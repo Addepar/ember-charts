@@ -1479,7 +1479,7 @@ Ember.Charts.PieComponent = Ember.Charts.ChartComponent.extend(Ember.Charts.PieL
     });
   }).property('data.@each'),
   sortedData: Ember.computed(function() {
-    var data, key, total;
+    var data, total;
     data = this.get('filteredData');
     total = data.reduce(function(p, child) {
       return child.value + p;
@@ -1495,8 +1495,7 @@ Ember.Charts.PieComponent = Ember.Charts.ChartComponent.extend(Ember.Charts.PieL
         percent: d3.round(100 * d.value / total)
       };
     });
-    key = this.get('sortKey');
-    return data.sortBy(key);
+    return _.sortBy(data, this.get('sortKey'));
   }).property('filteredData', 'sortKey'),
   sortedDataWithOther: Ember.computed(function() {
     var data, lastItem, lowPercentIndex, maxNumberOfSlices, minNumberOfSlices, minSlicePercent, otherItems, otherSlice, overflowSlices, slicesLeft,
