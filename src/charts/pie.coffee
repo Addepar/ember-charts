@@ -57,8 +57,7 @@ Ember.Charts.PieComponent = Ember.Charts.ChartComponent.extend(
       value: d.value
       percent: d3.round( 100 * d.value / total )
 
-    key = @get 'sortKey'
-    data.sortBy key
+    _.sortBy data, @get('sortKey')
   .property 'filteredData', 'sortKey'
 
   # This takes the sorted slices that have percents calculated and returns
