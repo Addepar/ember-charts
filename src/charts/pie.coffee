@@ -300,7 +300,7 @@ Ember.Charts.PieComponent = Ember.Charts.ChartComponent.extend(
     labelOverlap = (side, ypos, height) ->
       positions = usedLabelPositions[side]
       for pos in positions
-        if Math.abs(ypos - pos) - height
+        if Math.abs(ypos - pos) < height
           return yes
       no
     if @get('numSlices') > 1

@@ -1694,7 +1694,7 @@ Ember.Charts.PieComponent = Ember.Charts.ChartComponent.extend(Ember.Charts.PieL
       positions = usedLabelPositions[side];
       for (_i = 0, _len = positions.length; _i < _len; _i++) {
         pos = positions[_i];
-        if (Math.abs(ypos - pos) - height) {
+        if (Math.abs(ypos - pos) < height) {
           return true;
         }
       }
