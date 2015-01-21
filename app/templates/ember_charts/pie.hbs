@@ -46,7 +46,7 @@
         <div class="form-group">
           <label class="col-lg-4 control-label">Max Radius</label>
           <div class="col-lg-8">
-            {{view App.ScrubberComponent min="40" max="300" step="10" valueBinding="maxRadius"}}
+            {{view App.ScrubberComponent min="40" max="400" step="10" valueBinding="maxRadius"}}
             <span class="help-block">Max Radius: {{maxRadius}}</span>
           </div>
         </div>
@@ -70,7 +70,15 @@
     <div class="col-md-6">
       <h4>JSON Data</h4>
       <div class="chart-json">
+        {{#if isEditDataMode}}
+          {{textarea
+            value=customData
+            col="200"
+            rows="30"
+          }}
+        {{else}}
 <pre>{{prettyPrintedData}}</pre>
+        {{/if}}
       </div>
     </div>
   </div>

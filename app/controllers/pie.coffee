@@ -16,9 +16,20 @@ App.EmberChartsPieController = App.SlideController.extend
     _.keys @get('rawDataHash')
   .property 'rawDataHash'
 
+  customData: ''
+
   data: Ember.computed ->
-    @get('rawDataHash')[@get 'selectedData']
-  .property 'selectedData', 'rawDataHash'
+    selected = @get 'selectedData'
+    if selected is 'custom'
+      try
+        JSON.parse @get('customData')
+      catch e
+        null
+    else
+      @get('rawDataHash')[@get 'selectedData']
+  .property 'selectedData', 'rawDataHash', 'customData'
+
+  isEditDataMode: Ember.computed.equal 'selectedData', 'custom'
 
   rawDataHash: Ember.computed ->
     asset_values: App.data.asset_values
@@ -33,4 +44,6 @@ App.EmberChartsPieController = App.SlideController.extend
     zeroes: App.data.zeroes
     sum_to_zero: App.data.sum_to_zero
     bad_range: App.data.bad_range
+    '-----': App.data.null
+    custom: App.data.null
   selectedData: 'asset_values'
