@@ -1571,10 +1571,10 @@ Ember.Charts.PieComponent = Ember.Charts.ChartComponent.extend(Ember.Charts.PieL
     var dataLength, finishedData;
     finishedData = this.get('finishedData');
     dataLength = finishedData.length;
-    if (finishedData.length > 2 && finishedData[dataLength - 3].percent + finishedData[dataLength - 2].percent < 15) {
-      return this.get('marginBottom');
+    if (dataLength > 2 && this.get('hasLegend') && finishedData[dataLength - 3].percent + finishedData[dataLength - 2].percent < 15) {
+      return this.get('legendHeight') * 2;
     } else {
-      return 0.3 * this.get('marginBottom');
+      return this.get('marginBottom');
     }
   }).property('marginBottom', 'finishedData'),
   numSlices: Ember.computed.alias('finishedData.length'),
