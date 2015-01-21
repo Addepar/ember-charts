@@ -153,8 +153,8 @@ Ember.Charts.PieComponent = Ember.Charts.ChartComponent.extend(
   marginTop: Ember.computed ->
     finishedData = @get('finishedData')
     dataLength = finishedData.length
-    if finishedData.length > 2 and
-    finishedData[dataLength - 3].percent + finishedData[dataLength - 2].percent < 15
+    if dataLength > 2 and @get('hasLegend') and
+        finishedData[dataLength - 3].percent + finishedData[dataLength - 2].percent < 15
       @get('legendHeight') * 2
     else
       @get('marginBottom')
