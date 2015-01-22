@@ -1564,19 +1564,12 @@ Ember.Charts.PieComponent = Ember.Charts.ChartComponent.extend(Ember.Charts.PieL
     if (this.get('hasLegend')) {
       return this.get('legendHeight');
     } else {
-      return Math.max(1, this.get('outerHeight') * .1);
+      return this.get('marginTop');
     }
-  }).property('legendHeight', 'hasLegend', 'outerHeight'),
+  }).property('legendHeight', 'hasLegend', 'marginTop'),
   marginTop: Ember.computed(function() {
-    var dataLength, finishedData;
-    finishedData = this.get('finishedData');
-    dataLength = finishedData.length;
-    if (dataLength > 2 && this.get('hasLegend') && finishedData[dataLength - 3].percent + finishedData[dataLength - 2].percent < 15) {
-      return this.get('legendHeight') * 2;
-    } else {
-      return this.get('marginBottom');
-    }
-  }).property('marginBottom', 'finishedData'),
+    return Math.max(1, this.get('outerHeight') * .1);
+  }).property('outerHeight'),
   numSlices: Ember.computed.alias('finishedData.length'),
   startOffset: Ember.computed(function() {
     var data, sum;

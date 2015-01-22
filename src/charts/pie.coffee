@@ -138,27 +138,12 @@ Ember.Charts.PieComponent = Ember.Charts.ChartComponent.extend(
   # Bottom margin is equal to the total amount of space the legend needs,
   # or 10% of the viewport if there is no legend
   marginBottom: Ember.computed ->
-    if @get 'hasLegend'
-      @get 'legendHeight'
-    else
-      Math.max 1, @get('outerHeight') * .1
-  .property 'legendHeight', 'hasLegend', 'outerHeight'
+    if @get('hasLegend') then @get('legendHeight') else @get('marginTop')
+  .property 'legendHeight', 'hasLegend', 'marginTop'
 
-  # Top margin will only be a percentage of the bottom margin since we don't
-  # have a legend there and would like the pie to lift to the top
-  # Note(edward): There can be multiple legends on the top depending on the data.
-  # If 2nd and 3rd largest slices sum to less than 15%, then there will be at
-  # least two legends stacked on the top of the pie, and so we need to return a
-  # larger marginTop.
   marginTop: Ember.computed ->
-    finishedData = @get('finishedData')
-    dataLength = finishedData.length
-    if dataLength > 2 and @get('hasLegend') and
-        finishedData[dataLength - 3].percent + finishedData[dataLength - 2].percent < 15
-      @get('legendHeight') * 2
-    else
-      @get('marginBottom')
-  .property 'marginBottom', 'finishedData'
+    Math.max 1, @get('outerHeight') * .1
+  .property 'outerHeight'
 
   # ----------------------------------------------------------------------------
   # Graphics Properties
