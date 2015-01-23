@@ -312,7 +312,7 @@ Ember.Charts.PieComponent = Ember.Charts.ChartComponent.extend(
         labelXPos = f x
         labelYPos = f y
         labelHeight = @getBBox().height
-        side = if labelYPos > 0 then 'right' else 'left'
+        side = if labelXPos > 0 then 'right' else 'left'
         if labelOverlap(side, labelYPos, labelHeight)
           if side is 'right'
             labelYPos = _.max(usedLabelPositions[side]) + labelHeight
