@@ -1458,6 +1458,7 @@ Ember.Charts.PieComponent = Ember.Charts.ChartComponent.extend(Ember.Charts.PieL
     return 0.25 * this.get('outerWidth');
   }).property('outerWidth'),
   maxRadius: 2000,
+  minimumTopBottomMargin: 0,
   filteredData: Ember.computed(function() {
     var data;
     data = this.get('data');
@@ -1560,16 +1561,22 @@ Ember.Charts.PieComponent = Ember.Charts.ChartComponent.extend(Ember.Charts.PieL
   horizontalMargin: Ember.computed(function() {
     return this.get('labelPadding') + this.get('labelWidth');
   }).property('labelPadding', 'labelWidth'),
-  marginBottom: Ember.computed(function() {
+  _marginBottom: Ember.computed(function() {
     if (this.get('hasLegend')) {
       return this.get('legendHeight');
     } else {
       return this.get('marginTop');
     }
   }).property('legendHeight', 'hasLegend', 'marginTop'),
-  marginTop: Ember.computed(function() {
+  marginBottom: Ember.computed(function() {
+    return Math.max(this.get('_marginBottom'), this.get('minimumTopBottomMargin'));
+  }).property('_marginBottom', 'minimumTopBottomMargin'),
+  _marginTop: Ember.computed(function() {
     return Math.max(1, this.get('outerHeight') * .1);
   }).property('outerHeight'),
+  marginTop: Ember.computed(function() {
+    return Math.max(this.get('_marginTop'), this.get('minimumTopBottomMargin'));
+  }).property('_marginTop', 'minimumTopBottomMargin'),
   numSlices: Ember.computed.alias('finishedData.length'),
   startOffset: Ember.computed(function() {
     var data, sum;

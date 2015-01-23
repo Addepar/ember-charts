@@ -25,6 +25,11 @@ Ember.Charts.PieComponent = Ember.Charts.ChartComponent.extend(
   # Essentially we don't want a maximum radius
   maxRadius: 2000
 
+  # top and bottom margin will never be smaller than this
+  # you can use this to ensure that your labels don't get pushed off
+  # the top / bottom when your labels are large or the chart is very small
+  minimumTopBottomMargin: 0
+
   # ----------------------------------------------------------------------------
   # Data
   # ----------------------------------------------------------------------------
@@ -137,13 +142,19 @@ Ember.Charts.PieComponent = Ember.Charts.ChartComponent.extend(
 
   # Bottom margin is equal to the total amount of space the legend needs,
   # or 10% of the viewport if there is no legend
-  marginBottom: Ember.computed ->
+  _marginBottom: Ember.computed ->
     if @get('hasLegend') then @get('legendHeight') else @get('marginTop')
   .property 'legendHeight', 'hasLegend', 'marginTop'
+  marginBottom: Ember.computed ->
+    Math.max @get('_marginBottom'), @get('minimumTopBottomMargin')
+  .property '_marginBottom', 'minimumTopBottomMargin'
 
-  marginTop: Ember.computed ->
+  _marginTop: Ember.computed ->
     Math.max 1, @get('outerHeight') * .1
   .property 'outerHeight'
+  marginTop: Ember.computed ->
+    Math.max @get('_marginTop'), @get('minimumTopBottomMargin')
+  .property '_marginTop', 'minimumTopBottomMargin'
 
   # ----------------------------------------------------------------------------
   # Graphics Properties
