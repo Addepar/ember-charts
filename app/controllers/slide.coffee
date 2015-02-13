@@ -24,7 +24,7 @@ App.SlideController = Ember.Controller.extend
     @get('seedColors')[@get 'selectedSeedColorName']
   .property 'selectedSeedColorName', 'seedColors.@each'
 
-App.ScrubberComponent = Ember.Component.extend
+App.RangeScrubberComponent = Ember.Component.extend
   tagName: 'input'
   attributeBindings: ['min', 'max', 'step', 'type']
   type: 'range'

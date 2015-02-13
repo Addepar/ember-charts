@@ -23,7 +23,7 @@
         <div class="form-group">
           <label class="col-lg-4 control-label">Data</label>
           <div class="col-lg-8">
-            {{view Ember.Select
+            {{view "select"
               contentBinding="availableDataSets"
               valueBinding="selectedData"
               class="form-control"
@@ -33,7 +33,7 @@
         <div class="form-group">
           <label class="col-lg-4 control-label">Sorting</label>
           <div class="col-lg-8">
-            {{view Ember.Select
+            {{view "select"
               contentBinding="sortTypes"
               valueBinding="selectedSortType"
               class="form-control"
@@ -43,7 +43,7 @@
         <div class="form-group">
           <label class="col-lg-4 control-label">Color</label>
           <div class="col-lg-8">
-            {{view Ember.Select
+            {{view "select"
               contentBinding="seedColorNames"
               valueBinding="selectedSeedColorName"
               class="form-control"
@@ -53,14 +53,14 @@
         <div class="form-group">
           <label class="col-lg-4 control-label">Min Bar Thickness</label>
           <div class="col-lg-8">
-            {{view App.ScrubberComponent  min=20 max=200 step=10 valueBinding="minBarThickness"}}
+            {{range-scrubber  min=20 max=200 step=10 valueBinding="minBarThickness"}}
             <span class="help-block">Min Thickness: {{minBarThickness}}</span>
           </div>
         </div>
         <div class="form-group">
           <label class="col-lg-4 control-label">Max Bar Thickness</label>
           <div class="col-lg-8">
-            {{view App.ScrubberComponent min=20 max=200 step=10 valueBinding="maxBarThickness"}}
+            {{range-scrubber min=20 max=200 step=10 valueBinding="maxBarThickness"}}
             <span class="help-block">Max Thickness: {{maxBarThickness}}</span>
           </div>
         </div>
