@@ -25,7 +25,7 @@
         <div class="form-group">
           <label class="col-lg-4 control-label">Data</label>
           <div class="col-lg-8">
-            {{view Ember.Select
+            {{view "select"
              contentBinding="availableDataSets"
              valueBinding="selectedData"
              class="form-control"
@@ -35,7 +35,7 @@
         <div class="form-group">
           <label class="col-lg-4 control-label">Color</label>
           <div class="col-lg-8">
-            {{view Ember.Select
+            {{view "select"
               contentBinding="seedColorNames"
               valueBinding="selectedSeedColorName"
               class="form-control"
@@ -45,7 +45,7 @@
         <div class="form-group">
           <label class="col-lg-4 control-label">Dot Radius</label>
           <div class="col-lg-8">
-            {{view App.ScrubberComponent min="2" max="20" step="1" valueBinding="dotRadius"}}
+            {{range-scrubber min="2" max="20" step="1" valueBinding="dotRadius"}}
             <span class="help-block">Dot Radius: {{dotRadius}}</span>
           </div>
         </div>
@@ -65,7 +65,7 @@
           <div class="col-lg-offset-4 col-lg-8">
             <div class="checkbox">
               <label>
-                {{view Ember.Checkbox checkedBinding="isShowingTotal"}} Show Portfolio Total
+                {{input type="checkbox" checked=isShowingTotal}} Show Portfolio Total
               </label>
             </div>
           </div>

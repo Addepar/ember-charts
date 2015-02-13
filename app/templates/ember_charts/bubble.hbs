@@ -17,7 +17,7 @@
       <ol>
         <li>
           <label>Data</label>
-          {{view Ember.Select
+          {{view "select"
            contentBinding="availableDataSets"
            valueBinding="selectedData"
            class="form-control"
@@ -25,7 +25,7 @@
         </li>
         <li>
           <label>Color</label>
-          {{view Ember.Select
+          {{view "select"
            contentBinding="seedColorNames"
            valueBinding="selectedSeedColorName"
            class="form-control"

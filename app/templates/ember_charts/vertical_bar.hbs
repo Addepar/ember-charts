@@ -25,7 +25,7 @@
         <div class="form-group">
           <label class="col-lg-4 control-label">Data</label>
           <div class="col-lg-8">
-            {{view Ember.Select
+            {{view "select"
               contentBinding="availableDataSets"
               valueBinding="selectedData"
               class="form-control"
@@ -35,7 +35,7 @@
         <div class="form-group">
           <label class="col-lg-4 control-label">Color</label>
           <div class="col-lg-8">
-            {{view Ember.Select
+            {{view "select"
               contentBinding="seedColorNames"
               valueBinding="selectedSeedColorName"
               class="form-control"
@@ -45,21 +45,21 @@
         <div class="form-group">
           <label class="col-lg-4 control-label">Rotated Label Height</label>
           <div class="col-lg-8">
-            {{view App.ScrubberComponent min="20" max="100" valueBinding="maxLabelHeight"}}
+            {{range-scrubber min="20" max="100" valueBinding="maxLabelHeight"}}
             <span class="help-block">Max Label Height: {{maxLabelHeight}}</span>
           </div>
         </div>
         <div class="form-group">
           <label class="col-lg-4 control-label">Between Group Padding</label>
           <div class="col-lg-8">
-            {{view App.ScrubberComponent min="0" max="2" step="0.05" valueBinding="betweenGroupPadding"}}
+            {{range-scrubber min="0" max="2" step="0.05" valueBinding="betweenGroupPadding"}}
             <span class="help-block">Between Group Padding: {{betweenGroupPadding}}</span>
           </div>
         </div>
         <div class="form-group">
           <label class="col-lg-4 control-label">Within Group Padding</label>
           <div class="col-lg-8">
-            {{view App.ScrubberComponent min="0" max="2" step="0.05" valueBinding="withinGroupPadding"}}
+            {{range-scrubber min="0" max="2" step="0.05" valueBinding="withinGroupPadding"}}
             <span class="help-block">Within Group Padding: {{withinGroupPadding}}</span>
           </div>
         </div>
@@ -67,7 +67,7 @@
           <div class="col-lg-offset-4 col-lg-8">
             <div class="checkbox">
               <label>
-                {{view Ember.Checkbox checkedBinding="stackBars"}} Stacked Bars
+                {{input type="checkbox" checked=stackBars}} Stacked Bars
               </label>
             </div>
           </div>
