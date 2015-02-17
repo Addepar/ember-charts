@@ -12,20 +12,56 @@ var _ref;
 
 (function() {
 
-Ember.TEMPLATES["chart"] = Ember.Handlebars.template({"compiler":[6,">= 2.0.0-beta.1"],"main":function(depth0,helpers,partials,data) {
-  var escapeExpression=this.escapeExpression, buffer = '';
-  data.buffer.push("<svg ");
-  data.buffer.push(escapeExpression(helpers['bind-attr'].call(depth0, {"name":"bind-attr","hash":{
-    'height': ("outerHeight"),
-    'width': ("outerWidth")
-  },"hashTypes":{'height': "STRING",'width': "STRING"},"hashContexts":{'height': depth0,'width': depth0},"types":[],"contexts":[],"data":data})));
-  data.buffer.push(">\n  <g class=\"chart-viewport\" ");
-  data.buffer.push(escapeExpression(helpers['bind-attr'].call(depth0, {"name":"bind-attr","hash":{
-    'transform': ("transformViewport")
-  },"hashTypes":{'transform': "STRING"},"hashContexts":{'transform': depth0},"types":[],"contexts":[],"data":data})));
-  data.buffer.push("></g>\n</svg>\n");
-  return buffer;
-},"useData":true});
+Ember.TEMPLATES["chart"] = Ember.HTMLBars.template((function() {
+  return {
+    isHTMLBars: true,
+    blockParams: 0,
+    cachedFragment: null,
+    hasRendered: false,
+    build: function build(dom) {
+      var el0 = dom.createDocumentFragment();
+      dom.setNamespace("http://www.w3.org/2000/svg");
+      var el1 = dom.createElement("svg");
+      var el2 = dom.createTextNode("\n  ");
+      dom.appendChild(el1, el2);
+      var el2 = dom.createElement("g");
+      dom.setAttribute(el2,"class","chart-viewport");
+      dom.appendChild(el1, el2);
+      var el2 = dom.createTextNode("\n");
+      dom.appendChild(el1, el2);
+      dom.appendChild(el0, el1);
+      var el1 = dom.createTextNode("\n");
+      dom.appendChild(el0, el1);
+      return el0;
+    },
+    render: function render(context, env, contextualElement) {
+      var dom = env.dom;
+      var hooks = env.hooks, element = hooks.element;
+      dom.detectNamespace(contextualElement);
+      var fragment;
+      if (env.useFragmentCache && dom.canClone) {
+        if (this.cachedFragment === null) {
+          fragment = this.build(dom);
+          if (this.hasRendered) {
+            this.cachedFragment = fragment;
+          } else {
+            this.hasRendered = true;
+          }
+        }
+        if (this.cachedFragment) {
+          fragment = dom.cloneNode(this.cachedFragment, true);
+        }
+      } else {
+        fragment = this.build(dom);
+      }
+      var element0 = dom.childAt(fragment, [0]);
+      var element1 = dom.childAt(element0, [1]);
+      element(env, element0, context, "bind-attr", [], {"width": "outerWidth", "height": "outerHeight"});
+      element(env, element1, context, "bind-attr", [], {"transform": "transformViewport"});
+      return fragment;
+    }
+  };
+}()));
 
 })();
 

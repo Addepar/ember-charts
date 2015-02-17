@@ -29,8 +29,8 @@
   ],
   "dependencies": {
     "d3": "3.3.9",
-    "ember": "~1.1.0",
-    "handlebars": "~1.0.0",
+    "ember": "1.10.0",
+    "handlebars": "2.0.0",
     "jquery": "1.9.1",
     "jquery-ui": "1.10.1",
     "lodash": "~1.2.1"
