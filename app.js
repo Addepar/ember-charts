@@ -2276,7 +2276,7 @@ Ember.AddeparMixins.StyleBindingsMixin = Ember.Mixin.create({
 
 Ember.Charts = Ember.Namespace.create();
 
-Ember.Charts.VERSION = '0.3.0';
+Ember.Charts.VERSION = '0.4.0';
 
 if ((_ref = Ember.libraries) != null) {
   _ref.register('Ember Charts', Ember.Charts.VERSION);
@@ -2428,6 +2428,19 @@ Ember.Charts.Colorable = Ember.Mixin.create({
       }
     };
   }).property('numSecondaryColorSeries', 'secondaryColorRange', 'secondaryColorScale')
+});
+
+
+})();
+
+(function() {
+
+
+Ember.Charts.Formattable = Ember.Mixin.create({
+  formatLabelFunction: Ember.computed(function() {
+    return d3.format("," + (this.get('formatLabel')));
+  }).property('formatLabel'),
+  formatLabel: '.2f'
 });
 
 
@@ -2666,6 +2679,9 @@ Ember.Charts.TimeSeriesLabeler = Ember.Mixin.create({
         case 'weeks':
         case 'W':
           return this.weeksBetween(start, stop);
+        case 'hours':
+        case 'H':
+          return d3.time.hours(start, stop);
         case 'seconds':
         case 'S':
           return this.secondsBetween(start, stop);
@@ -2705,6 +2721,9 @@ Ember.Charts.TimeSeriesLabeler = Ember.Mixin.create({
           case 'weeks':
           case 'W':
             return 'week';
+          case 'hours':
+          case 'H':
+            return 'hour';
           case 'seconds':
           case 'S':
             return 'second';
@@ -2788,6 +2807,30 @@ Ember.Charts.TimeSeriesLabeler = Ember.Mixin.create({
       return weeks;
     }
   },
+  labelledDays: function(start, stop) {
+    var days, skipVal;
+    days = d3.time.days(start, stop);
+    if (days.length > this.get('maxNumberOfLabels')) {
+      skipVal = Math.ceil(days.length / this.get('maxNumberOfLabels'));
+      return d3.time.days(start, stop).filter(function(d, i) {
+        return !(i % skipVal);
+      });
+    } else {
+      return days;
+    }
+  },
+  labelledHours: function(start, stop) {
+    var hours, skipVal;
+    hours = d3.time.hours(start, stop);
+    if (hours.length > this.get('maxNumberOfLabels')) {
+      skipVal = Math.ceil(hours.length / this.get('maxNumberOfLabels'));
+      return d3.time.hours(start, stop).filter(function(d, i) {
+        return !(i % skipVal);
+      });
+    } else {
+      return hours;
+    }
+  },
   tickLabelerFn: Ember.computed(function() {
     var _this = this;
     switch (this.get('selectedInterval')) {
@@ -2813,7 +2856,14 @@ Ember.Charts.TimeSeriesLabeler = Ember.Mixin.create({
         };
       case 'days':
       case 'D':
-        return d3.time.days;
+        return function(start, stop) {
+          return _this.labelledDays(start, stop);
+        };
+      case 'hours':
+      case 'H':
+        return function(start, stop) {
+          return _this.labelledHours(start, stop);
+        };
       case 'seconds':
       case 'S':
         return function(start, stop) {
@@ -2856,6 +2906,9 @@ Ember.Charts.TimeSeriesLabeler = Ember.Mixin.create({
       case 'days':
       case 'D':
         return d3.time.format('%a');
+      case 'hours':
+      case 'H':
+        return d3.time.format('%H');
       case 'seconds':
       case 'S':
         return d3.time.format('%M : %S');
@@ -3223,22 +3276,32 @@ Ember.Charts.ChartComponent = Ember.Component.extend(Ember.Charts.Colorable, Emb
   concatenatedProperties: ['renderVars'],
   renderVars: ['finishedData', 'width', 'height', 'margin', 'isInteractive'],
   init: function() {
-    var renderVar, _i, _len, _ref, _results,
-      _this = this;
+    var renderVar, _i, _len, _ref, _results;
     this._super();
     _ref = this.get('renderVars').uniq();
     _results = [];
     for (_i = 0, _len = _ref.length; _i < _len; _i++) {
       renderVar = _ref[_i];
-      _results.push(this.addObserver(renderVar, function() {
-        return Ember.run.once(_this, _this.get('draw'));
-      }));
+      this.addObserver(renderVar, this.drawOnce);
+      _results.push(this.get(renderVar));
     }
     return _results;
+  },
+  willDestroyElement: function() {
+    var renderVar, _i, _len, _ref;
+    _ref = this.get('renderVars').uniq();
+    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+      renderVar = _ref[_i];
+      this.removeObserver(renderVar, this, this.drawOnce);
+    }
+    return this._super();
   },
   didInsertElement: function() {
     this._super();
     this._updateDimensions();
+    return this.drawOnce();
+  },
+  drawOnce: function() {
     return Ember.run.once(this, this.get('draw'));
   },
   onResizeEnd: function() {
@@ -3269,10 +3332,28 @@ Ember.Charts.ChartComponent = Ember.Component.extend(Ember.Charts.Colorable, Emb
 (function() {
 
 
-Ember.Charts.HorizontalBarComponent = Ember.Charts.ChartComponent.extend(Ember.Charts.FloatingTooltipMixin, {
+Ember.Charts.SortableChartMixin = Ember.Mixin.create({
+  sortKey: 'value',
+  sortedData: Ember.computed(function() {
+    var data, key;
+    data = this.get('data');
+    key = this.get('sortKey');
+    if (Ember.isEmpty(data)) {
+      return [];
+    } else {
+      return data.sortBy(key);
+    }
+  }).property('data.@each', 'sortKey')
+});
+
+
+})();
+
+(function() {
+
+
+Ember.Charts.HorizontalBarComponent = Ember.Charts.ChartComponent.extend(Ember.Charts.FloatingTooltipMixin, Ember.Charts.Formattable, Ember.Charts.SortableChartMixin, {
   classNames: ['chart-horizontal-bar'],
-  formatLabel: d3.format(',.2f'),
-  selectedSortType: 'value',
   defaultOuterHeight: 500,
   labelWidth: Ember.computed(function() {
     return 0.25 * this.get('outerWidth');
@@ -3281,37 +3362,6 @@ Ember.Charts.HorizontalBarComponent = Ember.Charts.ChartComponent.extend(Ember.C
   barPadding: 0.2,
   maxBarThickness: 60,
   minBarThickness: 20,
-  sortedData: Ember.computed(function() {
-    var comparator, data, sortFunc, sortType;
-    data = this.get('data');
-    if (Ember.isEmpty(data)) {
-      return [];
-    }
-    sortType = this.get('selectedSortType');
-    sortFunc = (function() {
-      var _this = this;
-      switch (sortType) {
-        case 'value':
-          return function(d) {
-            return -d.value;
-          };
-        case 'label':
-          return function(d) {
-            return d.label;
-          };
-      }
-    }).call(this);
-    comparator = function(a, b) {
-      if (sortFunc(a) < sortFunc(b)) {
-        return -1;
-      } else if (sortFunc(a) > sortFunc(b)) {
-        return 1;
-      } else {
-        return 0;
-      }
-    };
-    return data.sort(comparator);
-  }).property('data.@each', 'selectedSortType'),
   finishedData: Ember.computed.alias('sortedData'),
   minOuterHeight: Ember.computed(function() {
     var minBarSpace;
@@ -3366,7 +3416,7 @@ Ember.Charts.HorizontalBarComponent = Ember.Charts.ChartComponent.extend(Ember.C
     return function(data, i, element) {
       var content, formatLabel;
       d3.select(element).classed('hovered', true);
-      formatLabel = _this.get('formatLabel');
+      formatLabel = _this.get('formatLabelFunction');
       content = "<span class=\"tip-label\">" + data.label + "</span>";
       content += "<span class=\"name\">" + (_this.get('tooltipValueDisplayName')) + ": </span>";
       content += "<span class=\"value\">" + (formatLabel(data.value)) + "</span>";
@@ -3497,7 +3547,7 @@ Ember.Charts.HorizontalBarComponent = Ember.Charts.ChartComponent.extend(Ember.C
     return this.updateGraphic();
   },
   updateData: function() {
-    var entering, exiting, groups, hideDetails, showDetails;
+    var entering, groups, hideDetails, showDetails;
     groups = this.get('groups');
     showDetails = this.get('showDetails');
     hideDetails = this.get('hideDetails');
@@ -3509,18 +3559,18 @@ Ember.Charts.HorizontalBarComponent = Ember.Charts.ChartComponent.extend(Ember.C
     entering.append('rect');
     entering.append('text').attr('class', 'value');
     entering.append('text').attr('class', 'group');
-    return exiting = groups.exit().remove();
+    return groups.exit().remove();
   },
   updateAxes: function() {
     return this.get('yAxis').attr(this.get('axisAttrs'));
   },
   updateGraphic: function() {
-    var groupLabels, groups, labelTrimmer, labelWidth, valueLabels,
+    var groups, labelTrimmer, labelWidth,
       _this = this;
     groups = this.get('groups').attr(this.get('groupAttrs'));
     groups.select('rect').attr(this.get('barAttrs'));
-    valueLabels = groups.select('text.value').text(function(d) {
-      return _this.get('formatLabel')(d.value);
+    groups.select('text.value').text(function(d) {
+      return _this.get('formatLabelFunction')(d.value);
     }).attr(this.get('valueLabelAttrs'));
     labelWidth = this.get('labelWidth');
     labelTrimmer = Ember.Charts.Helpers.LabelTrimmer.create({
@@ -3531,7 +3581,7 @@ Ember.Charts.HorizontalBarComponent = Ember.Charts.ChartComponent.extend(Ember.C
         return d.label;
       }
     });
-    return groupLabels = groups.select('text.group').text(function(d) {
+    return groups.select('text.group').text(function(d) {
       return d.label;
     }).attr(this.get('groupLabelAttrs')).call(labelTrimmer.get('trim'));
   }
@@ -3545,31 +3595,15 @@ Ember.Handlebars.helper('horizontal-bar-chart', Ember.Charts.HorizontalBarCompon
 (function() {
 
 
-Ember.Charts.PieComponent = Ember.Charts.ChartComponent.extend(Ember.Charts.PieLegend, Ember.Charts.FloatingTooltipMixin, {
+Ember.Charts.PieComponent = Ember.Charts.ChartComponent.extend(Ember.Charts.PieLegend, Ember.Charts.FloatingTooltipMixin, Ember.Charts.Formattable, Ember.Charts.SortableChartMixin, {
   classNames: ['chart-pie'],
-  formatLabel: d3.format(',.2f'),
   minSlicePercent: 5,
   maxNumberOfSlices: 8,
   labelWidth: Ember.computed(function() {
     return 0.25 * this.get('outerWidth');
   }).property('outerWidth'),
   maxRadius: 2000,
-  sortFunction: Ember.computed(function() {
-    switch (this.get('selectedSortType')) {
-      case 'value':
-        return function(d) {
-          return d.percent;
-        };
-      case 'label':
-        return function(d) {
-          return d.label;
-        };
-      default:
-        return function(d) {
-          return d.percent;
-        };
-    }
-  }).property('selectedSortType'),
+  minimumTopBottomMargin: 0,
   filteredData: Ember.computed(function() {
     var data;
     data = this.get('data');
@@ -3607,8 +3641,8 @@ Ember.Charts.PieComponent = Ember.Charts.ChartComponent.extend(Ember.Charts.PieL
         percent: d3.round(100 * d.value / total)
       };
     });
-    return _.sortBy(data, this.get('sortFunction'));
-  }).property('filteredData', 'sortFunc'),
+    return _.sortBy(data, this.get('sortKey'));
+  }).property('filteredData', 'sortKey'),
   sortedDataWithOther: Ember.computed(function() {
     var data, lastItem, lowPercentIndex, maxNumberOfSlices, minNumberOfSlices, minSlicePercent, otherItems, otherSlice, overflowSlices, slicesLeft,
       _this = this;
@@ -3672,19 +3706,22 @@ Ember.Charts.PieComponent = Ember.Charts.ChartComponent.extend(Ember.Charts.PieL
   horizontalMargin: Ember.computed(function() {
     return this.get('labelPadding') + this.get('labelWidth');
   }).property('labelPadding', 'labelWidth'),
-  marginBottom: Ember.computed(function() {
-    return this.get('legendHeight');
-  }).property('legendHeight'),
-  marginTop: Ember.computed(function() {
-    var dataLength, finishedData;
-    finishedData = this.get('finishedData');
-    dataLength = finishedData.length;
-    if (finishedData.length > 2 && finishedData[dataLength - 3].percent + finishedData[dataLength - 2].percent < 15) {
-      return this.get('marginBottom');
+  _marginBottom: Ember.computed(function() {
+    if (this.get('hasLegend')) {
+      return this.get('legendHeight');
     } else {
-      return 0.3 * this.get('marginBottom');
+      return this.get('marginTop');
     }
-  }).property('marginBottom', 'finishedData'),
+  }).property('legendHeight', 'hasLegend', 'marginTop'),
+  marginBottom: Ember.computed(function() {
+    return Math.max(this.get('_marginBottom'), this.get('minimumTopBottomMargin'));
+  }).property('_marginBottom', 'minimumTopBottomMargin'),
+  _marginTop: Ember.computed(function() {
+    return Math.max(1, this.get('outerHeight') * .1);
+  }).property('outerHeight'),
+  marginTop: Ember.computed(function() {
+    return Math.max(this.get('_marginTop'), this.get('minimumTopBottomMargin'));
+  }).property('_marginTop', 'minimumTopBottomMargin'),
   numSlices: Ember.computed.alias('finishedData.length'),
   startOffset: Ember.computed(function() {
     var data, sum;
@@ -3727,16 +3764,16 @@ Ember.Charts.PieComponent = Ember.Charts.ChartComponent.extend(Ember.Charts.PieL
       return Ember.K;
     }
     return function(d, i, element) {
-      var content, data, formatLabel;
+      var content, data, formatLabelFunction;
       d3.select(element).classed('hovered', true);
       data = d.data;
       if (data._otherItems) {
         return _this.get('viewport').select('.legend').classed('hovered', true);
       } else {
-        formatLabel = _this.get('formatLabel');
+        formatLabelFunction = _this.get('formatLabelFunction');
         content = "<span class=\"tip-label\">" + data.label + "</span>";
         content += "<span class=\"name\">" + (_this.get('tooltipValueDisplayName')) + ": </span>";
-        content += "<span class=\"value\">" + (formatLabel(data.value)) + "</span>";
+        content += "<span class=\"value\">" + (formatLabelFunction(data.value)) + "</span>";
         return _this.showTooltip(content, d3.event);
       }
     };
@@ -3764,8 +3801,7 @@ Ember.Charts.PieComponent = Ember.Charts.ChartComponent.extend(Ember.Charts.PieL
     return "translate(" + cx + "," + cy + ")";
   }).property('marginLeft', 'marginTop', 'width', 'height'),
   arc: Ember.computed(function() {
-    var arc;
-    return arc = d3.svg.arc().outerRadius(this.get('radius')).innerRadius(0);
+    return d3.svg.arc().outerRadius(this.get('radius')).innerRadius(0);
   }).property('radius'),
   pie: Ember.computed(function() {
     return d3.layout.pie().startAngle(this.get('startOffset')).endAngle(this.get('startOffset') + Math.PI * 2).sort(null).value(function(d) {
@@ -3791,11 +3827,24 @@ Ember.Charts.PieComponent = Ember.Charts.ChartComponent.extend(Ember.Charts.PieL
     };
   }).property('arc', 'getSliceColor'),
   labelAttrs: Ember.computed(function() {
-    var arc, labelRadius, lastXPos, lastYPos, mostTintedColor;
+    var arc, labelOverlap, labelRadius, mostTintedColor, usedLabelPositions;
     arc = this.get('arc');
     labelRadius = this.get('labelRadius');
-    lastXPos = 0;
-    lastYPos = 0;
+    usedLabelPositions = {
+      left: [],
+      right: []
+    };
+    labelOverlap = function(side, ypos, height) {
+      var pos, positions, _i, _len;
+      positions = usedLabelPositions[side];
+      for (_i = 0, _len = positions.length; _i < _len; _i++) {
+        pos = positions[_i];
+        if (Math.abs(ypos - pos) < height) {
+          return true;
+        }
+      }
+      return false;
+    };
     if (this.get('numSlices') > 1) {
       return {
         dy: '.35em',
@@ -3811,7 +3860,7 @@ Ember.Charts.PieComponent = Ember.Charts.ChartComponent.extend(Ember.Charts.PieL
           }
         },
         transform: function(d) {
-          var f, isSwitchingSides, labelHeight, labelXPos, labelYPos, labelsTooClose, x, y, _ref;
+          var f, labelHeight, labelXPos, labelYPos, side, x, y, _ref;
           _ref = arc.centroid(d), x = _ref[0], y = _ref[1];
           f = function(d) {
             return d / Math.sqrt(x * x + y * y) * labelRadius;
@@ -3819,17 +3868,15 @@ Ember.Charts.PieComponent = Ember.Charts.ChartComponent.extend(Ember.Charts.PieL
           labelXPos = f(x);
           labelYPos = f(y);
           labelHeight = this.getBBox().height;
-          isSwitchingSides = (lastXPos > 0 && 0 > labelXPos) || (lastXPos < 0 && 0 < labelXPos);
-          labelsTooClose = Math.abs(labelYPos - lastYPos) < labelHeight;
-          if (labelsTooClose && !isSwitchingSides) {
-            if (labelYPos < lastYPos) {
-              labelYPos = lastYPos - labelHeight;
+          side = labelXPos > 0 ? 'right' : 'left';
+          if (labelOverlap(side, labelYPos, labelHeight)) {
+            if (side === 'right') {
+              labelYPos = _.max(usedLabelPositions[side]) + labelHeight;
             } else {
-              labelYPos = lastYPos + labelHeight;
+              labelYPos = _.min(usedLabelPositions[side]) - labelHeight;
             }
           }
-          lastXPos = labelXPos;
-          lastYPos = labelYPos;
+          usedLabelPositions[side].push(labelYPos);
           return "translate(" + labelXPos + "," + labelYPos + ")";
         }
       };
@@ -3904,10 +3951,8 @@ Ember.Handlebars.helper('pie-chart', Ember.Charts.PieComponent);
 (function() {
 
 
-Ember.Charts.VerticalBarComponent = Ember.Charts.ChartComponent.extend(Ember.Charts.Legend, Ember.Charts.FloatingTooltipMixin, Ember.Charts.AxesMixin, {
+Ember.Charts.VerticalBarComponent = Ember.Charts.ChartComponent.extend(Ember.Charts.Legend, Ember.Charts.FloatingTooltipMixin, Ember.Charts.AxesMixin, Ember.Charts.Formattable, Ember.Charts.SortableChartMixin, {
   classNames: ['chart-vertical-bar'],
-  formatLabel: d3.format(',.2f'),
-  selectedSortType: 'none',
   ungroupedSeriesName: 'Other',
   stackBars: false,
   withinGroupPadding: 0,
@@ -3932,23 +3977,6 @@ Ember.Charts.VerticalBarComponent = Ember.Charts.ChartComponent.extend(Ember.Cha
       return (_ref = d.group) != null ? _ref : _this.get('ungroupedSeriesName');
     });
   }).property('sortedData', 'ungroupedSeriesName'),
-  sortedData: Ember.computed(function() {
-    var data, type;
-    type = this.get('selectedSortType');
-    data = this.get('data');
-    if (type === 'value') {
-      data = data.sort(function(a, b) {
-        if (a.value < b.value) {
-          return 1;
-        } else if (a.value > b.value) {
-          return -1;
-        } else {
-          return 0;
-        }
-      });
-    }
-    return data;
-  }).property('selectedSortType', 'data.@each'),
   groupNames: Ember.computed(function() {
     var groupName, values, _ref, _results;
     _ref = this.get('groupedData');
@@ -4171,7 +4199,7 @@ Ember.Charts.VerticalBarComponent = Ember.Charts.ChartComponent.extend(Ember.Cha
       } else {
         content = '';
       }
-      formatLabel = _this.get('formatLabel');
+      formatLabel = _this.get('formatLabelFunction');
       addValueLine = function(d) {
         content += "<span class=\"name\">" + d.label + ": </span>";
         return content += "<span class=\"value\">" + (formatLabel(d.value)) + "</span><br/>";
@@ -4290,11 +4318,10 @@ Ember.Charts.VerticalBarComponent = Ember.Charts.ChartComponent.extend(Ember.Cha
     }
   }).volatile(),
   maxLabelWidth: Ember.computed(function() {
-    var maxLabelWidth;
     if (this.get('isGrouped') || this.get('stackBars')) {
-      return maxLabelWidth = this.get('groupWidth');
+      return this.get('groupWidth');
     } else {
-      return maxLabelWidth = this.get('barWidth');
+      return this.get('barWidth');
     }
   }).property('isGrouped', 'stackBars', 'groupWidth', 'barWidth'),
   _shouldRotateLabels: false,
@@ -4336,7 +4363,7 @@ Ember.Charts.VerticalBarComponent = Ember.Charts.ChartComponent.extend(Ember.Cha
     }
   },
   updateData: function() {
-    var bars, entering, exiting, groups, hideDetails, showDetails, subdata;
+    var bars, entering, groups, hideDetails, showDetails, subdata;
     groups = this.get('groups');
     showDetails = this.get('showDetails');
     hideDetails = this.get('hideDetails');
@@ -4346,7 +4373,7 @@ Ember.Charts.VerticalBarComponent = Ember.Charts.ChartComponent.extend(Ember.Cha
     }).on("mouseout", function(d, i) {
       return hideDetails(d, i, this);
     });
-    exiting = groups.exit().remove();
+    groups.exit().remove();
     if (this.get('stackBars')) {
       subdata = function(d) {
         return d.stackedValues;
@@ -4422,7 +4449,7 @@ Ember.Charts.VerticalBarComponent = Ember.Charts.ChartComponent.extend(Ember.Cha
     });
   },
   updateGraphic: function() {
-    var barAttrs, groups, labels;
+    var barAttrs, groups;
     groups = this.get('groups');
     if (this.get('stackBars')) {
       barAttrs = this.get('stackedBarAttrs');
@@ -4431,7 +4458,7 @@ Ember.Charts.VerticalBarComponent = Ember.Charts.ChartComponent.extend(Ember.Cha
     }
     groups.attr(this.get('groupAttrs'));
     groups.selectAll('rect').style('fill', this.get('getSeriesColor')).attr(barAttrs);
-    return labels = groups.select('g.groupLabel').attr(this.get('labelAttrs'));
+    return groups.select('g.groupLabel').attr(this.get('labelAttrs'));
   }
 });
 
@@ -4829,13 +4856,12 @@ Ember.Handlebars.helper('scatter-chart', Ember.Charts.ScatterComponent);
 (function() {
 
 
-Ember.Charts.TimeSeriesComponent = Ember.Charts.ChartComponent.extend(Ember.Charts.Legend, Ember.Charts.TimeSeriesLabeler, Ember.Charts.FloatingTooltipMixin, Ember.Charts.HasTimeSeriesRule, Ember.Charts.AxesMixin, {
+Ember.Charts.TimeSeriesComponent = Ember.Charts.ChartComponent.extend(Ember.Charts.Legend, Ember.Charts.TimeSeriesLabeler, Ember.Charts.FloatingTooltipMixin, Ember.Charts.HasTimeSeriesRule, Ember.Charts.AxesMixin, Ember.Charts.Formattable, {
   classNames: ['chart-time-series'],
   lineData: null,
   barData: null,
   formatTime: d3.time.format('%Y-%m-%d'),
   formatTimeLong: d3.time.format('%a %b %-d, %Y'),
-  formatLabel: d3.format(',.2f'),
   ungroupedSeriesName: 'Other',
   interpolate: false,
   yAxisFromZero: false,
@@ -5153,14 +5179,14 @@ Ember.Charts.TimeSeriesComponent = Ember.Charts.ChartComponent.extend(Ember.Char
       return Ember.K;
     }
     return function(data, i, element) {
-      var addValueLine, content, formatLabel, time;
+      var addValueLine, content, formatLabelFunction, time;
       d3.select(element).classed('hovered', true);
       time = data.labelTime != null ? data.labelTime : data.time;
       content = "<span class=\"tip-label\">" + (_this.get('formatTime')(time)) + "</span>";
-      formatLabel = _this.get('formatLabel');
+      formatLabelFunction = _this.get('formatLabelFunction');
       addValueLine = function(d) {
         content += "<span class=\"name\">" + d.group + ": </span>";
-        return content += "<span class=\"value\">" + (formatLabel(d.value)) + "</span><br/>";
+        return content += "<span class=\"value\">" + (formatLabelFunction(d.value)) + "</span><br/>";
       };
       if (Ember.isArray(data.values)) {
         data.values.forEach(addValueLine);
@@ -31444,9 +31470,7 @@ App.EmberChartsHorizontalBarController = App.SlideController.extend({
       bad_range: App.data.bad_range
     };
   }),
-  selectedData: 'asset_values',
-  sortTypes: ['label', 'value'],
-  selectedSortType: 'value'
+  selectedData: 'asset_values'
 });
 
 
@@ -31522,9 +31546,7 @@ App.EmberChartsPieController = App.SlideController.extend({
       bad_range: App.data.bad_range
     };
   }),
-  selectedData: 'asset_values',
-  sortTypes: ['label', 'value'],
-  selectedSortType: 'value'
+  selectedData: 'asset_values'
 });
 
 
@@ -31643,14 +31665,6 @@ App.EmberChartsOverviewRoute = Ember.Route.extend({
     return controller.set('showLargeHero', false);
   }
 });
-
-
-})();
-
-(function() {
-
-
-
 
 
 })();
@@ -31979,7 +31993,7 @@ helpers = this.merge(helpers, Ember.Handlebars.helpers); data = data || {};
   var buffer = '';
 
 
-  data.buffer.push("\n<div class=\"col-md-10 col-md-offset-2 left-border main-content-container\">\n  <h1>Ember Charts API</h1>\n  <h2>Time-series-chart Options</h2>\n  <table class=\"table ember-charts-options\">\n    <tr>\n      <th style=\"width: 200px;\">Option</th>\n      <th style=\"width: 150px;\">Default</th>\n      <th>Description</th>\n    </tr>\n    <tr>\n      <td>barData</td>\n      <td>undefined</td>\n      <td>\n        <p>Time series data to be represented by bars.  This is an array of\n        data points.  Each data point is an object with at least three fields:\n        <em>time</em>, <em>value</em>, and <em>label</em>.  The time field\n        contains a JavaScript Date.  The value field is a Number.  The label\n        field indicates which group (series) a data point belongs to.  Example:</p>\n        <div class=\"highlight\">\n<pre class=\"prettyprint lang-js\">// average high temperature (degrees F) by city\n[\n  {\n    date: new Date(2013, 05, 01),\n    value: 64,\n    label: 'San Francisco'\n  },\n  {\n    date: new Date(2013, 05, 01),\n    value: 93,\n    label: 'Phoenix'\n  },\n  {\n    date: new Date(2013, 06, 01),\n    value: 66,\n    label: 'San Francisco'\n  },\n  {\n    date: new Date(2013, 06, 01),\n    value: 103,\n    label: 'Phoenix'\n  },\n  ...\n]</pre>\n        </div>\n      </td>\n    </tr>\n    <tr>\n      <td>lineData</td>\n      <td>undefined</td>\n      <td>\n        <p>Time series data to be represented by bars.  Format is the same as for\n        the <em>barData</em> time series above.</p>\n      </td>\n    </tr>\n    <tr>\n      <td>selectedInterval</td>\n      <td>M</td>\n      <td>\n        <p>Interval between ticks on the time axis.  Can be 'D' (days), 'W'\n        (weeks), 'M' (months), 'Q' (quarters), or 'Y' (years).</p>\n      </td>\n    </tr>\n    <tr>\n      <td>selectedSeedColor</td>\n      <td>rgb(65, 65, 65)</td>\n      <td>\n        <p>Base color that the color palette will be generated from.</p>\n      </td>\n    </tr>\n    <tr>\n      <td>timeDelta</td>\n      <td>month</td>\n      <td>\n        <p>The time interval used represented by each group when using grouped\n        bars.  Can be 'day', 'week', 'month', 'quarter', 'year'</p>\n      </td>\n    </tr>\n    <tr>\n      <td>barPadding</td>\n      <td>0</td>\n      <td>\n        <p>Space between bars, as fraction of total bar + padding space.</p>\n      </td>\n    </tr>\n    <tr>\n      <td>barGroupPadding</td>\n      <td>0.25</td>\n      <td>\n        <p>Space between bar groups, as fraction of total bar + padding space.</p>\n      </td>\n    </tr>\n    <tr>\n      <td>yAxisFromZero</td>\n      <td>false</td>\n      <td>\n        <p>Force the Y axis to start at zero, instead of the smallest Y value\n        provided.</p>\n      </td>\n    </tr>\n  </table>\n\n  <hr>\n  <h2>Horizontal-Bar Options</h2>\n  <table class=\"table ember-charts-options\">\n    <tr>\n      <th style=\"width: 200px;\">Option</th>\n      <th style=\"width: 150px;\">Default</th>\n      <th>Description</th>\n    </tr>\n    <tr>\n      <td>minBarThickness</td>\n      <td>20</td>\n      <td>\n        <p>Miminum bar width in pixels.</p>\n      </td>\n    </tr>\n    <tr>\n      <td>maxBarThickness</td>\n      <td>60</td>\n      <td>\n        <p>Maximum bar width in pixels.</p>\n      </td>\n    </tr>\n    <tr>\n      <td>selectedSeedColor</td>\n      <td>rgb(65, 65, 65)</td>\n      <td><p>Base color that the color palette will be generated from.</p>\n    </td>\n    </tr>\n    <tr>\n      <td>data</td>\n      <td>undefined</td>\n      <td>\n        <p>Data to be represented by bars.  This is an array of data points.  Each\n        data point is an object with at least two fields: <em>value</em>\n        (Number), and <em>label</em> (String).</p>\n        <div class=\"highlight\">\n<pre class=\"prettyprint lang-js\">// Population\n[\n  {\n    value: 825111,\n    label: 'San Francisco'\n  },\n  {\n    value: 984299,\n    label: 'San Jose'\n  },\n  {\n    value: 400740,\n    label: 'Oakland'\n  },\n  ...\n]</pre>\n        </div>\n      </td>\n    </tr>\n    <tr>\n      <td>selectedSortType</td>\n      <td>value</td>\n      <td>\n        <p>Field from each data point by which the bars will be sorted.</p>\n      </td>\n    </tr>\n  </table>\n\n  <hr>\n  <h2>Vertical-Bar Options</h2>\n  <table class=\"table ember-charts-options\">\n    <tr>\n      <th style=\"width: 200px;\">Option</th>\n      <th style=\"width: 150px;\">Default</th>\n      <th>Description</th>\n    </tr>\n    <tr>\n      <td>maxBarThickness</td>\n      <td>60</td>\n      <td>\n        <p>Maximum bar width in pixels.</p>\n      </td>\n    </tr>\n    <tr>\n      <td>selectedSeedColor</td>\n      <td>rgb(65, 65, 65)</td>\n      <td>\n        <p>Base color that the color palette will be generated from.</p>\n      </td>\n   </tr>\n    <tr>\n      <td>data</td>\n      <td>undefined</td>\n      <td>\n        <p>Data to be represented by bars.  This is an array of data points.  Each\n        data point is an object with at least two fields: <em>value</em>\n        (Number), and <em>label</em> (String).  A third field <em>group</em>\n        (String) is optional for each data point.  The prescence of the group\n        field will group the bars based on the value of this field.</p>\n        <div class=\"highlight\">\n<pre class=\"prettyprint lang-js\">// percentage absolute return\n[\n  {\n    value: 21.51,\n    label: 'Google',\n    group: 'Tech'\n  },\n  {\n    value: 10.10,\n    label: 'Microsoft',\n    group: 'Tech'\n  },\n  {\n    value: 15.32,\n    label: 'ExxonMobil',\n    group: 'Energy'\n  },\n  {\n    value: -7.11,\n    label: 'Schlumberger',\n    group: 'Energy'\n  },\n  ...\n]</pre>\n        </div>\n      </td>\n    </tr>\n    <tr>\n      <td>maxLabelHeight</td>\n      <td>50</td>\n      <td>\n        <p>Space allocated for rotated labels on the bottom of the chart. If labels\n        are rotated, they will be extended beyond labelHeight up to\n        maxLabelHeight.</p>\n      </td>\n    </tr>\n    <tr>\n      <td>withinGroupPadding</td>\n      <td>0</td>\n      <td>\n        <p>Space between bars, as fraction of bar size.</p>\n      </td>\n    </tr>\n    <tr>\n      <td>stackBars</td>\n      <td>false</td>\n      <td>\n        <p>Stacks bars, otherwise it groups them  horizontally.</p>\n      </td>\n    </tr>\n  </table>\n\n  <hr>\n  <h2>Pie Options</h2>\n  <table class=\"table ember-charts-options\">\n    <tr>\n      <th style=\"width: 200px;\">Option</th>\n      <th style=\"width: 150px;\">Default</th>\n      <th>Description</th>\n    </tr>\n    <tr>\n      <td>maxRadius</td>\n      <td>2000</td>\n      <td>\n        <p>The maximum size in pixels of the radius of the pie.</p>\n      </td>\n    </tr>\n    <tr>\n      <td>minSlicePercent</td>\n      <td>5</td>\n      <td>\n        The smallest slices will be combined into an \"Other\" slice until no\n        slice is smaller than minSlicePercent. \"Other\" is also guaranteed to be\n        larger than minSlicePercent.\n      </td>\n    </tr>\n    <tr>\n      <td>maxNumberOfSlices</td>\n      <td>8</td>\n      <td>\n        <p>The maximum number of slices. If the number of slices is greater\n        than this then the smallest slices will be combined into an \"other\"\n        slice until there are at most maxNumberOfSlices.</p>\n      </td>\n    </tr>\n    <tr>\n      <td>selectedSeedColor</td>\n      <td>rgb(65, 65, 65)</td>\n      <td>\n        <p>Base color that the color palette will be generated from.</p>\n      </td>\n    </tr>\n    <tr>\n      <td>selectedSortType</td>\n      <td>value</td>\n      <td>\n        <p>Field from each data point by which the pie-slices will be sorted.</p>\n      </td>\n    </tr>\n    <tr>\n      <td>data</td>\n      <td>undefined</td>\n      <td>\n        <p>Data to be represented by pie-slices.  This is an array of data points.\n        Each data point is an object with at least two fields: <em>value</em>\n        (Number), and <em>label</em> (String).</p>\n        <div class=\"highlight\">\n<pre class=\"prettyprint lang-js\">// Population\n[\n  {\n  value: 825111,\n  label: 'San Francisco'\n  },\n  {\n  value: 984299,\n  label: 'San Jose'\n  },\n  {\n  value: 400740,\n  label: 'Oakland'\n  },\n  ...\n]</pre>\n        </div>\n      </td>\n    </tr>\n  </table>\n\n  <hr>\n  <h2>Scatter Options</h2>\n  <table class=\"table ember-charts-options\">\n    <tr>\n      <th style=\"width: 200px;\">Option</th>\n      <th style=\"width: 150px;\">Default</th>\n      <th>Description</th>\n    </tr>\n    <tr>\n      <td>dotRadius</td>\n      <td>7</td>\n      <td>\n        <p>Size of each icon on the scatter plot.</p>\n      </td>\n    </tr>\n    <tr>\n      <td>data</td>\n      <td>undefined</td>\n      <td>\n        <p>Data to be represented by points on a scatter plot.  This is an array of\n        data points.  Each data point is an object with at least two fields:\n        <em>xValue</em> (Number), and <em>yValue</em> (Number).  XValue and\n        yValue correspond to an individual measurement.</p>\n\n        <p>A third field <em>group</em>, indicating the group to which the\n        measurement belongs,  is optional.  We display a different icon for each\n        group if the number of groups is less than or equal to the maximum\n        number of icons.  Otherwise, a standard icon is used for all groups.</p>\n        <div class=\"highlight\">\n<pre class=\"prettyprint lang-js\">// January minimum temperature in degrees F (yValue)\n// by latitude (xValue) and region\n[\n  {\n  \"group\": \"West Coast\",\n  \"xValue\": 38.4,\n  \"yValue\": 42\n  },\n  {\n  \"group\": \"Midwest\",\n  \"xValue\": 42.3,\n  \"yValue\": 21\n  },\n  {\n  \"group\": \"West Coast\",\n  \"xValue\": 34.2,\n  \"yValue\": 47\n  },\n  {\n  \"group\": \"South\",\n  \"xValue\": 33.9,\n  \"yValue\": 37\n  },\n  ...\n]</pre>\n        </div>\n        </code>\n      </td>\n    </tr>\n    <tr>\n      <td>selectedSeedColor</td>\n      <td>rgb(65, 65, 65)</td>\n      <td>\n        <p>Base color that the color palette will be generated from.</p>\n      </td>\n    </tr>\n  </table>\n\n  <hr>\n  <h2>Bubble Options</h2>\n  <table class=\"table ember-charts-options\">\n    <tr>\n      <th style=\"width: 200px;\">Option</th>\n      <th style=\"width: 150px;\">Default</th>\n      <th>Description</th>\n    </tr>\n    <tr>\n      <td>data</td>\n      <td>undefined</td>\n      <td>\n        <p>Data to be represented by bubbles in a bubble chart.  This is an array\n        of data points.  Each data point is an object with at least two fields:\n        <em>value</em> (Number), and <em>label</em> (String).</p>\n        <div class=\"highlight\">\n<pre class=\"prettyprint lang-js\">// Population\n[\n  {\n    value: 825111,\n    label: 'San Francisco'\n  },\n  {\n    value: 984299,\n    label: 'San Jose'\n  },\n  {\n    value: 400740,\n    label: 'Oakland'\n  },\n  ...\n]</pre>\n        </div>\n      </td>\n    </tr>\n    <tr>\n      <td>selectedSeedColor</td>\n      <td>rgb(65, 65, 65)</td>\n      <td>\n        <p>Base color that the color palette will be generated from.</p>\n      </td>\n    </tr>\n  </table>\n</div>\n");
+  data.buffer.push("\n<div class=\"col-md-10 col-md-offset-2 left-border main-content-container\">\n  <h1>Ember Charts API</h1>\n  <h2>Time-series-chart Options</h2>\n  <table class=\"table ember-charts-options\">\n    <tr>\n      <th style=\"width: 200px;\">Option</th>\n      <th style=\"width: 150px;\">Default</th>\n      <th>Description</th>\n    </tr>\n    <tr>\n      <td>barData</td>\n      <td>undefined</td>\n      <td>\n        <p>Time series data to be represented by bars.  This is an array of\n        data points.  Each data point is an object with at least three fields:\n        <em>time</em>, <em>value</em>, and <em>label</em>.  The time field\n        contains a JavaScript Date.  The value field is a Number.  The label\n        field indicates which group (series) a data point belongs to.  Example:</p>\n        <div class=\"highlight\">\n<pre class=\"prettyprint lang-js\">// average high temperature (degrees F) by city\n[\n  {\n    date: new Date(2013, 05, 01),\n    value: 64,\n    label: 'San Francisco'\n  },\n  {\n    date: new Date(2013, 05, 01),\n    value: 93,\n    label: 'Phoenix'\n  },\n  {\n    date: new Date(2013, 06, 01),\n    value: 66,\n    label: 'San Francisco'\n  },\n  {\n    date: new Date(2013, 06, 01),\n    value: 103,\n    label: 'Phoenix'\n  },\n  ...\n]</pre>\n        </div>\n      </td>\n    </tr>\n    <tr>\n      <td>lineData</td>\n      <td>undefined</td>\n      <td>\n        <p>Time series data to be represented by bars.  Format is the same as for\n        the <em>barData</em> time series above.</p>\n      </td>\n    </tr>\n    <tr>\n      <td>selectedInterval</td>\n      <td>M</td>\n      <td>\n        <p>Interval between ticks on the time axis.  Can be 'H' (hours), 'D' (days), 'W'\n        (weeks), 'M' (months), 'Q' (quarters), or 'Y' (years).</p>\n      </td>\n    </tr>\n    <tr>\n      <td>selectedSeedColor</td>\n      <td>rgb(65, 65, 65)</td>\n      <td>\n        <p>Base color that the color palette will be generated from.</p>\n      </td>\n    </tr>\n    <tr>\n      <td>timeDelta</td>\n      <td>month</td>\n      <td>\n        <p>The time interval used represented by each group when using grouped\n        bars.  Can be 'day', 'week', 'month', 'quarter', 'year'</p>\n      </td>\n    </tr>\n    <tr>\n      <td>barPadding</td>\n      <td>0</td>\n      <td>\n        <p>Space between bars, as fraction of total bar + padding space.</p>\n      </td>\n    </tr>\n    <tr>\n      <td>barGroupPadding</td>\n      <td>0.25</td>\n      <td>\n        <p>Space between bar groups, as fraction of total bar + padding space.</p>\n      </td>\n    </tr>\n    <tr>\n      <td>yAxisFromZero</td>\n      <td>false</td>\n      <td>\n        <p>Force the Y axis to start at zero, instead of the smallest Y value\n        provided.</p>\n      </td>\n    </tr>\n  </table>\n\n  <hr>\n  <h2>Horizontal-Bar Options</h2>\n  <table class=\"table ember-charts-options\">\n    <tr>\n      <th style=\"width: 200px;\">Option</th>\n      <th style=\"width: 150px;\">Default</th>\n      <th>Description</th>\n    </tr>\n    <tr>\n      <td>minBarThickness</td>\n      <td>20</td>\n      <td>\n        <p>Miminum bar width in pixels.</p>\n      </td>\n    </tr>\n    <tr>\n      <td>maxBarThickness</td>\n      <td>60</td>\n      <td>\n        <p>Maximum bar width in pixels.</p>\n      </td>\n    </tr>\n    <tr>\n      <td>selectedSeedColor</td>\n      <td>rgb(65, 65, 65)</td>\n      <td><p>Base color that the color palette will be generated from.</p>\n    </td>\n    </tr>\n    <tr>\n      <td>data</td>\n      <td>undefined</td>\n      <td>\n        <p>Data to be represented by bars.  This is an array of data points.  Each\n        data point is an object with at least two fields: <em>value</em>\n        (Number), and <em>label</em> (String).</p>\n        <div class=\"highlight\">\n<pre class=\"prettyprint lang-js\">// Population\n[\n  {\n    value: 825111,\n    label: 'San Francisco'\n  },\n  {\n    value: 984299,\n    label: 'San Jose'\n  },\n  {\n    value: 400740,\n    label: 'Oakland'\n  },\n  ...\n]</pre>\n        </div>\n      </td>\n    </tr>\n    <tr>\n      <td>sortKey</td>\n      <td>value</td>\n      <td>\n        <p>Field from each data point by which the bars will be sorted.</p>\n      </td>\n    </tr>\n  </table>\n\n  <hr>\n  <h2>Vertical-Bar Options</h2>\n  <table class=\"table ember-charts-options\">\n    <tr>\n      <th style=\"width: 200px;\">Option</th>\n      <th style=\"width: 150px;\">Default</th>\n      <th>Description</th>\n    </tr>\n    <tr>\n      <td>maxBarThickness</td>\n      <td>60</td>\n      <td>\n        <p>Maximum bar width in pixels.</p>\n      </td>\n    </tr>\n    <tr>\n      <td>selectedSeedColor</td>\n      <td>rgb(65, 65, 65)</td>\n      <td>\n        <p>Base color that the color palette will be generated from.</p>\n      </td>\n   </tr>\n    <tr>\n      <td>data</td>\n      <td>undefined</td>\n      <td>\n        <p>Data to be represented by bars.  This is an array of data points.  Each\n        data point is an object with at least two fields: <em>value</em>\n        (Number), and <em>label</em> (String).  A third field <em>group</em>\n        (String) is optional for each data point.  The prescence of the group\n        field will group the bars based on the value of this field.</p>\n        <div class=\"highlight\">\n<pre class=\"prettyprint lang-js\">// percentage absolute return\n[\n  {\n    value: 21.51,\n    label: 'Google',\n    group: 'Tech'\n  },\n  {\n    value: 10.10,\n    label: 'Microsoft',\n    group: 'Tech'\n  },\n  {\n    value: 15.32,\n    label: 'ExxonMobil',\n    group: 'Energy'\n  },\n  {\n    value: -7.11,\n    label: 'Schlumberger',\n    group: 'Energy'\n  },\n  ...\n]</pre>\n        </div>\n      </td>\n    </tr>\n    <tr>\n      <td>maxLabelHeight</td>\n      <td>50</td>\n      <td>\n        <p>Space allocated for rotated labels on the bottom of the chart. If labels\n        are rotated, they will be extended beyond labelHeight up to\n        maxLabelHeight.</p>\n      </td>\n    </tr>\n    <tr>\n      <td>withinGroupPadding</td>\n      <td>0</td>\n      <td>\n        <p>Space between bars, as fraction of bar size.</p>\n      </td>\n    </tr>\n    <tr>\n      <td>stackBars</td>\n      <td>false</td>\n      <td>\n        <p>Stacks bars, otherwise it groups them  horizontally.</p>\n      </td>\n    </tr>\n    <tr>\n      <td>sortKey</td>\n      <td>value</td>\n      <td>\n        <p>Field from each data point used for sorting when chart is grouped\n        horizontally. The chart is sorted by the field's value for the first data\n        point in each group, and each group is sorted by the field as well.</p>\n      </td>\n    </tr>\n  </table>\n\n  <hr>\n  <h2>Pie Options</h2>\n  <table class=\"table ember-charts-options\">\n    <tr>\n      <th style=\"width: 200px;\">Option</th>\n      <th style=\"width: 150px;\">Default</th>\n      <th>Description</th>\n    </tr>\n    <tr>\n      <td>maxRadius</td>\n      <td>2000</td>\n      <td>\n        <p>The maximum size in pixels of the radius of the pie.</p>\n      </td>\n    </tr>\n    <tr>\n      <td>minSlicePercent</td>\n      <td>5</td>\n      <td>\n        The smallest slices will be combined into an \"Other\" slice until no\n        slice is smaller than minSlicePercent. \"Other\" is also guaranteed to be\n        larger than minSlicePercent.\n      </td>\n    </tr>\n    <tr>\n      <td>maxNumberOfSlices</td>\n      <td>8</td>\n      <td>\n        <p>The maximum number of slices. If the number of slices is greater\n        than this then the smallest slices will be combined into an \"other\"\n        slice until there are at most maxNumberOfSlices.</p>\n      </td>\n    </tr>\n    <tr>\n      <td>selectedSeedColor</td>\n      <td>rgb(65, 65, 65)</td>\n      <td>\n        <p>Base color that the color palette will be generated from.</p>\n      </td>\n    </tr>\n    <tr>\n      <td>sortKey</td>\n      <td>value</td>\n      <td>\n        <p>Field from each data point by which the pie-slices will be sorted.</p>\n      </td>\n    </tr>\n    <tr>\n      <td>data</td>\n      <td>undefined</td>\n      <td>\n        <p>Data to be represented by pie-slices.  This is an array of data points.\n        Each data point is an object with at least two fields: <em>value</em>\n        (Number), and <em>label</em> (String).</p>\n        <div class=\"highlight\">\n<pre class=\"prettyprint lang-js\">// Population\n[\n  {\n  value: 825111,\n  label: 'San Francisco'\n  },\n  {\n  value: 984299,\n  label: 'San Jose'\n  },\n  {\n  value: 400740,\n  label: 'Oakland'\n  },\n  ...\n]</pre>\n        </div>\n      </td>\n    </tr>\n  </table>\n\n  <hr>\n  <h2>Scatter Options</h2>\n  <table class=\"table ember-charts-options\">\n    <tr>\n      <th style=\"width: 200px;\">Option</th>\n      <th style=\"width: 150px;\">Default</th>\n      <th>Description</th>\n    </tr>\n    <tr>\n      <td>dotRadius</td>\n      <td>7</td>\n      <td>\n        <p>Size of each icon on the scatter plot.</p>\n      </td>\n    </tr>\n    <tr>\n      <td>data</td>\n      <td>undefined</td>\n      <td>\n        <p>Data to be represented by points on a scatter plot.  This is an array of\n        data points.  Each data point is an object with at least two fields:\n        <em>xValue</em> (Number), and <em>yValue</em> (Number).  XValue and\n        yValue correspond to an individual measurement.</p>\n\n        <p>A third field <em>group</em>, indicating the group to which the\n        measurement belongs,  is optional.  We display a different icon for each\n        group if the number of groups is less than or equal to the maximum\n        number of icons.  Otherwise, a standard icon is used for all groups.</p>\n        <div class=\"highlight\">\n<pre class=\"prettyprint lang-js\">// January minimum temperature in degrees F (yValue)\n// by latitude (xValue) and region\n[\n  {\n  \"group\": \"West Coast\",\n  \"xValue\": 38.4,\n  \"yValue\": 42\n  },\n  {\n  \"group\": \"Midwest\",\n  \"xValue\": 42.3,\n  \"yValue\": 21\n  },\n  {\n  \"group\": \"West Coast\",\n  \"xValue\": 34.2,\n  \"yValue\": 47\n  },\n  {\n  \"group\": \"South\",\n  \"xValue\": 33.9,\n  \"yValue\": 37\n  },\n  ...\n]</pre>\n        </div>\n        </code>\n      </td>\n    </tr>\n    <tr>\n      <td>selectedSeedColor</td>\n      <td>rgb(65, 65, 65)</td>\n      <td>\n        <p>Base color that the color palette will be generated from.</p>\n      </td>\n    </tr>\n  </table>\n\n  <hr>\n  <h2>Bubble Options</h2>\n  <table class=\"table ember-charts-options\">\n    <tr>\n      <th style=\"width: 200px;\">Option</th>\n      <th style=\"width: 150px;\">Default</th>\n      <th>Description</th>\n    </tr>\n    <tr>\n      <td>data</td>\n      <td>undefined</td>\n      <td>\n        <p>Data to be represented by bubbles in a bubble chart.  This is an array\n        of data points.  Each data point is an object with at least two fields:\n        <em>value</em> (Number), and <em>label</em> (String).</p>\n        <div class=\"highlight\">\n<pre class=\"prettyprint lang-js\">// Population\n[\n  {\n    value: 825111,\n    label: 'San Francisco'\n  },\n  {\n    value: 984299,\n    label: 'San Jose'\n  },\n  {\n    value: 400740,\n    label: 'Oakland'\n  },\n  ...\n]</pre>\n        </div>\n      </td>\n    </tr>\n    <tr>\n      <td>selectedSeedColor</td>\n      <td>rgb(65, 65, 65)</td>\n      <td>\n        <p>Base color that the color palette will be generated from.</p>\n      </td>\n    </tr>\n  </table>\n</div>\n");
   return buffer;
   
 });
@@ -32125,7 +32139,7 @@ function program9(depth0,data) {
   options = {hash:{},inverse:self.noop,fn:self.program(9, program9, data),contexts:[depth0],types:["STRING"],hashContexts:hashContexts,hashTypes:hashTypes,data:data};
   stack2 = ((stack1 = helpers['link-to'] || depth0['link-to']),stack1 ? stack1.call(depth0, "emberCharts.scatter", options) : helperMissing.call(depth0, "link-to", "emberCharts.scatter", options));
   if(stack2 || stack2 === 0) { data.buffer.push(stack2); }
-  data.buffer.push("\n  </div>\n\n  <hr>\n  <div class=\"row\">\n    <div class=\"col-md-6\">\n      <h3>Features</h3>\n      <ul class=\"styled\">\n        <li>Highly customizable and extensible.</li>\n        <li>Rich with features - add legends, labels, tooltips, and\n        mouseover effects.</li>\n        <li>Robust & polished - weird data will not cause your charts to\n        break.</li>\n        <li>Roll your own charts by extending our ChartComponent class -\n        get labels, automatic resizing, and reasonable defaults for\n        margins, padding, etc.</li>\n      </ul>\n    </div>\n    <div class=\"col-md-6\">\n      <h3>Dependencies</h3>\n      <ul class=\"styled\">\n        <li><a target=\"_BLANK\" href=\"http://d3js.org/\">D3.js</a></li>\n        <li><a target=\"_BLANK\" href=\"http://emberjs.com/\">Ember.js</a></li>\n        <li><a target=\"_BLANK\" href=\"http://lodash.com/\">Lo-Dash.js</a></li>\n        <li><a target=\"_BLANK\" href=\"http://jquery.com/\">jQuery</a></li>\n        <li><a target=\"_BLANK\" href=\"http://jqueryui.com/\">jQuery UI</a></li>\n      </ul>\n    </div>\n  </div>\n\n  <div class=\"row\">\n    <div class=\"col-md-6\">\n      <hr>\n      <h1>Getting Started</h1>\n      <p>You will need <a target=\"_BLANK\" href=\"http://nodejs.org/\">node</a> installed as a development dependency.</p>\n      <p><a target=\"_BLANK\"\n      href=\"https://github.com/Addepar/ember-charts/\">Clone it from Github</a>\n      or <a target=\"_BLANK\" href=\"https://github.com/Addepar/ember-charts/releases\">download the ZIP repo</a></p>\n      <div class=\"highlight\">\n<pre><code>$ npm install -g grunt-cli\n$ npm install\n$ grunt\n$ node examples.js</code></pre>\n      <p>Go to your browser and navigate to localhost:8000/gh_pages</p>\n      </div>\n    </div>\n    <div class=\"col-md-6\">\n      <hr>\n      <h1>Contributing</h1>\n      <p>You can contribute to this project in one of two ways:\n      <ul class=\"styled\">\n        <li>Browse the ember-charts <a target=\"_BLANK\" href=\"https://github.com/Addepar/ember-charts/issues?state=open\">issues</a> and report bugs</li>\n        <li>Clone the ember-charts repo, make some changes according to our development guidelines and issue a pull-request with your changes.</li>\n      </ul>\n      <p>We keep the ember-charts.js code to the minimum necessary, giving users as much control as possible.</p>\n    </div>\n  </div>\n\n  <div class=\"row\">\n    <div class=\"col-md-6\">\n      <hr>\n      <h1>Changelog</h1>\n      <p>The current version is 0.3.0.\n      <p>For the full list of changes, please see <a target=\"_BLANK\"\n      href=\"https://github.com/Addepar/ember-charts/blob/master/CHANGELOG.md\">CHANGELOG.md</a>.</p>\n      </ul>\n    </div>\n    <div class=\"col-md-6\">\n      <hr>\n      <h1>Acknowledgements</h1>\n      <p>Core contributors</p>\n      <ul class=\"styled\">\n        <li><a target=\"_BLANK\" href=\"https://github.com/sherb\">Tony Sherbondy</a></li>\n        <li><a target=\"_BLANK\" href=\"https://github.com/raykyri\">Raymond Zhong</a></li>\n      </ul>\n      <p><a target=\"_BLANK\" href=\"https://github.com/Addepar/ember-charts/graphs/contributors\">List of Contributors on Github</a></p>\n      <p>With lots of help from the Ember.js team</p>\n    </div>\n  </div>\n</div>\n");
+  data.buffer.push("\n  </div>\n\n  <hr>\n  <div class=\"row\">\n    <div class=\"col-md-6\">\n      <h3>Features</h3>\n      <ul class=\"styled\">\n        <li>Highly customizable and extensible.</li>\n        <li>Rich with features - add legends, labels, tooltips, and\n        mouseover effects.</li>\n        <li>Robust & polished - weird data will not cause your charts to\n        break.</li>\n        <li>Roll your own charts by extending our ChartComponent class -\n        get labels, automatic resizing, and reasonable defaults for\n        margins, padding, etc.</li>\n      </ul>\n    </div>\n    <div class=\"col-md-6\">\n      <h3>Dependencies</h3>\n      <ul class=\"styled\">\n        <li><a target=\"_BLANK\" href=\"http://d3js.org/\">D3.js</a></li>\n        <li><a target=\"_BLANK\" href=\"http://emberjs.com/\">Ember.js</a></li>\n        <li><a target=\"_BLANK\" href=\"http://lodash.com/\">Lo-Dash.js</a></li>\n        <li><a target=\"_BLANK\" href=\"http://jquery.com/\">jQuery</a></li>\n        <li><a target=\"_BLANK\" href=\"http://jqueryui.com/\">jQuery UI</a></li>\n      </ul>\n    </div>\n  </div>\n\n  <div class=\"row\">\n    <div class=\"col-md-6\">\n      <hr>\n      <h1>Getting Started</h1>\n      <p>You will need <a target=\"_BLANK\" href=\"http://nodejs.org/\">node</a> installed as a development dependency.</p>\n      <p><a target=\"_BLANK\"\n      href=\"https://github.com/Addepar/ember-charts/\">Clone it from Github</a>\n      or <a target=\"_BLANK\" href=\"https://github.com/Addepar/ember-charts/releases\">download the ZIP repo</a></p>\n      <div class=\"highlight\">\n<pre><code>$ npm install -g grunt-cli\n$ npm install\n$ grunt\n$ node examples.js</code></pre>\n      <p>Go to your browser and navigate to localhost:8000/gh_pages</p>\n      </div>\n    </div>\n    <div class=\"col-md-6\">\n      <hr>\n      <h1>Contributing</h1>\n      <p>You can contribute to this project in one of two ways:\n      <ul class=\"styled\">\n        <li>Browse the ember-charts <a target=\"_BLANK\" href=\"https://github.com/Addepar/ember-charts/issues?state=open\">issues</a> and report bugs</li>\n        <li>Clone the ember-charts repo, make some changes according to our development guidelines and issue a pull-request with your changes.</li>\n      </ul>\n      <p>We keep the ember-charts.js code to the minimum necessary, giving users as much control as possible.</p>\n    </div>\n  </div>\n\n  <div class=\"row\">\n    <div class=\"col-md-6\">\n      <hr>\n      <h1>Changelog</h1>\n      <p>The current version is 0.4.0.\n      <p>For the full list of changes, please see <a target=\"_BLANK\"\n      href=\"https://github.com/Addepar/ember-charts/blob/master/CHANGELOG.md\">CHANGELOG.md</a>.</p>\n      </ul>\n    </div>\n    <div class=\"col-md-6\">\n      <hr>\n      <h1>Acknowledgements</h1>\n      <p>Core contributors</p>\n      <ul class=\"styled\">\n        <li><a target=\"_BLANK\" href=\"https://github.com/sherb\">Tony Sherbondy</a></li>\n        <li><a target=\"_BLANK\" href=\"https://github.com/raykyri\">Raymond Zhong</a></li>\n      </ul>\n      <p><a target=\"_BLANK\" href=\"https://github.com/Addepar/ember-charts/graphs/contributors\">List of Contributors on Github</a></p>\n      <p>With lots of help from the Ember.js team</p>\n    </div>\n  </div>\n</div>\n");
   return buffer;
   
 });
