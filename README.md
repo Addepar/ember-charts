@@ -93,7 +93,7 @@ more soon.
 
 
 ## Copyright and License
-Copyright © 2013 Addepar, Inc. All Rights Reserved
+Copyright © 2015 Addepar, Inc. All Rights Reserved
 
 Licensed under the BSD License (the "License"); you may not use this work
 except in compliance with the License. You may obtain a copy of the License in

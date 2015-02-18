@@ -1,5 +1,24 @@
 # Ember Charts Changelog
 
+### Ember Charts 0.4.0 _(February 18, 2015)_
+
+This will be the last ember-charts release to support Ember 1.8 and earlier
+compiled templates. See #77 for more information on our upgrade process.
+
+* Arbitrary keys are now supported for sorting pie and bar charts
+* Custom label format strings are now supported for pie, bar, and time series
+  charts
+* Hours are now a supported option for selectedInterval in time series charts
+* Numerous bugfixes and enhancements to pie charts
+  * Margins no longer are larger than they need to be for labels and legends
+  * Labels in pie charts can no longer overlap each other
+  * A minimum margin option is now available for pie charts
+* Other Bugfixes
+  * Time series charts now rerender after data loads
+  * Observers are torn down to fix application memory leaks
+  * Hours and days now respect maxNumberOfLabels setting in time series charts
+* Demo App and Documentation updated
+
 ### Ember Charts 0.3.0 _(October 23, 2014)_
 
 * Make the group optional when building a tooltip
