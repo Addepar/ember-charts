@@ -1223,8 +1223,10 @@ Ember.Charts.SortableChartMixin = Ember.Mixin.create({
     key = this.get('sortKey');
     if (Ember.isEmpty(data)) {
       return [];
-    } else {
+    } else if (key != null) {
       return data.sortBy(key);
+    } else {
+      return data;
     }
   }).property('data.@each', 'sortKey')
 });

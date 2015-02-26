@@ -7,5 +7,10 @@ Ember.Charts.SortableChartMixin = Ember.Mixin.create
   sortedData: Ember.computed ->
     data = @get 'data'
     key = @get 'sortKey'
-    if Ember.isEmpty(data) then [] else data.sortBy key
+    if Ember.isEmpty(data)
+      []
+    else if key?
+      data.sortBy key
+    else
+      data
   .property 'data.@each', 'sortKey'
