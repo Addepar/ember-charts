@@ -13,4 +13,4 @@ Ember.Charts.SortableChartMixin = Ember.Mixin.create
       data.sortBy key
     else
       data
-  .property 'data.@each', 'sortKey'
+  .property 'data.[]', 'sortKey'

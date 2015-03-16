@@ -47,8 +47,17 @@ Ember.Charts.VerticalBarComponent = Ember.Charts.ChartComponent.extend(
   groupedData: Ember.computed ->
     data = @get 'sortedData'
     return [] if Ember.isEmpty data
-    Ember.Charts.Helpers.groupBy data, (d) =>
+    data = Ember.Charts.Helpers.groupBy data, (d) =>
       d.group ? @get('ungroupedSeriesName')
+
+    # After grouping, the data points may be out of order, and therefore not properly
+    # matched with their value and color. Here, we resort to ensure proper order.
+    # This could potentially be addressed with a refactor where sorting happens after
+    # grouping across the board.
+    # TODO(ember-charts-lodash): Use _.mapValues instead of the each loop.
+    for groupName in _.keys(data)
+      data[groupName] = data[groupName].sortBy('label')
+    data
   .property 'sortedData', 'ungroupedSeriesName'
 
   groupNames: Ember.computed ->

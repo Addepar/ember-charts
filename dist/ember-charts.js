@@ -1228,7 +1228,7 @@ Ember.Charts.SortableChartMixin = Ember.Mixin.create({
     } else {
       return data;
     }
-  }).property('data.@each', 'sortKey')
+  }).property('data.[]', 'sortKey')
 });
 
 
@@ -1851,16 +1851,22 @@ Ember.Charts.VerticalBarComponent = Ember.Charts.ChartComponent.extend(Ember.Cha
   }).property('xBetweenGroupDomain', 'xWithinGroupDomain'),
   maxLabelHeight: 50,
   groupedData: Ember.computed(function() {
-    var data,
+    var data, groupName, _i, _len, _ref,
       _this = this;
     data = this.get('sortedData');
     if (Ember.isEmpty(data)) {
       return [];
     }
-    return Ember.Charts.Helpers.groupBy(data, function(d) {
+    data = Ember.Charts.Helpers.groupBy(data, function(d) {
       var _ref;
       return (_ref = d.group) != null ? _ref : _this.get('ungroupedSeriesName');
     });
+    _ref = _.keys(data);
+    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+      groupName = _ref[_i];
+      data[groupName] = data[groupName].sortBy('label');
+    }
+    return data;
   }).property('sortedData', 'ungroupedSeriesName'),
   groupNames: Ember.computed(function() {
     var groupName, values, _ref, _results;
