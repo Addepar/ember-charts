@@ -46,6 +46,9 @@ module.exports = (grunt) ->
 
     emberTemplates:
       options:
+        templateCompilerPath: 'vendor/ember/ember-template-compiler.js'
+        handlebarsPath: 'vendor/handlebars/handlebars.js'
+        templateNamespace: 'HTMLBars'
         templateName: (sourceFile) ->
           sourceFile = sourceFile.replace(/app\/templates\//, '')
           sourceFile = sourceFile.replace(/src\/templates\//, '')
@@ -115,7 +118,7 @@ module.exports = (grunt) ->
         src: ['app/templates/ember_charts/overview.hbs']
         overwrite: true,
         replacements: [{
-          from: /The current version is .*\..*\..*./
+          from: /The current version is .*\..*\..*\./
           to: "The current version is <%=pkg.version%>."
         }]
 
