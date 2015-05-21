@@ -1217,18 +1217,24 @@ Ember.Charts.ChartComponent = Ember.Component.extend(Ember.Charts.Colorable, Emb
 
 Ember.Charts.SortableChartMixin = Ember.Mixin.create({
   sortKey: 'value',
+  sortDescending: false,
   sortedData: Ember.computed(function() {
-    var data, key;
+    var data, desc, key;
     data = this.get('data');
     key = this.get('sortKey');
+    desc = this.get('sortDescending');
     if (Ember.isEmpty(data)) {
       return [];
     } else if (key != null) {
-      return data.sortBy(key);
+      if (desc) {
+        return data.sortBy(key).reverse();
+      } else {
+        return data.sortBy(key);
+      }
     } else {
       return data;
     }
-  }).property('data.[]', 'sortKey')
+  }).property('data.[]', 'sortKey', 'sortDescending')
 });
 
 
