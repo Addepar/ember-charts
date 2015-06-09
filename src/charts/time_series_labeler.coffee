@@ -46,7 +46,7 @@ Ember.Charts.TimeSeriesLabeler = Ember.Mixin.create
     secondIndex = _.findIndex(allTicks, findTick(labelledTicks[1]))
     firstIndex = _.findIndex(allTicks, findTick(labelledTicks[0]))
     secondIndex - firstIndex - 1
-  .property 'xDomain', 'selectedInterval'
+  .property 'xDomain', 'selectedInterval', 'labelledTicks'
 
   #  This is the set of ticks on which labels appear.
   labelledTicks: Ember.computed ->
@@ -67,7 +67,7 @@ Ember.Charts.TimeSeriesLabeler = Ember.Mixin.create
         count = 3
         interval = 'month'
       (@_advanceMiddle(tick, interval, count) for tick in ticks)
-  .property 'xDomain'
+  .property 'xDomain', 'maxNumberOfLabels', 'centerAxisLabels', 'selectedInterval'
 
   _advanceMiddle: (time, interval, count) ->
     new Date (time = time.getTime()/2 + d3.time[interval].offset(time, count)/2)

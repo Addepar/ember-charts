@@ -398,6 +398,7 @@ Ember.Charts.ScatterComponent = Ember.Charts.ChartComponent.extend(
 
   updateAxes: ->
 
+    #tickSize isn't doing anything here, it should take two arguments
     xAxis = d3.svg.axis()
       .scale(@get 'xScale')
       .orient('top')

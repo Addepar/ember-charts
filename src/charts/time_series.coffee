@@ -611,6 +611,7 @@ Ember.Charts.TimeSeriesComponent = Ember.Charts.ChartComponent.extend(
       .tickFormat(@get 'formattedTime')
       .tickSize(6, 3)
 
+    #tickSize isn't doing anything here, it should take two arguments
     yAxis = d3.svg.axis()
       .scale(@get 'yScale')
       .orient('right')

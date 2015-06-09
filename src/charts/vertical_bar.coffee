@@ -507,6 +507,8 @@ Ember.Charts.VerticalBarComponent = Ember.Charts.ChartComponent.extend(
         dy: @get('labelPadding')
 
   updateAxes: ->
+    
+    #tickSize isn't doing anything here, it should take two arguments
     yAxis = d3.svg.axis()
       .scale(@get 'yScale')
       .orient('right')

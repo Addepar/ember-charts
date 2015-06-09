@@ -581,7 +581,7 @@ Ember.Charts.TimeSeriesLabeler = Ember.Mixin.create({
     secondIndex = _.findIndex(allTicks, findTick(labelledTicks[1]));
     firstIndex = _.findIndex(allTicks, findTick(labelledTicks[0]));
     return secondIndex - firstIndex - 1;
-  }).property('xDomain', 'selectedInterval'),
+  }).property('xDomain', 'selectedInterval', 'labelledTicks'),
   labelledTicks: Ember.computed(function() {
     var count, domain, interval, tick, ticks, _i, _len, _results;
     domain = this.get('xDomain');
@@ -623,7 +623,7 @@ Ember.Charts.TimeSeriesLabeler = Ember.Mixin.create({
       }
       return _results;
     }
-  }).property('xDomain'),
+  }).property('xDomain', 'maxNumberOfLabels', 'centerAxisLabels', 'selectedInterval'),
   _advanceMiddle: function(time, interval, count) {
     return new Date((time = time.getTime() / 2 + d3.time[interval].offset(time, count) / 2));
   },
