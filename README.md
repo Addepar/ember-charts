@@ -36,7 +36,7 @@ $ grunt
 
 To view examples, start the node server. From the root directory:
 
-`$ node examples.js`.
+`$ node example.js`.
 
 You can view the examples at http://localhost:8000/gh_pages.
 
