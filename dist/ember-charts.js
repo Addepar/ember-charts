@@ -7,36 +7,14 @@
 
 var _ref;
 
+Ember.Charts = Ember.Namespace.create();
 
-})();
+Ember.Charts.VERSION = '0.4.0';
 
-(function() {
+if ((_ref = Ember.libraries) != null) {
+  _ref.register('Ember Charts', Ember.Charts.VERSION);
+}
 
-Ember.TEMPLATES["chart"] = Ember.Handlebars.template(function anonymous(Handlebars,depth0,helpers,partials,data) {
-this.compilerInfo = [4,'>= 1.0.0'];
-helpers = this.merge(helpers, Ember.Handlebars.helpers); data = data || {};
-  var buffer = '', stack1, hashContexts, hashTypes, options, helperMissing=helpers.helperMissing, escapeExpression=this.escapeExpression;
-
-
-  data.buffer.push("<svg ");
-  hashContexts = {'width': depth0,'height': depth0};
-  hashTypes = {'width': "STRING",'height': "STRING"};
-  options = {hash:{
-    'width': ("outerWidth"),
-    'height': ("outerHeight")
-  },contexts:[],types:[],hashContexts:hashContexts,hashTypes:hashTypes,data:data};
-  data.buffer.push(escapeExpression(((stack1 = helpers['bind-attr'] || depth0['bind-attr']),stack1 ? stack1.call(depth0, options) : helperMissing.call(depth0, "bind-attr", options))));
-  data.buffer.push(">\n  <g class=\"chart-viewport\" ");
-  hashContexts = {'transform': depth0};
-  hashTypes = {'transform': "STRING"};
-  options = {hash:{
-    'transform': ("transformViewport")
-  },contexts:[],types:[],hashContexts:hashContexts,hashTypes:hashTypes,data:data};
-  data.buffer.push(escapeExpression(((stack1 = helpers['bind-attr'] || depth0['bind-attr']),stack1 ? stack1.call(depth0, options) : helperMissing.call(depth0, "bind-attr", options))));
-  data.buffer.push("></g>\n</svg>\n");
-  return buffer;
-  
-});
 
 })();
 
@@ -157,14 +135,31 @@ Ember.AddeparMixins.StyleBindingsMixin = Ember.Mixin.create({
 
 (function() {
 
-Ember.Charts = Ember.Namespace.create();
+Ember.TEMPLATES["components/ember-chart"] = Ember.Handlebars.template(function anonymous(Handlebars,depth0,helpers,partials,data) {
+this.compilerInfo = [4,'>= 1.0.0'];
+helpers = this.merge(helpers, Ember.Handlebars.helpers); data = data || {};
+  var buffer = '', stack1, hashContexts, hashTypes, options, helperMissing=helpers.helperMissing, escapeExpression=this.escapeExpression;
 
-Ember.Charts.VERSION = '0.4.0';
 
-if ((_ref = Ember.libraries) != null) {
-  _ref.register('Ember Charts', Ember.Charts.VERSION);
-}
-
+  data.buffer.push("<svg ");
+  hashContexts = {'width': depth0,'height': depth0};
+  hashTypes = {'width': "STRING",'height': "STRING"};
+  options = {hash:{
+    'width': ("outerWidth"),
+    'height': ("outerHeight")
+  },contexts:[],types:[],hashContexts:hashContexts,hashTypes:hashTypes,data:data};
+  data.buffer.push(escapeExpression(((stack1 = helpers['bind-attr'] || depth0['bind-attr']),stack1 ? stack1.call(depth0, options) : helperMissing.call(depth0, "bind-attr", options))));
+  data.buffer.push(">\n  <g class=\"chart-viewport\" ");
+  hashContexts = {'transform': depth0};
+  hashTypes = {'transform': "STRING"};
+  options = {hash:{
+    'transform': ("transformViewport")
+  },contexts:[],types:[],hashContexts:hashContexts,hashTypes:hashTypes,data:data};
+  data.buffer.push(escapeExpression(((stack1 = helpers['bind-attr'] || depth0['bind-attr']),stack1 ? stack1.call(depth0, options) : helperMissing.call(depth0, "bind-attr", options))));
+  data.buffer.push("></g>\n</svg>\n");
+  return buffer;
+  
+});
 
 })();
 
@@ -1106,7 +1101,7 @@ Ember.Charts.PieLegend = Ember.Mixin.create({
 
 
 Ember.Charts.ChartComponent = Ember.Component.extend(Ember.Charts.Colorable, Ember.AddeparMixins.ResizeHandlerMixin, {
-  layoutName: 'chart',
+  layoutName: 'components/ember-chart',
   classNames: ['chart-frame', 'scroll-y'],
   isInteractive: true,
   horizontalMargin: 30,

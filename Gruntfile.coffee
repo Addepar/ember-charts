@@ -13,8 +13,9 @@ module.exports = (grunt) ->
   grunt.loadNpmTasks "grunt-contrib-less"
   grunt.loadNpmTasks "grunt-contrib-copy"
   grunt.loadNpmTasks "grunt-contrib-clean"
-  grunt.loadNpmTasks "grunt-text-replace"
+  grunt.loadNpmTasks "grunt-karma"
   grunt.loadNpmTasks "grunt-banner"
+  grunt.loadNpmTasks "grunt-text-replace"
   grunt.loadNpmTasks "grunt-release-it"
 
   grunt.initConfig
@@ -27,54 +28,67 @@ module.exports = (grunt) ->
       target: ['build', 'dist' , 'gh_pages']
 
     coffee:
+      options:
+        bare: true
       src:
-        options:
-          bare: true
         expand: true
         cwd: "src/"
         src: [ "**/*.coffee" ]
         dest: "build/src/"
         ext: ".js"
       app:
-        options:
-          bare: true
         expand: true
         cwd: "app/"
         src: [ "**/*.coffee" ]
         dest: "build/app/"
         ext: ".js"
+      tests:
+        expand: true
+        cwd: "tests/"
+        src: ["**/*.coffee" ]
+        dest: "build/tests/"
+        ext: ".js"
 
     emberTemplates:
       options:
         templateName: (sourceFile) ->
-          sourceFile = sourceFile.replace(/app\/templates\//, '')
-          sourceFile = sourceFile.replace(/src\/templates\//, '')
-          sourceFile
-      'build/app/templates.js':  ["app/templates/**/*.hbs"]
-      'build/src/charts/templates.js':  ["src/**/*.hbs"]
+          sourceFile.replace(/app\/templates\//, '')
+                    .replace(/src\/templates\//, '')
+      src:
+        files:
+          'build/src/templates.js': ["src/templates/**/*.hbs"]
+      app:
+        files:
+          'build/app/templates.js': ["app/templates/**/*.hbs"]
 
     neuter:
       options:
         includeSourceURL: no
-      "dist/ember-charts.js": "build/src/dist.js"
-      "gh_pages/app.js": "build/app/app.js"
+      src:
+        files:
+          "dist/ember-charts.js": "build/src/ember_charts.js"
+      app:
+        files:
+          "gh_pages/app.js": "build/app/app.js"
 
     uglify:
       "dist/ember-charts.min.js": "dist/ember-charts.js"
 
     less:
-      all:
-        options:
-          yuicompress: no
+      options:
+        yuicompress: no
+      src:
         files:
           "dist/ember-charts.css": "src/css/ember-charts.less"
+      app:
+        files:
           "gh_pages/css/app.css": "app/assets/css/app.less"
 
     ###
       Copy build/app/assets/css into gh_pages/asset and other assets from docs
     ###
     copy:
-      gh_pages:
+      app:
         files: [
           {src: ['dist/css/ember-charts.css'], dest: 'gh_pages/css/ember-charts.css'},
           {src: ['app/index.html'], dest: 'gh_pages/index.html'},
@@ -104,14 +118,14 @@ module.exports = (grunt) ->
           from: /.*\..*\..*/
           to: '<%=pkg.version%>'
         ]
-      main_coffee_version:
+      src:
         src: ['src/dist.coffee']
         overwrite: true
         replacements: [
           from: /Ember.Charts.VERSION = '.*\..*\..*'/
           to: "Ember.Charts.VERSION = '<%=pkg.version%>'"
         ]
-      overview_page:
+      app:
         src: ['app/templates/ember_charts/overview.hbs']
         overwrite: true,
         replacements: [{
@@ -155,12 +169,21 @@ module.exports = (grunt) ->
       grunt:
         files: [ "Gruntfile.coffee" ]
         tasks: [ "default" ]
-      code:
-        files: [ "src/**/*.coffee", "app/**/*.coffee", "dependencies/**/*.js" ]
-        tasks: [ "coffee", "neuter", "uglify", "usebanner:js" ]
-      handlebars:
-        files: [ "src/**/*.hbs", "app/**/*.hbs"]
-        tasks: [ "emberTemplates", "neuter", "uglify", "usebanner:js" ]
+      src:
+        files: [ "src/**/*.coffee"]
+        tasks: [ "coffee:src", "neuter:src", "uglify", "usebanner:js" ]
+      test:
+        files: [ "tests/**/*.coffee"]
+        tasks: [ "coffee:tests" ]
+      src_handlebars:
+        files: [ "src/**/*.hbs" ]
+        tasks: [ "emberTemplates:src", "neuter:src", "uglify", "usebanner:js" ]
+      app:
+        files: [ "app/**/*.coffee", "dependencies/**/*.js", "vendor/**/*.js" ]
+        tasks: [ "coffee:app", "neuter:app" ]
+      app_handlebars:
+        files: [ "app/**/*.hbs"]
+        tasks: [ "emberTemplates:app", "neuter:app" ]
       less:
         files: [ "app/assets/**/*.less", "app/assets/**/*.cmss", "src/**/*.less" ]
         tasks: [ "less", "copy", "usebanner:css" ]
@@ -172,13 +195,36 @@ module.exports = (grunt) ->
         tasks: [ 'bower']
 
     ###
+      Runs all .html files found in the test/ directory through PhantomJS.
+      Prints the report in your terminal.
+    ###
+    qunit:
+      all: [ "build/tests/**/*.html" ]
+        
+    karma:
+      continuous:  # continuous integration mode
+        configFile: 'karma.conf.js'
+        singleRun: true
+      unit:
+        configFile: 'karma.conf.js'
+        singleRun: false
+        exclude: ['build/src/ember_charts.js', 'build/tests/functional/*.js'],
+      functional:
+        configFile: 'karma.conf.js'
+        singleRun: false
+        exclude: ['build/src/ember_charts.js', 'build/tests/unit/*.js'],
+      default:
+        configFile: 'karma.conf.js'
+        singleRun: false
+
+    ###
       Find all the <whatever>_test.js files in the test folder.
       These will get loaded via script tags when the task is run.
       This gets run as part of the larger 'test' task registered
       below.
     ###
     build_test_runner_file:
-      all: [ "test/**/*_test.js" ]
+      all: [ "build/tests/**/*_test.js" ]
 
     "release-it":
       options:
@@ -201,12 +247,14 @@ module.exports = (grunt) ->
     its coniguration above in the grunt.initConfig above.
   ###
   grunt.registerMultiTask "build_test_runner_file", "Creates a test runner file.", ->
-    tmpl = grunt.file.read("test/support/runner.html.tmpl")
+    tmpl = grunt.file.read("tests/support/runner.html.tmpl")
     renderingContext = data:
-      files: @filesSrc.map (fileSrc) -> fileSrc.replace "test/", ""
-    grunt.file.write "test/runner.html", grunt.template.process(tmpl, renderingContext)
+      files: @filesSrc.map (fileSrc) -> fileSrc.replace "build/tests/", ""
+    grunt.file.write "build/tests/runner.html", grunt.template.process(tmpl, renderingContext)
 
-  grunt.registerTask "build_all", [ "coffee", "emberTemplates", "neuter" ]
+  grunt.registerTask "build_src", [ "coffee:src", "emberTemplates:src", "neuter:src" ]
+  grunt.registerTask "build_app", [ "replace:app", "coffee:app", "emberTemplates:app", "neuter:app", "copy:app" ]
+  grunt.registerTask "build_tests", [ "coffee:tests" ]
 
-  grunt.registerTask "dist", [ "clean", "bower", "replace", "build_all", "less", "copy", "uglify", "usebanner" ]
-  grunt.registerTask "default", [ "dist", "watch" ]
+  grunt.registerTask "dist", [ "clean", "bower", "replace:src", "build_src", "less:src", "uglify", "usebanner" ]
+  grunt.registerTask "default", [ "dist", "build_app", "build_tests", "watch" ]

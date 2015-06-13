@@ -3,7 +3,8 @@
   "version": "0.4.0",
   "main": "Gruntfile.js",
   "scripts": {
-    "test": "grunt"
+    "postinstall": "grunt bower",
+    "test": "grunt build_tests && grunt build_app && grunt karma:continuous"
   },
   "repository": {
     "type": "git",
@@ -12,20 +13,26 @@
   "license": "MIT",
   "devDependencies": {
     "grunt": "~0.4.1",
-    "grunt-neuter": "~0.4.0",
-    "grunt-bower-task": "~0.4.0",
-    "grunt-contrib-uglify": "~0.1.1rc5",
-    "grunt-contrib-coffee": "~0.4.0",
-    "grunt-contrib-jshint": "~0.1.1rc5",
-    "grunt-contrib-qunit": "~0.1.1rc5",
-    "grunt-ember-templates": "0.4.10",
-    "grunt-contrib-watch": "~0.2.0rc5",
-    "grunt-contrib-less": "~0.7.0",
-    "grunt-contrib-copy": "~0.4.1",
-    "grunt-contrib-clean": "~0.4.0",
-    "grunt-text-replace": "^0.3.12",
-    "node-static": "*",
     "grunt-banner": "^0.2.3",
-    "grunt-release-it": "~0.2.0"
+    "grunt-bower-task": "~0.4.0",
+    "grunt-contrib-clean": "~0.4.0",
+    "grunt-contrib-coffee": "~0.4.0",
+    "grunt-contrib-copy": "~0.4.1",
+    "grunt-contrib-jshint": "~0.1.1rc5",
+    "grunt-contrib-less": "~0.7.0",
+    "grunt-contrib-qunit": "~0.2.2",
+    "grunt-contrib-uglify": "~0.1.1rc5",
+    "grunt-contrib-watch": "~0.2.0rc5",
+    "grunt-ember-templates": "0.4.10",
+    "grunt-karma": "^0.11.0",
+    "grunt-neuter": "~0.4.0",
+    "grunt-release-it": "~0.2.0",
+    "grunt-text-replace": "^0.3.12",
+    "karma": "^0.12.36",
+    "karma-chrome-launcher": "~0.1.2",
+    "karma-ember-preprocessor": "*",
+    "karma-qunit": "*",
+    "karma-spec-reporter": "0.0.6",
+    "node-static": "*"
   }
 }

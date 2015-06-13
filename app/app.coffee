@@ -24,7 +24,7 @@ require 'build/app/controllers/bubble'
 require 'build/app/router'
 
 # App
-require 'build/app/main'
+require 'build/app/app'
 
 # Compiled Handlebars templates
 require 'build/app/templates'

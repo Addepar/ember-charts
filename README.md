@@ -1,4 +1,4 @@
-# Ember Charts
+# Ember Charts [![Build Status](https://secure.travis-ci.org/Addepar/ember-charts.svg?branch=master)](http://travis-ci.org/Addepar/ember-charts)
 
 A charting library built with the Ember.js and d3.js frameworks. It includes
 time series, bar, pie, and scatter charts which are easy to extend and modify.
@@ -39,6 +39,13 @@ To view examples, start the node server. From the root directory:
 `$ node example.js`.
 
 You can view the examples at http://localhost:8000/gh_pages.
+
+You can also run tests in the console by running:
+
+```bash
+$ grunt karma:unit
+$ grunt karma:functional
+```
 
 ## Dependencies
 * d3

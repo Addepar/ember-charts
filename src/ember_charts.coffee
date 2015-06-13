@@ -1,12 +1,14 @@
-require 'build/src/charts/templates'
-require 'dependencies/ember-addepar-mixins/resize_handler'
-require 'dependencies/ember-addepar-mixins/style_bindings'
-
 Ember.Charts = Ember.Namespace.create()
 Ember.Charts.VERSION = '0.4.0'
 
 Ember.libraries?.register 'Ember Charts', Ember.Charts.VERSION
 
+# Dependencies
+require 'dependencies/ember-addepar-mixins/resize_handler'
+require 'dependencies/ember-addepar-mixins/style_bindings'
+
+# Ember-Charts
+require 'build/src/templates'
 require 'build/src/charts/helpers'
 require 'build/src/charts/colorable'
 require 'build/src/charts/formattable'
