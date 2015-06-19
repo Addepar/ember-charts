@@ -3,7 +3,7 @@ moduleForComponent 'pie', '[Unit] Pie chart component',
     'template:components/ember-chart'
   ]
 
-test 'it renders', (assert) ->
+test 'Pie chart renders', (assert) ->
   @append()
 
   assert.equal find('.chart-pie').length, 1, 'The pie chart renders'

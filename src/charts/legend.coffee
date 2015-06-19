@@ -63,6 +63,11 @@ Ember.Charts.Legend = Ember.Mixin.create
   # below the chart graphic like an axis or labels or axis title.
   legendChartPadding: 0
 
+  # we use averageLegendLabelWidth in order to estimate how much to move the
+  # labels to make them seem roughly centered
+  # averageLegendLabelWidth is set every time we redraw the legend
+  averageLegendLabelWidth: 0
+
   # Center the legend beneath the chart. Since the legend is inside the chart
   # viewport, which has already been positioned with regards to margins,
   # only consider the height of the chart.
@@ -76,6 +81,9 @@ Ember.Charts.Legend = Ember.Mixin.create
 
   # Place each legend item, breaking across rows. Center them if there is one
   # row
+  # Ideally legend items would be centered to the very middle of the graph,
+  # this is made difficult by the fact that we want the icons to line up in
+  # nice columns and that the labels are variable length
   legendItemAttrs: Ember.computed ->
     legendItemWidth = @get 'legendItemWidth'
     legendItemHeight = @get 'legendItemHeight'
@@ -89,11 +97,14 @@ Ember.Charts.Legend = Ember.Mixin.create
       col = i % numItemsPerRow
       row = Math.floor(i / numItemsPerRow)
       items = if isSingleRow then numAllItems else numItemsPerRow
-      dx = col * legendItemWidth - items/2 * legendItemWidth + 1/2
+      #Adding averageLegendLabelWidth/2 is a magic number that is about right
+      dx = col * legendItemWidth - items/2 * legendItemWidth +
+        @get('averageLegendLabelWidth')/2
       dy = row * legendItemHeight + legendItemHeight/2
       "translate(#{dx}, #{dy})"
   .property('legendItemWidth', 'legendItemHeight',
-    'numLegendItemsPerRow', 'legendItems.length', 'numLegendRows')
+    'numLegendItemsPerRow', 'legendItems.length', 'numLegendRows',
+    'averageLegendLabelWidth')
 
   legendIconAttrs: Ember.computed ->
     iconRadius = @get 'legendIconRadius'
@@ -219,3 +230,7 @@ Ember.Charts.Legend = Ember.Mixin.create
       .text((d) -> d.label)
       .attr(@get 'legendLabelAttrs')
       .call(labelTrimmer.get 'trim')
+    totalLabelWidth = 0
+    legend.selectAll('text').each ->
+      totalLabelWidth += this.getComputedTextLength()
+    @set 'averageLegendLabelWidth', totalLabelWidth / @get 'legendItems.length'
