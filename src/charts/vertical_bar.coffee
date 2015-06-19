@@ -1,7 +1,7 @@
 Ember.Charts.VerticalBarComponent = Ember.Charts.ChartComponent.extend(
   Ember.Charts.Legend, Ember.Charts.FloatingTooltipMixin,
   Ember.Charts.AxesMixin, Ember.Charts.Formattable,
-  Ember.Charts.SortableChartMixin,
+  Ember.Charts.SortableChartMixin, Ember.Charts.NoMarginChartMixin,
   classNames: ['chart-vertical-bar']
 
   # ----------------------------------------------------------------------------
@@ -516,10 +516,15 @@ Ember.Charts.VerticalBarComponent = Ember.Charts.ChartComponent.extend(
       .tickSize(@get 'graphicWidth')
       .tickFormat(@get 'formatValueAxis')
 
+    gYAxis = @get('yAxis')
+
+    # find the correct size of graphicLeft in order to fit the Labels perfectly
+    @set 'graphicLeft', @maxLabelLength(gYAxis.selectAll('text')) + @get 'labelPadding'
+
+
     graphicTop = @get 'graphicTop'
     graphicLeft = @get 'graphicLeft'
-    gYAxis = @get('yAxis')
-      .attr(transform: "translate(#{graphicLeft},#{graphicTop})")
+    gYAxis.attr(transform: "translate(#{graphicLeft},#{graphicTop})")
       .call(yAxis)
 
     gYAxis.selectAll('g')

@@ -834,6 +834,7 @@ Ember.Charts.Legend = Ember.Mixin.create({
     return this.get('legendItemWidth') - this.get('legendIconRadius') - this.get('legendLabelPadding') * 2;
   }).property('legendItemWidth', 'legendIconRadius', 'legendLabelPadding'),
   legendChartPadding: 0,
+  averageLegendLabelWidth: 0,
   legendAttrs: Ember.computed(function() {
     var dx, dy, offsetToLegend;
     dx = this.get('outerWidth') / 2;
@@ -860,12 +861,12 @@ Ember.Charts.Legend = Ember.Mixin.create({
         col = i % numItemsPerRow;
         row = Math.floor(i / numItemsPerRow);
         items = isSingleRow ? numAllItems : numItemsPerRow;
-        dx = col * legendItemWidth - items / 2 * legendItemWidth + 1 / 2;
+        dx = col * legendItemWidth - items / 2 * legendItemWidth + _this.get('averageLegendLabelWidth') / 2;
         dy = row * legendItemHeight + legendItemHeight / 2;
         return "translate(" + dx + ", " + dy + ")";
       }
     };
-  }).property('legendItemWidth', 'legendItemHeight', 'numLegendItemsPerRow', 'legendItems.length', 'numLegendRows'),
+  }).property('legendItemWidth', 'legendItemHeight', 'numLegendItemsPerRow', 'legendItems.length', 'numLegendRows', 'averageLegendLabelWidth'),
   legendIconAttrs: Ember.computed(function() {
     var iconRadius, legendItemHeight;
     iconRadius = this.get('legendIconRadius');
@@ -964,7 +965,7 @@ Ember.Charts.Legend = Ember.Mixin.create({
     }
   }).volatile(),
   drawLegend: function() {
-    var hideLegendDetails, isShowingTotal, labelTrimmer, labels, legend, legendIconAttrs, legendItems, legendLabelWidth, showLegendDetails, totalPointShape;
+    var hideLegendDetails, isShowingTotal, labelTrimmer, labels, legend, legendIconAttrs, legendItems, legendLabelWidth, showLegendDetails, totalLabelWidth, totalPointShape;
     this.clearLegend();
     legend = this.get('legend');
     legend.attr(this.get('legendAttrs'));
@@ -996,9 +997,14 @@ Ember.Charts.Legend = Ember.Mixin.create({
         return d.label;
       }
     });
-    return labels = legendItems.append('text').style('text-anchor', 'start').text(function(d) {
+    labels = legendItems.append('text').style('text-anchor', 'start').text(function(d) {
       return d.label;
     }).attr(this.get('legendLabelAttrs')).call(labelTrimmer.get('trim'));
+    totalLabelWidth = 0;
+    legend.selectAll('text').each(function() {
+      return totalLabelWidth += this.getComputedTextLength();
+    });
+    return this.set('averageLegendLabelWidth', totalLabelWidth / this.get('legendItems.length'));
   }
 });
 
@@ -1230,6 +1236,33 @@ Ember.Charts.SortableChartMixin = Ember.Mixin.create({
       return data;
     }
   }).property('data.[]', 'sortKey', 'sortAscending')
+});
+
+
+})();
+
+(function() {
+
+
+Ember.Charts.NoMarginChartMixin = Ember.Mixin.create({
+  marginLeft: 0,
+  marginRight: 0,
+  marginBottom: Ember.computed(function() {
+    if (!this.get('hasLegend')) {
+      return 0;
+    }
+    return 30;
+  }).property('hasLegend'),
+  maxLabelLength: function(svgTextArray) {
+    var maxLabel;
+    maxLabel = 0;
+    svgTextArray.each(function() {
+      if (this.getComputedTextLength() > maxLabel) {
+        return maxLabel = this.getComputedTextLength();
+      }
+    });
+    return maxLabel;
+  }
 });
 
 
@@ -1837,7 +1870,7 @@ Ember.Handlebars.helper('pie-chart', Ember.Charts.PieComponent);
 (function() {
 
 
-Ember.Charts.VerticalBarComponent = Ember.Charts.ChartComponent.extend(Ember.Charts.Legend, Ember.Charts.FloatingTooltipMixin, Ember.Charts.AxesMixin, Ember.Charts.Formattable, Ember.Charts.SortableChartMixin, {
+Ember.Charts.VerticalBarComponent = Ember.Charts.ChartComponent.extend(Ember.Charts.Legend, Ember.Charts.FloatingTooltipMixin, Ember.Charts.AxesMixin, Ember.Charts.Formattable, Ember.Charts.SortableChartMixin, Ember.Charts.NoMarginChartMixin, {
   classNames: ['chart-vertical-bar'],
   ungroupedSeriesName: 'Other',
   stackBars: false,
@@ -2328,9 +2361,11 @@ Ember.Charts.VerticalBarComponent = Ember.Charts.ChartComponent.extend(Ember.Cha
   updateAxes: function() {
     var gYAxis, graphicLeft, graphicTop, yAxis;
     yAxis = d3.svg.axis().scale(this.get('yScale')).orient('right').ticks(this.get('numYTicks')).tickSize(this.get('graphicWidth')).tickFormat(this.get('formatValueAxis'));
+    gYAxis = this.get('yAxis');
+    this.set('graphicLeft', this.maxLabelLength(gYAxis.selectAll('text')) + this.get('labelPadding'));
     graphicTop = this.get('graphicTop');
     graphicLeft = this.get('graphicLeft');
-    gYAxis = this.get('yAxis').attr({
+    gYAxis.attr({
       transform: "translate(" + graphicLeft + "," + graphicTop + ")"
     }).call(yAxis);
     gYAxis.selectAll('g').filter(function(d) {
@@ -2362,7 +2397,7 @@ Ember.Handlebars.helper('vertical-bar-chart', Ember.Charts.VerticalBarComponent)
 (function() {
 
 
-Ember.Charts.ScatterComponent = Ember.Charts.ChartComponent.extend(Ember.Charts.Legend, Ember.Charts.FloatingTooltipMixin, Ember.Charts.AxesMixin, {
+Ember.Charts.ScatterComponent = Ember.Charts.ChartComponent.extend(Ember.Charts.Legend, Ember.Charts.FloatingTooltipMixin, Ember.Charts.AxesMixin, Ember.Charts.NoMarginChartMixin, {
   classNames: ['chart-scatter'],
   formatXValue: d3.format(',.2f'),
   formatYValue: d3.format(',.2f'),
@@ -2372,6 +2407,7 @@ Ember.Charts.ScatterComponent = Ember.Charts.ChartComponent.extend(Ember.Charts.
   }).property('dotRadius'),
   graphPadding: 0.05,
   tickSpacing: 80,
+  marginRight: Ember.computed.alias('horizontalMargin'),
   isShowingTotal: false,
   totalPointData: null,
   filteredData: Ember.computed(function() {
@@ -2697,8 +2733,10 @@ Ember.Charts.ScatterComponent = Ember.Charts.ChartComponent.extend(Ember.Charts.
         return this.getBBox().height + labelPadding / 2;
       }
     });
+    gYAxis = this.get('yAxis');
+    this.set('graphicLeft', this.maxLabelLength(gYAxis.selectAll('text')) + this.get('labelPadding'));
     graphicLeft = this.get('graphicLeft');
-    gYAxis = this.get('yAxis').attr('transform', "translate(" + graphicLeft + ",0)").call(yAxis);
+    gYAxis.attr('transform', "translate(" + graphicLeft + ",0)").call(yAxis);
     gYAxis.selectAll('g').filter(function(d) {
       return d !== 0;
     }).classed('major', false).classed('minor', true);
@@ -2712,7 +2750,7 @@ Ember.Charts.ScatterComponent = Ember.Charts.ChartComponent.extend(Ember.Charts.
     });
     return this.get('yAxisTitle').text(this.get('yValueDisplayName')).style('text-anchor', 'start').attr({
       y: 0,
-      x: -this.get('labelPadding')
+      x: 0
     });
   },
   updateGraphic: function() {
@@ -2748,7 +2786,7 @@ Ember.Handlebars.helper('scatter-chart', Ember.Charts.ScatterComponent);
 (function() {
 
 
-Ember.Charts.TimeSeriesComponent = Ember.Charts.ChartComponent.extend(Ember.Charts.Legend, Ember.Charts.TimeSeriesLabeler, Ember.Charts.FloatingTooltipMixin, Ember.Charts.HasTimeSeriesRule, Ember.Charts.AxesMixin, Ember.Charts.Formattable, {
+Ember.Charts.TimeSeriesComponent = Ember.Charts.ChartComponent.extend(Ember.Charts.Legend, Ember.Charts.TimeSeriesLabeler, Ember.Charts.FloatingTooltipMixin, Ember.Charts.HasTimeSeriesRule, Ember.Charts.AxesMixin, Ember.Charts.Formattable, Ember.Charts.NoMarginChartMixin, {
   classNames: ['chart-time-series'],
   lineData: null,
   barData: null,
@@ -2890,8 +2928,8 @@ Ember.Charts.TimeSeriesComponent = Ember.Charts.ChartComponent.extend(Ember.Char
   _hasBarData: Ember.computed.notEmpty('barData'),
   graphicLeft: Ember.computed.alias('labelWidthOffset'),
   graphicWidth: Ember.computed(function() {
-    return this.get('width') - this.get('labelWidthOffset');
-  }).property('width', 'labelWidthOffset'),
+    return this.get('width') - this.get('graphicLeft');
+  }).property('width', 'graphicLeft'),
   graphicHeight: Ember.computed(function() {
     return this.get('height') - this.get('legendHeight') - this.get('legendChartPadding');
   }).property('height', 'legendHeight', 'legendChartPadding'),
@@ -3309,14 +3347,16 @@ Ember.Charts.TimeSeriesComponent = Ember.Charts.ChartComponent.extend(Ember.Char
   updateAxes: function() {
     var gXAxis, gYAxis, graphicHeight, graphicLeft, graphicTop, xAxis, yAxis;
     xAxis = d3.svg.axis().scale(this.get('xTimeScale')).orient('bottom').tickValues(this.get('labelledTicks')).tickSubdivide(this.get('numberOfMinorTicks')).tickFormat(this.get('formattedTime')).tickSize(6, 3);
-    yAxis = d3.svg.axis().scale(this.get('yScale')).orient('right').ticks(this.get('numYTicks')).tickSize(this.get('graphicWidth')).tickFormat(this.get('formatValueAxis'));
     graphicTop = this.get('graphicTop');
     graphicHeight = this.get('graphicHeight');
     gXAxis = this.get('xAxis').attr({
       transform: "translate(0," + (graphicTop + graphicHeight) + ")"
     }).call(xAxis);
+    yAxis = d3.svg.axis().scale(this.get('yScale')).orient('right').ticks(this.get('numYTicks')).tickSize(this.get('graphicWidth')).tickFormat(this.get('formatValueAxis'));
+    gYAxis = this.get('yAxis');
+    this.set('graphicLeft', this.maxLabelLength(gYAxis.selectAll('text')) + this.get('labelPadding'));
     graphicLeft = this.get('graphicLeft');
-    gYAxis = this.get('yAxis').attr('transform', "translate(" + graphicLeft + ",0)").call(yAxis);
+    gYAxis.attr('transform', "translate(" + graphicLeft + ",0)").call(yAxis);
     gYAxis.selectAll('g').filter(function(d) {
       return d;
     }).classed('major', false).classed('minor', true);

@@ -2,6 +2,7 @@ Ember.Charts.TimeSeriesComponent = Ember.Charts.ChartComponent.extend(
   Ember.Charts.Legend, Ember.Charts.TimeSeriesLabeler,
   Ember.Charts.FloatingTooltipMixin, Ember.Charts.HasTimeSeriesRule,
   Ember.Charts.AxesMixin, Ember.Charts.Formattable,
+  Ember.Charts.NoMarginChartMixin,
   classNames: ['chart-time-series']
 
   # ----------------------------------------------------------------------------
@@ -171,8 +172,8 @@ Ember.Charts.TimeSeriesComponent = Ember.Charts.ChartComponent.extend(
 
   # width of the graphic
   graphicWidth: Ember.computed ->
-    @get('width') - @get('labelWidthOffset')
-  .property 'width', 'labelWidthOffset'
+    @get('width') - @get('graphicLeft')
+  .property 'width', 'graphicLeft'
 
   graphicHeight: Ember.computed ->
     @get('height') - @get('legendHeight') - @get('legendChartPadding')
@@ -208,6 +209,8 @@ Ember.Charts.TimeSeriesComponent = Ember.Charts.ChartComponent.extend(
       'day'
   .property '_groupedBarData'
 
+  # this method seems very flaky to me; making padding by changing domain
+  # convention is to change range
   barDataExtent: Ember.computed ->
     timeDelta = @get 'timeDelta'
     groupedBarData = @get '_groupedBarData'
@@ -611,6 +614,12 @@ Ember.Charts.TimeSeriesComponent = Ember.Charts.ChartComponent.extend(
       .tickFormat(@get 'formattedTime')
       .tickSize(6, 3)
 
+    graphicTop = @get 'graphicTop'
+    graphicHeight = @get 'graphicHeight'
+    gXAxis = @get('xAxis')
+      .attr(transform: "translate(0,#{graphicTop+graphicHeight})")
+      .call(xAxis)
+
     #tickSize isn't doing anything here, it should take two arguments
     yAxis = d3.svg.axis()
       .scale(@get 'yScale')
@@ -619,15 +628,13 @@ Ember.Charts.TimeSeriesComponent = Ember.Charts.ChartComponent.extend(
       .tickSize(@get 'graphicWidth')
       .tickFormat(@get 'formatValueAxis')
 
-    graphicTop = @get 'graphicTop'
-    graphicHeight = @get 'graphicHeight'
-    gXAxis = @get('xAxis')
-      .attr(transform: "translate(0,#{graphicTop+graphicHeight})")
-      .call(xAxis)
+    gYAxis = @get('yAxis')
+
+    # find the correct size of graphicLeft in order to fit the Labels perfectly
+    @set 'graphicLeft', @maxLabelLength(gYAxis.selectAll('text')) + @get 'labelPadding'
 
     graphicLeft = @get 'graphicLeft'
-    gYAxis = @get('yAxis')
-      .attr('transform', "translate(#{graphicLeft},0)")
+    gYAxis.attr('transform', "translate(#{graphicLeft},0)")
       .call(yAxis)
 
     # Ensure ticks other than the zeroline are minor ticks

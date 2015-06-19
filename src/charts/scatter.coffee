@@ -1,6 +1,6 @@
 Ember.Charts.ScatterComponent = Ember.Charts.ChartComponent.extend(
   Ember.Charts.Legend, Ember.Charts.FloatingTooltipMixin,
-  Ember.Charts.AxesMixin,
+  Ember.Charts.AxesMixin,  Ember.Charts.NoMarginChartMixin,
   classNames: ['chart-scatter']
 
   # ----------------------------------------------------------------------------
@@ -28,6 +28,10 @@ Ember.Charts.ScatterComponent = Ember.Charts.ChartComponent.extend(
   # end where we want them, but reading the d3.js literature it was not clear
   # how to easily do that.
   tickSpacing: 80
+
+  # NoMarginChartMixin makes right margin 0 but we need that room because the
+  # last label of the axis is commonly too large
+  marginRight: Ember.computed.alias 'horizontalMargin'
 
   # ----------------------------------------------------------------------------
   # Data
@@ -430,9 +434,14 @@ Ember.Charts.ScatterComponent = Ember.Charts.ChartComponent.extend(
       .attr
         y: (d) -> @getBBox().height + labelPadding / 2
 
-    graphicLeft = @get 'graphicLeft'
     gYAxis = @get('yAxis')
-      .attr('transform', "translate(#{graphicLeft},0)")
+
+    # find the correct size of graphicLeft in order to fit the Labels perfectly
+    @set 'graphicLeft', @maxLabelLength(gYAxis.selectAll('text')) + @get 'labelPadding'
+
+    graphicLeft = @get 'graphicLeft'
+    
+    gYAxis.attr('transform', "translate(#{graphicLeft},0)")
       .call(yAxis)
 
     gYAxis.selectAll('g')
@@ -454,12 +463,13 @@ Ember.Charts.ScatterComponent = Ember.Charts.ChartComponent.extend(
         x: @get('graphicWidth')/2 + @get('labelWidthOffset')
         y: @get('graphicBottom') + xAxisPadding
 
+    # y axis title is just in the top left of the chart viewport
     @get('yAxisTitle')
       .text(@get 'yValueDisplayName')
       .style('text-anchor', 'start')
       .attr
         y: 0
-        x: -@get('labelPadding')
+        x: 0
 
   updateGraphic: ->
 
