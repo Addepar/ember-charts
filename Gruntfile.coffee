@@ -253,7 +253,7 @@ module.exports = (grunt) ->
     grunt.file.write "build/tests/runner.html", grunt.template.process(tmpl, renderingContext)
 
   grunt.registerTask "build_src", [ "coffee:src", "emberTemplates:src", "neuter:src" ]
-  grunt.registerTask "build_app", [ "replace:app", "coffee:app", "emberTemplates:app", "neuter:app", "copy:app" ]
+  grunt.registerTask "build_app", [ "replace:app", "coffee:app", "emberTemplates:app", "neuter:app", "copy:app", "less:app" ]
   grunt.registerTask "build_tests", [ "coffee:tests" ]
 
   grunt.registerTask "dist", [ "clean", "bower", "replace:src", "build_src", "less:src", "uglify", "usebanner" ]
