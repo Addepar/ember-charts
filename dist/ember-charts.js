@@ -1620,7 +1620,18 @@ Ember.Charts.PieComponent = Ember.Charts.ChartComponent.extend(Ember.Charts.PieL
     });
     otherItems = (_ref = otherSlice != null ? otherSlice._otherItems : void 0) != null ? _ref : [];
     return _.sortBy(otherItems, this.get('sortFunction')).reverse();
-  }).property('sortedDataWithOther', 'sortFunction'),
+  }).property('sortedDataWithOther.[]', 'sortFunction'),
+  otherDataValue: Ember.computed(function() {
+    var otherItems, value;
+    value = 0;
+    otherItems = this.get('otherData');
+    if (otherItems != null) {
+      otherItems.forEach(function(item) {
+        return value += item.value;
+      });
+    }
+    return value;
+  }).property('otherData.[]'),
   finishedData: Ember.computed.alias('sortedDataWithOther'),
   horizontalMargin: Ember.computed(function() {
     return this.get('labelPadding') + this.get('labelWidth');
@@ -1683,18 +1694,19 @@ Ember.Charts.PieComponent = Ember.Charts.ChartComponent.extend(Ember.Charts.PieL
       return Ember.K;
     }
     return function(d, i, element) {
-      var content, data, formatLabelFunction;
+      var content, data, formatLabelFunction, value;
       d3.select(element).classed('hovered', true);
       data = d.data;
       if (data._otherItems) {
-        return _this.get('viewport').select('.legend').classed('hovered', true);
+        value = _this.get('otherDataValue');
       } else {
-        formatLabelFunction = _this.get('formatLabelFunction');
-        content = "<span class=\"tip-label\">" + data.label + "</span>";
-        content += "<span class=\"name\">" + (_this.get('tooltipValueDisplayName')) + ": </span>";
-        content += "<span class=\"value\">" + (formatLabelFunction(data.value)) + "</span>";
-        return _this.showTooltip(content, d3.event);
+        value = data.value;
       }
+      formatLabelFunction = _this.get('formatLabelFunction');
+      content = "<span class=\"tip-label\">" + data.label + "</span>";
+      content += "<span class=\"name\">" + (_this.get('tooltipValueDisplayName')) + ": </span>";
+      content += "<span class=\"value\">" + (formatLabelFunction(value)) + "</span>";
+      return _this.showTooltip(content, d3.event);
     };
   }).property('isInteractive'),
   hideDetails: Ember.computed(function() {
