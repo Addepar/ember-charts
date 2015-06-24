@@ -123,7 +123,14 @@ Ember.Charts.PieComponent = Ember.Charts.ChartComponent.extend(
     otherSlice = _.find @get('sortedDataWithOther'), (d) -> d._otherItems
     otherItems = otherSlice?._otherItems ? []
     _.sortBy(otherItems, @get 'sortFunction').reverse()
-  .property 'sortedDataWithOther', 'sortFunction'
+  .property 'sortedDataWithOther.[]', 'sortFunction'
+
+  otherDataValue: Ember.computed ->
+    value = 0
+    otherItems = @get 'otherData'
+    otherItems?.forEach (item) -> value += item.value
+    return value
+  .property 'otherData.[]'
 
   finishedData: Ember.computed.alias 'sortedDataWithOther'
 
@@ -221,17 +228,17 @@ Ember.Charts.PieComponent = Ember.Charts.ChartComponent.extend(
       # Show tooltip
       data = d.data
       if data._otherItems
-        # If we are on the other slice just highlight legend without tooltip
-        @get('viewport').select('.legend').classed('hovered', yes)
+        value = @get 'otherDataValue'
       else
-        # Show tooltip when not on hover
-        formatLabelFunction = @get 'formatLabelFunction'
-        # Line 1
-        content = "<span class=\"tip-label\">#{data.label}</span>"
-        # Line 2
-        content +="<span class=\"name\">#{@get 'tooltipValueDisplayName'}: </span>"
-        content +="<span class=\"value\">#{formatLabelFunction(data.value)}</span>"
-        @showTooltip(content, d3.event)
+        value = data.value
+      # Show tooltip when not on hover
+      formatLabelFunction = @get 'formatLabelFunction'
+      # Line 1
+      content = "<span class=\"tip-label\">#{data.label}</span>"
+      # Line 2
+      content +="<span class=\"name\">#{@get 'tooltipValueDisplayName'}: </span>"
+      content +="<span class=\"value\">#{formatLabelFunction(value)}</span>"
+      @showTooltip(content, d3.event)
   .property 'isInteractive'
 
   hideDetails: Ember.computed ->
