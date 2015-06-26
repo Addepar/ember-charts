@@ -2329,8 +2329,7 @@ Ember.Charts.VerticalBarComponent = Ember.Charts.ChartComponent.extend(Ember.Cha
     return bars.exit().remove();
   },
   updateLayout: function() {
-    var groups, labelTrimmer, labels, maxLabelWidth, rotateLabelDegrees,
-      _this = this;
+    var groups, labels, maxLabelWidth, rotateLabelDegrees;
     groups = this.get('groups');
     labels = groups.select('.groupLabel text').attr('transform', null).text(function(d) {
       return d.group;
@@ -2338,15 +2337,7 @@ Ember.Charts.VerticalBarComponent = Ember.Charts.ChartComponent.extend(Ember.Cha
     this.setRotateLabels();
     if (this.get('_shouldRotateLabels')) {
       rotateLabelDegrees = this.get('rotateLabelDegrees');
-      labelTrimmer = Ember.Charts.Helpers.LabelTrimmer.create({
-        getLabelSize: function(d) {
-          return _this.get('rotatedLabelLength');
-        },
-        getLabelText: function(d) {
-          return d.group;
-        }
-      });
-      return labels.call(labelTrimmer.get('trim')).attr({
+      return labels.attr({
         'text-anchor': 'end',
         transform: "rotate(" + (-rotateLabelDegrees) + ")",
         dy: function(d) {
@@ -2355,16 +2346,7 @@ Ember.Charts.VerticalBarComponent = Ember.Charts.ChartComponent.extend(Ember.Cha
       });
     } else {
       maxLabelWidth = this.get('maxLabelWidth');
-      labelTrimmer = Ember.Charts.Helpers.LabelTrimmer.create({
-        getLabelSize: function(d) {
-          return maxLabelWidth;
-        },
-        getLabelText: function(d) {
-          var _ref;
-          return (_ref = d.group) != null ? _ref : '';
-        }
-      });
-      return labels.call(labelTrimmer.get('trim')).attr({
+      return labels.attr({
         'text-anchor': 'middle',
         dy: this.get('labelPadding')
       });

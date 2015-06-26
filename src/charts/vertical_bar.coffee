@@ -489,25 +489,18 @@ Ember.Charts.VerticalBarComponent = Ember.Charts.ChartComponent.extend(
 
     if @get('_shouldRotateLabels')
       rotateLabelDegrees = @get 'rotateLabelDegrees'
-      labelTrimmer = Ember.Charts.Helpers.LabelTrimmer.create
-        getLabelSize: (d) => @get 'rotatedLabelLength'
-        getLabelText: (d) -> d.group
-      labels.call(labelTrimmer.get 'trim').attr
+      labels.attr
         'text-anchor': 'end'
         transform: "rotate(#{-rotateLabelDegrees})"
         dy: (d) -> @getBBox().height
-
     else
       maxLabelWidth = @get 'maxLabelWidth'
-      labelTrimmer = Ember.Charts.Helpers.LabelTrimmer.create
-        getLabelSize: (d) -> maxLabelWidth
-        getLabelText: (d) -> d.group ? ''
-      labels.call(labelTrimmer.get 'trim').attr
+      labels.attr
         'text-anchor': 'middle'
         dy: @get('labelPadding')
 
   updateAxes: ->
-    
+
     #tickSize isn't doing anything here, it should take two arguments
     yAxis = d3.svg.axis()
       .scale(@get 'yScale')
