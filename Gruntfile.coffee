@@ -255,6 +255,8 @@ module.exports = (grunt) ->
   grunt.registerTask "build_src", [ "coffee:src", "emberTemplates:src", "neuter:src" ]
   grunt.registerTask "build_app", [ "replace:app", "coffee:app", "emberTemplates:app", "neuter:app", "copy:app", "less:app" ]
   grunt.registerTask "build_tests", [ "coffee:tests" ]
+  grunt.registerTask "run_unit_tests", [ "coffee:tests", "karma:unit"]
+  grunt.registerTask "run_functional_tests", [ "coffee:tests", "karma:functional"]
 
   grunt.registerTask "dist", [ "clean", "bower", "replace:src", "build_src", "less:src", "uglify", "usebanner" ]
   grunt.registerTask "default", [ "dist", "build_app", "build_tests", "watch" ]

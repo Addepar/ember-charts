@@ -43,8 +43,8 @@ You can view the examples at http://localhost:8000/gh_pages.
 You can also run tests in the console by running:
 
 ```bash
-$ grunt karma:unit
-$ grunt karma:functional
+$ grunt run_unit_tests
+$ grunt run_functional_tests
 ```
 
 ## Dependencies
