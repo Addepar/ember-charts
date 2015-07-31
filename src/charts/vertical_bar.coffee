@@ -260,8 +260,9 @@ Ember.Charts.VerticalBarComponent = Ember.Charts.ChartComponent.extend(
   # ----------------------------------------------------------------------------
 
   hasLegend: Ember.computed ->
-    @get('stackBars') or @get('isGrouped') and @get('legendItems.length') > 1
-  .property 'stackBars', 'isGrouped', 'legendItems.length'
+    @get('stackBars') or @get('isGrouped') and @get('legendItems.length') > 1 and 
+      @get 'showLegend'
+  .property 'stackBars', 'isGrouped', 'legendItems.length', 'showLegend'
 
   legendItems: Ember.computed ->
     getSeriesColor = @get 'getSeriesColor'

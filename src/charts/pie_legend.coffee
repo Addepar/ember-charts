@@ -21,6 +21,9 @@ Ember.Charts.PieLegend = Ember.Mixin.create
     0.05 * @get('outerHeight')
   .property 'outerWidth', 'outerHeight'
 
+  # Toggle for whether or not to show the legend
+  showLegend: yes
+
   # ----------------------------------------------------------------------------
   # Layout
   # ----------------------------------------------------------------------------
@@ -82,6 +85,7 @@ Ember.Charts.PieLegend = Ember.Mixin.create
       .remove()
 
   drawLegend: ->
+    return unless @get 'showLegend'
     @clearLegend()
 
     legend = @get('legend')

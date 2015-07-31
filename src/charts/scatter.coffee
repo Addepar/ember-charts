@@ -203,7 +203,9 @@ Ember.Charts.ScatterComponent = Ember.Charts.ChartComponent.extend(
   # Legend Configuration
   # ----------------------------------------------------------------------------
 
-  hasLegend: Ember.computed.alias 'isGrouped'
+  hasLegend: Ember.computed ->
+    @get('isGrouped') and @get 'showLegend'
+  .property 'isGrouped', 'showLegend'
 
   legendIconRadius: Ember.computed.alias 'dotRadius'
 

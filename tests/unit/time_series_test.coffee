@@ -58,3 +58,16 @@ test 'Margins are the right size when there is a legend', (assert) ->
   assert.equal @subject().get('marginLeft'), 0, 'no left margin'
   assert.equal @subject().get('marginRight'), 0, 'no right margin'
   assert.equal @subject().get('marginBottom'), 30, 'bottom margin for legend'
+
+test 'Margins are the right size when showLegend is no', (assert) ->
+  @subject timeSeriesContent
+  @append()
+  timeSubject = @subject()
+  Ember.run ->
+    timeSubject.set 'showLegend', no
+
+  assert.equal @subject().get('hasLegend'), no, 'has no legend if you dont show'
+  assert.equal @subject().get('marginLeft'), 0, 'no left margin'
+  assert.equal @subject().get('marginRight'), 0, 'no right margin'
+  assert.equal @subject().get('marginBottom'), 0,
+    'no bottom margin if showLegend is no'

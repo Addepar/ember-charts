@@ -809,6 +809,7 @@ Ember.Charts.Legend = Ember.Mixin.create({
   maxLegendItemWidth: 160,
   legendIconRadius: 9,
   legendLabelPadding: 10,
+  showLegend: true,
   legendWidth: Ember.computed.alias('width'),
   legendHeight: Ember.computed(function() {
     return this.get('numLegendRows') * this.get('legendItemHeight');
@@ -966,6 +967,9 @@ Ember.Charts.Legend = Ember.Mixin.create({
   }).volatile(),
   drawLegend: function() {
     var hideLegendDetails, isShowingTotal, labelTrimmer, labels, legend, legendIconAttrs, legendItems, legendLabelWidth, showLegendDetails, totalLabelWidth, totalPointShape;
+    if (!this.get('showLegend')) {
+      return;
+    }
     this.clearLegend();
     legend = this.get('legend');
     legend.attr(this.get('legendAttrs'));
@@ -1022,6 +1026,7 @@ Ember.Charts.PieLegend = Ember.Mixin.create({
   maxLabelHeight: Ember.computed(function() {
     return 0.05 * this.get('outerHeight');
   }).property('outerWidth', 'outerHeight'),
+  showLegend: true,
   legendWidth: Ember.computed(function() {
     return this.get('outerWidth') - this.get('legendHorizontalPadding');
   }).property('outerWidth', 'legendHorizontalPadding'),
@@ -1057,6 +1062,9 @@ Ember.Charts.PieLegend = Ember.Mixin.create({
   },
   drawLegend: function() {
     var currentText, labelStrings, labelTop, labels, legend, nextLabel, otherSlice, row, rowNode, _i, _len, _ref;
+    if (!this.get('showLegend')) {
+      return;
+    }
     this.clearLegend();
     legend = this.get('legend').attr(this.get('legendAttrs'));
     otherSlice = this.get('viewport').select('.other-slice');
@@ -1686,8 +1694,8 @@ Ember.Charts.PieComponent = Ember.Charts.ChartComponent.extend(Ember.Charts.PieL
     return this.get('otherData').concat(this.get('rejectedData'));
   }).property('otherData', 'rejectedData'),
   hasLegend: Ember.computed(function() {
-    return this.get('legendItems.length') > 0;
-  }).property('legendItems.length'),
+    debugger;    return this.get('legendItems.length') > 0 && this.get('showLegend');
+  }).property('legendItems.length', 'showLegend'),
   showDetails: Ember.computed(function() {
     var _this = this;
     if (!this.get('isInteractive')) {
@@ -2102,8 +2110,8 @@ Ember.Charts.VerticalBarComponent = Ember.Charts.ChartComponent.extend(Ember.Cha
   }).property('yScale'),
   numColorSeries: Ember.computed.alias('individualBarLabels.length'),
   hasLegend: Ember.computed(function() {
-    return this.get('stackBars') || this.get('isGrouped') && this.get('legendItems.length') > 1;
-  }).property('stackBars', 'isGrouped', 'legendItems.length'),
+    return this.get('stackBars') || this.get('isGrouped') && this.get('legendItems.length') > 1 && this.get('showLegend');
+  }).property('stackBars', 'isGrouped', 'legendItems.length', 'showLegend'),
   legendItems: Ember.computed(function() {
     var getSeriesColor;
     getSeriesColor = this.get('getSeriesColor');
@@ -2557,7 +2565,9 @@ Ember.Charts.ScatterComponent = Ember.Charts.ChartComponent.extend(Ember.Charts.
       return _this.get('colorScale')(colorIndex / _this.get('numGroupColors'));
     };
   }),
-  hasLegend: Ember.computed.alias('isGrouped'),
+  hasLegend: Ember.computed(function() {
+    return this.get('isGrouped') && this.get('showLegend');
+  }).property('isGrouped', 'showLegend'),
   legendIconRadius: Ember.computed.alias('dotRadius'),
   legendItems: Ember.computed(function() {
     var displayGroups, getGroupColor, getGroupShape, legendData, point;
@@ -3280,8 +3290,8 @@ Ember.Charts.TimeSeriesComponent = Ember.Charts.ChartComponent.extend(Ember.Char
     }
   }).property('numLines'),
   hasLegend: Ember.computed(function() {
-    return this.get('legendItems.length') > 1;
-  }).property('legendItems.length'),
+    return this.get('legendItems.length') > 1 && this.get('showLegend');
+  }).property('legendItems.length', 'showLegend'),
   legendItems: Ember.computed(function() {
     var getSeriesColor, lineAttrs,
       _this = this;

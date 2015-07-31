@@ -88,5 +88,14 @@ test 'Pie chart renders', (assert) ->
 test 'Legend renders', (assert) ->
   @subject pieContent
   @append()
-
+  debugger
   assert.equal find('.legend').length, 1, 'Has a legend for other slice'
+test 'Margins are the right size when showLegend is no', (assert) ->
+  @subject pieContent
+  @append()
+  pieSubject = @subject()
+  Ember.run ->
+    pieSubject.set 'showLegend', no
+
+  assert.equal @subject().get('hasLegend'), no,
+    'if showLegend is no, a legend is not made'

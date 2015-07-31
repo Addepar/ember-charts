@@ -18,6 +18,9 @@ Ember.Charts.Legend = Ember.Mixin.create
   # Padding between each legend icon and padding
   legendLabelPadding: 10
 
+  # Toggle for whether or not to show the legend
+  showLegend: yes
+
   # ----------------------------------------------------------------------------
   # Layout
   # ----------------------------------------------------------------------------
@@ -192,6 +195,7 @@ Ember.Charts.Legend = Ember.Mixin.create
   .volatile()
 
   drawLegend: ->
+    return unless @get 'showLegend'
     @clearLegend()
     legend = @get 'legend'
 
