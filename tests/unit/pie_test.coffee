@@ -88,7 +88,6 @@ test 'Pie chart renders', (assert) ->
 test 'Legend renders', (assert) ->
   @subject pieContent
   @append()
-  debugger
   assert.equal find('.legend').length, 1, 'Has a legend for other slice'
 test 'Margins are the right size when showLegend is no', (assert) ->
   @subject pieContent

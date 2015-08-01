@@ -212,7 +212,6 @@ Ember.Charts.PieComponent = Ember.Charts.ChartComponent.extend(
   .property 'otherData', 'rejectedData'
 
   hasLegend: Ember.computed ->
-    debugger
     @get('legendItems.length') > 0 and @get 'showLegend'
   .property 'legendItems.length', 'showLegend'
 
