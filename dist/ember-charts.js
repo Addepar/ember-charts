@@ -1694,7 +1694,7 @@ Ember.Charts.PieComponent = Ember.Charts.ChartComponent.extend(Ember.Charts.PieL
     return this.get('otherData').concat(this.get('rejectedData'));
   }).property('otherData', 'rejectedData'),
   hasLegend: Ember.computed(function() {
-    debugger;    return this.get('legendItems.length') > 0 && this.get('showLegend');
+    return this.get('legendItems.length') > 0 && this.get('showLegend');
   }).property('legendItems.length', 'showLegend'),
   showDetails: Ember.computed(function() {
     var _this = this;

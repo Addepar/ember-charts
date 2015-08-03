@@ -19,6 +19,7 @@ Ember.Charts.Legend = Ember.Mixin.create
   legendLabelPadding: 10
 
   # Toggle for whether or not to show the legend
+  # if you want to override default legend behavior, override showLegend
   showLegend: yes
 
   # ----------------------------------------------------------------------------

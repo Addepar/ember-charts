@@ -22,6 +22,7 @@ Ember.Charts.PieLegend = Ember.Mixin.create
   .property 'outerWidth', 'outerHeight'
 
   # Toggle for whether or not to show the legend
+  # if you want to override default legend behavior, override showLegend
   showLegend: yes
 
   # ----------------------------------------------------------------------------

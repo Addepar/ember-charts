@@ -13,6 +13,7 @@ Ember.Charts.VerticalBarComponent = Ember.Charts.ChartComponent.extend(
 
   # If stackBars is yes then it stacks bars, otherwise it groups them
   # horizontally. Stacking discards negative data.
+  # TODO(nick): make stacked bars deal gracefully with negative data
   stackBars: no
 
   # Space between bars, as fraction of bar size
@@ -156,6 +157,7 @@ Ember.Charts.VerticalBarComponent = Ember.Charts.ChartComponent.extend(
       _.max d.values.map((dd) -> dd.value)
     maxOfStacks = d3.max finishedData, (d) -> d.totalValue
     # minOfStacks is always zero since we do not compute negative stacks
+    # TODO(nick): make stacked bars deal gracefully with negative data
     minOfStacks = d3.min finishedData, (d) -> 0
 
     if @get('stackBars')
