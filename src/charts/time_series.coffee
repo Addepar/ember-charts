@@ -46,6 +46,14 @@ Ember.Charts.TimeSeriesComponent = Ember.Charts.ChartComponent.extend(
   barLeftOffset: 0.0
 
   # ----------------------------------------------------------------------------
+  # Time Series Chart Constants
+  # ----------------------------------------------------------------------------
+  
+  # The default maximum number of labels to use along the x axis for a dynamic
+  # x axis. 
+  DEFAULT_MAX_NUMBER_OF_LABELS: 10
+
+  # ----------------------------------------------------------------------------
   # Overrides of ChartComponent methods
   # ----------------------------------------------------------------------------
 
@@ -278,9 +286,17 @@ Ember.Charts.TimeSeriesComponent = Ember.Charts.ChartComponent.extend(
   # Ticks and Scales
   # ----------------------------------------------------------------------------
 
-  # Override maxNumberOfLabels in the time series labeler mixin, setting it to
-  # the dynamically computed number of ticks going on the time series axis
-  maxNumberOfLabels: Ember.computed.alias 'numXTicks'
+  # If there is a dynamic x axis, then assume the value that it is given,
+  # and if it is not a dynamic x axis, set it to the number of x axis ticks.
+  # For a dynamic x axis, let the max number of labels be the minimum of 
+  # the number of x ticks and the assigned value. This is to prevent
+  # the assigned value from being so large that labels flood the x axis.  
+  maxNumberOfLabels: Ember.computed (key, value) ->
+    if @get 'dynamicXAxis'
+      Math.min (value ? @get 'DEFAULT_MAX_NUMBER_OF_LABELS'), @get 'numXTicks'
+    else
+      @get 'numXTicks'
+  .property 'numXTicks', 'dynamicXAxis'  
 
   # Create a domain that spans the larger range of bar or line data
   xDomain: Ember.computed ->
@@ -291,7 +307,7 @@ Ember.Charts.TimeSeriesComponent = Ember.Charts.ChartComponent.extend(
     [ Math.min(minOfGroups, minOfSeries),
       Math.max(maxOfGroups, maxOfSeries) ]
   .property('xBetweenGroupDomain', 'xWithinSeriesDomain',
-    '_hasBarData', '_hasLineData')
+    '_hasBarData', '_hasLineData', 'maxNumberOfLabels')
 
   # Largest and smallest values in line and bar data
   # Use raw bar data instead of doubly grouped hashes in groupedBarData

@@ -8,7 +8,8 @@ App.EmberChartsTimeSeriesController = App.SlideController.extend
   barGroupPadding: 0.25
   barLeftOffset: 0.0
   yAxisFromZero: no
-
+  dynamicXAxis: no
+  
   # ---------
   # Data Selection
   # ---------

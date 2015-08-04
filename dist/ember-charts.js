@@ -135,7 +135,8 @@ Ember.AddeparMixins.StyleBindingsMixin = Ember.Mixin.create({
 
 (function() {
 
-Ember.TEMPLATES["components/ember-chart"] = Ember.Handlebars.template(function anonymous(Handlebars,depth0,helpers,partials,data) {
+Ember.TEMPLATES["components/ember-chart"] = Ember.Handlebars.template(function anonymous(Handlebars,depth0,helpers,partials,data
+/**/) {
 this.compilerInfo = [4,'>= 1.0.0'];
 helpers = this.merge(helpers, Ember.Handlebars.helpers); data = data || {};
   var buffer = '', stack1, hashContexts, hashTypes, options, helperMissing=helpers.helperMissing, escapeExpression=this.escapeExpression;
@@ -534,37 +535,34 @@ Ember.Charts.HasTimeSeriesRule = Ember.Mixin.create({
 
 (function() {
 
+var domainTypeToLabellerType, domainTypeToLongDomainType, longDomainTypeToDomainType;
 
 Ember.Charts.TimeSeriesLabeler = Ember.Mixin.create({
   centerAxisLabels: false,
   selectedInterval: 'M',
+  dynamicXAxis: false,
+  SPECIFICITY_RATIO: 0.7,
+  minTimeSpecificity: 'S',
+  maxTimeSpecificity: 'Y',
+  MONTHS_IN_QUARTER: 3,
+  xAxisTimeInterval: Ember.computed(function(key, value) {
+    var domain;
+    domain = this.get('dynamicXAxis') ? value != null ? value : 'M' : this.get('selectedInterval');
+    if (domain.length > 1) {
+      return longDomainTypeToDomainType[domain];
+    } else {
+      return domain;
+    }
+  }).property('selectedInterval', 'dynamicXAxis'),
   maxNumberOfLabels: 10,
+  DOMAIN_ORDERING: ['S', 'H', 'D', 'W', 'M', 'Q', 'Y'],
   numberOfMinorTicks: Ember.computed(function() {
-    var allTicks, findTick, firstIndex, labelledTicks, secondIndex, start, stop, _ref;
+    var allTicks, domain, findTick, firstIndex, interval, labelledTicks, secondIndex, start, stop, _ref;
     labelledTicks = this.get('labelledTicks');
     _ref = this.get('xDomain'), start = _ref[0], stop = _ref[1];
-    allTicks = (function() {
-      switch (this.get('selectedInterval')) {
-        case 'years':
-        case 'Y':
-          return d3.time.years(start, stop);
-        case 'quarters':
-        case 'Q':
-          return d3.time.months(start, stop, 3);
-        case 'months':
-        case 'M':
-          return this.monthsBetween(start, stop);
-        case 'weeks':
-        case 'W':
-          return this.weeksBetween(start, stop);
-        case 'hours':
-        case 'H':
-          return d3.time.hours(start, stop);
-        case 'seconds':
-        case 'S':
-          return this.secondsBetween(start, stop);
-      }
-    }).call(this);
+    domain = this.get('xAxisTimeInterval');
+    interval = domain === 'Q' ? this.MONTHS_IN_QUARTER : 1;
+    allTicks = d3.time[domainTypeToLabellerType[domain]](start, stop, interval);
     if (labelledTicks.length < 2) {
       return 0;
     }
@@ -576,7 +574,7 @@ Ember.Charts.TimeSeriesLabeler = Ember.Mixin.create({
     secondIndex = _.findIndex(allTicks, findTick(labelledTicks[1]));
     firstIndex = _.findIndex(allTicks, findTick(labelledTicks[0]));
     return secondIndex - firstIndex - 1;
-  }).property('xDomain', 'selectedInterval', 'labelledTicks'),
+  }).property('xDomain', 'xAxisTimeInterval', 'labelledTicks'),
   labelledTicks: Ember.computed(function() {
     var count, domain, interval, tick, ticks, _i, _len, _results;
     domain = this.get('xDomain');
@@ -585,30 +583,9 @@ Ember.Charts.TimeSeriesLabeler = Ember.Mixin.create({
       return ticks;
     } else {
       count = 1;
-      interval = (function() {
-        switch (this.get('selectedInterval')) {
-          case 'years':
-          case 'Y':
-            return 'year';
-          case 'quarters':
-          case 'Q':
-            return 'quarter';
-          case 'months':
-          case 'M':
-            return 'month';
-          case 'weeks':
-          case 'W':
-            return 'week';
-          case 'hours':
-          case 'H':
-            return 'hour';
-          case 'seconds':
-          case 'S':
-            return 'second';
-        }
-      }).call(this);
+      interval = this.domainTypeToLongDomainTypeSingular(this.get('xAxisTimeInterval'));
       if (interval === 'quarter') {
-        count = 3;
+        count = this.MONTHS_IN_QUARTER;
         interval = 'month';
       }
       _results = [];
@@ -618,139 +595,133 @@ Ember.Charts.TimeSeriesLabeler = Ember.Mixin.create({
       }
       return _results;
     }
-  }).property('xDomain', 'maxNumberOfLabels', 'centerAxisLabels', 'selectedInterval'),
+  }).property('xDomain', 'centerAxisLabels', 'xAxisTimeInterval'),
   _advanceMiddle: function(time, interval, count) {
     return new Date((time = time.getTime() / 2 + d3.time[interval].offset(time, count) / 2));
   },
-  labelledYears: function(start, stop) {
-    var skipVal, years;
-    years = d3.time.years(start, stop);
-    if (years.length > this.get('maxNumberOfLabels')) {
-      skipVal = Math.ceil(years.length / this.get('maxNumberOfLabels'));
-      return d3.time.years(start, stop, skipVal);
-    } else {
-      return years;
+  numTimeBetween: function(timeInterval, start, stop) {
+    switch (timeInterval) {
+      case 'seconds':
+        return (stop - start) / 1000;
+      case 'hours':
+        return (stop - start) / 1000;
+      case 'days':
+        return (stop - start) / 86400000;
+      case 'weeks':
+        return d3.time.weeks(start, stop).length;
+      case 'months':
+        return d3.time.months(start, stop).length;
+      case 'quarters':
+        return d3.time.months(start, stop).length / this.MONTHS_IN_QUARTER;
+      case 'years':
+        return d3.time.years(start, stop).length;
     }
-  },
-  labelledQuarters: function(start, stop) {
-    var quarters;
-    quarters = d3.time.months(start, stop, 3);
-    if (quarters.length > this.get('maxNumberOfLabels')) {
-      return this.labelledYears(start, stop);
-    } else {
-      return quarters;
+  }
+}, domainTypeToLabellerType = {
+  'S': 'seconds',
+  'H': 'hours',
+  'D': 'days',
+  'W': 'weeks',
+  'M': 'months',
+  'Q': 'months',
+  'Y': 'years'
+}, domainTypeToLongDomainType = {
+  'S': 'seconds',
+  'H': 'hours',
+  'D': 'days',
+  'W': 'weeks',
+  'M': 'months',
+  'Q': 'quarters',
+  'Y': 'years'
+}, {
+  domainTypeToLongDomainTypeSingular: function(timeInterval) {
+    var domainType;
+    domainType = domainTypeToLongDomainType[timeInterval];
+    return domainType.substring(0, domainType.length - 1);
+  }
+}, longDomainTypeToDomainType = {
+  'seconds': 'S',
+  'hours': 'H',
+  'days': 'D',
+  'weeks': 'W',
+  'months': 'M',
+  'quarters': 'Q',
+  'years': 'Y'
+}, {
+  dynamicXLabelling: function(start, stop) {
+    var d, domainType, domainTypes, i, ind1, ind2, interval, labellerTypes, labels, maxNumberOfLabels, timeBetween, times, _i, _len;
+    ind1 = this.get('DOMAIN_ORDERING').indexOf(this.get('minTimeSpecificity'));
+    ind2 = this.get('DOMAIN_ORDERING').indexOf(this.get('maxTimeSpecificity'));
+    domainTypes = this.get('DOMAIN_ORDERING').slice(ind1, +ind2 + 1 || 9e9);
+    labellerTypes = (function() {
+      var _i, _len, _results;
+      _results = [];
+      for (_i = 0, _len = domainTypes.length; _i < _len; _i++) {
+        domainType = domainTypes[_i];
+        _results.push(domainTypeToLabellerType[domainType]);
+      }
+      return _results;
+    })();
+    times = (function() {
+      var _i, _len, _results;
+      _results = [];
+      for (_i = 0, _len = domainTypes.length; _i < _len; _i++) {
+        d = domainTypes[_i];
+        _results.push(this.numTimeBetween(domainTypeToLongDomainType[d], start, stop));
+      }
+      return _results;
+    }).call(this);
+    labels = null;
+    maxNumberOfLabels = this.get('maxNumberOfLabels');
+    for (i = _i = 0, _len = times.length; _i < _len; i = ++_i) {
+      timeBetween = times[i];
+      interval = null;
+      if (timeBetween < maxNumberOfLabels) {
+        interval = domainTypes[i] === 'Q' ? this.MONTHS_IN_QUARTER : 1;
+      } else if (domainTypes[i] === this.get('maxTimeSpecificity') || times[i + 1] < maxNumberOfLabels * (this.get('SPECIFICITY_RATIO'))) {
+        if (domainTypes[i] === 'Q') {
+          interval = Math.ceil(this.MONTHS_IN_QUARTER * timeBetween / maxNumberOfLabels);
+        } else {
+          interval = Math.ceil(timeBetween / maxNumberOfLabels);
+        }
+      }
+      if (interval != null) {
+        this.set('xAxisTimeInterval', domainTypes[i]);
+        labels = d3.time[labellerTypes[i]](start, stop).filter(function(d, i) {
+          return !(i % interval);
+        });
+        break;
+      }
     }
-  },
-  monthsBetween: function(start, stop, skip) {
-    if (skip == null) {
-      skip = 1;
-    }
-    return d3.time.months(start, stop).filter(function(d, i) {
-      return !(i % skip);
-    });
-  },
-  labelledMonths: function(start, stop) {
-    var months, skipVal;
-    months = this.monthsBetween(start, stop);
-    if (months.length > this.get('maxNumberOfLabels')) {
-      skipVal = Math.ceil(months.length / this.get('maxNumberOfLabels'));
-      return this.monthsBetween(start, stop, skipVal);
-    } else {
-      return months;
-    }
-  },
-  weeksBetween: function(start, stop, skip) {
-    if (skip == null) {
-      skip = 1;
-    }
-    return d3.time.weeks(start, stop).filter(function(d, i) {
-      return !(i % skip);
-    });
-  },
-  secondsBetween: function(start, stop, skip) {
-    if (skip == null) {
-      skip = 1;
-    }
-    return d3.time.seconds(start, stop).filter(function(d, i) {
-      return !(i % skip);
-    });
-  },
-  labelledWeeks: function(start, stop) {
-    var skipVal, weeks;
-    weeks = this.weeksBetween(start, stop);
-    if (weeks.length > this.get('maxNumberOfLabels')) {
-      skipVal = Math.ceil(weeks.length / this.get('maxNumberOfLabels'));
-      return this.weeksBetween(start, stop, skipVal);
-    } else {
-      return weeks;
-    }
-  },
-  labelledDays: function(start, stop) {
-    var days, skipVal;
-    days = d3.time.days(start, stop);
-    if (days.length > this.get('maxNumberOfLabels')) {
-      skipVal = Math.ceil(days.length / this.get('maxNumberOfLabels'));
-      return d3.time.days(start, stop).filter(function(d, i) {
-        return !(i % skipVal);
-      });
-    } else {
-      return days;
-    }
-  },
-  labelledHours: function(start, stop) {
-    var hours, skipVal;
-    hours = d3.time.hours(start, stop);
-    if (hours.length > this.get('maxNumberOfLabels')) {
-      skipVal = Math.ceil(hours.length / this.get('maxNumberOfLabels'));
-      return d3.time.hours(start, stop).filter(function(d, i) {
-        return !(i % skipVal);
-      });
-    } else {
-      return hours;
-    }
+    return labels;
   },
   tickLabelerFn: Ember.computed(function() {
     var _this = this;
-    switch (this.get('selectedInterval')) {
-      case 'years':
-      case 'Y':
-        return function(start, stop) {
-          return _this.labelledYears(start, stop);
-        };
-      case 'quarters':
-      case 'Q':
-        return function(start, stop) {
-          return _this.labelledQuarters(start, stop);
-        };
-      case 'months':
-      case 'M':
-        return function(start, stop) {
-          return _this.labelledMonths(start, stop);
-        };
-      case 'weeks':
-      case 'W':
-        return function(start, stop) {
-          return _this.labelledWeeks(start, stop);
-        };
-      case 'days':
-      case 'D':
-        return function(start, stop) {
-          return _this.labelledDays(start, stop);
-        };
-      case 'hours':
-      case 'H':
-        return function(start, stop) {
-          return _this.labelledHours(start, stop);
-        };
-      case 'seconds':
-      case 'S':
-        return function(start, stop) {
-          return _this.labelledSeconds(start, stop);
-        };
-      default:
-        return d3.time.years;
+    if (this.get('dynamicXAxis')) {
+      return function(start, stop) {
+        return _this.dynamicXLabelling(start, stop);
+      };
+    } else {
+      return function(start, stop) {
+        var domain, interval, timeBetween;
+        domain = _this.get('xAxisTimeInterval');
+        timeBetween = _this.numTimeBetween(domainTypeToLongDomainType[domain], start, stop);
+        if (domain === 'Q') {
+          if (timeBetween > _this.get('maxNumberOfLabels')) {
+            return d3.time.years(start, stop);
+          } else {
+            return d3.time.months(start, stop, _this.MONTHS_IN_QUARTER);
+          }
+        } else {
+          interval = timeBetween > _this.get('maxNumberOfLabels') ? Math.ceil(timeBetween / _this.get('maxNumberOfLabels')) : 1;
+          return d3.time[domainTypeToLabellerType[domain]](start, stop).filter(function(d, i) {
+            return !(i % interval);
+          });
+        }
+      };
     }
-  }).property('maxNumberOfLabels', 'selectedInterval'),
+  }).property('dynamicXAxis', 'maxNumberOfLabels', 'xAxisTimeInterval')
+}, 'SPECIFICITY_RATIO', 'minTimeSpecificity', 'maxTimeSpecificity', {
   quarterFormat: function(d) {
     var month, prefix, suffix;
     month = d.getMonth() % 12;
@@ -768,7 +739,7 @@ Ember.Charts.TimeSeriesLabeler = Ember.Mixin.create({
     return prefix + ' ' + suffix;
   },
   formattedTime: Ember.computed(function() {
-    switch (this.get('selectedInterval')) {
+    switch (this.get('xAxisTimeInterval')) {
       case 'years':
       case 'Y':
         return d3.time.format('%Y');
@@ -777,23 +748,23 @@ Ember.Charts.TimeSeriesLabeler = Ember.Mixin.create({
         return this.quarterFormat;
       case 'months':
       case 'M':
-        return d3.time.format("%b '%y");
+        return d3.time.format('%b \'%y');
       case 'weeks':
       case 'W':
         return d3.time.format('%-m/%-d/%y');
       case 'days':
       case 'D':
-        return d3.time.format('%a');
+        return d3.time.format('%-m/%-d/%y');
       case 'hours':
       case 'H':
-        return d3.time.format('%H');
+        return d3.time.format('%H:%M:%S');
       case 'seconds':
       case 'S':
-        return d3.time.format('%M : %S');
+        return d3.time.format('%H:%M:%S');
       default:
         return d3.time.format('%Y');
     }
-  }).property('selectedInterval')
+  }).property('xAxisTimeInterval')
 });
 
 
@@ -2820,6 +2791,7 @@ Ember.Charts.TimeSeriesComponent = Ember.Charts.ChartComponent.extend(Ember.Char
   barPadding: 0,
   barGroupPadding: 0.25,
   barLeftOffset: 0.0,
+  DEFAULT_MAX_NUMBER_OF_LABELS: 10,
   finishedData: Ember.computed(function() {
     return {
       lineData: this.get('_groupedLineData'),
@@ -3036,7 +3008,13 @@ Ember.Charts.TimeSeriesComponent = Ember.Charts.ChartComponent.extend(Ember.Char
   }).property('_groupedLineData.@each.values'),
   xBetweenSeriesDomain: Ember.computed.alias('lineSeriesNames'),
   xWithinSeriesDomain: Ember.computed.alias('lineDataExtent'),
-  maxNumberOfLabels: Ember.computed.alias('numXTicks'),
+  maxNumberOfLabels: Ember.computed(function(key, value) {
+    if (this.get('dynamicXAxis')) {
+      return Math.min(value != null ? value : this.get('DEFAULT_MAX_NUMBER_OF_LABELS'), this.get('numXTicks'));
+    } else {
+      return this.get('numXTicks');
+    }
+  }).property('numXTicks', 'dynamicXAxis'),
   xDomain: Ember.computed(function() {
     var maxOfGroups, maxOfSeries, minOfGroups, minOfSeries, _ref, _ref1;
     if (!this.get('_hasBarData')) {
@@ -3048,7 +3026,7 @@ Ember.Charts.TimeSeriesComponent = Ember.Charts.ChartComponent.extend(Ember.Char
     _ref = this.get('xBetweenGroupDomain'), minOfGroups = _ref[0], maxOfGroups = _ref[1];
     _ref1 = this.get('xWithinSeriesDomain'), minOfSeries = _ref1[0], maxOfSeries = _ref1[1];
     return [Math.min(minOfGroups, minOfSeries), Math.max(maxOfGroups, maxOfSeries)];
-  }).property('xBetweenGroupDomain', 'xWithinSeriesDomain', '_hasBarData', '_hasLineData'),
+  }).property('xBetweenGroupDomain', 'xWithinSeriesDomain', '_hasBarData', '_hasLineData', 'maxNumberOfLabels'),
   yDomain: Ember.computed(function() {
     var groupData, hasBarData, hasLineData, lineData, max, maxOfGroups, maxOfSeries, min, minOfGroups, minOfSeries;
     lineData = this.get('_groupedLineData');
