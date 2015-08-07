@@ -1,0 +1,105 @@
+<div class="col-md-10 col-md-offset-2 left-border main-content-container">
+  <div class="chart-header">
+    <h2>Time Series Chart</h2>
+  </div>
+
+  <div class="example-container">
+    <div class="chart-container">
+      {{time-series-chart
+        barData=barData
+        lineData=lineData
+        selectedInterval=selectedInterval
+        selectedSeedColor=selectedSeedColor
+        barPadding=barPadding
+        barGroupPadding=barGroupPadding
+        barLeftOffset=barLeftOffset
+        yAxisFromZero=yAxisFromZero
+        marginLeft=30
+      }}
+    </div>
+  </div>
+
+  <div class="row bumper-30">
+    <div class="col-md-6">
+      <h4>Ember Bindings</h4>
+
+      <div class="form-horizontal">
+        <div class="form-group" data-test="line-data">
+          <label class="col-lg-4 control-label">Line Data</label>
+          <div class="col-lg-8">
+            {{view "select"
+              content=availableLineDataSets
+              value=selectedLineData
+              class="form-control"
+            }}
+          </div>
+        </div>
+        <div class="form-group" data-test="bar-data">
+          <label class="col-lg-4 control-label">Bar Data</label>
+          <div class="col-lg-8">
+            {{view "select"
+                content=availableBarDataSets
+                value=selectedBarData
+                class="form-control"
+            }}
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="col-lg-4 control-label" data-test="color">Color</label>
+          <div class="col-lg-8">
+            {{view "select"
+              content=seedColorNames
+              value=selectedSeedColorName
+              class="form-control"
+            }}
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="col-lg-4 control-label" data-test="tick-interval">Tick Interval</label>
+          <div class="col-lg-8">
+            {{view "select"
+                content=tickIntervals
+                value=selectedInterval
+                class="form-control"
+            }}
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="col-lg-4 control-label">Bar Padding</label>
+          <div class="col-lg-8">
+          {{scrubber-component min="0" max="1" step="0.05" value=barPadding}}
+            <span class="help-block">Bar Padding: {{barPadding}} </span>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="col-lg-4 control-label">Bar Group Padding</label>
+          <div class="col-lg-8">
+            {{scrubber-component min="0" max="1" step="0.05" value=barGroupPadding}}
+            <span class="help-block">Bar Group Padding: {{barGroupPadding}} </span>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="col-lg-4 control-label">Bar Left Offset</label>
+          <div class="col-lg-8">
+            {{scrubber-component min="0" max="1" step="0.05" value=barLeftOffset}}
+            <span class="help-block">Bar Left Offset: {{barLeftOffset}} </span>
+          </div>
+        </div>
+        <div class="form-group">
+          <div class="col-lg-offset-4 col-lg-8">
+            <div class="checkbox" data-test="y-axis-from-zero">
+              <label>{{input type="checkbox" checked=yAxisFromZero }} Force Y-Axis From Zero</label>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-6">
+      <h4>JSON Data</h4>
+      <div class="chart-json">
+        <pre>{{prettyPrintedData}}</pre>
+      </div>
+    </div>
+  </div>
+</div>
