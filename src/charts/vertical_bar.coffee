@@ -191,6 +191,13 @@ Ember.Charts.VerticalBarComponent = Ember.Charts.ChartComponent.extend(
     _.uniq _.flatten(groups)
   .property 'groupedData.@each'
 
+  labelIDMapping: Ember.computed ->
+    @get('individualBarLabels').reduce (previousValue, label, index) ->
+      previousValue[label] = index
+      previousValue
+    , {}
+  .property 'individualBarLabels.[]'
+
   # The range of labels assigned to each group
   xBetweenGroupDomain: Ember.computed.alias 'groupNames'
 
@@ -268,14 +275,16 @@ Ember.Charts.VerticalBarComponent = Ember.Charts.ChartComponent.extend(
 
   legendItems: Ember.computed ->
     getSeriesColor = @get 'getSeriesColor'
-    @get('individualBarLabels').map (d, i) ->
-      color = getSeriesColor(d, i)
-      label: d
+    @get('individualBarLabels').map (label, i) =>
+      color = getSeriesColor(label, i)
+      if @get 'stackBars'
+        i = @get('labelIDMapping')[label]
+      label: label
       fill: color
       stroke: color
       icon: -> 'square'
       selector: ".grouping-#{i}"
-  .property 'individualBarLabels', 'getSeriesColor'
+  .property 'individualBarLabels.[]', 'getSeriesColor', 'stackBars', 'labelIDMapping.[]'
 
   # ----------------------------------------------------------------------------
   # Tooltip Configuration
@@ -344,13 +353,15 @@ Ember.Charts.VerticalBarComponent = Ember.Charts.ChartComponent.extend(
     # the origin line so that they do not overlap with it
     zeroDisplacement = 1
     yScale = @get 'yScale'
-    class: (d,i) -> "grouping-#{i}"
+    class: (barSection, i) =>
+      id = @get('labelIDMapping')[barSection.label]
+      "grouping-#{id}"
     'stroke-width': 0
-    width: (d) => @get('groupWidth')
+    width: (barSection) => @get('groupWidth')
     x: null
-    y: (d) => yScale(d.y1) + zeroDisplacement
-    height: (d) -> yScale(d.y0) - yScale(d.y1)
-  .property 'yScale', 'groupWidth'
+    y: (barSection) => yScale(barSection.y1) + zeroDisplacement
+    height: (barSection) -> yScale(barSection.y0) - yScale(barSection.y1)
+  .property 'yScale', 'groupWidth', 'labelIDMapping.[]'
 
   groupedBarAttrs: Ember.computed ->
     zeroDisplacement = 1

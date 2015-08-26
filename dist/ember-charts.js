@@ -135,8 +135,7 @@ Ember.AddeparMixins.StyleBindingsMixin = Ember.Mixin.create({
 
 (function() {
 
-Ember.TEMPLATES["components/ember-chart"] = Ember.Handlebars.template(function anonymous(Handlebars,depth0,helpers,partials,data
-/**/) {
+Ember.TEMPLATES["components/ember-chart"] = Ember.Handlebars.template(function anonymous(Handlebars,depth0,helpers,partials,data) {
 this.compilerInfo = [4,'>= 1.0.0'];
 helpers = this.merge(helpers, Ember.Handlebars.helpers); data = data || {};
   var buffer = '', stack1, hashContexts, hashTypes, options, helperMissing=helpers.helperMissing, escapeExpression=this.escapeExpression;
@@ -2044,6 +2043,12 @@ Ember.Charts.VerticalBarComponent = Ember.Charts.ChartComponent.extend(Ember.Cha
     });
     return _.uniq(_.flatten(groups));
   }).property('groupedData.@each'),
+  labelIDMapping: Ember.computed(function() {
+    return this.get('individualBarLabels').reduce(function(previousValue, label, index) {
+      previousValue[label] = index;
+      return previousValue;
+    }, {});
+  }).property('individualBarLabels.[]'),
   xBetweenGroupDomain: Ember.computed.alias('groupNames'),
   xWithinGroupDomain: Ember.computed.alias('individualBarLabels'),
   groupWidth: Ember.computed(function() {
@@ -2084,13 +2089,17 @@ Ember.Charts.VerticalBarComponent = Ember.Charts.ChartComponent.extend(Ember.Cha
     return this.get('stackBars') || this.get('isGrouped') && this.get('legendItems.length') > 1 && this.get('showLegend');
   }).property('stackBars', 'isGrouped', 'legendItems.length', 'showLegend'),
   legendItems: Ember.computed(function() {
-    var getSeriesColor;
+    var getSeriesColor,
+      _this = this;
     getSeriesColor = this.get('getSeriesColor');
-    return this.get('individualBarLabels').map(function(d, i) {
+    return this.get('individualBarLabels').map(function(label, i) {
       var color;
-      color = getSeriesColor(d, i);
+      color = getSeriesColor(label, i);
+      if (_this.get('stackBars')) {
+        i = _this.get('labelIDMapping')[label];
+      }
       return {
-        label: d,
+        label: label,
         fill: color,
         stroke: color,
         icon: function() {
@@ -2099,7 +2108,7 @@ Ember.Charts.VerticalBarComponent = Ember.Charts.ChartComponent.extend(Ember.Cha
         selector: ".grouping-" + i
       };
     });
-  }).property('individualBarLabels', 'getSeriesColor'),
+  }).property('individualBarLabels.[]', 'getSeriesColor', 'stackBars', 'labelIDMapping.[]'),
   showDetails: Ember.computed(function() {
     var _this = this;
     if (!this.get('isInteractive')) {
@@ -2160,22 +2169,24 @@ Ember.Charts.VerticalBarComponent = Ember.Charts.ChartComponent.extend(Ember.Cha
     zeroDisplacement = 1;
     yScale = this.get('yScale');
     return {
-      "class": function(d, i) {
-        return "grouping-" + i;
+      "class": function(barSection, i) {
+        var id;
+        id = _this.get('labelIDMapping')[barSection.label];
+        return "grouping-" + id;
       },
       'stroke-width': 0,
-      width: function(d) {
+      width: function(barSection) {
         return _this.get('groupWidth');
       },
       x: null,
-      y: function(d) {
-        return yScale(d.y1) + zeroDisplacement;
+      y: function(barSection) {
+        return yScale(barSection.y1) + zeroDisplacement;
       },
-      height: function(d) {
-        return yScale(d.y0) - yScale(d.y1);
+      height: function(barSection) {
+        return yScale(barSection.y0) - yScale(barSection.y1);
       }
     };
-  }).property('yScale', 'groupWidth'),
+  }).property('yScale', 'groupWidth', 'labelIDMapping.[]'),
   groupedBarAttrs: Ember.computed(function() {
     var yScale, zeroDisplacement,
       _this = this;
