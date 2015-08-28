@@ -44,6 +44,38 @@ Ember.Charts.VerticalBarComponent = Ember.Charts.ChartComponent.extend(
   # Data
   # ----------------------------------------------------------------------------
 
+  # Override sortedData from SortableChartMixin
+  sortedData: Ember.computed ->
+    if @get 'stackBars'
+      data = @get 'data'
+      groupedData = _.groupBy data, (d) -> d.group
+      summedGroupValues = []
+      for group, groupData of groupedData
+        if group isnt null
+          summedGroupValues.pushObject
+            group: group
+            value: groupData.reduce (previousValue, dataObject, index) ->
+                previousValue + dataObject.value
+              , 0
+      key = @get 'sortKey'
+      sortAscending = @get 'sortAscending'
+      if Ember.isEmpty(summedGroupValues)
+        []
+      else if key?
+        sortedGroups = summedGroupValues.sortBy key
+        unless sortAscending
+          sortedGroups = sortedGroups.reverse()
+        newData = []
+        for groupObj in sortedGroups
+          newData.pushObjects groupedData[groupObj.group]
+        newData
+      else
+        data
+    else
+      @_super()
+
+  .property 'data.[]', 'sortKey', 'sortAscending', 'stackBars'
+
   # Aggregates objects provided in `data` in a dictionary, keyed by group names
   groupedData: Ember.computed ->
     data = @get 'sortedData'
@@ -269,7 +301,7 @@ Ember.Charts.VerticalBarComponent = Ember.Charts.ChartComponent.extend(
   # ----------------------------------------------------------------------------
 
   hasLegend: Ember.computed ->
-    @get('stackBars') or @get('isGrouped') and @get('legendItems.length') > 1 and 
+    @get('stackBars') or @get('isGrouped') and @get('legendItems.length') > 1 and
       @get 'showLegend'
   .property 'stackBars', 'isGrouped', 'legendItems.length', 'showLegend'
 
@@ -521,7 +553,7 @@ Ember.Charts.VerticalBarComponent = Ember.Charts.ChartComponent.extend(
         dy: @get('labelPadding')
 
   updateAxes: ->
-    
+
     #tickSize isn't doing anything here, it should take two arguments
     yAxis = d3.svg.axis()
       .scale(@get 'yScale')

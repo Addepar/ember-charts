@@ -1874,6 +1874,47 @@ Ember.Charts.VerticalBarComponent = Ember.Charts.ChartComponent.extend(Ember.Cha
     return this.get('xBetweenGroupDomain.length') * this.get('xWithinGroupDomain.length') || 0;
   }).property('xBetweenGroupDomain', 'xWithinGroupDomain'),
   maxLabelHeight: 50,
+  sortedData: Ember.computed(function() {
+    var data, group, groupData, groupObj, groupedData, key, newData, sortAscending, sortedGroups, summedGroupValues, _i, _len;
+    if (this.get('stackBars')) {
+      data = this.get('data');
+      groupedData = _.groupBy(data, function(d) {
+        return d.group;
+      });
+      summedGroupValues = [];
+      for (group in groupedData) {
+        groupData = groupedData[group];
+        if (group !== null) {
+          summedGroupValues.pushObject({
+            group: group,
+            value: groupData.reduce(function(previousValue, dataObject, index) {
+              return previousValue + dataObject.value;
+            }, 0)
+          });
+        }
+      }
+      key = this.get('sortKey');
+      sortAscending = this.get('sortAscending');
+      if (Ember.isEmpty(summedGroupValues)) {
+        return [];
+      } else if (key != null) {
+        sortedGroups = summedGroupValues.sortBy(key);
+        if (!sortAscending) {
+          sortedGroups = sortedGroups.reverse();
+        }
+        newData = [];
+        for (_i = 0, _len = sortedGroups.length; _i < _len; _i++) {
+          groupObj = sortedGroups[_i];
+          newData.pushObjects(groupedData[groupObj.group]);
+        }
+        return newData;
+      } else {
+        return data;
+      }
+    } else {
+      return this._super();
+    }
+  }).property('data.[]', 'sortKey', 'sortAscending', 'stackBars'),
   groupedData: Ember.computed(function() {
     var data, groupName, _i, _len, _ref,
       _this = this;
