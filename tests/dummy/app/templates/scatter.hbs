@@ -1,0 +1,83 @@
+<div class="col-md-10 col-md-offset-2 left-border main-content-container">
+  <div class="chart-header">
+    <h2>Scatter Plot</h2>
+  </div>
+
+  <div class="example-container">
+    <div class="chart-container">
+      {{scatter-chart
+        dotRadius=dotRadius
+        data=data
+        isShowingTotal=isShowingTotal
+        totalPointData=totalPointData
+        selectedSeedColor=selectedSeedColor
+        xValueDisplayName=xValueDisplayName
+        yValueDisplayName=yValueDisplayName
+      }}
+    </div>
+  </div>
+
+  <div class="row bumper-30">
+    <div class="col-md-6">
+      <h4>Ember Bindings</h4>
+
+      <div class="form-horizontal">
+        <div class="form-group">
+          <label class="col-lg-4 control-label">Data</label>
+          <div class="col-lg-8">
+            {{view "select"
+             content=availableDataSets
+             value=selectedData
+             class="form-control"
+            }}
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="col-lg-4 control-label">Color</label>
+          <div class="col-lg-8">
+            {{view "select"
+              content=seedColorNames
+              value=selectedSeedColorName
+              class="form-control"
+            }}
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="col-lg-4 control-label">Dot Radius</label>
+          <div class="col-lg-8">
+           {{scrubber-component min="2" max="20" step="1" value=dotRadius}}
+            <span class="help-block">Dot Radius: {{dotRadius}}</span>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="col-lg-4 control-label">X Display Name</label>
+          <div class="col-lg-8">
+            {{input value=xValueDisplayName}}
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="col-lg-4 control-label">Y Display Name</label>
+          <div class="col-lg-8">
+            {{input value=yValueDisplayName}}
+          </div>
+        </div>
+        <div class="form-group">
+          <div class="col-lg-offset-4 col-lg-8">
+            <div class="checkbox">
+              <label>
+                {{input type="checkbox" checked=isShowingTotal }} Show Portfolio Total
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-6">
+      <h4>JSON Data</h4>
+      <div class="chart-json">
+<pre>{{prettyPrintedData}}</pre>
+      </div>
+    </div>
+  </div>
+</div>

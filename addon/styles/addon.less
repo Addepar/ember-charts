@@ -1,0 +1,274 @@
+//
+// Ember-Chart Variables
+// -----------------------------------------------------------------------------
+
+/* Typography */
+@label-color:             #888; //#585858;
+@font-size:               11px;
+
+@axis-color:              #aaa;
+@axis-minor-tick-color:   #ddd;
+@highlight-color:         #00c0f3;
+
+//
+// General Chart CSS
+// ----------------------------------------------------------------------
+
+
+svg {
+  // Note: Important for Firefox
+  display: block;
+
+  .chart-background {
+    fill: transparent;
+  }
+
+  .axis {
+    line,
+    path {
+      fill: none;
+      stroke: @axis-color;
+      stroke-width: 1px;
+    }
+
+    .tick.minor line {
+      stroke: @axis-minor-tick-color;
+      stroke-width: 2px;
+    }
+  }
+
+  text {
+    cursor: default;
+    fill: @label-color;
+    font-size: @font-size;
+    shape-rendering: crispEdges;
+  }
+}
+
+//
+// Horizontal Bar Chart
+// ----------------------------------------------------------------------
+
+.chart-horizontal-bar .axis {
+  line,
+  path {
+    fill: none;
+    stroke: #000;
+    shape-rendering: crispEdges;
+    stroke: #C7C7C7;
+  }
+}
+
+//
+// Pie Chart
+// ----------------------------------------------------------------------
+
+.chart-pie {
+  .arc path {
+    stroke: #fff;
+  }
+
+  .legend.hovered text {
+    stroke: none !important;
+  }
+}
+
+//
+// Time Series Chart
+// ----------------------------------------------------------------------
+
+.chart-time-series {
+  .line {
+    fill: none;
+
+    &.hovered {
+      stroke-width: 3px;
+    }
+  }
+
+  .axis {
+    .tick {
+      fill: none;
+      stroke: #aaaaaa;
+      stroke-width: 1px;
+      stroke-dasharray: 1px, 3px;
+      opacity: 1;
+      // TODO(Peter): hack
+      font-size: 11px;
+
+      &.major {
+        stroke-dasharray: none;
+      }
+    }
+
+    path {
+      opacity: 0;
+    }
+  }
+
+  // .y.axis path {
+  //   opacity: 0;
+  // }
+
+  // .y.axis .tick {
+  //   font-size: 11px;
+  // }
+
+  // .rule {
+  //   stroke: @axis-minor-tick-color;
+  // }
+
+  // .line-marker,
+  // .line-marker.hovered {
+  //   stroke-width: 1.5px;
+  //   /*fill: transparent !important;*/
+  // }
+}
+
+//
+// Vertical Bar Chart
+// ----------------------------------------------------------------------
+
+.chart-vertical-bar,
+.chart-vertical-bar-advanced,
+.chart-grouped-bar {
+  .axis {
+    .tick {
+      fill: none;
+      stroke: #aaaaaa;
+      stroke-width: 1px;
+      stroke-dasharray: 1px, 3px;
+      opacity: 1;
+
+      &.major {
+        stroke-dasharray: none;
+      }
+    }
+
+    path {
+      opacity: 0;
+    }
+  }
+}
+
+//
+// Scatter Plot
+// ----------------------------------------------------------------------
+
+.chart-scatter {
+  .axis {
+    .tick {
+      fill: none;
+      stroke: #aaaaaa;
+      stroke-width: 1px;
+      stroke-dasharray: 1px, 3px;
+      opacity: 1;
+    }
+
+    path {
+      opacity: 0;
+    }
+  }
+}
+
+//
+// Bubble
+// ----------------------------------------------------------------------
+
+// TODO(Louis): This is bad and needs refactoring
+circle {
+  stroke-width: 1px;
+  stroke: rgba(0, 0, 0, 0.1);
+}
+
+//
+// Misc
+// ----------------------------------------------------------------------
+
+.chart-brush {
+  circle {
+    -webkit-transition: fill-opacity 250ms linear;
+  }
+
+  .selecting circle {
+    fill-opacity: .2;
+  }
+
+  .selecting circle.selected {
+    stroke: #f00;
+  }
+
+  .resize path {
+    fill: #666;
+    fill-opacity: .8;
+    stroke: #000;
+    stroke-width: 1.5px;
+  }
+
+  .axis path,
+  .axis line {
+    fill: none;
+    stroke: #000;
+    shape-rendering: crispEdges;
+  }
+
+  .brush .extent {
+    fill-opacity: .125;
+    shape-rendering: crispEdges;
+  }
+}
+
+//
+// interactivity
+// ----------------------------------------------------------------------
+
+.chart-frame .chart-tooltip {
+  .background,
+  .callout-tail {
+    fill: #08c !important;
+    stroke: #08c !important;
+  }
+
+  line,
+  path,
+  rect {
+    stroke-width: 0;
+  }
+}
+
+.chart-frame {
+  .hovered {
+    fill: #08c !important;
+    stroke: #08c !important;
+
+    line,
+    path,
+    rect,
+    circle,
+    text {
+      fill: #08c !important;
+      stroke: #08c !important;
+    }
+  }
+
+  .series path.hovered {
+    fill: none !important;
+  }
+}
+
+.chart-float-tooltip {
+  position: absolute;
+  top: 50px;
+  left: 50px;
+  background: #555;
+  color: #eee;
+  padding: 5px;
+  font-size: 12px;
+  z-index: 10;
+  line-height: 14px;
+  border: solid 1px rgba(255, 255, 255, 0.25);
+
+  .tip-label {
+    display: block;
+  }
+}
