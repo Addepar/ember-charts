@@ -105,3 +105,11 @@ Copyright © 2015 Addepar, Inc. All Rights Reserved
 Licensed under the BSD License (the "License"); you may not use this work
 except in compliance with the License. You may obtain a copy of the License in
 the LICENSE file.
+=======
+# Ember-charts-addon
+
+This was a temporary repository to help with Ember Charts's transition to Ember CLI. Transition is in progress now.
+
+After the transition is completed, any further work will be done at https://github.com/Addepar/ember-charts.
+
+This repository will be preserved for a while out of courtesy to anyone who was using it while we transitioned. It will eventually be shut down.
