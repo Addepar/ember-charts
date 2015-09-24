@@ -58,6 +58,14 @@ export default ChartComponent.extend(
   barLeftOffset: 0.0,
 
   // ----------------------------------------------------------------------------
+  // Time Series Chart Constants
+  // ----------------------------------------------------------------------------
+
+  // The default maximum number of labels to use along the x axis for a dynamic
+  // x axis.
+  DEFAULT_MAX_NUMBER_OF_LABELS: 10,
+
+  // ----------------------------------------------------------------------------
   // Overrides of ChartComponent methods
   // ----------------------------------------------------------------------------
 
@@ -355,14 +363,23 @@ export default ChartComponent.extend(
   // Ticks and Scales
   // ----------------------------------------------------------------------------
 
-  // Override maxNumberOfLabels in the time series labeler mixin, setting it to
-  // the dynamically computed number of ticks going on the time series axis
-  maxNumberOfLabels: Ember.computed.alias('numXTicks'),
+  // If there is a dynamic x axis, then assume the value that it is given,
+  // and if it is not a dynamic x axis, set it to the number of x axis ticks.
+  // For a dynamic x axis, let the max number of labels be the minimum of
+  // the number of x ticks and the assigned value. This is to prevent
+  // the assigned value from being so large that labels flood the x axis.
+  maxNumberOfLabels: Ember.computed('numXTicks', 'dynamicXAxis', function(key, value){
+    if(this.get('dynamicXAxis')){
+      value = _.isNaN(value) ? this.get('DEFAULT_MAX_NUMBER_OF_LABELS') : value;
+      return Math.min(value, this.get('numXTicks'));
+    }else{
+      return this.get('numXTicks');
+    }
+  }),
 
   // Create a domain that spans the larger range of bar or line data
   xDomain: Ember.computed('xBetweenGroupDomain', 'xWithinSeriesDomain',
-    '_hasBarData', '_hasLineData', function() {
-
+    '_hasBarData', '_hasLineData', 'maxNumberOfLabels', function() {
     if (!this.get('_hasBarData')) {
       return this.get('xWithinSeriesDomain');
     }
@@ -444,7 +461,10 @@ export default ChartComponent.extend(
   }),
 
   yRange: Ember.computed('graphicTop', 'graphicHeight', function() {
-    return [ this.get('graphicTop') + this.get('graphicHeight'), this.get('graphicTop') ];
+    return [
+      this.get('graphicTop') + this.get('graphicHeight'),
+      this.get('graphicTop')
+    ];
   }),
 
   yScale: Ember.computed('yDomain', 'yRange', 'numYTicks', function() {
@@ -455,7 +475,10 @@ export default ChartComponent.extend(
   }),
 
   xRange: Ember.computed( 'graphicLeft', 'graphicWidth', function() {
-    return [ this.get('graphicLeft'), this.get('graphicLeft') + this.get('graphicWidth') ];
+    return [
+      this.get('graphicLeft'),
+      this.get('graphicLeft') + this.get('graphicWidth')
+    ];
   }),
 
   xTimeScale: Ember.computed('xDomain', 'xRange', function() {

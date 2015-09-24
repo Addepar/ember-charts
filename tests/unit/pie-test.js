@@ -1,6 +1,6 @@
  import Ember from "ember";
  import { test, moduleForComponent } from 'ember-qunit';
- 
+
  moduleForComponent('pie-chart', '[Unit] PieChartComponent', {
    needs: [ 'template:components/chart-component'],
    beforeEach: function () {},
@@ -118,7 +118,7 @@
 	}
   ]
 };
- 
+
 test("it exists", function(assert){
   assert.ok(this.subject());
 });
