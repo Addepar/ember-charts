@@ -11,6 +11,7 @@ export default Ember.Mixin.create({
     return this.get('hasLegend') ? 30 : 0;
   }),
 
+  // Gives the maximum of the lengths of the labels given in svgTextArray
   maxLabelLength: function(svgTextArray) {
     var maxLabel = 0;
     svgTextArray.each(function() {

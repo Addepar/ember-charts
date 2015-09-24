@@ -26,6 +26,11 @@ var countRects = function() {
   return $('.chart-time-series svg rect').length;
 };
 
+test("it exists", function(assert){
+  assert.equal(find('.chart-time-series').length, 1,
+    'The time series chart renders');
+});
+
 test('tooltip mouseover with bars: monthly_return_single_series', function(assert) {
   assert.expect(4);
 
@@ -37,7 +42,7 @@ test('tooltip mouseover with bars: monthly_return_single_series', function(asser
       isVisible: true,
       label: '2013-05-15',
       name: 'Financial analytics software: ',
-      value: '49,668.00' 
+      value: '49,668.00'
     });
   });
 
@@ -45,7 +50,7 @@ test('tooltip mouseover with bars: monthly_return_single_series', function(asser
 
 test('tooltip mouseout with bars: monthly_return_single_series', function(assert) {
   assert.expect(4);
-  
+
   domTriggerEvent('.grouping-0', 'mouseover');
   domTriggerEvent('.grouping-0', 'mouseout');
 
@@ -301,7 +306,3 @@ test('select bars: empty', function(assert) {
     assert.equal( countRects(), 0);
   });
 });
-
-
-
-
