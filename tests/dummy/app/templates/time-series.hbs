@@ -13,8 +13,10 @@
         barPadding=barPadding
         barGroupPadding=barGroupPadding
         barLeftOffset=barLeftOffset
+        maxNumberOfLabels=maxNumberOfLabels
         yAxisFromZero=yAxisFromZero
         marginLeft=30
+        dynamicXAxis=dynamicXAxis
       }}
     </div>
   </div>
@@ -61,6 +63,7 @@
                 content=tickIntervals
                 value=selectedInterval
                 class="form-control"
+                disabled=dynamicXAxis
             }}
           </div>
         </div>
@@ -92,6 +95,22 @@
             </div>
           </div>
         </div>
+        <div class="form-group">
+          <div class="col-lg-offset-4 col-lg-8">
+            <div class="checkbox">
+              <label>{{input type="checkbox" checked=dynamicXAxis}} Use Dynamic X-Axis</label>
+            </div>
+          </div>
+        </div>
+        {{#if dynamicXAxis}}
+          <div class="form-group">
+            <label class="col-lg-4 control-label">Maximum Number of Labels (for use with a Dynamic X-Axis)</label>
+            <div class="col-lg-8">
+              {{scrubber-component min="2" max="30" step="1" value=maxNumberOfLabels}}
+              <span class="help-block">Maximum Number of Labels: {{maxNumberOfLabels}}</span>
+            </div>
+          </div>
+        {{/if}}
       </div>
     </div>
 

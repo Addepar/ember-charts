@@ -41,6 +41,7 @@ export default SlideController.extend({
   barGroupPadding: 0.25,
   barLeftOffset: 0.0,
   yAxisFromZero: false,
+  dynamicXAxis: false,
 
   // ---------
   // Data Selection
@@ -53,7 +54,7 @@ export default SlideController.extend({
   availableBarDataSets: Ember.computed('barDataHash', function() {
     return Ember.A( _.keys( this.get('barDataHash')));
   }),
-    
+
   // display line data in the chart guide
   data: Ember.computed.alias('lineData'),
 
@@ -94,11 +95,11 @@ export default SlideController.extend({
       zeroes_ungrouped: zeroes_ungrouped,
       same_value_grouped: same_value_grouped,
       same_value_ungrouped: same_value_ungrouped,
-      
+
       empty: data.empty
     };
   }),
-      
+
   barDataHash: Ember.computed.alias('lineDataHash'),
   selectedLineData: 'daily_two_series',
   selectedBarData: 'monthly_return_triple_series',

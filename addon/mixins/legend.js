@@ -21,6 +21,7 @@ export default Ember.Mixin.create({
   legendLabelPadding: 10,
 
   // Toggle for whether or not to show the legend
+  // if you want to override default legend behavior, override showLegend
   showLegend: true,
 
   // ----------------------------------------------------------------------------
@@ -32,7 +33,7 @@ export default Ember.Mixin.create({
 
   legendHeight: Ember.computed('numLegendRows', 'legendItemHeight', function() {
     return this.get('numLegendRows') * this.get('legendItemHeight');
-  }), 
+  }),
 
   // Dynamically calculate the size of each legend item
   legendItemWidth: Ember.computed('legendWidth', 'minLegendItemWidth', 'maxLegendItemWidth',
@@ -61,7 +62,7 @@ export default Ember.Mixin.create({
   // Maximum width of each label before it gets truncated
   legendLabelWidth: Ember.computed('legendItemWidth', 'legendIconRadius', 'legendLabelPadding', function() {
     return (this.get('legendItemWidth') - this.get('legendIconRadius') - this.get('legendLabelPadding') * 2);
-  }), 
+  }),
 
   // ----------------------------------------------------------------------------
   // Styles
@@ -120,10 +121,10 @@ export default Ember.Mixin.create({
       }
     };
   }),
-  
+
   legendIconAttrs: Ember.computed('legendIconRadius', function() {
     var iconRadius = this.get('legendIconRadius');
-    
+
     return {
       d: function(d, i) {
         if (d.icon(d) === 'line') {
@@ -235,7 +236,7 @@ export default Ember.Mixin.create({
 
     var showLegendDetails = this.get('showLegendDetails');
     var hideLegendDetails = this.get('hideLegendDetails');
-    var legendItems = 
+    var legendItems =
       legend.selectAll('.legend-item')
             .data(this.get('legendItems'))
             .enter()
