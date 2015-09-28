@@ -2,7 +2,7 @@ import Ember from 'ember';
 import ChartComponent from './chart-component';
 
 import LegendMixin from '../mixins/legend';
-import TimeSeriesLabelerMixin from '../mixins/time-series-laberer';
+import TimeSeriesLabelerMixin from '../mixins/time-series-labeler';
 import FloatingTooltipMixin from '../mixins/floating-tooltip';
 import HasTimeSeriesRuleMixin from '../mixins/has-time-series-rule';
 import AxesMixin from '../mixins/axes';
@@ -12,7 +12,7 @@ import NoMarginChartMixin from '../mixins/no-margin-chart';
 import { groupBy } from '../utils/group-by';
 
 export default ChartComponent.extend(
-  LegendMixin, TimeSeriesLabelerMixin, FloatingTooltipMixin, 
+  LegendMixin, TimeSeriesLabelerMixin, FloatingTooltipMixin,
   HasTimeSeriesRuleMixin, AxesMixin, FormattableMixin, NoMarginChartMixin, {
 
   classNames: ['chart-time-series'],
@@ -96,7 +96,7 @@ export default ChartComponent.extend(
     if (Ember.isEmpty(lineData)) {
       return [];
     }
-    
+
     var _this = this;
     var groups = groupBy(lineData, function(datum) {
       return _this._getLabelOrDefault(datum);
@@ -106,7 +106,7 @@ export default ChartComponent.extend(
     //   values = groups[groupName];
     //   _results.push();
     // }
-    return _.map(groups, function( values, groupName) { 
+    return _.map(groups, function( values, groupName) {
       return {
         group: groupName,
         values: values
@@ -233,7 +233,7 @@ export default ChartComponent.extend(
   // width of the graphic
   graphicWidth: Ember.computed('width', 'graphicLeft', function() {
     return (this.get('width') - this.get('graphicLeft'));
-  }), 
+  }),
 
   graphicHeight: Ember.computed('height', 'legendHeight', 'legendChartPadding', function() {
     return (this.get('height') - this.get('legendHeight') - this.get('legendChartPadding'));
@@ -269,7 +269,7 @@ export default ChartComponent.extend(
     } else {
       return 'day';
     }
-  }), 
+  }),
 
   // this method seems very flaky to me; making padding by changing domain
   // convention is to change range
@@ -289,7 +289,7 @@ export default ChartComponent.extend(
     var paddedStart = this._padTimeBackward(startTime, timeDelta);
     var paddedEnd = this._padTimeForward(endTime, timeDelta);
     return [ new Date(paddedStart), new Date(paddedEnd) ];
-  }), 
+  }),
 
   // The time range over which all bar groups are drawn
   xBetweenGroupDomain: Ember.computed.alias('barDataExtent'),
@@ -300,7 +300,7 @@ export default ChartComponent.extend(
   // The space (in pixels) allocated to each bar, including padding
   barWidth: Ember.computed('xGroupScale', function() {
     return this.get('xGroupScale').rangeBand();
-  }), 
+  }),
 
   paddedGroupWidth: Ember.computed('timeDelta', 'xTimeScale', 'xBetweenGroupDomain', function() {
     var timeDelta = this.get('timeDelta');
@@ -308,7 +308,7 @@ export default ChartComponent.extend(
     var t1 = this.get('xBetweenGroupDomain')[0];
     var t2 = (timeDelta === 'quarter') ? d3.time['month'].offset(t1, 3) : d3.time[timeDelta].offset(t1, 1);
     return (scale(t2) - scale(t1));
-  }), 
+  }),
   // ----------------------------------------------------------------------------
   // Line Drawing Scales
   // ----------------------------------------------------------------------------
@@ -318,10 +318,10 @@ export default ChartComponent.extend(
     if (Ember.isEmpty(data)) {
       return [];
     }
-    return data.map(function(d) { 
-      return d.group; 
+    return data.map(function(d) {
+      return d.group;
     });
-  }), 
+  }),
 
   lineDataExtent: Ember.computed('_groupedLineData.@each.values', function() {
     var data = this.get('_groupedLineData');
@@ -385,15 +385,15 @@ export default ChartComponent.extend(
     var lineData = this.get('_groupedLineData');
     var groupData = this.get('_groupedBarData');
 
-    var maxOfSeries = d3.max(lineData, function(d) { 
-      return d3.max(d.values, function(dd) { 
+    var maxOfSeries = d3.max(lineData, function(d) {
+      return d3.max(d.values, function(dd) {
         return dd.value;
-      }); 
+      });
     });
 
-    var minOfSeries = d3.min(lineData, function(d) { 
-      return d3.min(d.values, function(dd) { 
-        return dd.value; 
+    var minOfSeries = d3.min(lineData, function(d) {
+      return d3.min(d.values, function(dd) {
+        return dd.value;
       });
     });
 
@@ -445,24 +445,24 @@ export default ChartComponent.extend(
 
   yRange: Ember.computed('graphicTop', 'graphicHeight', function() {
     return [ this.get('graphicTop') + this.get('graphicHeight'), this.get('graphicTop') ];
-  }), 
+  }),
 
   yScale: Ember.computed('yDomain', 'yRange', 'numYTicks', function() {
     return d3.scale.linear()
       .domain(this.get('yDomain'))
       .range(this.get('yRange'))
       .nice(this.get('numYTicks'));
-  }), 
+  }),
 
   xRange: Ember.computed( 'graphicLeft', 'graphicWidth', function() {
     return [ this.get('graphicLeft'), this.get('graphicLeft') + this.get('graphicWidth') ];
-  }), 
+  }),
 
   xTimeScale: Ember.computed('xDomain', 'xRange', function() {
     return d3.time.scale()
       .domain(this.get('xDomain'))
       .range(this.get('xRange'));
-  }), 
+  }),
 
   xGroupScale: Ember.computed('xWithinGroupDomain', 'paddedGroupWidth',
     'barPadding', 'barGroupPadding', function() {
@@ -476,12 +476,12 @@ export default ChartComponent.extend(
   minAxisValue: Ember.computed('yScale', function() {
     var yScale = this.get('yScale');
     return yScale.domain()[0];
-  }), 
+  }),
 
   maxAxisValue: Ember.computed('yScale', function() {
     var yScale = this.get('yScale');
     return yScale.domain()[1];
-  }), 
+  }),
 
   // ----------------------------------------------------------------------------
   // Tooltip Configuration
@@ -496,11 +496,11 @@ export default ChartComponent.extend(
     var _this = this;
     return function(data, i, element) {
       d3.select(element).classed('hovered', true);
-      
+
       var time = data.labelTime != null ? data.labelTime : data.time;
       var content = "<span class=\"tip-label\">" + (_this.get('formatTime')(time)) + "</span>";
       var formatLabelFunction = _this.get('formatLabelFunction');
-      
+
       var addValueLine = function(d) {
         content += "<span class=\"name\">" + d.group + ": </span>";
         return content += "<span class=\"value\">" + (formatLabelFunction(d.value)) + "</span><br/>";
@@ -542,7 +542,7 @@ export default ChartComponent.extend(
         return "translate(" + (-_this.get('paddedGroupWidth') / 2) + ",0)";
       }
     };
-  }), 
+  }),
 
   groupedBarAttrs: Ember.computed( 'xTimeScale', 'xGroupScale', 'barWidth', 'yScale',
     'zeroDisplacement', 'barLeftOffset', function() {
@@ -551,16 +551,16 @@ export default ChartComponent.extend(
     var xGroupScale = this.get('xGroupScale');
     var yScale = this.get('yScale');
     var zeroDisplacement = this.get('zeroDisplacement');
-    
+
     return {
-      class: function(d,i) { 
+      class: function(d,i) {
         return ("grouping-" + i);
       },
 
       'stroke-width': 0,
       width: this.get('barWidth'),
       x: function(d) {
-        return (xGroupScale(d.label) + xTimeScale(d.time)); 
+        return (xGroupScale(d.label) + xTimeScale(d.time));
       },
 
       y: function(d) {
@@ -570,7 +570,7 @@ export default ChartComponent.extend(
       height: function(d) {
         // prevent zero-height bars from causing errors because of zeroDisplacement
         var zeroLine = Math.max(0, yScale.domain()[0]);
-        return Math.max(0, 
+        return Math.max(0,
             (d.value > zeroLine) ?
               (Math.abs(yScale(zeroLine) - yScale(d.value)) - zeroDisplacement)
               :
@@ -586,7 +586,7 @@ export default ChartComponent.extend(
       .x( function(d) { return _this.get('xTimeScale')(d.time); })
       .y( function(d) { return _this.get('yScale')(d.value); })
       .interpolate( this.get('interpolate') ? 'basis' : 'linear');
-  }), 
+  }),
 
   // Line styles. Implements Craig's design spec, which ensures that out of the
   // first six lines, there are always two distinguishing styles between every
@@ -630,11 +630,11 @@ export default ChartComponent.extend(
   lineAttrs: Ember.computed('line', 'getSeriesColor', function() {
     var _this = this;
     return {
-        class: function(d,i) { 
-          return ("line series-" + i); 
+        class: function(d,i) {
+          return ("line series-" + i);
         },
-        d: function(d) { 
-          return _this.get('line')(d.values); 
+        d: function(d) {
+          return _this.get('line')(d.values);
         },
         stroke: this.get('lineColorFn'),
         'stroke-width': function(d, i) {
@@ -667,7 +667,7 @@ export default ChartComponent.extend(
           }
         }
     };
-  }), 
+  }),
 
   // ----------------------------------------------------------------------------
   // Color Configuration
@@ -687,7 +687,7 @@ export default ChartComponent.extend(
 
   secondaryMaximumTint: Ember.computed( 'numLines', function() {
     return (this.get('numLines') === 0) ? 0.8 : 0.85;
-  }), 
+  }),
 
   // ----------------------------------------------------------------------------
   // Legend Configuration
@@ -695,7 +695,7 @@ export default ChartComponent.extend(
 
   hasLegend: Ember.computed( 'legendItems.length', 'showLegend', function() {
     return (this.get('legendItems.length') > 1) && (this.get('showLegend'));
-  }), 
+  }),
 
   legendItems: Ember.computed('xBetweenSeriesDomain', 'xWithinGroupDomain',
     'getSeriesColor', 'getSecondarySeriesColor', function() {
@@ -712,7 +712,7 @@ export default ChartComponent.extend(
         width: _this.get('lineAttrs')['stroke-width'](d, i),
         dotted: _this.get('lineAttrs')['stroke-dasharray'](d, i),
         icon: function() { return 'line'; },
-        selector: ".series-" + i 
+        selector: ".series-" + i
       };
       return res;
     }).concat( _this.get('xWithinGroupDomain').map(function(d, i) {
@@ -804,7 +804,7 @@ export default ChartComponent.extend(
     var graphicTop = this.get('graphicTop');
     var graphicHeight = this.get('graphicHeight');
     var gXAxis = this.get('xAxis');
-    
+
     gXAxis.attr({
         transform: "translate(0," + graphicTop + graphicHeight + ")"
       }).call(xAxis);
@@ -854,10 +854,10 @@ export default ChartComponent.extend(
 
     var bars = groups.selectAll('rect').data( function(d) { return d; });
     bars.enter().append('rect')
-      .on("mouseover", function(d,i) { 
+      .on("mouseover", function(d,i) {
         return showDetails(d,i,this);
       })
-      .on("mouseout", function(d,i) { 
+      .on("mouseout", function(d,i) {
         return hideDetails(d,i,this);
       });
     bars.exit().remove();

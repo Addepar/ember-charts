@@ -10,23 +10,11 @@ cache:
     - node_modules
     - vendor
 
-before_script:
-  - "grunt build_tests"
-  - "grunt build_app"
-
-script:
-  - ember try $EMBER_TRY_SCENARIO test
-
 env:
   - EMBER_TRY_SCENARIO=default
-  - EMBER_TRY_SCENARIO=ember-release
-  - EMBER_TRY_SCENARIO=ember-beta
-  - EMBER_TRY_SCENARIO=ember-canary
 
 matrix:
   fast_finish: true
-  allow_failures:
-    - env: EMBER_TRY_SCENARIO=ember-canary
 
 before_install:
   - export PATH=/usr/local/phantomjs-2.0.0/bin:$PATH
@@ -37,3 +25,6 @@ install:
   - npm install -g bower
   - npm install
   - bower install
+
+script:
+  - ember try $EMBER_TRY_SCENARIO test
