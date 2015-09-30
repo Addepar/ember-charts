@@ -75,7 +75,7 @@ export default ChartComponent.extend(LegendMixin, FloatingTooltipMixin, AxesMixi
       summedGroupValues = [];
       for (group in groupedData) {
         groupData = groupedData[group];
-        if (group !== "null" && group !== null) {
+        if (group !== null) {
           summedGroupValues.pushObject({
             group: group,
             value: groupData.reduce(reduceGroups, 0)
