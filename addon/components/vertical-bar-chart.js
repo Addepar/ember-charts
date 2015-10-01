@@ -72,7 +72,7 @@ export default ChartComponent.extend(LegendMixin, FloatingTooltipMixin, AxesMixi
       groupedData = _.groupBy(data, function(d) {
         return d.group;
       });
-      summedGroupValues = [];
+      summedGroupValues = Ember.A();
       for (group in groupedData) {
         groupData = groupedData[group];
         if (group !== null) {
@@ -85,13 +85,13 @@ export default ChartComponent.extend(LegendMixin, FloatingTooltipMixin, AxesMixi
       key = this.get('sortKey');
       sortAscending = this.get('sortAscending');
       if (Ember.isEmpty(summedGroupValues)) {
-        return [];
+        return Ember.A();
       } else if (key != null) {
         sortedGroups = summedGroupValues.sortBy(key);
         if (!sortAscending) {
           sortedGroups = sortedGroups.reverse();
         }
-        newData = [];
+        newData = Ember.A();
         for (i = 0, len = sortedGroups.length; i < len; i++) {
           groupObj = sortedGroups[i];
           newData.pushObjects(groupedData[groupObj.group]);
