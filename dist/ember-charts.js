@@ -4292,6 +4292,10 @@ var define, requireModule, require, requirejs;
     var groupBy = __dependency9__.groupBy;
     var LabelTrimmer = __dependency10__["default"];
 
+    function reduceGroups(previousValue, dataObject) {
+      return previousValue + dataObject.value;
+    }
+
     __exports__["default"] = ChartComponent.extend(LegendMixin, FloatingTooltipMixin, AxesMixin,
       FormattableMixin, SortableChartMixin, NoMarginChartMixin, {
 
@@ -4327,7 +4331,7 @@ var define, requireModule, require, requirejs;
 
       numBars: Ember.computed('xBetweenGroupDomain', 'xWithinGroupDomain', function() {
         return this.get('xBetweenGroupDomain.length') * this.get('xWithinGroupDomain.length') || 0;
-      }), 
+      }),
 
       // Space allocated for rotated labels on the bottom of the chart. If labels
       // are rotated, they will be extended beyond labelHeight up to maxLabelHeight
@@ -4337,6 +4341,52 @@ var define, requireModule, require, requirejs;
       // Data
       // ----------------------------------------------------------------------------
 
+      // Override sortedData from SortableChartMixin
+      sortedData: Ember.computed('data.[]', 'sortKey',
+      'sortAscending', 'stackBars',
+      function() {
+        var data, group, groupData, groupObj, groupedData, i, key,
+        len, newData, sortAscending, sortedGroups, summedGroupValues;
+
+        if (this.get('stackBars')) {
+
+          data = this.get('data');
+          groupedData = _.groupBy(data, function(d) {
+            return d.group;
+          });
+          summedGroupValues = Ember.A();
+          for (group in groupedData) {
+            groupData = groupedData[group];
+            if (group !== null) {
+              summedGroupValues.pushObject({
+                group: group,
+                value: groupData.reduce(reduceGroups, 0)
+              });
+            }
+          }
+          key = this.get('sortKey');
+          sortAscending = this.get('sortAscending');
+          if (Ember.isEmpty(summedGroupValues)) {
+            return Ember.A();
+          } else if (key != null) {
+            sortedGroups = summedGroupValues.sortBy(key);
+            if (!sortAscending) {
+              sortedGroups = sortedGroups.reverse();
+            }
+            newData = Ember.A();
+            for (i = 0, len = sortedGroups.length; i < len; i++) {
+              groupObj = sortedGroups[i];
+              newData.pushObjects(groupedData[groupObj.group]);
+            }
+            return newData;
+          } else {
+            return data;
+          }
+        } else {
+          return this._super.apply(this, arguments);
+        }
+      }),
+
       // Aggregates objects provided in `data` in a dictionary, keyed by group names
       groupedData: Ember.computed('sortedData', 'stackBars', 'ungroupedSeriesName', function() {
         var data = this.get('sortedData');
@@ -4345,7 +4395,7 @@ var define, requireModule, require, requirejs;
        	}
 
         var _this = this;
-        data = groupBy(data, function(d) { 
+        data = groupBy(data, function(d) {
           return (d.group || _this.get('ungroupedSeriesName'));
         });
 
@@ -4416,7 +4466,7 @@ var define, requireModule, require, requirejs;
               y1: y0 += Math.max(d.value, 0)
             };
           });
-          
+
           return [{
             group: this.get('data.firstObject.group'),
             values: this.get('data'),
@@ -4460,7 +4510,7 @@ var define, requireModule, require, requirejs;
 
       graphicWidth: Ember.computed('width', 'labelWidthOffset', function() {
          return this.get('width') - this.get('labelWidthOffset');
-      }), 
+      }),
 
       graphicHeight: Ember.computed('height', 'legendHeight', 'legendChartPadding', function() {
         return this.get('height') - this.get('legendHeight') - this.get('legendChartPadding');
@@ -4474,18 +4524,18 @@ var define, requireModule, require, requirejs;
       yDomain: Ember.computed('finishedData', 'stackBars', function() {
         var finishedData = this.get('finishedData');
         var minOfGroups = d3.min(finishedData, function(d) {
-          return _.min( d.values.map( function(dd) { 
-            return dd.value; 
+          return _.min( d.values.map( function(dd) {
+            return dd.value;
           }));
         });
 
         var maxOfGroups = d3.max(finishedData, function(d) {
-          return _.max(d.values.map(function(dd) { 
-            return dd.value; 
+          return _.max(d.values.map(function(dd) {
+            return dd.value;
           }));
         });
 
-        var maxOfStacks = d3.max(finishedData, function(d) { 
+        var maxOfStacks = d3.max(finishedData, function(d) {
           return d.totalValue;
         });
 
@@ -4521,7 +4571,7 @@ var define, requireModule, require, requirejs;
           .domain(this.get('yDomain'))
           .range([ this.get('graphicTop') + this.get('graphicHeight'), this.get('graphicTop') ])
           .nice(this.get('numYTicks'));
-      }), 
+      }),
 
       individualBarLabels: Ember.computed('groupedData.@each', function() {
 
@@ -4529,7 +4579,7 @@ var define, requireModule, require, requirejs;
           return _.pluck(g, 'label');
         });
         return _.uniq( _.flatten(groups));
-      }), 
+      }),
 
       // The range of labels assigned to each group
       xBetweenGroupDomain: Ember.computed.alias('groupNames'),
@@ -4585,14 +4635,14 @@ var define, requireModule, require, requirejs;
         return d3.scale.ordinal()
           .domain(this.get('xBetweenGroupDomain'))
           .rangeRoundBands([0, this.get('graphicWidth')], betweenGroupPadding / 2, betweenGroupPadding / 2);
-      
+
       }),
 
       // Override axis mix-in min and max values to listen to the scale's domain
       minAxisValue: Ember.computed('yScale', function() {
         var yScale = this.get('yScale');
         return yScale.domain()[0];
-      }), 
+      }),
 
       maxAxisValue: Ember.computed('yScale', function() {
         var yScale = this.get('yScale');
@@ -4611,7 +4661,7 @@ var define, requireModule, require, requirejs;
 
       hasLegend: Ember.computed('stackBars', 'isGrouped', 'legendItems.length', 'showLegend', function() {
         return this.get('stackBars') || this.get('isGrouped') && this.get('legendItems.length') > 1 && this.get('showLegend');
-      }), 
+      }),
 
       legendItems: Ember.computed('individualBarLabels', 'getSeriesColor', function() {
         var getSeriesColor = this.get('getSeriesColor');
@@ -4621,13 +4671,13 @@ var define, requireModule, require, requirejs;
             label: d,
             fill: color,
             stroke: color,
-            icon: function() { 
+            icon: function() {
               return 'square';
             },
             selector: ".grouping-" + i
           };
         });
-      }), 
+      }),
 
       // ----------------------------------------------------------------------------
       // Tooltip Configuration
@@ -4697,7 +4747,7 @@ var define, requireModule, require, requirejs;
           transform: function(d) {
             var dx = xBetweenGroupScale(d.group) ? _this.get('graphicLeft') + xBetweenGroupScale(d.group) : _this.get('graphicLeft');
             var dy = _this.get('graphicTop');
-            
+
             return "translate(" + dx + ", " + dy + ")";
           }
         };
@@ -4908,7 +4958,7 @@ var define, requireModule, require, requirejs;
       },
 
       updateAxes: function() {
-        
+
         //tickSize isn't doing anything here, it should take two arguments
         var yAxis = d3.svg.axis()
           .scale(this.get('yScale'))
@@ -5018,32 +5068,32 @@ var define, requireModule, require, requirejs;
 });
 
 window.Ember.Charts = Ember.Namespace.create();
-window.Ember.AddeparMixins = {};
 window.Ember.TEMPLATES['components/chart-component'] = require('ember-charts/templates/components/chart-component')['default'];
-window.Ember.Charts.BubbleChartComponent = require('ember-charts/components/bubble-chart')['default'];
+window.Ember.Charts.BubbleComponent = require('ember-charts/components/bubble-chart')['default'];
 window.Ember.Charts.ChartComponent = require('ember-charts/components/chart-component')['default'];
-window.Ember.Charts.HorizontalBarComponent = require('ember-charts/components/horizontal-bar-component')['default'];
-window.Ember.Charts.PieChartComponent = require('ember-charts/components/pie-chart')['default'];
-window.Ember.Charts.ScatterChartComponent = require('ember-charts/components/scatter-chart')['default'];
-window.Ember.Charts.TimeSeriesChartComponent = require('ember-charts/components/time-series-chart')['default'];
-window.Ember.Charts.VerticalBarChartComponent = require('ember-charts/components/vertical-bar-chart')['default'];
-window.Ember.AxesMixin = require('ember-charts/mixins/axes')['default'];
-window.Ember.ColorableMixin = require('ember-charts/mixins/colorable')['default'];
-window.Ember.FloatingTooltipMixin = require('ember-charts/mixins/floating-tooltip')['default'];
-window.Ember.HasTimeSeriesRuleMixin = require('ember-charts/mixins/has-time-series-rule')['default'];
-window.Ember.LegendMixin = require('ember-charts/mixins/legend')['default'];
-window.Ember.NoMarginChartMixin = require('ember-charts/mixins/no-margin-chart')['default'];
-window.Ember.PieLegendMixin = require('ember-charts/mixins/pie-legend')['default'];
-window.Ember.ResizeHandlerMixin = require('ember-charts/mixins/resize-handler')['default'];
-window.Ember.SortableChartMixin = require('ember-charts/mixins/sortable-chart')['default'];
-window.Ember.TimeSeriesLabelerMixin = require('ember-charts/mixins/time-series-labeler')['default'];
+window.Ember.Charts.HorizontalBarComponent = require('ember-charts/components/horizontal-bar-chart')['default'];
+window.Ember.Charts.PieComponent = require('ember-charts/components/pie-chart')['default'];
+window.Ember.Charts.ScatterComponent = require('ember-charts/components/scatter-chart')['default'];
+window.Ember.Charts.TimeSeriesComponent = require('ember-charts/components/time-series-chart')['default'];
+window.Ember.Charts.VerticalBarComponent = require('ember-charts/components/vertical-bar-chart')['default'];
+window.Ember.Charts.AxesMixin = require('ember-charts/mixins/axes')['default'];
+window.Ember.Charts.Colorable = require('ember-charts/mixins/colorable')['default'];
+window.Ember.Charts.FloatingTooltipMixin = require('ember-charts/mixins/floating-tooltip')['default'];
+window.Ember.Charts.Formattable = require('ember-charts/mixins/formattable')['default'];
+window.Ember.Charts.HasTimeSeriesRuleMixin = require('ember-charts/mixins/has-time-series-rule')['default'];
+window.Ember.Charts.Legend = require('ember-charts/mixins/legend')['default'];
+window.Ember.Charts.NoMarginChartMixin = require('ember-charts/mixins/no-margin-chart')['default'];
+window.Ember.Charts.PieLegend = require('ember-charts/mixins/pie-legend')['default'];
+window.Ember.Charts.ResizeHandlerMixin = require('ember-charts/mixins/resize-handler')['default'];
+window.Ember.Charts.SortableChartMixin = require('ember-charts/mixins/sortable-chart')['default'];
+window.Ember.Charts.TimeSeriesLabeler = require('ember-charts/mixins/time-series-labeler')['default'];
 Ember.onLoad('Ember.Application', function(Application) {
 Application.initializer({
 name: 'ember-charts',
 initialize: function(container) {
 container.register('component:bubble-chart', require('ember-charts/components/bubble-chart')['default']);
 container.register('component:chart-component', require('ember-charts/components/chart-component')['default']);
-container.register('component:horizontal-bar-component', require('ember-charts/components/horizontal-bar-component')['default']);
+container.register('component:horizontal-bar-chart', require('ember-charts/components/horizontal-bar-chart')['default']);
 container.register('component:pie-chart', require('ember-charts/components/pie-chart')['default']);
 container.register('component:scatter-chart', require('ember-charts/components/scatter-chart')['default']);
 container.register('component:time-series-chart', require('ember-charts/components/time-series-chart')['default']);
@@ -5051,7 +5101,7 @@ container.register('component:vertical-bar-chart', require('ember-charts/compone
 }
 });
 });
-Ember.Charts.ChartsComponent.reopen({
+Ember.Charts.ChartComponent.reopen({
 layoutName: 'components/ember-charts'
 });
-Ember.Handlebars.helper('table-component', Ember.Charts.ChartsComponent);})();
+Ember.Handlebars.helper('table-component', Ember.Charts.ChartComponent);})();
