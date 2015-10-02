@@ -17,24 +17,25 @@ var Globals = function (inputTree) {
   // Ember.AddeparMixins, and some just on Ember. For backwards-compatibility
   // we need to maintain the same old names.
   this.globalNameMapping = {
-    'ember-charts/components/bubble-chart': 'Ember.Charts.BubbleChartComponent',
+    'ember-charts/components/bubble-chart': 'Ember.Charts.BubbleComponent',
     'ember-charts/components/chart-component': 'Ember.Charts.ChartComponent',
-    'ember-charts/components/horizontal-bar-component': 'Ember.Charts.HorizontalBarComponent',
-    'ember-charts/components/pie-chart': 'Ember.Charts.PieChartComponent',
-    'ember-charts/components/scatter-chart': 'Ember.Charts.ScatterChartComponent',
-    'ember-charts/components/time-series-chart': 'Ember.Charts.TimeSeriesChartComponent',
-    'ember-charts/components/vertical-bar-chart': 'Ember.Charts.VerticalBarChartComponent',
+    'ember-charts/components/horizontal-bar-chart': 'Ember.Charts.HorizontalBarComponent',
+    'ember-charts/components/pie-chart': 'Ember.Charts.PieComponent',
+    'ember-charts/components/scatter-chart': 'Ember.Charts.ScatterComponent',
+    'ember-charts/components/time-series-chart': 'Ember.Charts.TimeSeriesComponent',
+    'ember-charts/components/vertical-bar-chart': 'Ember.Charts.VerticalBarComponent',
 
-    'ember-charts/mixins/axes': 'Ember.AxesMixin',
-    'ember-charts/mixins/colorable': 'Ember.ColorableMixin',
-    'ember-charts/mixins/floating-tooltip': 'Ember.FloatingTooltipMixin',
-    'ember-charts/mixins/has-time-series-rule': 'Ember.HasTimeSeriesRuleMixin',
-    'ember-charts/mixins/legend': 'Ember.LegendMixin',
-    'ember-charts/mixins/no-margin-chart': 'Ember.NoMarginChartMixin',
-    'ember-charts/mixins/pie-legend': 'Ember.PieLegendMixin',
-    'ember-charts/mixins/resize-handler': 'Ember.ResizeHandlerMixin',
-    'ember-charts/mixins/sortable-chart': 'Ember.SortableChartMixin',
-    'ember-charts/mixins/time-series-labeler': 'Ember.TimeSeriesLabelerMixin',
+    'ember-charts/mixins/axes': 'Ember.Charts.AxesMixin',
+    'ember-charts/mixins/colorable': 'Ember.Charts.Colorable',
+    'ember-charts/mixins/floating-tooltip': 'Ember.Charts.FloatingTooltipMixin',
+    'ember-charts/mixins/formattable': 'Ember.Charts.Formattable',
+    'ember-charts/mixins/has-time-series-rule': 'Ember.Charts.HasTimeSeriesRuleMixin',
+    'ember-charts/mixins/legend': 'Ember.Charts.Legend',
+    'ember-charts/mixins/no-margin-chart': 'Ember.Charts.NoMarginChartMixin',
+    'ember-charts/mixins/pie-legend': 'Ember.Charts.PieLegend',
+    'ember-charts/mixins/resize-handler': 'Ember.Charts.ResizeHandlerMixin',
+    'ember-charts/mixins/sortable-chart': 'Ember.Charts.SortableChartMixin',
+    'ember-charts/mixins/time-series-labeler': 'Ember.Charts.TimeSeriesLabeler',
   };
 };
 
@@ -57,8 +58,7 @@ Globals.prototype.write = function(readTree, destDir) {
         "  __exports__['default'] = window.Ember;",
         "});",
         "",
-        "window.Ember.Charts = Ember.Namespace.create();",
-        "window.Ember.AddeparMixins = {};"];
+        "window.Ember.Charts = Ember.Namespace.create();"];
 
       // Get a listing of all hbs files from inputTree and make sure each one
       // is registered on Ember.TEMPLATES
@@ -120,7 +120,7 @@ Globals.prototype.write = function(readTree, destDir) {
       // For backwards compatibility, set a layoutName so the component
       // actually renders
       _this.addLinesToOutput(output, [
-        "Ember.Charts.ChartsComponent.reopen({",
+        "Ember.Charts.ChartComponent.reopen({",
         "layoutName: 'components/ember-charts'",
         "});"
       ]);
@@ -128,7 +128,7 @@ Globals.prototype.write = function(readTree, destDir) {
       // Register table-component with handlebars so users can just use
       // {{table-component}}
       output.push("Ember.Handlebars.helper('table-component', " +
-                  "Ember.Charts.ChartsComponent);");
+                  "Ember.Charts.ChartComponent);");
 
       fs.writeFileSync(path.join(destDir, 'globals-output.js'),
           output.join("\n"));
