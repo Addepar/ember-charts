@@ -1,58 +1,49 @@
-<<<<<<< HEAD
- import Ember from "ember";
- import { test, moduleForComponent } from 'ember-qunit';
- var three_ranges = [{
-     label: "Label 1",
-     group: "Group One",
-     value: 20
- }, {
-     label: "Label 1",
-     group: "Group Two",
-     value: 32
- }, {
-     label: "Label 1",
-     group: "Group Three",
-     value: 4
- }, {
-     label: "Label 2",
-     group: "Group One",
-     value: 16
- }, {
-     label: "Label 2",
-     group: "Group Two",
-     value: 17
- }, {
-     label: "Label 2",
-     group: "Group Three",
-     value: -18
- }, {
-     label: "Label 3",
-     group: "Group One",
-     value: -18
- }, {
-     label: "Label 3",
-     group: "Group Two",
-     value: 18
- }, {
-     label: "Label 3",
-     group: "Group Three",
-     value: -19
- }];
-
- moduleForComponent('vertical-bar-chart', '[Unit] Vertical bar component', {
-=======
+import Ember from "ember";
 import { test, moduleForComponent } from 'ember-qunit';
+var three_ranges = [{
+   label: "Label 1",
+   group: "Group One",
+   value: 20
+}, {
+   label: "Label 1",
+   group: "Group Two",
+   value: 32
+}, {
+   label: "Label 1",
+   group: "Group Three",
+   value: 4
+}, {
+   label: "Label 2",
+   group: "Group One",
+   value: 16
+}, {
+   label: "Label 2",
+   group: "Group Two",
+   value: 17
+}, {
+   label: "Label 2",
+   group: "Group Three",
+   value: -18
+}, {
+   label: "Label 3",
+   group: "Group One",
+   value: -18
+}, {
+   label: "Label 3",
+   group: "Group Two",
+   value: 18
+}, {
+   label: "Label 3",
+   group: "Group Three",
+   value: -19
+}];
 
 moduleForComponent('vertical-bar-chart', '[Unit] Vertical bar component', {
->>>>>>> Backports commits to ember-cli/javascript
+  needs: [ 'template:components/chart-component'],
+  beforeEach: function () {},
+  afterEach: function () {}
+});
 
-   needs: [ 'template:components/chart-component'],
-   beforeEach: function () {},
-   afterEach: function () {}
- });
-
-<<<<<<< HEAD
-=======
 var label1, label2, label3, stackedBarContent;
 
 label1 = "Label 1";
@@ -88,7 +79,6 @@ stackedBarContent = {
  ]
 };
 
->>>>>>> Backports commits to ember-cli/javascript
 test("it exists", function(assert){
   assert.ok(this.subject());
 });
@@ -101,8 +91,6 @@ test('Margins are the right size', function(assert) {
   assert.equal( component.get('marginRight'), 0, 'no right margin');
   assert.equal( component.get('marginBottom'), 0, 'no bottom margin');
 });
-
-<<<<<<< HEAD
 
 test('Stacked bar chart data is sorted correctly', function(assert) {
   var component = this.subject();
@@ -148,7 +136,7 @@ test('Stacked bar chart data is sorted correctly', function(assert) {
     assert.ok(totals[0] < totals[1], 'Group three is the smaller than group one');
     assert.ok(totals[1] < totals[2], 'Group one is the smaller than group two');
   });
-=======
+});
 test('Stacked bars Are grouped correctly', function(assert) {
   var labelIDMapping;
   this.subject(stackedBarContent);
@@ -157,5 +145,4 @@ test('Stacked bars Are grouped correctly', function(assert) {
   assert.equal(find(".grouping-" + labelIDMapping[label1]).length, 1, 'label1 has one section');
   assert.equal(find(".grouping-" + labelIDMapping[label2]).length, 2, 'label2 has two sections');
   return assert.equal(find(".grouping-" + labelIDMapping[label3]).length, 2, 'label3 has two sections');
->>>>>>> Backports commits to ember-cli/javascript
 });
