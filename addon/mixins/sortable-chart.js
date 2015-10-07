@@ -5,7 +5,7 @@ export default Ember.Mixin.create({
   sortKey: 'value',
   sortAscending: true,
 
-  sortedData: Ember.computed('data.[]', 'sortKey', 'sortAscending', function() {
+  defaultSortedData: Ember.computed('data.[]', 'sortKey', 'sortAscending', function() {
     var data = this.get('data');
     var key = this.get('sortKey');
     var sortAscending = this.get('sortAscending');
@@ -21,5 +21,7 @@ export default Ember.Mixin.create({
     } else {
       return data;
     }
-  })
+  }),
+
+  sortedData: Ember.computed.alias('defaultSortedData')
 });
