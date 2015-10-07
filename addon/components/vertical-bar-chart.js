@@ -75,7 +75,7 @@ export default ChartComponent.extend(LegendMixin, FloatingTooltipMixin, AxesMixi
     const data = this.get('data');
 
     if (Ember.isEmpty(data)) {
-      return []
+      return [];
     }
 
     const groupedData = _.groupBy(data, (d) => d.group);
@@ -88,7 +88,7 @@ export default ChartComponent.extend(LegendMixin, FloatingTooltipMixin, AxesMixi
           value: groupData.reduce(reduceGroups, 0)
         });
       }
-    })
+    });
 
     const key = this.get('sortKey');
     const sortAscending = this.get('sortAscending');
@@ -96,11 +96,11 @@ export default ChartComponent.extend(LegendMixin, FloatingTooltipMixin, AxesMixi
     if (Ember.isEmpty(summedGroupValues)) {
       return Ember.A();
     } else if (key != null) {
-      sortedGroups = summedGroupValues.sortBy(key);
+      let sortedGroups = summedGroupValues.sortBy(key);
       if (!sortAscending) {
         sortedGroups = sortedGroups.reverse();
       }
-      newData = Ember.A();
+      const newData = Ember.A();
       sortedGroups.forEach((groupObj) => {
         const group = groupObj.group;
         newData.pushObjects(groupedData[group]);
@@ -196,7 +196,7 @@ export default ChartComponent.extend(LegendMixin, FloatingTooltipMixin, AxesMixi
     // If we do not have grouped data and are drawing stacked bars, keep the
     // data in one group so it gets stacked
     let y0 = 0;
-    stackedValues = _.map(this.get('data'), function(d) {
+    const stackedValues = _.map(this.get('data'), function(d) {
       return {
         y0: y0,
         y1: y0 += Math.max(d.value, 0)
@@ -592,7 +592,7 @@ export default ChartComponent.extend(LegendMixin, FloatingTooltipMixin, AxesMixi
 
   renderVars: Ember.computed(function() {
     return ['xWithinGroupScale', 'xBetweenGroupScale', 'yScale',
-      'finishedData', 'getSeriesColor']
+      'finishedData', 'getSeriesColor'];
   }),
 
   drawChart: function() {
