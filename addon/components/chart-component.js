@@ -29,11 +29,11 @@ export default Ember.Component.extend( ColorableMixin, ResizeHandlerMixin, {
 
   width: Ember.computed('outerWidth', 'marginLeft', 'marginRight', function() {
     return (this.get('outerWidth') - this.get('marginLeft') - this.get('marginRight'));
-  }), 
+  }),
 
   height: Ember.computed('outerHeight', 'marginBottom', 'marginTop', function() {
     return Math.max(1, this.get('outerHeight') - this.get('marginBottom') - this.get('marginTop'));
-  }), 
+  }),
 
   // Hierarchy of chart view is:
   // 1 Outside most element is div.chart-frame
@@ -50,7 +50,7 @@ export default Ember.Component.extend( ColorableMixin, ResizeHandlerMixin, {
   // Transform the view commonly displaced by the margin
   transformViewport: Ember.computed('marginLeft', 'marginTop', function() {
     return ('translate(' + this.get('marginLeft') + ',' + this.get('marginTop') + ')');
-  }), 
+  }),
 
   // ----------------------------------------------------------------------------
   // Labels
@@ -64,11 +64,11 @@ export default Ember.Component.extend( ColorableMixin, ResizeHandlerMixin, {
 
   labelWidthOffset: Ember.computed('labelWidth', 'labelPadding', function() {
     return (this.get('labelWidth') + this.get('labelPadding'));
-  }), 
+  }),
 
   labelHeightOffset: Ember.computed('labelHeight', 'labelPadding', function() {
     return (this.get('labelHeight') + this.get('labelPadding'));
-  }), 
+  }),
 
   // ----------------------------------------------------------------------------
   // Graphic/NonGraphic Layout
@@ -90,7 +90,7 @@ export default Ember.Component.extend( ColorableMixin, ResizeHandlerMixin, {
 
   graphicRight: Ember.computed('graphicLeft', 'graphicWidth', function() {
     return (this.get('graphicLeft') + this.get('graphicWidth'));
-  }), 
+  }),
 
   // ----------------------------------------------------------------------------
   // Data
@@ -98,7 +98,7 @@ export default Ember.Component.extend( ColorableMixin, ResizeHandlerMixin, {
 
   hasNoData: Ember.computed('finishedData', function() {
     return Ember.isEmpty(this.get('finishedData'));
-  }), 
+  }),
 
   // ----------------------------------------------------------------------------
   // Drawing Functions
@@ -125,7 +125,7 @@ export default Ember.Component.extend( ColorableMixin, ResizeHandlerMixin, {
 
   willDestroyElement: function() {
     var _this = this;
-    _.uniq(this.get('renderVars')).forEach(function(renderVar) { 
+    _.uniq(this.get('renderVars')).forEach(function(renderVar) {
       _this.removeObserver(renderVar, _this, _this.drawOnce);
     });
     this._super();

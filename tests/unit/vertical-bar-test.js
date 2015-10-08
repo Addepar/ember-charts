@@ -79,7 +79,7 @@ stackedBarContent = {
  ]
 };
 
-test("it exists", function(assert){
+test("it exists", function(assert) {
   assert.ok(this.subject());
 });
 
@@ -137,12 +137,13 @@ test('Stacked bar chart data is sorted correctly', function(assert) {
     assert.ok(totals[1] < totals[2], 'Group one is the smaller than group two');
   });
 });
-test('Stacked bars Are grouped correctly', function(assert) {
+test('Stacked bars are grouped correctly', function(assert) {
   var labelIDMapping;
   this.subject(stackedBarContent);
   this.append();
   labelIDMapping = this.subject().get('labelIDMapping');
-  assert.equal(find(".grouping-" + labelIDMapping[label1]).length, 1, 'label1 has one section');
-  assert.equal(find(".grouping-" + labelIDMapping[label2]).length, 2, 'label2 has two sections');
-  return assert.equal(find(".grouping-" + labelIDMapping[label3]).length, 2, 'label3 has two sections');
+
+  assert.equal(this.$().find(".grouping-" + labelIDMapping[label1]).length, 1, 'label1 has one section');
+  assert.equal(this.$().find(".grouping-" + labelIDMapping[label2]).length, 2, 'label2 has two sections');
+  assert.equal(this.$().find(".grouping-" + labelIDMapping[label3]).length, 2, 'label3 has two sections');
 });

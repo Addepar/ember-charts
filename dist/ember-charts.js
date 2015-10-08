@@ -4328,10 +4328,6 @@ var define, requireModule, require, requirejs;
     var groupBy = __dependency9__.groupBy;
     var LabelTrimmer = __dependency10__["default"];
 
-    function reduceGroups(previousValue, dataObject) {
-      return previousValue + dataObject.value;
-    }
-
     __exports__["default"] = ChartComponent.extend(LegendMixin, FloatingTooltipMixin, AxesMixin,
       FormattableMixin, SortableChartMixin, NoMarginChartMixin, {
 
@@ -4377,26 +4373,24 @@ var define, requireModule, require, requirejs;
       // Data
       // ----------------------------------------------------------------------------
 
-      // Override sortedData from SortableChartMixin
-      sortedData: Ember.computed('data.[]', 'sortKey',
-      'sortAscending', 'stackBars',
-      function() {
-        var data, group, groupData, groupObj, groupedData, i, key,
-        len, newData, sortAscending, sortedGroups, summedGroupValues;
-
+      sortedData: Ember.computed('data.[]', 'sortKey', 'sortAscending', 'stackBars', function() {
+        var data, group, groupData, groupObj, groupedData, key, newData, sortAscending, sortedGroups, summedGroupValues, _i, _len;
         if (this.get('stackBars')) {
-
           data = this.get('data');
           groupedData = _.groupBy(data, function(d) {
             return d.group;
           });
           summedGroupValues = Ember.A();
+
+          const reduceByValue = (previousValue, dataObject) =>
+            previousValue + dataObject.value;
+
           for (group in groupedData) {
             groupData = groupedData[group];
             if (group !== null) {
               summedGroupValues.pushObject({
                 group: group,
-                value: groupData.reduce(reduceGroups, 0)
+                value: groupData.reduce(reduceByValue, 0)
               });
             }
           }
@@ -4410,8 +4404,8 @@ var define, requireModule, require, requirejs;
               sortedGroups = sortedGroups.reverse();
             }
             newData = Ember.A();
-            for (i = 0, len = sortedGroups.length; i < len; i++) {
-              groupObj = sortedGroups[i];
+            for (_i = 0, _len = sortedGroups.length; _i < _len; _i++) {
+              groupObj = sortedGroups[_i];
               newData.pushObjects(groupedData[groupObj.group]);
             }
             return newData;
@@ -4419,19 +4413,20 @@ var define, requireModule, require, requirejs;
             return data;
           }
         } else {
-          return this._super.apply(this, arguments);
+          return this._super();
         }
       }),
 
       // Aggregates objects provided in `data` in a dictionary, keyed by group names
-      groupedData: Ember.computed('sortedData', 'ungroupedSeriesName', function() {
+      groupedData: Ember.computed('sortedData', 'stackBars', 'ungroupedSeriesName', function() {
         var data = this.get('sortedData');
         if (Ember.isEmpty(data)) {
-        	return [];
+        	return Ember.A();
        	}
 
-        data = groupBy(data, (d) => {
-          return (d.group || this.get('ungroupedSeriesName'));
+        var _this = this;
+        data = groupBy(data, function(d) {
+          return (d.group || _this.get('ungroupedSeriesName'));
         });
 
         // After grouping, the data points may be out of order, and therefore not properly
@@ -4447,7 +4442,7 @@ var define, requireModule, require, requirejs;
       }),
 
       groupNames: Ember.computed('groupedData', function() {
-        return _.keys(this.get('groupedData'));
+        return _.keys( this.get('groupedData'));
       }),
 
       // We know the data is grouped because it has more than one label. If there
@@ -4456,19 +4451,20 @@ var define, requireModule, require, requirejs;
       // labels will be 1. If we are passed ungrouped data we will display
       // each data object in its own group.
       isGrouped: Ember.computed('groupNames.length', function() {
-        return this.get('groupNames.length') > 1;
+        var result = (this.get('groupNames.length') > 1);
+        return result;
       }),
 
       finishedData: Ember.computed('groupedData', 'isGrouped', 'stackBars', 'sortedData', function() {
         var y0, stackedValues;
         if (this.get('isGrouped')) {
-          if (Ember.isEmpty(this.get('groupedData'))) {
-            return [];
+          if (Ember.isEmpty( this.get('groupedData'))) {
+            return Ember.A();
           }
 
-          return _.map(this.get('groupedData'), function(values, groupName) {
+          return _.map( this.get('groupedData'), function(values, groupName) {
             y0 = 0;
-            stackedValues = _.map(values, function(d) {
+            stackedValues = _.map( values, function(d) {
               return {
                 y0: y0,
                 y1: y0 += Math.max(d.value, 0),
@@ -4489,33 +4485,33 @@ var define, requireModule, require, requirejs;
 
         } else if (this.get('stackBars')) {
           if (Ember.isEmpty(this.get('data'))) {
-            return [];
+            return Ember.A();
           }
           // If we do not have grouped data and are drawing stacked bars, keep the
           // data in one group so it gets stacked
           y0 = 0;
-          stackedValues = _.map(this.get('data'), function(d) {
+          stackedValues = _.map( this.get('data'), function(d) {
             return {
               y0: y0,
               y1: y0 += Math.max(d.value, 0)
             };
           });
 
-          return [{
+          return Ember.A([{
             group: this.get('data.firstObject.group'),
             values: this.get('data'),
             stackedValues: stackedValues,
             totalValue: y0
-          }];
+          }]);
 
         } else {
 
           if (Ember.isEmpty(this.get('data'))) {
-            return [];
+            return Ember.A();
           }
           // If we have grouped data and do not have stackBars turned on, split the
           // data up so it gets drawn in separate groups and labeled
-          return _.map(this.get('sortedData'), function(d) {
+          return _.map( this.get('sortedData'), function(d) {
             return {
               group: d.label,
               values: [d]
@@ -4603,22 +4599,16 @@ var define, requireModule, require, requirejs;
       yScale: Ember.computed('graphicTop', 'graphicHeight', 'yDomain', 'numYTicks', function() {
         return d3.scale.linear()
           .domain(this.get('yDomain'))
-          .range([this.get('graphicTop') + this.get('graphicHeight'), this.get('graphicTop')])
+          .range([ this.get('graphicTop') + this.get('graphicHeight'), this.get('graphicTop') ])
           .nice(this.get('numYTicks'));
       }),
 
       individualBarLabels: Ember.computed('groupedData.@each', function() {
+
         var groups = _.map(_.values(this.get('groupedData')), function(g) {
           return _.pluck(g, 'label');
         });
-        return _.uniq(_.flatten(groups));
-      }),
-
-      labelIDMapping: Ember.computed('individualBarLabels.[]', function() {
-        return this.get('individualBarLabels').reduce(function(previousValue, label, index) {
-          previousValue[label] = index;
-          return previousValue;
-        }, {});
+        return _.uniq( _.flatten(groups));
       }),
 
       // The range of labels assigned to each group
@@ -4647,12 +4637,12 @@ var define, requireModule, require, requirejs;
         if (this.get('isGrouped') || this.get('stackBars')) {
           return d3.scale.ordinal()
             .domain(this.get('xWithinGroupDomain'))
-            .rangeRoundBands([0, this.get('groupWidth')], this.get('withinGroupPadding')/2, 0);
+            .rangeRoundBands( [0, this.get('groupWidth')], this.get('withinGroupPadding')/2, 0);
 
         } else {
           return d3.scale.ordinal()
             .domain(this.get('xWithinGroupDomain'))
-            .rangeRoundBands([0, this.get('groupWidth')],
+            .rangeRoundBands([ 0, this.get('groupWidth') ],
               this.get('betweenGroupPadding')/2, this.get('betweenGroupPadding')/2 );
         }
       }),
@@ -4660,10 +4650,10 @@ var define, requireModule, require, requirejs;
       // The scale used to position each group and label across the horizontal axis
       // If we do not have grouped data, do not add additional padding around groups
       // since this will only add whitespace to the left/right of the graph.
-      // TODO(jordan) check if labelWidth is necessary here as it is not used but
-      // may be necessary for scale calculations
       xBetweenGroupScale: Ember.computed('isGrouped', 'stackBars', 'graphicWidth', 'labelWidth',
         'xBetweenGroupDomain', 'betweenGroupPadding', function() {
+
+        // var labelWidth = this.get('labelWidth');
         var betweenGroupPadding;
 
         if (this.get('isGrouped') || this.get('stackBars')) {
@@ -4675,6 +4665,7 @@ var define, requireModule, require, requirejs;
         return d3.scale.ordinal()
           .domain(this.get('xBetweenGroupDomain'))
           .rangeRoundBands([0, this.get('graphicWidth')], betweenGroupPadding / 2, betweenGroupPadding / 2);
+
       }),
 
       // Override axis mix-in min and max values to listen to the scale's domain
@@ -4701,25 +4692,22 @@ var define, requireModule, require, requirejs;
       hasLegend: Ember.computed('stackBars', 'isGrouped', 'legendItems.length', 'showLegend', function() {
         return this.get('stackBars') || this.get('isGrouped') && this.get('legendItems.length') > 1 && this.get('showLegend');
       }),
-      legendItems: Ember.computed(
-        'individualBarLabels.[]', 'getSeriesColor', 'stackBars', 'labelIDMapping.[]',
-        function() {
-          var getSeriesColor = this.get('getSeriesColor');
-          return this.get('individualBarLabels').map((label, i) => {
-            var color = getSeriesColor(label, i);
-            if (this.get('stackBars')) {
-              i = this.get('labelIDMapping')[label];
-            }
-            return {
-              label: label,
-              fill: color,
-              stroke: color,
-              icon: () => 'square',
-              selector: ".grouping-" + i
-            };
-          });
-        }
-      ),
+
+      legendItems: Ember.computed('individualBarLabels', 'getSeriesColor', function() {
+        var getSeriesColor = this.get('getSeriesColor');
+        return this.get('individualBarLabels').map( function(d, i) {
+          var color = getSeriesColor(d, i);
+          return {
+            label: d,
+            fill: color,
+            stroke: color,
+            icon: function() {
+              return 'square';
+            },
+            selector: ".grouping-" + i
+          };
+        });
+      }),
 
       // ----------------------------------------------------------------------------
       // Tooltip Configuration
@@ -4729,7 +4717,9 @@ var define, requireModule, require, requirejs;
         if (!this.get('isInteractive')) {
           return Ember.K;
         }
-        return (data, i, element) => {
+        var _this = this;
+        return function(data, i, element) {
+
           // Specify whether we are on an individual bar or group
           var isGroup = Ember.isArray(data.values);
 
@@ -4740,9 +4730,9 @@ var define, requireModule, require, requirejs;
           // Show tooltip
           var content =  (data.group) ? "<span class=\"tip-label\">" + data.group + "</span>" : '';
 
-          var formatLabel = this.get('formatLabelFunction');
+          var formatLabel = _this.get('formatLabelFunction');
           var addValueLine = function(d) {
-            content += "<span class=\"name\">" + d.label + ": </span>";
+            content +="<span class=\"name\">" + d.label + ": </span>";
             return content += "<span class=\"value\">" + formatLabel(d.value) + "</span><br/>";
           };
 
@@ -4753,7 +4743,7 @@ var define, requireModule, require, requirejs;
             // Just hovering over single bar
             addValueLine(data);
           }
-          return this.showTooltip(content, d3.event);
+          return _this.showTooltip(content, d3.event);
         };
       }),
 
@@ -4761,7 +4751,8 @@ var define, requireModule, require, requirejs;
         if (!this.get('isInteractive')) {
           return Ember.K;
         }
-        return (data, i, element) => {
+        var _this = this;
+        return function(data, i, element) {
           // if we exited the group label undo for the group
           if (Ember.isArray(data.values)) {
             element = element.parentNode.parentNode;
@@ -4770,8 +4761,7 @@ var define, requireModule, require, requirejs;
           d3.select(element).classed('hovered', false);
 
           // Hide Tooltip
-          // TODO: remove?
-          return this.hideTooltip();
+          return _this.hideTooltip();
         };
       }),
 
@@ -4782,45 +4772,43 @@ var define, requireModule, require, requirejs;
 
       groupAttrs: Ember.computed('graphicLeft', 'graphicTop', 'xBetweenGroupScale', function() {
         var xBetweenGroupScale = this.get('xBetweenGroupScale');
+        var _this = this;
         return {
-          transform: (d) => {
-            var dx = this.get('graphicLeft') + xBetweenGroupScale(d.group);
-            var dy = this.get('graphicTop');
+          transform: function(d) {
+            var dx = xBetweenGroupScale(d.group) ? _this.get('graphicLeft') + xBetweenGroupScale(d.group) : _this.get('graphicLeft');
+            var dy = _this.get('graphicTop');
 
             return "translate(" + dx + ", " + dy + ")";
           }
         };
       }),
 
-      stackedBarAttrs: Ember.computed('yScale', 'groupWidth', 'labelIDMapping.[]', function() {
+      stackedBarAttrs: Ember.computed('yScale', 'groupWidth', function() {
         // zeroDisplacement is the number of pixels to shift graphics away from
         // the origin line so that they do not overlap with it
         var zeroDisplacement = 1;
         var yScale = this.get('yScale');
+        var _this = this;
         return {
-          "class": (barSection) => {
-              var id = this.get('labelIDMapping')[barSection.label];
-              return "grouping-" + id;
-          },
+          "class": function(d,i) { return "grouping-" + i; },
           'stroke-width': 0,
-          width: () => this.get('groupWidth'),
+          width: function() { return _this.get('groupWidth'); },
           x: null,
-          y: (barSection) => yScale(barSection.y1) + zeroDisplacement,
-          height: (barSection) => yScale(barSection.y0) - yScale(barSection.y1)
+          y: function(d) { return yScale(d.y1) + zeroDisplacement; },
+          height: function(d) { return (yScale(d.y0) - yScale(d.y1)); }
         };
       }),
 
       groupedBarAttrs: Ember.computed('yScale', 'getSeriesColor', 'barWidth', 'xWithinGroupScale', function() {
         var zeroDisplacement = 1;
         var yScale = this.get('yScale');
+        var _this = this;
         return {
           "class": function(d,i) { return "grouping-" + i; },
           'stroke-width': 0,
-          width: () => { this.get('barWidth'); },
-          x: (d) => { this.get('xWithinGroupScale')(d.label); },
-          height: (d) => {
-            return Math.max(0, Math.abs( yScale(d.value) - yScale(0) ) - zeroDisplacement);
-          },
+          width: function() { return _this.get('barWidth'); },
+          x: function (d) { return _this.get('xWithinGroupScale')(d.label); },
+          height: function (d) { return Math.max(0, Math.abs( yScale(d.value) - yScale(0) ) - zeroDisplacement); },
           y: function(d) {
             if (d.value > 0) {
               return yScale(d.value);
@@ -4834,16 +4822,17 @@ var define, requireModule, require, requirejs;
       labelAttrs: Ember.computed('barWidth', 'isGrouped', 'stackBars', 'groupWidth',
         'xWithinGroupScale', 'graphicTop', 'graphicHeight', 'labelPadding', function() {
 
+        var _this = this;
         return {
           'stroke-width': 0,
-          transform: (d) => {
-            var dx = this.get('barWidth')/2;
-            if (this.get('isGrouped') || this.get('stackBars')) {
-              dx += this.get('groupWidth')/2 - this.get('barWidth')/2;
+          transform: function (d) {
+            var dx = _this.get('barWidth')/2;
+            if (_this.get('isGrouped') || _this.get('stackBars')) {
+              dx += _this.get('groupWidth')/2 - _this.get('barWidth')/2;
             } else {
-              dx += this.get('xWithinGroupScale')(d.group);
+              dx += _this.get('xWithinGroupScale')(d.group);
             }
-            var dy = this.get('graphicTop') + this.get('graphicHeight') + this.get('labelPadding');
+            var dy = _this.get('graphicTop') + _this.get('graphicHeight') + _this.get('labelPadding');
             return "translate(" + dx +", " + dy + ")";
           }
         };
@@ -4896,7 +4885,6 @@ var define, requireModule, require, requirejs;
             }
           });
         }
-        // TODO(jordan): no return?
         return this.set('_shouldRotateLabels', rotateLabels);
       },
 
@@ -4969,12 +4957,13 @@ var define, requireModule, require, requirejs;
         // group. Otherwise, rotate each label and anchor it at the top of its
         // first character.
         this.setRotateLabels();
+        var _this = this;
         var labelTrimmer;
 
         if (this.get('_shouldRotateLabels')) {
           var rotateLabelDegrees = this.get('rotateLabelDegrees');
           labelTrimmer = LabelTrimmer.create({
-            getLabelSize: () => { return this.get('rotatedLabelLength'); },
+            getLabelSize: function () { return _this.get('rotatedLabelLength'); },
             getLabelText: function (d) { return d.group; }
           });
 
@@ -4991,7 +4980,6 @@ var define, requireModule, require, requirejs;
             getLabelText: function (d) { return (d.group != null) ? d.group : ''; }
           });
 
-          // TODO(jordan): remove return?
           return labels.call(labelTrimmer.get('trim')).attr({
             'text-anchor': 'middle',
             dy: this.get('labelPadding')
@@ -5037,11 +5025,10 @@ var define, requireModule, require, requirejs;
 
         var barAttrs = this.get('stackBars') ? this.get('stackedBarAttrs') : this.get('groupedBarAttrs');
 
-        groups.attr(this.get('groupAttrs'));
+        groups.attr( this.get('groupAttrs') );
         groups.selectAll('rect')
-          .style('fill', this.get('getSeriesColor'))
-          .attr(barAttrs);
-        // TODO(jordan): remove return?
+          .attr(barAttrs)
+          .style('fill', this.get('getSeriesColor'));
         return groups.select('g.groupLabel')
           .attr(this.get('labelAttrs') );
       }
