@@ -378,22 +378,21 @@ export default ChartComponent.extend(LegendMixin, FloatingTooltipMixin, AxesMixi
 
   legendItems: Ember.computed('individualBarLabels.[]', 'getSeriesColor',
     'stackBars', 'labelIDMapping.[]', function() {
-      const getSeriesColor = this.get('getSeriesColor');
-      return this.get('individualBarLabels').map((label, i) => {
-        const color = getSeriesColor(label, i);
-        if (this.get('stackBars')) {
-          i = this.get('labelIDMapping')[label];
-        }
-        return {
-          label: label,
-          fill: color,
-          stroke: color,
-          icon: () => 'square',
-          selector: ".grouping-" + i
-        };
-      });
-    }
-  ),
+    const getSeriesColor = this.get('getSeriesColor');
+    return this.get('individualBarLabels').map((label, i) => {
+      const color = getSeriesColor(label, i);
+      if (this.get('stackBars')) {
+        i = this.get('labelIDMapping')[label];
+      }
+      return {
+        label: label,
+        fill: color,
+        stroke: color,
+        icon: () => 'square',
+        selector: ".grouping-" + i
+      };
+    });
+  }),
 
   // ----------------------------------------------------------------------------
   // Tooltip Configuration
