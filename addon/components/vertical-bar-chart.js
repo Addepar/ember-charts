@@ -121,14 +121,14 @@ export default ChartComponent.extend(LegendMixin, FloatingTooltipMixin, AxesMixi
     // grouping across the board.
     // TODO(ember-charts-lodash): Use _.mapValues instead of the each loop.
     _.each(_.keys(data), function(groupName) {
-      data[groupName] = _.sortBy( data[groupName], 'label');
+      data[groupName] = _.sortBy(data[groupName], 'label');
     });
 
     return data;
   }),
 
   groupNames: Ember.computed('groupedData', function() {
-    return _.keys( this.get('groupedData'));
+    return _.keys(this.get('groupedData'));
   }),
 
   // We know the data is grouped because it has more than one label. If there
@@ -144,13 +144,13 @@ export default ChartComponent.extend(LegendMixin, FloatingTooltipMixin, AxesMixi
   finishedData: Ember.computed('groupedData', 'isGrouped', 'stackBars', 'sortedData', function() {
     var y0, stackedValues;
     if (this.get('isGrouped')) {
-      if (Ember.isEmpty( this.get('groupedData'))) {
+      if (Ember.isEmpty(this.get('groupedData'))) {
         return Ember.A();
       }
 
-      return _.map( this.get('groupedData'), function(values, groupName) {
+      return _.map(this.get('groupedData'), function(values, groupName) {
         y0 = 0;
-        stackedValues = _.map( values, function(d) {
+        stackedValues = _.map(values, function(d) {
           return {
             y0: y0,
             y1: y0 += Math.max(d.value, 0),
@@ -176,7 +176,7 @@ export default ChartComponent.extend(LegendMixin, FloatingTooltipMixin, AxesMixi
       // If we do not have grouped data and are drawing stacked bars, keep the
       // data in one group so it gets stacked
       y0 = 0;
-      stackedValues = _.map( this.get('data'), function(d) {
+      stackedValues = _.map(this.get('data'), function(d) {
         return {
           y0: y0,
           y1: y0 += Math.max(d.value, 0)
@@ -197,7 +197,7 @@ export default ChartComponent.extend(LegendMixin, FloatingTooltipMixin, AxesMixi
       }
       // If we have grouped data and do not have stackBars turned on, split the
       // data up so it gets drawn in separate groups and labeled
-      return _.map( this.get('sortedData'), function(d) {
+      return _.map(this.get('sortedData'), function(d) {
         return {
           group: d.label,
           values: [d]
@@ -240,7 +240,7 @@ export default ChartComponent.extend(LegendMixin, FloatingTooltipMixin, AxesMixi
   yDomain: Ember.computed('finishedData', 'stackBars', function() {
     var finishedData = this.get('finishedData');
     var minOfGroups = d3.min(finishedData, function(d) {
-      return _.min( d.values.map( function(dd) {
+      return _.min(d.values.map(function(dd) {
         return dd.value;
       }));
     });
@@ -293,7 +293,7 @@ export default ChartComponent.extend(LegendMixin, FloatingTooltipMixin, AxesMixi
     var groups = _.map(_.values(this.get('groupedData')), function(g) {
       return _.pluck(g, 'label');
     });
-    return _.uniq( _.flatten(groups));
+    return _.uniq(_.flatten(groups));
   }),
 
   labelIDMapping: Ember.computed('individualBarLabels.[]', function() {
@@ -335,7 +335,7 @@ export default ChartComponent.extend(LegendMixin, FloatingTooltipMixin, AxesMixi
       return d3.scale.ordinal()
         .domain(this.get('xWithinGroupDomain'))
         .rangeRoundBands([ 0, this.get('groupWidth') ],
-          this.get('betweenGroupPadding')/2, this.get('betweenGroupPadding')/2 );
+          this.get('betweenGroupPadding')/2, this.get('betweenGroupPadding')/2);
     }
   }),
 
@@ -597,14 +597,14 @@ export default ChartComponent.extend(LegendMixin, FloatingTooltipMixin, AxesMixi
   // Calculate the number of degrees to rotate labels based on how widely labels
   // will be spaced, but never rotate the labels less than 20 degrees
   rotateLabelDegrees: Ember.computed('labelHeight', 'maxLabelWidth', function() {
-    var radians = Math.atan( this.get('labelHeight') / this.get('maxLabelWidth'));
+    var radians = Math.atan(this.get('labelHeight') / this.get('maxLabelWidth'));
     var degrees = radians * 180 / Math.PI;
     return Math.max(degrees, 20);
   }),
 
   rotatedLabelLength: Ember.computed('maxLabelHeight', 'rotateLabelDegrees', function() {
     var rotateLabelRadians = Math.PI / 180 * this.get('rotateLabelDegrees');
-    return Math.abs( this.get('maxLabelHeight') / Math.sin(rotateLabelRadians));
+    return Math.abs(this.get('maxLabelHeight') / Math.sin(rotateLabelRadians));
   }),
 
   // ----------------------------------------------------------------------------
@@ -657,7 +657,7 @@ export default ChartComponent.extend(LegendMixin, FloatingTooltipMixin, AxesMixi
     var groups = this.get('groups');
     var labels = groups.select('.groupLabel text')
       .attr('transform', null) // remove any previous rotation attrs
-      .text( function(d) { return d.group; });
+      .text(function(d) { return d.group; });
 
     // If there is enough space horizontally, center labels underneath each
     // group. Otherwise, rotate each label and anchor it at the top of its
@@ -706,7 +706,7 @@ export default ChartComponent.extend(LegendMixin, FloatingTooltipMixin, AxesMixi
     var gYAxis = this.get('yAxis');
 
     // find the correct size of graphicLeft in order to fit the Labels perfectly
-    this.set('graphicLeft', this.maxLabelLength( gYAxis.selectAll('text')) + this.get('labelPadding') );
+    this.set('graphicLeft', this.maxLabelLength(gYAxis.selectAll('text')) + this.get('labelPadding') );
 
 
     var graphicTop = this.get('graphicTop');
@@ -731,12 +731,11 @@ export default ChartComponent.extend(LegendMixin, FloatingTooltipMixin, AxesMixi
 
     var barAttrs = this.get('stackBars') ? this.get('stackedBarAttrs') : this.get('groupedBarAttrs');
 
-    groups.attr( this.get('groupAttrs') );
+    groups.attr(this.get('groupAttrs') );
     groups.selectAll('rect')
       .attr(barAttrs)
       .style('fill', this.get('getSeriesColor'));
     return groups.select('g.groupLabel')
       .attr(this.get('labelAttrs') );
   }
-
 });

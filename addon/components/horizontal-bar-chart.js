@@ -245,7 +245,7 @@ export default ChartComponent.extend(FloatingTooltipMixin, FormattableMixin, Sor
   groups: Ember.computed(function() {
     return this.get('viewport')
       .selectAll('.bar')
-      .data( this.get('finishedData'));
+      .data(this.get('finishedData'));
   }).volatile(),
 
   yAxis: Ember.computed(function() {

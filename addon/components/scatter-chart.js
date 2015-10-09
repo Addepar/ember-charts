@@ -76,7 +76,7 @@ export default ChartComponent.extend(LegendMixin, FloatingTooltipMixin,
       return d.group || _this.get('ungroupedSeriesName');
     });
 
-    this.set('groupNames', _.keys( groupedData));
+    this.set('groupNames', _.keys(groupedData));
     return _.values(groupedData);
   }),
 

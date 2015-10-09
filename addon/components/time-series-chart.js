@@ -11,8 +11,7 @@ import NoMarginChartMixin from '../mixins/no-margin-chart';
 
 import { groupBy } from '../utils/group-by';
 
-export default ChartComponent.extend(
-  LegendMixin, TimeSeriesLabelerMixin, FloatingTooltipMixin,
+export default ChartComponent.extend(LegendMixin, TimeSeriesLabelerMixin, FloatingTooltipMixin,
   HasTimeSeriesRuleMixin, AxesMixin, FormattableMixin, NoMarginChartMixin, {
 
   classNames: ['chart-time-series'],
@@ -114,7 +113,7 @@ export default ChartComponent.extend(
     //   values = groups[groupName];
     //   _results.push();
     // }
-    return _.map(groups, function( values, groupName) {
+    return _.map(groups, function(values, groupName) {
       return {
         group: groupName,
         values: values
@@ -601,9 +600,9 @@ export default ChartComponent.extend(
   line: Ember.computed( 'xTimeScale', 'yScale', 'interpolate', function() {
     var _this = this;
     return d3.svg.line()
-      .x( function(d) { return _this.get('xTimeScale')(d.time); })
-      .y( function(d) { return _this.get('yScale')(d.value); })
-      .interpolate( this.get('interpolate') ? 'basis' : 'linear');
+      .x(function(d) { return _this.get('xTimeScale')(d.time); })
+      .y(function(d) { return _this.get('yScale')(d.value); })
+      .interpolate(this.get('interpolate') ? 'basis' : 'linear');
   }),
 
   // Line styles. Implements Craig's design spec, which ensures that out of the
@@ -615,7 +614,7 @@ export default ChartComponent.extend(
   // 4th line: ~1px, 66% tinted, dotted
   // 5th line: ~3px, 33% tinted, solid
   // 6th line: ~3px, 33% tinted, dotted
-  lineColorFn: Ember.computed( function() {
+  lineColorFn: Ember.computed(function() {
     var _this = this;
     return function(d, i) {
       var ii;
@@ -722,7 +721,7 @@ export default ChartComponent.extend(
     // lineAttrs = this.get('lineAttrs');
 
     var _this = this;
-    var result = this.get('xBetweenSeriesDomain').map( function(d, i) {
+    var result = this.get('xBetweenSeriesDomain').map(function(d, i) {
       // Line legend items
       var res = {
         label: d,
@@ -733,7 +732,7 @@ export default ChartComponent.extend(
         selector: ".series-" + i
       };
       return res;
-    }).concat( _this.get('xWithinGroupDomain').map(function(d, i) {
+    }).concat(_this.get('xWithinGroupDomain').map(function(d, i) {
       // Bar legend items
       var color = _this.get('getSecondarySeriesColor')(d, i);
       var res = {
@@ -756,7 +755,7 @@ export default ChartComponent.extend(
     this.get('viewport').selectAll('.bars').remove();
   },
 
-  groups: Ember.computed( function() {
+  groups: Ember.computed(function() {
     return this.get('viewport').selectAll('.bars').data(this.get('_groupedBarData'));
   }).volatile(),
 
@@ -764,11 +763,11 @@ export default ChartComponent.extend(
     this.get('viewport').selectAll('.series').remove();
   },
 
-  series: Ember.computed( function() {
+  series: Ember.computed(function() {
     return this.get('viewport').selectAll('.series').data(this.get('_groupedLineData'));
   }).volatile(),
 
-  xAxis: Ember.computed( function() {
+  xAxis: Ember.computed(function() {
     var xAxis = this.get('viewport').select('.x.axis');
     if (xAxis.empty()) {
       return this.get('viewport')
@@ -779,7 +778,7 @@ export default ChartComponent.extend(
     }
   }).volatile(),
 
-  yAxis: Ember.computed( function() {
+  yAxis: Ember.computed(function() {
     var yAxis = this.get('viewport').select('.y.axis');
     if (yAxis.empty()) {
       return this.get('viewport')
@@ -870,7 +869,7 @@ export default ChartComponent.extend(
       .attr('class', 'bars');
     groups.exit().remove();
 
-    var bars = groups.selectAll('rect').data( function(d) { return d; });
+    var bars = groups.selectAll('rect').data(function(d) { return d; });
     bars.enter().append('rect')
       .on("mouseover", function(d, i) {
         return showDetails(d, i, this);

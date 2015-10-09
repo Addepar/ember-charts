@@ -274,9 +274,9 @@ export default Ember.Mixin.create({
 
     legendItems.append('text')
           .style('text-anchor', 'start')
-          .text( function(d) { return d.label; })
-          .attr( this.get('legendLabelAttrs'))
-          .call( labelTrimmer.get('trim'));
+          .text(function(d) { return d.label; })
+          .attr(this.get('legendLabelAttrs'))
+          .call(labelTrimmer.get('trim'));
 
     var totalLabelWidth = 0;
     legend.selectAll('text').each(function() {
