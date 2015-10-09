@@ -14,7 +14,9 @@ export default Ember.Mixin.create({
         return;
       }
       this.set('resizing', false);
-      return typeof this.onResizeEnd === "function" ? this.onResizeEnd(event) : void 0;
+      if (_.isFunction(this.onResizeEnd)) {
+        this.onResizeEnd(event);
+      }
     };
   }),
 
@@ -25,11 +27,11 @@ export default Ember.Mixin.create({
     }
     if (!this.get('resizing')) {
       this.set('resizing', true);
-      if (typeof this.onResizeStart === "function") {
+      if (_.isFunction(this.onResizeStart)) {
         this.onResizeStart(event);
       }
     }
-    if (typeof this.onResize === "function") {
+    if (_.isFunction(this.onResize)) {
       this.onResize(event);
     }
     return Ember.run.debounce(this, this.get('endResize'), event, this.get('resizeEndDelay'));
