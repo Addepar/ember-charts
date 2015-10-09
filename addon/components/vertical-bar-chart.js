@@ -112,7 +112,7 @@ export default ChartComponent.extend(LegendMixin, FloatingTooltipMixin, AxesMixi
 
     var _this = this;
     data = groupBy(data, function(d) {
-      return (d.group || _this.get('ungroupedSeriesName'));
+      return d.group || _this.get('ungroupedSeriesName');
     });
 
     // After grouping, the data points may be out of order, and therefore not properly
@@ -519,7 +519,7 @@ export default ChartComponent.extend(LegendMixin, FloatingTooltipMixin, AxesMixi
         if (d.value > 0) {
           return yScale(d.value);
         } else {
-          return (yScale(0) + zeroDisplacement);
+          return yScale(0) + zeroDisplacement;
         }
       }
     };
@@ -683,7 +683,7 @@ export default ChartComponent.extend(LegendMixin, FloatingTooltipMixin, AxesMixi
       var maxLabelWidth = this.get('maxLabelWidth');
       labelTrimmer = LabelTrimmer.create({
         getLabelSize: function() { return maxLabelWidth; },
-        getLabelText: function(d) { return (d.group != null) ? d.group : ''; }
+        getLabelText: function(d) { return d.group != null ? d.group : ''; }
       });
 
       return labels.call(labelTrimmer.get('trim')).attr({
@@ -715,7 +715,7 @@ export default ChartComponent.extend(LegendMixin, FloatingTooltipMixin, AxesMixi
       .call(yAxis);
 
     gYAxis.selectAll('g')
-      .filter(function(d) { return (d !== 0); })
+      .filter(function(d) { return d !== 0; })
       .classed('major', false)
       .classed('minor', true);
 

@@ -197,7 +197,7 @@ export default ChartComponent.extend(FloatingTooltipMixin, FormattableMixin, Sor
       y: this.get('barThickness') / 2,
       dy: '.35em',
       'text-anchor': function(d) {
-        return ((d.value < 0) ? 'end' : 'start');
+        return d.value < 0 ? 'end' : 'start';
       },
       'stroke-width': 0
     };
@@ -220,7 +220,7 @@ export default ChartComponent.extend(FloatingTooltipMixin, FormattableMixin, Sor
       y: this.get('barThickness') / 2,
       dy: '.35em',
       'text-anchor': function(d) {
-        return ((d.value < 0) ? 'start' : 'end');
+        return d.value < 0 ? 'start' : 'end';
       },
       'stroke-width': 0
     };

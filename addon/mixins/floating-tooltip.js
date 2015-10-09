@@ -25,7 +25,7 @@ export default Ember.Mixin.create({
   // # Private Methods
   // # ----------------------------------------------------------------------------
   _tooltipId: Ember.computed(function() {
-    return (this.get('elementId') + '_tooltip');
+    return this.get('elementId') + '_tooltip';
   }),
 
   _getTooltip: function() {

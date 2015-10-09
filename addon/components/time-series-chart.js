@@ -239,11 +239,11 @@ export default ChartComponent.extend(LegendMixin, TimeSeriesLabelerMixin, Floati
 
   // width of the graphic
   graphicWidth: Ember.computed('width', 'graphicLeft', function() {
-    return (this.get('width') - this.get('graphicLeft'));
+    return this.get('width') - this.get('graphicLeft');
   }),
 
   graphicHeight: Ember.computed('height', 'legendHeight', 'legendChartPadding', function() {
-    return (this.get('height') - this.get('legendHeight') - this.get('legendChartPadding'));
+    return this.get('height') - this.get('legendHeight') - this.get('legendChartPadding');
   }),
 
   // ----------------------------------------------------------------------------
@@ -314,7 +314,7 @@ export default ChartComponent.extend(LegendMixin, TimeSeriesLabelerMixin, Floati
     var scale = this.get('xTimeScale');
     var t1 = this.get('xBetweenGroupDomain')[0];
     var t2 = (timeDelta === 'quarter') ? d3.time['month'].offset(t1, 3) : d3.time[timeDelta].offset(t1, 1);
-    return (scale(t2) - scale(t1));
+    return scale(t2) - scale(t1);
   }),
   // ----------------------------------------------------------------------------
   // Line Drawing Scales
@@ -576,17 +576,17 @@ export default ChartComponent.extend(LegendMixin, TimeSeriesLabelerMixin, Floati
 
     return {
       class: function(d, i) {
-        return ("grouping-" + i);
+        return "grouping-" + i;
       },
 
       'stroke-width': 0,
       width: this.get('barWidth'),
       x: function(d) {
-        return (xGroupScale(d.label) + xTimeScale(d.time));
+        return xGroupScale(d.label) + xTimeScale(d.time);
       },
 
       y: function(d) {
-        return (d.value > 0) ? yScale(d.value) : (yScale(0) + zeroDisplacement);
+        return d.value > 0 ? yScale(d.value) : yScale(0) + zeroDisplacement;
       },
 
       height: function(d) {
@@ -648,7 +648,7 @@ export default ChartComponent.extend(LegendMixin, TimeSeriesLabelerMixin, Floati
     var _this = this;
     return {
         class: function(d, i) {
-          return ("line series-" + i);
+          return "line series-" + i;
         },
         d: function(d) {
           return _this.get('line')(d.values);
@@ -699,11 +699,11 @@ export default ChartComponent.extend(LegendMixin, TimeSeriesLabelerMixin, Floati
   // Use primary colors for bars if there are no lines
 
   secondaryMinimumTint: Ember.computed('numLines', function() {
-    return (this.get('numLines') === 0) ? 0.0 : 0.4;
+    return this.get('numLines') === 0 ? 0.0 : 0.4;
   }),
 
   secondaryMaximumTint: Ember.computed( 'numLines', function() {
-    return (this.get('numLines') === 0) ? 0.8 : 0.85;
+    return this.get('numLines') === 0 ? 0.8 : 0.85;
   }),
 
   // ----------------------------------------------------------------------------
@@ -711,7 +711,7 @@ export default ChartComponent.extend(LegendMixin, TimeSeriesLabelerMixin, Floati
   // ----------------------------------------------------------------------------
 
   hasLegend: Ember.computed( 'legendItems.length', 'showLegend', function() {
-    return (this.get('legendItems.length') > 1) && (this.get('showLegend'));
+    return this.get('legendItems.length') > 1 && this.get('showLegend');
   }),
 
   legendItems: Ember.computed('xBetweenSeriesDomain', 'xWithinGroupDomain',

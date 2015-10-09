@@ -61,7 +61,7 @@ export default Ember.Mixin.create({
 
   // Maximum width of each label before it gets truncated
   legendLabelWidth: Ember.computed('legendItemWidth', 'legendIconRadius', 'legendLabelPadding', function() {
-    return (this.get('legendItemWidth') - this.get('legendIconRadius') - this.get('legendLabelPadding') * 2);
+    return this.get('legendItemWidth') - this.get('legendIconRadius') - this.get('legendLabelPadding') * 2;
   }),
 
   // ----------------------------------------------------------------------------
@@ -134,10 +134,10 @@ export default Ember.Mixin.create({
         }
       },
       fill: function(d, i) {
-        return (_.isFunction(d.fill)) ? d.fill(d, i) : d.fill;
+        return _.isFunction(d.fill) ? d.fill(d, i) : d.fill;
       },
       stroke: function(d, i) {
-        return (_.isFunction(d.stroke)) ? d.stroke(d, i) : d.stroke;
+        return _.isFunction(d.stroke) ? d.stroke(d, i) : d.stroke;
       },
       'stroke-width': function(d) {
         if (!d.width) {

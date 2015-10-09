@@ -50,7 +50,7 @@ export default ChartComponent.extend(FloatingTooltipMixin,
       return [];
     }
     return data.filter(function(child) {
-      return (child.value >= 0);
+      return child.value >= 0;
     });
   }),
 
@@ -350,7 +350,7 @@ export default ChartComponent.extend(FloatingTooltipMixin,
   groupAttrs: Ember.computed(function() {
     return {
       'class': function(d) {
-        return ((d.data._otherItems) ? 'arc other-slice' : 'arc');
+        return d.data._otherItems ? 'arc other-slice' : 'arc';
       }
     };
   }),
@@ -395,7 +395,7 @@ export default ChartComponent.extend(FloatingTooltipMixin,
           // greater than 2*Math.PI
         'text-anchor': function(d) {
           var angle = (d.endAngle - d.startAngle) * 0.5 + d.startAngle;
-          return ((Math.PI < angle && angle < 2 * Math.PI)) ? 'end' : 'start';
+          return (Math.PI < angle && angle < 2 * Math.PI) ? 'end' : 'start';
         },
 
         // Position labels just outside of arc center outside of pie, making sure
