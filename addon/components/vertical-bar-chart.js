@@ -429,7 +429,7 @@ export default ChartComponent.extend(LegendMixin, FloatingTooltipMixin, AxesMixi
 
       var formatLabel = _this.get('formatLabelFunction');
       var addValueLine = function(d) {
-        content +="<span class=\"name\">" + d.label + ": </span>";
+        content += "<span class=\"name\">" + d.label + ": </span>";
         return content += "<span class=\"value\">" + formatLabel(d.value) + "</span><br/>";
       };
 
@@ -539,7 +539,7 @@ export default ChartComponent.extend(LegendMixin, FloatingTooltipMixin, AxesMixi
           dx += _this.get('xWithinGroupScale')(d.group);
         }
         var dy = _this.get('graphicTop') + _this.get('graphicHeight') + _this.get('labelPadding');
-        return "translate(" + dx +", " + dy + ")";
+        return "translate(" + dx + ", " + dy + ")";
       }
     };
   }),

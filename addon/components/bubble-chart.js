@@ -52,8 +52,8 @@ export default ChartComponent.extend(FloatingTooltipMixin, {
       // Line 1
       var content = "<span class=\"tip-label\">" + data.label + "</span>";
       // Line 2
-      content +="<span class=\"name\">" + this.get('tooltipValueDisplayName') + ": </span>";
-      content +="<span class=\"value\">" + formatLabel(data.value) + "</span>";
+      content += "<span class=\"name\">" + this.get('tooltipValueDisplayName') + ": </span>";
+      content += "<span class=\"value\">" + formatLabel(data.value) + "</span>";
       return this.showTooltip(content, d3.event);
     };
   }),
