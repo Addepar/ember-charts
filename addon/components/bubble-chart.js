@@ -3,8 +3,7 @@ import ChartComponent from './chart-component';
 
 import FloatingTooltipMixin from '../mixins/floating-tooltip';
 
-export default ChartComponent.extend( FloatingTooltipMixin, {
-  
+export default ChartComponent.extend(FloatingTooltipMixin, {
   classNames: ['chart-bubble'],
 
   // ----------------------------------------------------------------------------
@@ -26,8 +25,8 @@ export default ChartComponent.extend( FloatingTooltipMixin, {
   // repel.
   // Dividing by 8 scales down the charge to be
   // appropriate for the visualization dimensions.
-  charge: Ember.computed( function() {
-    return function(d) { 
+  charge: Ember.computed(function() {
+    return function(d) {
       return -Math.pow(d.radius, 2.0) / 8;
     };
   }),
@@ -44,8 +43,7 @@ export default ChartComponent.extend( FloatingTooltipMixin, {
       return Ember.K;
     }
 
-    return function (data, i, element) {
-
+    return function(data, i, element) {
       // Do hover detail style stuff here
       d3.select(element).classed('hovered', true);
 
@@ -58,14 +56,14 @@ export default ChartComponent.extend( FloatingTooltipMixin, {
       content +="<span class=\"value\">" + formatLabel(data.value) + "</span>";
       return this.showTooltip(content, d3.event);
     };
-
   }),
 
   hideDetails: Ember.computed('isInteractive', function() {
     if (this.get('isInteractive')) {
       return Ember.K;
     }
-    return function (data, i, element) {
+
+    return function(data, i, element) {
       // Undo hover style stuff
       d3.select(element).classed('hovered', false);
       // Hide Tooltip
@@ -82,8 +80,8 @@ export default ChartComponent.extend( FloatingTooltipMixin, {
   // Sqrt scaling between data and radius
   radiusScale: Ember.computed('data', 'width', 'height', function() {
     // use the max total_amount in the data as the max in the scale's domain
-    var maxAmount = d3.max( this.get('data'), function(d) { return d.value; });
-    var maxRadius = d3.min( [ this.get('width'), this.get('height') ] ) / 7;
+    var maxAmount = d3.max(this.get('data'), function(d) { return d.value; });
+    var maxRadius = d3.min([this.get('width'), this.get('height')]) / 7;
     // TODO(tony): get rid of hard coded values
     return d3.scale.pow().exponent(0.5).domain([0, maxAmount]).range([2, maxRadius]);
   }),
@@ -96,7 +94,7 @@ export default ChartComponent.extend( FloatingTooltipMixin, {
 
     var radiusScale = this.get('radiusScale');
     var _this = this;
-    var nodes = data.map(function (d) {
+    var nodes = data.map(function(d) {
       return {
         radius: radiusScale(d.value),
         value: d.value,
@@ -106,9 +104,10 @@ export default ChartComponent.extend( FloatingTooltipMixin, {
         y: Math.random() * _this.get('height') / 2
       };
     });
-    nodes.sort(function(a,b) { return b.value - a.value; });
+
+    nodes.sort(function(a, b) { return b.value - a.value; });
     return nodes;
-  }), 
+  }),
 
   finishedData: Ember.computed.alias('nodeData'),
 
@@ -133,8 +132,8 @@ export default ChartComponent.extend( FloatingTooltipMixin, {
       // see transition below
       .attr("r", 0)
       .attr("id", function(d) { return "bubble_" + d.id; })
-      .on("mouseover",  function(d,i) { return showDetails(d,i,this); })
-      .on("mouseout",  function(d,i) { return hideDetails(d,i,this); });
+      .on("mouseover", function(d, i) { return showDetails(d, i, this); })
+      .on("mouseout", function(d, i) { return hideDetails(d, i, this); });
 
     // Fancy transition to make bubbles appear, ending with the
     // correct radius
@@ -143,16 +142,19 @@ export default ChartComponent.extend( FloatingTooltipMixin, {
     circles
       .attr("fill", fill_color)
       .attr("stroke-width", 2)
-      .attr("stroke", function(d,i) { return d3.rgb(fill_color(d,i)).darker(); });
+      .attr("stroke", function(d, i) { return d3.rgb(fill_color(d, i)).darker(); });
 
     circles.exit().remove();
 
     // Moves all circles towards the @center
     // of the visualization
     var _this = this;
-    var move_towards_center = function (alpha) {
-      var center = {x: _this.get('width') / 2, y: _this.get('height') / 2};
-      return function (d) {
+    var move_towards_center = function(alpha) {
+      var center = {
+        x: _this.get('width') / 2,
+        y: _this.get('height') / 2
+      };
+      return function(d) {
         d.x = d.x + (center.x - d.x) * (_this.get('damper') + 0.02) * alpha;
         d.y = d.y + (center.y - d.y) * (_this.get('damper') + 0.02) * alpha;
       };
@@ -175,5 +177,4 @@ export default ChartComponent.extend( FloatingTooltipMixin, {
 
     return vis.selectAll(".years").remove();
   }
-
 });

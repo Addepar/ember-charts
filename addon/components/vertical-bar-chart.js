@@ -39,7 +39,7 @@ export default ChartComponent.extend(LegendMixin, FloatingTooltipMixin, AxesMixi
     // on the number of bars there are in the chart. Really, what we would want
     // to do is have the equation for bar width based on padding and use that
     // to set the padding exactly.
-    var scale = d3.scale.linear().domain([1,8]).range([1.25,0.25]).clamp(true);
+    var scale = d3.scale.linear().domain([1, 8]).range([1.25, 0.25]).clamp(true);
     return scale(this.get('numBars'));
   }),
 
@@ -510,11 +510,11 @@ export default ChartComponent.extend(LegendMixin, FloatingTooltipMixin, AxesMixi
     var yScale = this.get('yScale');
     var _this = this;
     return {
-      class: function(d,i) { return "grouping-" + i; },
+      class: function(d, i) { return "grouping-" + i; },
       'stroke-width': 0,
       width: function() { return _this.get('barWidth'); },
-      x: function (d) { return _this.get('xWithinGroupScale')(d.label); },
-      height: function (d) { return Math.max(0, Math.abs( yScale(d.value) - yScale(0) ) - zeroDisplacement); },
+      x: function(d) { return _this.get('xWithinGroupScale')(d.label); },
+      height: function(d) { return Math.max(0, Math.abs(yScale(d.value) - yScale(0)) - zeroDisplacement); },
       y: function(d) {
         if (d.value > 0) {
           return yScale(d.value);
@@ -531,7 +531,7 @@ export default ChartComponent.extend(LegendMixin, FloatingTooltipMixin, AxesMixi
     var _this = this;
     return {
       'stroke-width': 0,
-      transform: function (d) {
+      transform: function(d) {
         var dx = _this.get('barWidth')/2;
         if (_this.get('isGrouped') || _this.get('stackBars')) {
           dx += _this.get('groupWidth')/2 - _this.get('barWidth')/2;
@@ -635,8 +635,8 @@ export default ChartComponent.extend(LegendMixin, FloatingTooltipMixin, AxesMixi
       .append('g').attr('class', 'bars');
     entering.append('g').attr('class', 'groupLabel')
       .append('text')
-      .on("mouseover", function(d,i) { return showDetails(d,i,this); })
-      .on("mouseout", function(d,i) { return hideDetails(d,i,this); });
+      .on("mouseover", function(d, i) { return showDetails(d, i, this); })
+      .on("mouseout", function(d, i) { return hideDetails(d, i, this); });
     groups.exit().remove();
 
     var subdata;
@@ -648,8 +648,8 @@ export default ChartComponent.extend(LegendMixin, FloatingTooltipMixin, AxesMixi
 
     var bars = groups.selectAll('rect').data(subdata);
     bars.enter().append('rect')
-      .on("mouseover", function(d,i) { return showDetails(d,i,this); })
-      .on("mouseout", function(d,i) { return hideDetails(d,i,this); });
+      .on("mouseover", function(d, i) { return showDetails(d, i, this); })
+      .on("mouseout", function(d, i) { return hideDetails(d, i, this); });
     return bars.exit().remove();
   },
 
@@ -669,8 +669,8 @@ export default ChartComponent.extend(LegendMixin, FloatingTooltipMixin, AxesMixi
     if (this.get('_shouldRotateLabels')) {
       var rotateLabelDegrees = this.get('rotateLabelDegrees');
       labelTrimmer = LabelTrimmer.create({
-        getLabelSize: function () { return _this.get('rotatedLabelLength'); },
-        getLabelText: function (d) { return d.group; }
+        getLabelSize: function() { return _this.get('rotatedLabelLength'); },
+        getLabelText: function(d) { return d.group; }
       });
 
       return labels.call(labelTrimmer.get('trim')).attr({
@@ -682,8 +682,8 @@ export default ChartComponent.extend(LegendMixin, FloatingTooltipMixin, AxesMixi
     } else {
       var maxLabelWidth = this.get('maxLabelWidth');
       labelTrimmer = LabelTrimmer.create({
-        getLabelSize: function () { return maxLabelWidth; },
-        getLabelText: function (d) { return (d.group != null) ? d.group : ''; }
+        getLabelSize: function() { return maxLabelWidth; },
+        getLabelText: function(d) { return (d.group != null) ? d.group : ''; }
       });
 
       return labels.call(labelTrimmer.get('trim')).attr({

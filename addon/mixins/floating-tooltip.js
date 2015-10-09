@@ -51,9 +51,9 @@ export default Ember.Mixin.create({
     var curY = event.clientY + windowScrollTop;
 
     var tooltipLeftOffset =
-      ((curX - windowScrollLeft + xOffset*2 + width) > $(window).width()) ?
+      ((curX - windowScrollLeft + xOffset * 2 + width) > $(window).width()) ?
         // # Not enough room to put tooltip to the right of the cursor
-        - (width + xOffset*2)
+        - (width + xOffset * 2)
       :
         // # Offset the tooltip to the right
         xOffset;
@@ -61,9 +61,9 @@ export default Ember.Mixin.create({
     var tooltipLeft = curX + tooltipLeftOffset;
 
     var tooltipTopOffset =
-      ((curY - windowScrollTop + yOffset*2 + height) > $(window).height()) ?
+      ((curY - windowScrollTop + yOffset * 2 + height) > $(window).height()) ?
         // # Not enough room to put tooltip to the below the cursor
-        - (height + yOffset*2)
+        - (height + yOffset * 2)
       :
         // # Offset the tooltip below the cursor
         yOffset;
@@ -99,4 +99,3 @@ export default Ember.Mixin.create({
     return this._getTooltip().remove();
   }
 });
-

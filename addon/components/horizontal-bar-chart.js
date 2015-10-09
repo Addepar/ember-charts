@@ -56,7 +56,7 @@ export default ChartComponent.extend(FloatingTooltipMixin, FormattableMixin, Sor
   // override the default outerHeight, so the graph scrolls
   outerHeight: Ember.computed('minOuterHeight', 'maxOuterHeight', 'defaultOuterHeight', function() {
     var maxMinDefault = d3.max([this.get('defaultOuterHeight'), this.get('minOuterHeight')]);
-    return d3.min([ maxMinDefault, this.get('maxOuterHeight') ]);
+    return d3.min([maxMinDefault, this.get('maxOuterHeight')]);
   }),
 
   marginTop: Ember.computed.alias('labelPadding'),
@@ -74,24 +74,24 @@ export default ChartComponent.extend(FloatingTooltipMixin, FormattableMixin, Sor
 
   // Range of values used to size the graph, within which bars will be drawn
   xDomain: Ember.computed('finishedData', 'xDomainPadding', function() {
-    var values = this.get('finishedData').map( function(d) { return d.value; });
+    var values = this.get('finishedData').map(function(d) { return d.value; });
     var minValue = d3.min(values);
     var maxValue = d3.max(values);
     if (minValue < 0) {
       // Balance negative and positive axes if we have negative values
       var absMax = Math.max(-minValue, maxValue);
-      return [ -absMax, absMax ];
+      return [-absMax, absMax];
     } else {
       // Only positive values domain
-      return [ 0, maxValue ];
+      return [0, maxValue];
     }
-  }), 
+  }),
 
   // Scale to map value to horizontal length of bar
   xScale: Ember.computed('width', 'xDomain', function() {
     return d3.scale.linear()
       .domain(this.get('xDomain'))
-      .range([ 0, this.get('width') ])
+      .range([0, this.get('width')])
       .nice();
   }),
 
@@ -100,13 +100,13 @@ export default ChartComponent.extend(FloatingTooltipMixin, FormattableMixin, Sor
     // Evenly split up height for bars with space between bars
     return d3.scale.ordinal()
       .domain(d3.range(this.get('numBars')))
-      .rangeRoundBands([ 0, this.get('height') ], this.get('barPadding'));
+      .rangeRoundBands([0, this.get('height')], this.get('barPadding'));
   }),
 
   // Space in pixels allocated to each bar + padding
   barThickness: Ember.computed('yScale', function() {
     return this.get('yScale').rangeBand();
-  }), 
+  }),
 
   // ----------------------------------------------------------------------------
   // Tooltip Configuration
@@ -116,6 +116,7 @@ export default ChartComponent.extend(FloatingTooltipMixin, FormattableMixin, Sor
     if (!this.get('isInteractive')) {
     	return Ember.K;
     }
+
     var _this = this;
     return function(data, i, element) {
       // Do hover detail style stuff here
@@ -126,8 +127,8 @@ export default ChartComponent.extend(FloatingTooltipMixin, FormattableMixin, Sor
       // Line 1
       var content = "<span class=\"tip-label\">" + data.label + "</span>";
       // Line 2
-      content +="<span class=\"name\">" + _this.get('tooltipValueDisplayName') + ": </span>";
-      content +="<span class=\"value\">" + formatLabel(data.value) + "</span>";
+      content += "<span class=\"name\">" + _this.get('tooltipValueDisplayName') + ": </span>";
+      content += "<span class=\"value\">" + formatLabel(data.value) + "</span>";
       return _this.showTooltip(content, d3.event);
     };
   }),
@@ -136,6 +137,7 @@ export default ChartComponent.extend(FloatingTooltipMixin, FormattableMixin, Sor
     if (!this.get('isInteractive')) {
     	return Ember.K;
     }
+
     var _this = this;
     return function(data, i, element) {
       // Undo hover style stuff
@@ -143,7 +145,7 @@ export default ChartComponent.extend(FloatingTooltipMixin, FormattableMixin, Sor
       // Hide Tooltip
       return _this.hideTooltip();
     };
-  }), 
+  }),
 
   // ----------------------------------------------------------------------------
   // Styles
@@ -155,7 +157,7 @@ export default ChartComponent.extend(FloatingTooltipMixin, FormattableMixin, Sor
     return {
 	    transform: function(d, i) {
 	      var value = Math.min(0, d.value);
-	      return "translate(" + xScale(value) + ", "+ yScale(i) + ")";
+	      return "translate(" + xScale(value) + ", " + yScale(i) + ")";
 	    }
 	  };
   }),
@@ -171,7 +173,7 @@ export default ChartComponent.extend(FloatingTooltipMixin, FormattableMixin, Sor
       'stroke-width': 0,
       style: function(d) {
         if (d.color) {
-          return "fill:" + d.color; 
+          return "fill:" + d.color;
         }
         var color = (d.value < 0) ? _this.get('mostTintedColor') : _this.get('leastTintedColor');
         return "fill:" + color;
@@ -203,7 +205,7 @@ export default ChartComponent.extend(FloatingTooltipMixin, FormattableMixin, Sor
 
   groupLabelAttrs: Ember.computed('xScale', 'barThickness', 'labelPadding', function() {
     var xScale = this.get('xScale');
-    
+
     // Anchor the label 'labelPadding' away from the zero line
     // How to anchor the text depends on the direction of the bar
     var _this = this;
@@ -277,8 +279,8 @@ export default ChartComponent.extend(FloatingTooltipMixin, FormattableMixin, Sor
 
     var entering = groups.enter()
       .append('g').attr('class', 'bar')
-      .on("mouseover", function(d,i) { return showDetails(d,i,this); })
-      .on("mouseout", function(d,i) { return hideDetails(d,i,this); });
+      .on("mouseover", function(d, i) { return showDetails(d, i, this); })
+      .on("mouseout", function(d, i) { return hideDetails(d, i, this); });
     entering.append('rect');
     entering.append('text').attr('class', 'value');
     entering.append('text').attr('class', 'group');
@@ -293,14 +295,14 @@ export default ChartComponent.extend(FloatingTooltipMixin, FormattableMixin, Sor
   updateGraphic: function() {
     var _this = this;
     var groups = this.get('groups')
-      .attr( this.get('groupAttrs'));
+      .attr(this.get('groupAttrs'));
 
     groups.select('rect')
-      .attr( this.get('barAttrs'));
+      .attr(this.get('barAttrs'));
 
     groups.select('text.value').text(function(d) {
       return _this.get('formatLabelFunction')(d.value);
-    }).attr( this.get('valueLabelAttrs'));
+    }).attr(this.get('valueLabelAttrs'));
 
     var labelWidth = this.get('labelWidth');
     var labelTrimmer = LabelTrimmer.create({
@@ -310,8 +312,7 @@ export default ChartComponent.extend(FloatingTooltipMixin, FormattableMixin, Sor
 
     return groups.select('text.group').text(function(d) {
       return d.label;
-    }).attr( this.get('groupLabelAttrs'))
-      .call( labelTrimmer.get('trim'));
+    }).attr(this.get('groupLabelAttrs'))
+      .call(labelTrimmer.get('trim'));
   }
-
 });

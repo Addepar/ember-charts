@@ -576,7 +576,7 @@ export default ChartComponent.extend(
     var zeroDisplacement = this.get('zeroDisplacement');
 
     return {
-      class: function(d,i) {
+      class: function(d, i) {
         return ("grouping-" + i);
       },
 
@@ -622,7 +622,7 @@ export default ChartComponent.extend(
   // 6th line: ~3px, 33% tinted, dotted
   lineColorFn: Ember.computed( function() {
     var _this = this;
-    return function(d,i) {
+    return function(d, i) {
       var ii;
       switch (i) {
         case 0:
@@ -646,14 +646,14 @@ export default ChartComponent.extend(
         default:
           ii = i;
       }
-      return _this.get('getSeriesColor')(d,ii);
+      return _this.get('getSeriesColor')(d, ii);
     };
   }),
 
   lineAttrs: Ember.computed('line', 'getSeriesColor', function() {
     var _this = this;
     return {
-        class: function(d,i) {
+        class: function(d, i) {
           return ("line series-" + i);
         },
         d: function(d) {
@@ -877,11 +877,11 @@ export default ChartComponent.extend(
 
     var bars = groups.selectAll('rect').data( function(d) { return d; });
     bars.enter().append('rect')
-      .on("mouseover", function(d,i) {
-        return showDetails(d,i,this);
+      .on("mouseover", function(d, i) {
+        return showDetails(d, i, this);
       })
-      .on("mouseout", function(d,i) {
-        return hideDetails(d,i,this);
+      .on("mouseout", function(d, i) {
+        return hideDetails(d, i, this);
       });
     bars.exit().remove();
   },

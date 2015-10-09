@@ -3,7 +3,6 @@ import ResizeHandlerMixin from '../mixins/resize-handler';
 import ColorableMixin from '../mixins/colorable';
 
 export default Ember.Component.extend( ColorableMixin, ResizeHandlerMixin, {
-
   layoutName: 'components/chart-component',
   classNames: ['chart-frame', 'scroll-y'],
   isInteractive: true,
@@ -160,11 +159,11 @@ export default Ember.Component.extend( ColorableMixin, ResizeHandlerMixin, {
     if ((this._state || this.state) !== "inDOM") {
       return;
     }
+
     if (this.get('hasNoData')) {
       return this.clearChart();
     } else {
       return this.drawChart();
     }
   }
-
 });
