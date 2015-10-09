@@ -110,9 +110,8 @@ export default ChartComponent.extend(LegendMixin, FloatingTooltipMixin, AxesMixi
     	return [];
    	}
 
-    var _this = this;
-    data = groupBy(data, function(d) {
-      return (d.group || _this.get('ungroupedSeriesName'));
+    data = groupBy(data, (d) => {
+      return d.group || this.get('ungroupedSeriesName');
     });
 
     // After grouping, the data points may be out of order, and therefore not properly
@@ -121,14 +120,14 @@ export default ChartComponent.extend(LegendMixin, FloatingTooltipMixin, AxesMixi
     // grouping across the board.
     // TODO(ember-charts-lodash): Use _.mapValues instead of the each loop.
     _.each(_.keys(data), function(groupName) {
-      data[groupName] = _.sortBy( data[groupName], 'label');
+      data[groupName] = _.sortBy(data[groupName], 'label');
     });
 
     return data;
   }),
 
   groupNames: Ember.computed('groupedData', function() {
-    return _.keys( this.get('groupedData'));
+    return _.keys(this.get('groupedData'));
   }),
 
   // We know the data is grouped because it has more than one label. If there
@@ -144,13 +143,13 @@ export default ChartComponent.extend(LegendMixin, FloatingTooltipMixin, AxesMixi
   finishedData: Ember.computed('groupedData', 'isGrouped', 'stackBars', 'sortedData', function() {
     var y0, stackedValues;
     if (this.get('isGrouped')) {
-      if (Ember.isEmpty( this.get('groupedData'))) {
+      if (Ember.isEmpty(this.get('groupedData'))) {
         return Ember.A();
       }
 
-      return _.map( this.get('groupedData'), function(values, groupName) {
+      return _.map(this.get('groupedData'), function(values, groupName) {
         y0 = 0;
-        stackedValues = _.map( values, function(d) {
+        stackedValues = _.map(values, function(d) {
           return {
             y0: y0,
             y1: y0 += Math.max(d.value, 0),
@@ -176,7 +175,7 @@ export default ChartComponent.extend(LegendMixin, FloatingTooltipMixin, AxesMixi
       // If we do not have grouped data and are drawing stacked bars, keep the
       // data in one group so it gets stacked
       y0 = 0;
-      stackedValues = _.map( this.get('data'), function(d) {
+      stackedValues = _.map(this.get('data'), function(d) {
         return {
           y0: y0,
           y1: y0 += Math.max(d.value, 0)
@@ -197,7 +196,7 @@ export default ChartComponent.extend(LegendMixin, FloatingTooltipMixin, AxesMixi
       }
       // If we have grouped data and do not have stackBars turned on, split the
       // data up so it gets drawn in separate groups and labeled
-      return _.map( this.get('sortedData'), function(d) {
+      return _.map(this.get('sortedData'), function(d) {
         return {
           group: d.label,
           values: [d]
@@ -240,7 +239,7 @@ export default ChartComponent.extend(LegendMixin, FloatingTooltipMixin, AxesMixi
   yDomain: Ember.computed('finishedData', 'stackBars', function() {
     var finishedData = this.get('finishedData');
     var minOfGroups = d3.min(finishedData, function(d) {
-      return _.min( d.values.map( function(dd) {
+      return _.min(d.values.map(function(dd) {
         return dd.value;
       }));
     });
@@ -293,7 +292,7 @@ export default ChartComponent.extend(LegendMixin, FloatingTooltipMixin, AxesMixi
     var groups = _.map(_.values(this.get('groupedData')), function(g) {
       return _.pluck(g, 'label');
     });
-    return _.uniq( _.flatten(groups));
+    return _.uniq(_.flatten(groups));
   }),
 
   labelIDMapping: Ember.computed('individualBarLabels.[]', function() {
@@ -335,7 +334,7 @@ export default ChartComponent.extend(LegendMixin, FloatingTooltipMixin, AxesMixi
       return d3.scale.ordinal()
         .domain(this.get('xWithinGroupDomain'))
         .rangeRoundBands([ 0, this.get('groupWidth') ],
-          this.get('betweenGroupPadding')/2, this.get('betweenGroupPadding')/2 );
+          this.get('betweenGroupPadding')/2, this.get('betweenGroupPadding')/2);
     }
   }),
 
@@ -386,21 +385,19 @@ export default ChartComponent.extend(LegendMixin, FloatingTooltipMixin, AxesMixi
   }),
 
   legendItems: Ember.computed('individualBarLabels.[]', 'getSeriesColor', 'stackBars', 'labelIDMapping.[]', function() {
-    var getSeriesColor, _this = this;
+    var getSeriesColor;
     getSeriesColor = this.get('getSeriesColor');
-    return this.get('individualBarLabels').map(function(label, i) {
+    return this.get('individualBarLabels').map((label, i) => {
       var color;
       color = getSeriesColor(label, i);
-      if (_this.get('stackBars')) {
-        i = _this.get('labelIDMapping')[label];
+      if (this.get('stackBars')) {
+        i = this.get('labelIDMapping')[label];
       }
       return {
         label: label,
         fill: color,
         stroke: color,
-        icon: function() {
-          return 'square';
-        },
+        icon: () => 'square',
         selector: ".grouping-" + i
       };
     });
@@ -414,9 +411,8 @@ export default ChartComponent.extend(LegendMixin, FloatingTooltipMixin, AxesMixi
     if (!this.get('isInteractive')) {
       return Ember.K;
     }
-    var _this = this;
-    return function(data, i, element) {
 
+    return (data, i, element) => {
       // Specify whether we are on an individual bar or group
       var isGroup = Ember.isArray(data.values);
 
@@ -427,9 +423,9 @@ export default ChartComponent.extend(LegendMixin, FloatingTooltipMixin, AxesMixi
       // Show tooltip
       var content =  (data.group) ? "<span class=\"tip-label\">" + data.group + "</span>" : '';
 
-      var formatLabel = _this.get('formatLabelFunction');
+      var formatLabel = this.get('formatLabelFunction');
       var addValueLine = function(d) {
-        content +="<span class=\"name\">" + d.label + ": </span>";
+        content += "<span class=\"name\">" + d.label + ": </span>";
         return content += "<span class=\"value\">" + formatLabel(d.value) + "</span><br/>";
       };
 
@@ -440,7 +436,7 @@ export default ChartComponent.extend(LegendMixin, FloatingTooltipMixin, AxesMixi
         // Just hovering over single bar
         addValueLine(data);
       }
-      return _this.showTooltip(content, d3.event);
+      return this.showTooltip(content, d3.event);
     };
   }),
 
@@ -448,8 +444,8 @@ export default ChartComponent.extend(LegendMixin, FloatingTooltipMixin, AxesMixi
     if (!this.get('isInteractive')) {
       return Ember.K;
     }
-    var _this = this;
-    return function(data, i, element) {
+
+    return (data, i, element) => {
       // if we exited the group label undo for the group
       if (Ember.isArray(data.values)) {
         element = element.parentNode.parentNode;
@@ -458,7 +454,7 @@ export default ChartComponent.extend(LegendMixin, FloatingTooltipMixin, AxesMixi
       d3.select(element).classed('hovered', false);
 
       // Hide Tooltip
-      return _this.hideTooltip();
+      return this.hideTooltip();
     };
   }),
 
@@ -469,11 +465,11 @@ export default ChartComponent.extend(LegendMixin, FloatingTooltipMixin, AxesMixi
 
   groupAttrs: Ember.computed('graphicLeft', 'graphicTop', 'xBetweenGroupScale', function() {
     var xBetweenGroupScale = this.get('xBetweenGroupScale');
-    var _this = this;
+
     return {
-      transform: function(d) {
-        var dx = xBetweenGroupScale(d.group) ? _this.get('graphicLeft') + xBetweenGroupScale(d.group) : _this.get('graphicLeft');
-        var dy = _this.get('graphicTop');
+      transform: (d) => {
+        var dx = xBetweenGroupScale(d.group) ? this.get('graphicLeft') + xBetweenGroupScale(d.group) : this.get('graphicLeft');
+        var dy = this.get('graphicTop');
 
         return "translate(" + dx + ", " + dy + ")";
       }
@@ -481,20 +477,17 @@ export default ChartComponent.extend(LegendMixin, FloatingTooltipMixin, AxesMixi
   }),
 
   stackedBarAttrs: Ember.computed('yScale', 'groupWidth', 'labelIDMapping.[]', function() {
-    var yScale, zeroDisplacement,
-      _this = this;
+    var yScale, zeroDisplacement;
     zeroDisplacement = 1;
     yScale = this.get('yScale');
     return {
-      "class": function(barSection) {
+      "class": (barSection) => {
         var id;
-        id = _this.get('labelIDMapping')[barSection.label];
+        id = this.get('labelIDMapping')[barSection.label];
         return "grouping-" + id;
       },
       'stroke-width': 0,
-      width: function() {
-        return _this.get('groupWidth');
-      },
+      width: () => this.get('groupWidth'),
       x: null,
       y: function(barSection) {
         return yScale(barSection.y1) + zeroDisplacement;
@@ -508,18 +501,20 @@ export default ChartComponent.extend(LegendMixin, FloatingTooltipMixin, AxesMixi
   groupedBarAttrs: Ember.computed('yScale', 'getSeriesColor', 'barWidth', 'xWithinGroupScale', function() {
     var zeroDisplacement = 1;
     var yScale = this.get('yScale');
-    var _this = this;
+
     return {
-      class: function(d, i) { return "grouping-" + i; },
+      class: (d, i) => "grouping-" + i,
       'stroke-width': 0,
-      width: function() { return _this.get('barWidth'); },
-      x: function(d) { return _this.get('xWithinGroupScale')(d.label); },
-      height: function(d) { return Math.max(0, Math.abs(yScale(d.value) - yScale(0)) - zeroDisplacement); },
+      width: () => this.get('barWidth'),
+      x: (d) => this.get('xWithinGroupScale')(d.label),
+      height: function(d) {
+        return Math.max(0, Math.abs(yScale(d.value) - yScale(0)) - zeroDisplacement);
+      },
       y: function(d) {
         if (d.value > 0) {
           return yScale(d.value);
         } else {
-          return (yScale(0) + zeroDisplacement);
+          return yScale(0) + zeroDisplacement;
         }
       }
     };
@@ -527,19 +522,17 @@ export default ChartComponent.extend(LegendMixin, FloatingTooltipMixin, AxesMixi
 
   labelAttrs: Ember.computed('barWidth', 'isGrouped', 'stackBars', 'groupWidth',
     'xWithinGroupScale', 'graphicTop', 'graphicHeight', 'labelPadding', function() {
-
-    var _this = this;
     return {
       'stroke-width': 0,
-      transform: function(d) {
-        var dx = _this.get('barWidth')/2;
-        if (_this.get('isGrouped') || _this.get('stackBars')) {
-          dx += _this.get('groupWidth')/2 - _this.get('barWidth')/2;
+      transform: (d) => {
+        var dx = this.get('barWidth')/2;
+        if (this.get('isGrouped') || this.get('stackBars')) {
+          dx += this.get('groupWidth')/2 - this.get('barWidth')/2;
         } else {
-          dx += _this.get('xWithinGroupScale')(d.group);
+          dx += this.get('xWithinGroupScale')(d.group);
         }
-        var dy = _this.get('graphicTop') + _this.get('graphicHeight') + _this.get('labelPadding');
-        return "translate(" + dx +", " + dy + ")";
+        var dy = this.get('graphicTop') + this.get('graphicHeight') + this.get('labelPadding');
+        return "translate(" + dx + ", " + dy + ")";
       }
     };
   }),
@@ -597,14 +590,14 @@ export default ChartComponent.extend(LegendMixin, FloatingTooltipMixin, AxesMixi
   // Calculate the number of degrees to rotate labels based on how widely labels
   // will be spaced, but never rotate the labels less than 20 degrees
   rotateLabelDegrees: Ember.computed('labelHeight', 'maxLabelWidth', function() {
-    var radians = Math.atan( this.get('labelHeight') / this.get('maxLabelWidth'));
+    var radians = Math.atan(this.get('labelHeight') / this.get('maxLabelWidth'));
     var degrees = radians * 180 / Math.PI;
     return Math.max(degrees, 20);
   }),
 
   rotatedLabelLength: Ember.computed('maxLabelHeight', 'rotateLabelDegrees', function() {
     var rotateLabelRadians = Math.PI / 180 * this.get('rotateLabelDegrees');
-    return Math.abs( this.get('maxLabelHeight') / Math.sin(rotateLabelRadians));
+    return Math.abs(this.get('maxLabelHeight') / Math.sin(rotateLabelRadians));
   }),
 
   // ----------------------------------------------------------------------------
@@ -657,20 +650,19 @@ export default ChartComponent.extend(LegendMixin, FloatingTooltipMixin, AxesMixi
     var groups = this.get('groups');
     var labels = groups.select('.groupLabel text')
       .attr('transform', null) // remove any previous rotation attrs
-      .text( function(d) { return d.group; });
+      .text(function(d) { return d.group; });
 
     // If there is enough space horizontally, center labels underneath each
     // group. Otherwise, rotate each label and anchor it at the top of its
     // first character.
     this.setRotateLabels();
-    var _this = this;
     var labelTrimmer;
 
     if (this.get('_shouldRotateLabels')) {
       var rotateLabelDegrees = this.get('rotateLabelDegrees');
       labelTrimmer = LabelTrimmer.create({
-        getLabelSize: function() { return _this.get('rotatedLabelLength'); },
-        getLabelText: function(d) { return d.group; }
+        getLabelSize: () => this.get('rotatedLabelLength'),
+        getLabelText: (d) => d.group
       });
 
       return labels.call(labelTrimmer.get('trim')).attr({
@@ -682,8 +674,8 @@ export default ChartComponent.extend(LegendMixin, FloatingTooltipMixin, AxesMixi
     } else {
       var maxLabelWidth = this.get('maxLabelWidth');
       labelTrimmer = LabelTrimmer.create({
-        getLabelSize: function() { return maxLabelWidth; },
-        getLabelText: function(d) { return (d.group != null) ? d.group : ''; }
+        getLabelSize: () => maxLabelWidth,
+        getLabelText: (d) => d.group != null ? d.group : ''
       });
 
       return labels.call(labelTrimmer.get('trim')).attr({
@@ -694,7 +686,6 @@ export default ChartComponent.extend(LegendMixin, FloatingTooltipMixin, AxesMixi
   },
 
   updateAxes: function() {
-
     //tickSize isn't doing anything here, it should take two arguments
     var yAxis = d3.svg.axis()
       .scale(this.get('yScale'))
@@ -706,7 +697,7 @@ export default ChartComponent.extend(LegendMixin, FloatingTooltipMixin, AxesMixi
     var gYAxis = this.get('yAxis');
 
     // find the correct size of graphicLeft in order to fit the Labels perfectly
-    this.set('graphicLeft', this.maxLabelLength( gYAxis.selectAll('text')) + this.get('labelPadding') );
+    this.set('graphicLeft', this.maxLabelLength(gYAxis.selectAll('text')) + this.get('labelPadding') );
 
 
     var graphicTop = this.get('graphicTop');
@@ -715,7 +706,7 @@ export default ChartComponent.extend(LegendMixin, FloatingTooltipMixin, AxesMixi
       .call(yAxis);
 
     gYAxis.selectAll('g')
-      .filter(function(d) { return (d !== 0); })
+      .filter(function(d) { return d !== 0; })
       .classed('major', false)
       .classed('minor', true);
 
@@ -731,12 +722,11 @@ export default ChartComponent.extend(LegendMixin, FloatingTooltipMixin, AxesMixi
 
     var barAttrs = this.get('stackBars') ? this.get('stackedBarAttrs') : this.get('groupedBarAttrs');
 
-    groups.attr( this.get('groupAttrs') );
+    groups.attr(this.get('groupAttrs') );
     groups.selectAll('rect')
       .attr(barAttrs)
       .style('fill', this.get('getSeriesColor'));
     return groups.select('g.groupLabel')
       .attr(this.get('labelAttrs') );
   }
-
 });

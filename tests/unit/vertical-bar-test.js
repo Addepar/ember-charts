@@ -87,15 +87,15 @@ test('Margins are the right size', function(assert) {
   var component = this.subject();
   assert.expect(3);
 
-  assert.equal( component.get('marginLeft'), 0, 'no left margin');
-  assert.equal( component.get('marginRight'), 0, 'no right margin');
-  assert.equal( component.get('marginBottom'), 0, 'no bottom margin');
+  assert.equal(component.get('marginLeft'), 0, 'no left margin');
+  assert.equal(component.get('marginRight'), 0, 'no right margin');
+  assert.equal(component.get('marginBottom'), 0, 'no bottom margin');
 });
 
 test('Stacked bar chart data is sorted correctly', function(assert) {
   var component = this.subject();
   assert.expect(8);
-  Ember.run( function() {
+  Ember.run(function() {
     var data, sortedData, original = [], sorted = [], groups = [],
       totals = [], originalGroups = [];
 
@@ -117,9 +117,9 @@ test('Stacked bar chart data is sorted correctly', function(assert) {
     sorted.push(sortedData.slice(3,6));
     sorted.push(sortedData.slice(6,9));
 
-    totals.push(sorted[0].map( (val) => val.value ).reduce((left,right) => left+right ));
-    totals.push(sorted[1].map( (val) => val.value ).reduce((left,right) => left+right ));
-    totals.push(sorted[2].map( (val) => val.value ).reduce((left,right) => left+right ));
+    totals.push(sorted[0].map((val) => val.value).reduce((left,right) => left+right));
+    totals.push(sorted[1].map((val) => val.value).reduce((left,right) => left+right));
+    totals.push(sorted[2].map((val) => val.value).reduce((left,right) => left+right));
 
     groups.push(sorted[0].every((item) => item.group === 'Group Three'));
     groups.push(sorted[1].every((item) => item.group === 'Group One'));
@@ -137,6 +137,7 @@ test('Stacked bar chart data is sorted correctly', function(assert) {
     assert.ok(totals[1] < totals[2], 'Group one is the smaller than group two');
   });
 });
+
 test('Stacked bars are grouped correctly', function(assert) {
   var labelIDMapping;
   this.subject(stackedBarContent);

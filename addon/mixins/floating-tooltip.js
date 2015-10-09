@@ -25,7 +25,7 @@ export default Ember.Mixin.create({
   // # Private Methods
   // # ----------------------------------------------------------------------------
   _tooltipId: Ember.computed(function() {
-    return (this.get('elementId') + '_tooltip');
+    return this.get('elementId') + '_tooltip';
   }),
 
   _getTooltip: function() {
@@ -50,23 +50,25 @@ export default Ember.Mixin.create({
     var curX = event.clientX + windowScrollLeft;
     var curY = event.clientY + windowScrollTop;
 
-    var tooltipLeftOffset =
-      ((curX - windowScrollLeft + xOffset * 2 + width) > $(window).width()) ?
-        // # Not enough room to put tooltip to the right of the cursor
-        - (width + xOffset * 2)
-      :
-        // # Offset the tooltip to the right
-        xOffset;
+    var tooltipLeftOffset;
+    if ((curX - windowScrollLeft + xOffset * 2 + width) > $(window).width()) {
+      // # Not enough room to put tooltip to the right of the cursor
+      tooltipLeftOffset = -(width + xOffset * 2);
+    } else {
+      // # Offset the tooltip to the right
+      tooltipLeftOffset = xOffset;
+    }
 
     var tooltipLeft = curX + tooltipLeftOffset;
 
-    var tooltipTopOffset =
-      ((curY - windowScrollTop + yOffset * 2 + height) > $(window).height()) ?
-        // # Not enough room to put tooltip to the below the cursor
-        - (height + yOffset * 2)
-      :
-        // # Offset the tooltip below the cursor
-        yOffset;
+    var tooltipTopOffset;
+    if ((curY - windowScrollTop + yOffset * 2 + height) > $(window).height()) {
+      // # Not enough room to put tooltip to the below the cursor
+      tooltipTopOffset = -(height + yOffset * 2);
+    } else {
+      // # Offset the tooltip below the cursor
+      tooltipTopOffset = yOffset;
+    }
 
     var tooltipTop = curY + tooltipTopOffset;
 

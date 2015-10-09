@@ -11,8 +11,7 @@ import NoMarginChartMixin from '../mixins/no-margin-chart';
 
 import { groupBy } from '../utils/group-by';
 
-export default ChartComponent.extend(
-  LegendMixin, TimeSeriesLabelerMixin, FloatingTooltipMixin,
+export default ChartComponent.extend(LegendMixin, TimeSeriesLabelerMixin, FloatingTooltipMixin,
   HasTimeSeriesRuleMixin, AxesMixin, FormattableMixin, NoMarginChartMixin, {
 
   classNames: ['chart-time-series'],
@@ -105,16 +104,15 @@ export default ChartComponent.extend(
       return [];
     }
 
-    var _this = this;
-    var groups = groupBy(lineData, function(datum) {
-      return _this._getLabelOrDefault(datum);
+    var groups = groupBy(lineData, (datum) => {
+      return this._getLabelOrDefault(datum);
     });
     // _results = [];
     // for (groupName in groups) {
     //   values = groups[groupName];
     //   _results.push();
     // }
-    return _.map(groups, function( values, groupName) {
+    return _.map(groups, function(values, groupName) {
       return {
         group: groupName,
         values: values
@@ -139,12 +137,11 @@ export default ChartComponent.extend(
       return d.time.getTime();
     });
 
-    var _this = this;
-    return _.map(barTimes, function(groups) {
-      return _.map(groups, function(g) {
-          var label = _this._getLabelOrDefault(g);
+    return _.map(barTimes, (groups) => {
+      return _.map(groups, (g) => {
+          var label = this._getLabelOrDefault(g);
           var labelTime = g.time;
-          var drawTime = _this._transformCenter(g.time);
+          var drawTime = this._transformCenter(g.time);
           return {
               group: label,
               time: drawTime,
@@ -219,9 +216,9 @@ export default ChartComponent.extend(
     if (Ember.isEmpty(barData)) {
       return [];
     }
-    var _this = this;
-    var barGroups = groupBy(barData, function(datum) {
-      return _this._getLabelOrDefault(datum);
+
+    var barGroups = groupBy(barData, (datum) => {
+      return this._getLabelOrDefault(datum);
     });
     return _.keys(barGroups);
   }),
@@ -240,11 +237,11 @@ export default ChartComponent.extend(
 
   // width of the graphic
   graphicWidth: Ember.computed('width', 'graphicLeft', function() {
-    return (this.get('width') - this.get('graphicLeft'));
+    return this.get('width') - this.get('graphicLeft');
   }),
 
   graphicHeight: Ember.computed('height', 'legendHeight', 'legendChartPadding', function() {
-    return (this.get('height') - this.get('legendHeight') - this.get('legendChartPadding'));
+    return this.get('height') - this.get('legendHeight') - this.get('legendChartPadding');
   }),
 
   // ----------------------------------------------------------------------------
@@ -315,7 +312,7 @@ export default ChartComponent.extend(
     var scale = this.get('xTimeScale');
     var t1 = this.get('xBetweenGroupDomain')[0];
     var t2 = (timeDelta === 'quarter') ? d3.time['month'].offset(t1, 3) : d3.time[timeDelta].offset(t1, 1);
-    return (scale(t2) - scale(t1));
+    return scale(t2) - scale(t1);
   }),
   // ----------------------------------------------------------------------------
   // Line Drawing Scales
@@ -516,13 +513,12 @@ export default ChartComponent.extend(
       return Ember.K;
     }
 
-    var _this = this;
-    return function(data, i, element) {
+    return (data, i, element) => {
       d3.select(element).classed('hovered', true);
 
       var time = data.labelTime != null ? data.labelTime : data.time;
-      var content = "<span class=\"tip-label\">" + (_this.get('formatTime')(time)) + "</span>";
-      var formatLabelFunction = _this.get('formatLabelFunction');
+      var content = "<span class=\"tip-label\">" + (this.get('formatTime')(time)) + "</span>";
+      var formatLabelFunction = this.get('formatLabelFunction');
 
       var addValueLine = function(d) {
         content += "<span class=\"name\">" + d.group + ": </span>";
@@ -535,7 +531,7 @@ export default ChartComponent.extend(
         addValueLine(data);
       }
 
-      return _this.showTooltip(content, d3.event);
+      return this.showTooltip(content, d3.event);
     };
   }),
 
@@ -544,10 +540,9 @@ export default ChartComponent.extend(
       return Ember.K;
     }
 
-    var _this = this;
-    return function(data, i, element) {
+    return (data, i, element) => {
       d3.select(element).classed('hovered', false);
-      return _this.hideTooltip();
+      return this.hideTooltip();
     };
   }),
 
@@ -559,11 +554,8 @@ export default ChartComponent.extend(
   zeroDisplacement: 1,
 
   groupAttrs: Ember.computed('paddedGroupWidth', function() {
-    var _this = this;
     return {
-      transform: function() {
-        return "translate(" + (-_this.get('paddedGroupWidth') / 2) + ",0)";
-      }
+      transform: () => "translate(" + (-this.get('paddedGroupWidth') / 2) + ",0)"
     };
   }),
 
@@ -577,38 +569,32 @@ export default ChartComponent.extend(
 
     return {
       class: function(d, i) {
-        return ("grouping-" + i);
+        return "grouping-" + i;
       },
 
       'stroke-width': 0,
       width: this.get('barWidth'),
       x: function(d) {
-        return (xGroupScale(d.label) + xTimeScale(d.time));
+        return xGroupScale(d.label) + xTimeScale(d.time);
       },
 
       y: function(d) {
-        return (d.value > 0) ? yScale(d.value) : (yScale(0) + zeroDisplacement);
+        return d.value > 0 ? yScale(d.value) : yScale(0) + zeroDisplacement;
       },
 
       height: function(d) {
         // prevent zero-height bars from causing errors because of zeroDisplacement
         var zeroLine = Math.max(0, yScale.domain()[0]);
-        return Math.max(0,
-            (d.value > zeroLine) ?
-              (Math.abs(yScale(zeroLine) - yScale(d.value)) - zeroDisplacement)
-              :
-              (Math.abs(yScale(d.value) - yScale(zeroLine)) - zeroDisplacement)
-        );
+        return Math.max(0, Math.abs(yScale(zeroLine) - yScale(d.value)) - zeroDisplacement);
       }
     };
   }),
 
   line: Ember.computed( 'xTimeScale', 'yScale', 'interpolate', function() {
-    var _this = this;
     return d3.svg.line()
-      .x( function(d) { return _this.get('xTimeScale')(d.time); })
-      .y( function(d) { return _this.get('yScale')(d.value); })
-      .interpolate( this.get('interpolate') ? 'basis' : 'linear');
+      .x((d) => this.get('xTimeScale')(d.time))
+      .y((d) => this.get('yScale')(d.value))
+      .interpolate(this.get('interpolate') ? 'basis' : 'linear');
   }),
 
   // Line styles. Implements Craig's design spec, which ensures that out of the
@@ -620,9 +606,8 @@ export default ChartComponent.extend(
   // 4th line: ~1px, 66% tinted, dotted
   // 5th line: ~3px, 33% tinted, solid
   // 6th line: ~3px, 33% tinted, dotted
-  lineColorFn: Ember.computed( function() {
-    var _this = this;
-    return function(d, i) {
+  lineColorFn: Ember.computed(function() {
+    return (d, i) => {
       var ii;
       switch (i) {
         case 0:
@@ -646,19 +631,14 @@ export default ChartComponent.extend(
         default:
           ii = i;
       }
-      return _this.get('getSeriesColor')(d, ii);
+      return this.get('getSeriesColor')(d, ii);
     };
   }),
 
   lineAttrs: Ember.computed('line', 'getSeriesColor', function() {
-    var _this = this;
     return {
-        class: function(d, i) {
-          return ("line series-" + i);
-        },
-        d: function(d) {
-          return _this.get('line')(d.values);
-        },
+        class: (d, i) => "line series-" + i,
+        d: (d) => this.get('line')(d.values),
         stroke: this.get('lineColorFn'),
         'stroke-width': function(d, i) {
           switch (i) {
@@ -705,11 +685,11 @@ export default ChartComponent.extend(
   // Use primary colors for bars if there are no lines
 
   secondaryMinimumTint: Ember.computed('numLines', function() {
-    return (this.get('numLines') === 0) ? 0.0 : 0.4;
+    return this.get('numLines') === 0 ? 0.0 : 0.4;
   }),
 
   secondaryMaximumTint: Ember.computed( 'numLines', function() {
-    return (this.get('numLines') === 0) ? 0.8 : 0.85;
+    return this.get('numLines') === 0 ? 0.8 : 0.85;
   }),
 
   // ----------------------------------------------------------------------------
@@ -717,7 +697,7 @@ export default ChartComponent.extend(
   // ----------------------------------------------------------------------------
 
   hasLegend: Ember.computed( 'legendItems.length', 'showLegend', function() {
-    return (this.get('legendItems.length') > 1) && (this.get('showLegend'));
+    return this.get('legendItems.length') > 1 && this.get('showLegend');
   }),
 
   legendItems: Ember.computed('xBetweenSeriesDomain', 'xWithinGroupDomain',
@@ -726,26 +706,25 @@ export default ChartComponent.extend(
     // getSeriesColor = this.get('getSeriesColor');
     // lineAttrs = this.get('lineAttrs');
 
-    var _this = this;
-    var result = this.get('xBetweenSeriesDomain').map( function(d, i) {
+    var result = this.get('xBetweenSeriesDomain').map((d, i) => {
       // Line legend items
       var res = {
         label: d,
-        stroke: _this.get('lineAttrs')['stroke'](d, i),
-        width: _this.get('lineAttrs')['stroke-width'](d, i),
-        dotted: _this.get('lineAttrs')['stroke-dasharray'](d, i),
-        icon: function() { return 'line'; },
+        stroke: this.get('lineAttrs')['stroke'](d, i),
+        width: this.get('lineAttrs')['stroke-width'](d, i),
+        dotted: this.get('lineAttrs')['stroke-dasharray'](d, i),
+        icon: () => 'line',
         selector: ".series-" + i
       };
       return res;
-    }).concat( _this.get('xWithinGroupDomain').map(function(d, i) {
+    }).concat(this.get('xWithinGroupDomain').map((d, i) => {
       // Bar legend items
-      var color = _this.get('getSecondarySeriesColor')(d, i);
+      var color = this.get('getSecondarySeriesColor')(d, i);
       var res = {
         stroke: color,
         fill: color,
         label: d,
-        icon: function() { return 'square'; },
+        icon: () => 'square',
         selector: (".grouping-" + i)
       };
       return res;
@@ -761,7 +740,7 @@ export default ChartComponent.extend(
     this.get('viewport').selectAll('.bars').remove();
   },
 
-  groups: Ember.computed( function() {
+  groups: Ember.computed(function() {
     return this.get('viewport').selectAll('.bars').data(this.get('_groupedBarData'));
   }).volatile(),
 
@@ -769,11 +748,11 @@ export default ChartComponent.extend(
     this.get('viewport').selectAll('.series').remove();
   },
 
-  series: Ember.computed( function() {
+  series: Ember.computed(function() {
     return this.get('viewport').selectAll('.series').data(this.get('_groupedLineData'));
   }).volatile(),
 
-  xAxis: Ember.computed( function() {
+  xAxis: Ember.computed(function() {
     var xAxis = this.get('viewport').select('.x.axis');
     if (xAxis.empty()) {
       return this.get('viewport')
@@ -784,7 +763,7 @@ export default ChartComponent.extend(
     }
   }).volatile(),
 
-  yAxis: Ember.computed( function() {
+  yAxis: Ember.computed(function() {
     var yAxis = this.get('viewport').select('.y.axis');
     if (yAxis.empty()) {
       return this.get('viewport')
@@ -875,7 +854,7 @@ export default ChartComponent.extend(
       .attr('class', 'bars');
     groups.exit().remove();
 
-    var bars = groups.selectAll('rect').data( function(d) { return d; });
+    var bars = groups.selectAll('rect').data(function(d) { return d; });
     bars.enter().append('rect')
       .on("mouseover", function(d, i) {
         return showDetails(d, i, this);

@@ -59,7 +59,7 @@ export default Ember.Mixin.create({
   }),
 
   secondaryColorScale: Ember.computed('secondaryColorScaleType', 'secondaryColorRange', function() {
-    return this.get('secondaryColorScaleType')().range( this.get('secondaryColorRange') );
+    return this.get('secondaryColorScaleType')().range(this.get('secondaryColorRange') );
   }),
 
   // ----------------------------------------------------------------------------

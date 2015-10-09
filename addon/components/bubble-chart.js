@@ -26,9 +26,7 @@ export default ChartComponent.extend(FloatingTooltipMixin, {
   // Dividing by 8 scales down the charge to be
   // appropriate for the visualization dimensions.
   charge: Ember.computed(function() {
-    return function(d) {
-      return -Math.pow(d.radius, 2.0) / 8;
-    };
+    return (d) => -Math.pow(d.radius, 2.0) / 8;
   }),
 
   // Getters for formatting human-readable labels from provided data
@@ -52,8 +50,8 @@ export default ChartComponent.extend(FloatingTooltipMixin, {
       // Line 1
       var content = "<span class=\"tip-label\">" + data.label + "</span>";
       // Line 2
-      content +="<span class=\"name\">" + this.get('tooltipValueDisplayName') + ": </span>";
-      content +="<span class=\"value\">" + formatLabel(data.value) + "</span>";
+      content += "<span class=\"name\">" + this.get('tooltipValueDisplayName') + ": </span>";
+      content += "<span class=\"value\">" + formatLabel(data.value) + "</span>";
       return this.showTooltip(content, d3.event);
     };
   }),
@@ -80,7 +78,7 @@ export default ChartComponent.extend(FloatingTooltipMixin, {
   // Sqrt scaling between data and radius
   radiusScale: Ember.computed('data', 'width', 'height', function() {
     // use the max total_amount in the data as the max in the scale's domain
-    var maxAmount = d3.max(this.get('data'), function(d) { return d.value; });
+    var maxAmount = d3.max(this.get('data'), (d) => d.value);
     var maxRadius = d3.min([this.get('width'), this.get('height')]) / 7;
     // TODO(tony): get rid of hard coded values
     return d3.scale.pow().exponent(0.5).domain([0, maxAmount]).range([2, maxRadius]);
@@ -93,15 +91,14 @@ export default ChartComponent.extend(FloatingTooltipMixin, {
     }
 
     var radiusScale = this.get('radiusScale');
-    var _this = this;
-    var nodes = data.map(function(d) {
+    var nodes = data.map((d) => {
       return {
         radius: radiusScale(d.value),
         value: d.value,
         label: d.label,
         id: d.label,
-        x: Math.random() * _this.get('width') / 2,
-        y: Math.random() * _this.get('height') / 2
+        x: Math.random() * this.get('width') / 2,
+        y: Math.random() * this.get('height') / 2
       };
     });
 
@@ -125,19 +122,19 @@ export default ChartComponent.extend(FloatingTooltipMixin, {
     var fill_color = this.get('getSeriesColor');
 
     var circles = vis.selectAll("circle")
-      .data(nodes, function(d) { return d.id; });
+      .data(nodes, (d) => d.id);
 
     circles.enter().append("circle")
       // radius will be set to 0 initially.
       // see transition below
       .attr("r", 0)
-      .attr("id", function(d) { return "bubble_" + d.id; })
+      .attr("id", (d) => "bubble_" + d.id)
       .on("mouseover", function(d, i) { return showDetails(d, i, this); })
       .on("mouseout", function(d, i) { return hideDetails(d, i, this); });
 
     // Fancy transition to make bubbles appear, ending with the
     // correct radius
-    circles.transition().duration(2000).attr("r", function(d) { return d.radius; });
+    circles.transition().duration(2000).attr("r", (d) => d.radius);
 
     circles
       .attr("fill", fill_color)
@@ -148,30 +145,29 @@ export default ChartComponent.extend(FloatingTooltipMixin, {
 
     // Moves all circles towards the @center
     // of the visualization
-    var _this = this;
-    var move_towards_center = function(alpha) {
+    var move_towards_center = (alpha) => {
       var center = {
-        x: _this.get('width') / 2,
-        y: _this.get('height') / 2
+        x: this.get('width') / 2,
+        y: this.get('height') / 2
       };
-      return function(d) {
-        d.x = d.x + (center.x - d.x) * (_this.get('damper') + 0.02) * alpha;
-        d.y = d.y + (center.y - d.y) * (_this.get('damper') + 0.02) * alpha;
+      return (d) => {
+        d.x = d.x + (center.x - d.x) * (this.get('damper') + 0.02) * alpha;
+        d.y = d.y + (center.y - d.y) * (this.get('damper') + 0.02) * alpha;
       };
     };
 
     // Start the forces
     var force = d3.layout.force()
-      .nodes(nodes).size([_this.get('width'), _this.get('height')]);
+      .nodes(nodes).size([this.get('width'), this.get('height')]);
 
     // Display all
     force.gravity(this.get('layoutGravity'))
       .charge(this.get('charge'))
       .friction(0.9)
-      .on("tick", function(e) {
+      .on("tick", (e) => {
         circles.each(move_towards_center(e.alpha))
-          .attr("cx", function(d) { return d.x; })
-          .attr("cy", function(d) { return d.y; });
+          .attr("cx", (d) => d.x)
+          .attr("cy", (d) => d.y);
       });
     force.start();
 

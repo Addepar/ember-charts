@@ -48,11 +48,11 @@ export default SlideController.extend({
   // ---------
 
   availableLineDataSets: Ember.computed('lineDataHash', function() {
-    return Ember.A( _.keys( this.get('lineDataHash')));
+    return Ember.A(_.keys(this.get('lineDataHash')));
   }),
 
   availableBarDataSets: Ember.computed('barDataHash', function() {
-    return Ember.A( _.keys( this.get('barDataHash')));
+    return Ember.A(_.keys(this.get('barDataHash')));
   }),
 
   // display line data in the chart guide

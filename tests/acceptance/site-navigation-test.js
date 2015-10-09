@@ -16,7 +16,6 @@ module('Acceptance | site navigation', {
 
 test('visiting /', function(assert) {
   visit('/');
-
   andThen(function() {
     assert.equal(currentURL(), '/overview');
   });
@@ -24,7 +23,6 @@ test('visiting /', function(assert) {
 
 test('visiting /overview', function(assert) {
   visit('/');
-
   andThen(function() {
     assert.equal(currentURL(), '/overview');
   });
@@ -57,4 +55,3 @@ test('visiting /scatter', function(assert) {
     assert.equal(currentURL(), '/scatter');
   });
 });
-
