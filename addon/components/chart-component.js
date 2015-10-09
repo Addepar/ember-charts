@@ -113,19 +113,17 @@ export default Ember.Component.extend(ColorableMixin, ResizeHandlerMixin, {
 
   init: function() {
     this._super();
-    var _this = this;
-    _.uniq(this.get('renderVars')).forEach(function(renderVar) {
-      _this.addObserver(renderVar, _this.drawOnce);
+    _.uniq(this.get('renderVars')).forEach((renderVar) => {
+      this.addObserver(renderVar, this.drawOnce);
       // This is just to ensure that observers added above fire even
       // if that renderVar is not consumed elsewhere.
-      _this.get(renderVar);
+      this.get(renderVar);
     });
   },
 
   willDestroyElement: function() {
-    var _this = this;
-    _.uniq(this.get('renderVars')).forEach(function(renderVar) {
-      _this.removeObserver(renderVar, _this, _this.drawOnce);
+    _.uniq(this.get('renderVars')).forEach((renderVar) => {
+      this.removeObserver(renderVar, this, this.drawOnce);
     });
     this._super();
   },

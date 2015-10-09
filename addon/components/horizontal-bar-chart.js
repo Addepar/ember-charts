@@ -117,19 +117,18 @@ export default ChartComponent.extend(FloatingTooltipMixin, FormattableMixin, Sor
     	return Ember.K;
     }
 
-    var _this = this;
-    return function(data, i, element) {
+    return (data, i, element) => {
       // Do hover detail style stuff here
       d3.select(element).classed('hovered', true);
 
       // Show tooltip
-      var formatLabel = _this.get('formatLabelFunction');
+      var formatLabel = this.get('formatLabelFunction');
       // Line 1
       var content = "<span class=\"tip-label\">" + data.label + "</span>";
       // Line 2
-      content += "<span class=\"name\">" + _this.get('tooltipValueDisplayName') + ": </span>";
+      content += "<span class=\"name\">" + this.get('tooltipValueDisplayName') + ": </span>";
       content += "<span class=\"value\">" + formatLabel(data.value) + "</span>";
-      return _this.showTooltip(content, d3.event);
+      return this.showTooltip(content, d3.event);
     };
   }),
 
@@ -138,12 +137,11 @@ export default ChartComponent.extend(FloatingTooltipMixin, FormattableMixin, Sor
     	return Ember.K;
     }
 
-    var _this = this;
-    return function(data, i, element) {
+    return (data, i, element) => {
       // Undo hover style stuff
       d3.select(element).classed('hovered', false);
       // Hide Tooltip
-      return _this.hideTooltip();
+      return this.hideTooltip();
     };
   }),
 
@@ -164,18 +162,15 @@ export default ChartComponent.extend(FloatingTooltipMixin, FormattableMixin, Sor
 
   barAttrs: Ember.computed('xScale', 'mostTintedColor', 'leastTintedColor', 'barThickness', function() {
     var xScale = this.get('xScale');
-    var _this = this;
     return {
-      width: function(d) {
-        return Math.abs(xScale(d.value) - xScale(0));
-      },
+      width: (d) => Math.abs(xScale(d.value) - xScale(0)),
       height: this.get('barThickness'),
       'stroke-width': 0,
-      style: function(d) {
+      style: (d) => {
         if (d.color) {
           return "fill:" + d.color;
         }
-        var color = (d.value < 0) ? _this.get('mostTintedColor') : _this.get('leastTintedColor');
+        var color = (d.value < 0) ? this.get('mostTintedColor') : this.get('leastTintedColor');
         return "fill:" + color;
       }
     };
@@ -183,22 +178,19 @@ export default ChartComponent.extend(FloatingTooltipMixin, FormattableMixin, Sor
 
   valueLabelAttrs: Ember.computed('xScale', 'barThickness', 'labelPadding', function() {
     var xScale = this.get('xScale');
-    var _this = this;
     // Anchor the label 'labelPadding' away from the zero line
     // How to anchor the text depends on the direction of the bar
     return {
-      x: function(d) {
+      x: (d) => {
         if (d.value < 0) {
-          return -_this.get('labelPadding');
+          return -this.get('labelPadding');
         } else {
-          return xScale(d.value) - xScale(0) + _this.get('labelPadding');
+          return xScale(d.value) - xScale(0) + this.get('labelPadding');
         }
       },
       y: this.get('barThickness') / 2,
       dy: '.35em',
-      'text-anchor': function(d) {
-        return d.value < 0 ? 'end' : 'start';
-      },
+      'text-anchor': (d) => d.value < 0 ? 'end' : 'start',
       'stroke-width': 0
     };
   }),
@@ -208,20 +200,17 @@ export default ChartComponent.extend(FloatingTooltipMixin, FormattableMixin, Sor
 
     // Anchor the label 'labelPadding' away from the zero line
     // How to anchor the text depends on the direction of the bar
-    var _this = this;
     return {
-      x: function(d) {
+      x: (d) => {
         if (d.value < 0) {
-          return xScale(0) - xScale(d.value) + _this.get('labelPadding');
+          return xScale(0) - xScale(d.value) + this.get('labelPadding');
         } else {
-          return -_this.get('labelPadding');
+          return -this.get('labelPadding');
         }
       },
       y: this.get('barThickness') / 2,
       dy: '.35em',
-      'text-anchor': function(d) {
-        return d.value < 0 ? 'start' : 'end';
-      },
+      'text-anchor': (d) => d.value < 0 ? 'start' : 'end',
       'stroke-width': 0
     };
   }),
@@ -293,26 +282,25 @@ export default ChartComponent.extend(FloatingTooltipMixin, FormattableMixin, Sor
   },
 
   updateGraphic: function() {
-    var _this = this;
     var groups = this.get('groups')
       .attr(this.get('groupAttrs'));
 
     groups.select('rect')
       .attr(this.get('barAttrs'));
 
-    groups.select('text.value').text(function(d) {
-      return _this.get('formatLabelFunction')(d.value);
-    }).attr(this.get('valueLabelAttrs'));
+    groups.select('text.value')
+      .text((d) => this.get('formatLabelFunction')(d.value))
+      .attr(this.get('valueLabelAttrs'));
 
     var labelWidth = this.get('labelWidth');
     var labelTrimmer = LabelTrimmer.create({
-      getLabelSize: function() { return labelWidth; },
-      getLabelText: function(d) { return d.label; }
+      getLabelSize: () => labelWidth,
+      getLabelText: (d) => d.label
     });
 
-    return groups.select('text.group').text(function(d) {
-      return d.label;
-    }).attr(this.get('groupLabelAttrs'))
+    return groups.select('text.group')
+      .text((d) => d.label)
+      .attr(this.get('groupLabelAttrs'))
       .call(labelTrimmer.get('trim'));
   }
 });

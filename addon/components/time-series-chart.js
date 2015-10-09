@@ -104,9 +104,8 @@ export default ChartComponent.extend(LegendMixin, TimeSeriesLabelerMixin, Floati
       return [];
     }
 
-    var _this = this;
-    var groups = groupBy(lineData, function(datum) {
-      return _this._getLabelOrDefault(datum);
+    var groups = groupBy(lineData, (datum) => {
+      return this._getLabelOrDefault(datum);
     });
     // _results = [];
     // for (groupName in groups) {
@@ -138,12 +137,11 @@ export default ChartComponent.extend(LegendMixin, TimeSeriesLabelerMixin, Floati
       return d.time.getTime();
     });
 
-    var _this = this;
-    return _.map(barTimes, function(groups) {
-      return _.map(groups, function(g) {
-          var label = _this._getLabelOrDefault(g);
+    return _.map(barTimes, (groups) => {
+      return _.map(groups, (g) => {
+          var label = this._getLabelOrDefault(g);
           var labelTime = g.time;
-          var drawTime = _this._transformCenter(g.time);
+          var drawTime = this._transformCenter(g.time);
           return {
               group: label,
               time: drawTime,
@@ -218,9 +216,9 @@ export default ChartComponent.extend(LegendMixin, TimeSeriesLabelerMixin, Floati
     if (Ember.isEmpty(barData)) {
       return [];
     }
-    var _this = this;
-    var barGroups = groupBy(barData, function(datum) {
-      return _this._getLabelOrDefault(datum);
+
+    var barGroups = groupBy(barData, (datum) => {
+      return this._getLabelOrDefault(datum);
     });
     return _.keys(barGroups);
   }),
@@ -515,13 +513,12 @@ export default ChartComponent.extend(LegendMixin, TimeSeriesLabelerMixin, Floati
       return Ember.K;
     }
 
-    var _this = this;
-    return function(data, i, element) {
+    return (data, i, element) => {
       d3.select(element).classed('hovered', true);
 
       var time = data.labelTime != null ? data.labelTime : data.time;
-      var content = "<span class=\"tip-label\">" + (_this.get('formatTime')(time)) + "</span>";
-      var formatLabelFunction = _this.get('formatLabelFunction');
+      var content = "<span class=\"tip-label\">" + (this.get('formatTime')(time)) + "</span>";
+      var formatLabelFunction = this.get('formatLabelFunction');
 
       var addValueLine = function(d) {
         content += "<span class=\"name\">" + d.group + ": </span>";
@@ -534,7 +531,7 @@ export default ChartComponent.extend(LegendMixin, TimeSeriesLabelerMixin, Floati
         addValueLine(data);
       }
 
-      return _this.showTooltip(content, d3.event);
+      return this.showTooltip(content, d3.event);
     };
   }),
 
@@ -543,10 +540,9 @@ export default ChartComponent.extend(LegendMixin, TimeSeriesLabelerMixin, Floati
       return Ember.K;
     }
 
-    var _this = this;
-    return function(data, i, element) {
+    return (data, i, element) => {
       d3.select(element).classed('hovered', false);
-      return _this.hideTooltip();
+      return this.hideTooltip();
     };
   }),
 
@@ -558,11 +554,8 @@ export default ChartComponent.extend(LegendMixin, TimeSeriesLabelerMixin, Floati
   zeroDisplacement: 1,
 
   groupAttrs: Ember.computed('paddedGroupWidth', function() {
-    var _this = this;
     return {
-      transform: function() {
-        return "translate(" + (-_this.get('paddedGroupWidth') / 2) + ",0)";
-      }
+      transform: () => "translate(" + (-this.get('paddedGroupWidth') / 2) + ",0)"
     };
   }),
 
@@ -598,10 +591,9 @@ export default ChartComponent.extend(LegendMixin, TimeSeriesLabelerMixin, Floati
   }),
 
   line: Ember.computed( 'xTimeScale', 'yScale', 'interpolate', function() {
-    var _this = this;
     return d3.svg.line()
-      .x(function(d) { return _this.get('xTimeScale')(d.time); })
-      .y(function(d) { return _this.get('yScale')(d.value); })
+      .x((d) => this.get('xTimeScale')(d.time))
+      .y((d) => this.get('yScale')(d.value))
       .interpolate(this.get('interpolate') ? 'basis' : 'linear');
   }),
 
@@ -615,8 +607,7 @@ export default ChartComponent.extend(LegendMixin, TimeSeriesLabelerMixin, Floati
   // 5th line: ~3px, 33% tinted, solid
   // 6th line: ~3px, 33% tinted, dotted
   lineColorFn: Ember.computed(function() {
-    var _this = this;
-    return function(d, i) {
+    return (d, i) => {
       var ii;
       switch (i) {
         case 0:
@@ -640,19 +631,14 @@ export default ChartComponent.extend(LegendMixin, TimeSeriesLabelerMixin, Floati
         default:
           ii = i;
       }
-      return _this.get('getSeriesColor')(d, ii);
+      return this.get('getSeriesColor')(d, ii);
     };
   }),
 
   lineAttrs: Ember.computed('line', 'getSeriesColor', function() {
-    var _this = this;
     return {
-        class: function(d, i) {
-          return "line series-" + i;
-        },
-        d: function(d) {
-          return _this.get('line')(d.values);
-        },
+        class: (d, i) => "line series-" + i,
+        d: (d) => this.get('line')(d.values),
         stroke: this.get('lineColorFn'),
         'stroke-width': function(d, i) {
           switch (i) {
@@ -720,26 +706,25 @@ export default ChartComponent.extend(LegendMixin, TimeSeriesLabelerMixin, Floati
     // getSeriesColor = this.get('getSeriesColor');
     // lineAttrs = this.get('lineAttrs');
 
-    var _this = this;
-    var result = this.get('xBetweenSeriesDomain').map(function(d, i) {
+    var result = this.get('xBetweenSeriesDomain').map((d, i) => {
       // Line legend items
       var res = {
         label: d,
-        stroke: _this.get('lineAttrs')['stroke'](d, i),
-        width: _this.get('lineAttrs')['stroke-width'](d, i),
-        dotted: _this.get('lineAttrs')['stroke-dasharray'](d, i),
-        icon: function() { return 'line'; },
+        stroke: this.get('lineAttrs')['stroke'](d, i),
+        width: this.get('lineAttrs')['stroke-width'](d, i),
+        dotted: this.get('lineAttrs')['stroke-dasharray'](d, i),
+        icon: () => 'line',
         selector: ".series-" + i
       };
       return res;
-    }).concat(_this.get('xWithinGroupDomain').map(function(d, i) {
+    }).concat(this.get('xWithinGroupDomain').map((d, i) => {
       // Bar legend items
-      var color = _this.get('getSecondarySeriesColor')(d, i);
+      var color = this.get('getSecondarySeriesColor')(d, i);
       var res = {
         stroke: color,
         fill: color,
         label: d,
-        icon: function() { return 'square'; },
+        icon: () => 'square',
         selector: (".grouping-" + i)
       };
       return res;

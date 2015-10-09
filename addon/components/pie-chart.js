@@ -61,9 +61,7 @@ export default ChartComponent.extend(FloatingTooltipMixin,
     if (Ember.isEmpty(data)) {
       return [];
     }
-    return data.filter(function(child) {
-      return child.value < 0;
-    });
+    return data.filter((child) => child.value < 0);
   }),
 
   // Valid data points that have been sorted by selectedSortType
@@ -76,7 +74,7 @@ export default ChartComponent.extend(FloatingTooltipMixin,
       return [];
     }
 
-    data = data.map(function(d) {
+    data = data.map((d) => {
       return {
         color: d.color,
         label: d.label,
@@ -252,18 +250,17 @@ export default ChartComponent.extend(FloatingTooltipMixin,
   // ----------------------------------------------------------------------------
 
   getSliceColor: Ember.computed('numSlices', 'colorScale', function() {
-    var _this = this;
-    return function(d, i) {
+    return (d, i) => {
       var index, numSlices;
       if (d.data && d.data.color) {
         return d.data.color;
       }
-      numSlices = _this.get('numSlices');
+      numSlices = this.get('numSlices');
       index = numSlices - i - 1;
       if (numSlices !== 1) {
         index = index / (numSlices - 1);
       }
-      return _this.get('colorScale')(index);
+      return this.get('colorScale')(index);
     };
   }),
 
@@ -284,24 +281,23 @@ export default ChartComponent.extend(FloatingTooltipMixin,
   // ----------------------------------------------------------------------------
 
   showDetails: Ember.computed('isInteractive', function() {
-    var _this = this;
     if (!this.get('isInteractive')) {
       return Ember.K;
     }
-    return function(d, i, element) {
+    return (d, i, element) => {
       var content, data, formatLabelFunction, value;
       d3.select(element).classed('hovered', true);
       data = d.data;
       if (data._otherItems) {
-        value = _this.get('otherDataValue');
+        value = this.get('otherDataValue');
       } else {
         value = data.value;
       }
-      formatLabelFunction = _this.get('formatLabelFunction');
+      formatLabelFunction = this.get('formatLabelFunction');
       content = "<span class=\"tip-label\">" + data.label + "</span>";
-      content += "<span class=\"name\">" + (_this.get('tooltipValueDisplayName')) + ": </span>";
+      content += "<span class=\"name\">" + (this.get('tooltipValueDisplayName')) + ": </span>";
       content += "<span class=\"value\">" + (formatLabelFunction(value)) + "</span>";
-      return _this.showTooltip(content, d3.event);
+      return this.showTooltip(content, d3.event);
     };
   }),
 
@@ -310,14 +306,13 @@ export default ChartComponent.extend(FloatingTooltipMixin,
       return Ember.K;
     }
 
-    var _this = this;
-    return function(d, i, element) {
+    return (d, i, element) => {
       d3.select(element).classed('hovered', false);
       var data = d.data;
       if (data._otherItems) {
-        return _this.get('viewport').select('.legend').classed('hovered', false);
+        return this.get('viewport').select('.legend').classed('hovered', false);
       } else {
-        return _this.hideTooltip();
+        return this.hideTooltip();
       }
     };
   }),
@@ -506,5 +501,4 @@ export default ChartComponent.extend(FloatingTooltipMixin,
         return "" + this.textContent + ", " + d.data.percent + "%";
     });
   }
-
 });
