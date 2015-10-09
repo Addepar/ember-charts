@@ -137,7 +137,7 @@ export default ChartComponent.extend(FloatingTooltipMixin,
 
     // Next, continue putting slices in other slice if there are too many
     // take instead of first see https://lodash.com/docs#take
-    // drop instead of rest 
+    // drop instead of rest
     slicesLeft = _.take(data, lowPercentIndex);
 
     overflowSlices = _.drop(slicesLeft, maxNumberOfSlices);
@@ -162,11 +162,17 @@ export default ChartComponent.extend(FloatingTooltipMixin,
   }),
 
   otherData: Ember.computed('sortedDataWithOther.[]', 'sortFunction', function() {
-    var _ref;
     var otherSlice = _.find(this.get('sortedDataWithOther'), function(d) {
       return d._otherItems;
     });
-    var otherItems = (_ref = otherSlice != null ? otherSlice._otherItems : void 0) != null ? _ref : [];
+
+    var otherItems;
+    if (otherSlice != null && otherSlice._otherItems != null) {
+      otherItems = otherSlice._otherItems;
+    } else {
+      otherItems = [];
+    }
+
     return _.sortBy(otherItems, this.get('sortFunction')).reverse();
   }),
 
@@ -248,8 +254,8 @@ export default ChartComponent.extend(FloatingTooltipMixin,
   getSliceColor: Ember.computed('numSlices', 'colorScale', function() {
     var _this = this;
     return function(d, i) {
-      var index, numSlices, _ref;
-      if ((_ref = d.data) != null ? _ref.color : void 0) {
+      var index, numSlices;
+      if (d.data && d.data.color) {
         return d.data.color;
       }
       numSlices = _this.get('numSlices');
@@ -481,7 +487,7 @@ export default ChartComponent.extend(FloatingTooltipMixin,
   updateGraphic: function() {
     var groups = this.get('groups').attr(this.get('groupAttrs'));
     groups.select('path').attr(this.get('sliceAttrs'));
-    
+
     var labelWidth = this.get('labelWidth');
     var labelTrimmer = LabelTrimmer.create({
       getLabelSize: function() {
