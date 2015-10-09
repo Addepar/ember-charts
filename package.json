@@ -23,10 +23,11 @@
   "devDependencies": {
     "broccoli": "^0.13.0",
     "broccoli-asset-rev": "^2.0.2",
+    "broccoli-babel-transpiler": "^5.4.5",
     "broccoli-cli": "~1.0.0",
+    "broccoli-concat": "0.0.13",
     "broccoli-es3-safe-recast": "^1.0.0",
     "broccoli-es6-concatenator": "^0.1.11",
-    "broccoli-es6modules": "~0.5.1",
     "broccoli-filter": "^0.1.7",
     "broccoli-funnel": "^0.1.6",
     "broccoli-less-single": "^0.1.5",

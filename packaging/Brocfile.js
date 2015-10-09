@@ -1,11 +1,9 @@
 /* jshint node: true */
 var mergeTrees = require('broccoli-merge-trees');
-var Funnel = require('broccoli-funnel');
 // TODO(azirbel): This is deprecated
 var pickFiles = require('broccoli-static-compiler');
-// TODO(azirbel): Deprecated, remove and use es6modules
-var compileES6 = require('broccoli-es6-concatenator');
-var ES6Modules = require('broccoli-es6modules');
+var esTranspiler = require('broccoli-babel-transpiler');
+var concat = require('broccoli-concat');
 var es3Safe = require('broccoli-es3-safe-recast');
 var HtmlbarsCompiler = require('ember-cli-htmlbars');
 var less = require('broccoli-less-single');
@@ -42,16 +40,20 @@ var loader = pickFiles('bower_components', {srcDir: '/loader.js', destDir: '/'})
 var jsTree = mergeTrees([sourceTree, globalExports, loader]);
 
 // Transpile modules
-var compiled = compileES6(jsTree, {
-  wrapInEval: false,
-  loaderFile: 'loader.js',
-  inputFiles: ['ember-charts/**/*.js'],
-  ignoredModules: ['ember'],
-  outputFile: '/ember-charts.js',
-  legacyFilesToAppend: ['globals-output.js']
+var compiled = esTranspiler(jsTree, {
+  filterExtensions:['js', 'es6'],
+  stage: 0,
+  moduleIds: true,
+  modules: 'amd'
 });
 
 // Wrap in a function which is executed
+compiled = concat(compiled, {
+  inputFiles: [
+    '**/*.js'
+  ],
+  outputFile: '/ember-charts.js'
+});
 compiled = wrap(compiled);
 
 // Compile LESS
@@ -59,5 +61,4 @@ var lessTree = pickFiles('addon/styles', { srcDir: '/', destDir: '/' });
 var lessMain = 'addon.less';
 var lessOutput = 'ember-charts.css';
 lessTree = less(lessTree, lessMain, lessOutput);
-
 module.exports = mergeTrees([es3Safe(compiled), lessTree]);
