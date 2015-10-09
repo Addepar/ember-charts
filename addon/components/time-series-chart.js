@@ -593,12 +593,7 @@ export default ChartComponent.extend(
       height: function(d) {
         // prevent zero-height bars from causing errors because of zeroDisplacement
         var zeroLine = Math.max(0, yScale.domain()[0]);
-        return Math.max(0,
-            (d.value > zeroLine) ?
-              (Math.abs(yScale(zeroLine) - yScale(d.value)) - zeroDisplacement)
-              :
-              (Math.abs(yScale(d.value) - yScale(zeroLine)) - zeroDisplacement)
-        );
+        return Math.max(0, Math.abs(yScale(zeroLine) - yScale(d.value)) - zeroDisplacement);
       }
     };
   }),
