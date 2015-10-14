@@ -24,7 +24,7 @@ export default Ember.Object.extend({
             return '';
           }
           var charWidth = bbW / label.length;
-          var textLabelWidth = getLabelSize() - 4 * charWidth;
+          var textLabelWidth = getLabelSize(d, selection) - 4 * charWidth;
           var numChars = Math.floor(textLabelWidth / charWidth);
 
           if (numChars - 3 <= 0) {

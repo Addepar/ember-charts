@@ -482,11 +482,23 @@ export default ChartComponent.extend(FloatingTooltipMixin,
   updateGraphic: function() {
     var groups = this.get('groups').attr(this.get('groupAttrs'));
     groups.select('path').attr(this.get('sliceAttrs'));
-
-    var labelWidth = this.get('labelWidth');
+    
+    var maxLabelWidth = this.get('outerWidth') / 2 - this.get('labelPadding');
     var labelTrimmer = LabelTrimmer.create({
-      getLabelSize: function() {
-        return labelWidth;
+      getLabelSize: function(d, selection) {
+        // To calculate the label size, we need to identify the horizontal position `xPos` of the current label from the center.
+        // Subtracting `xPos` from `maxLabelWidth` will provide the maximum space available for the label.
+        
+        // First select the text element from `selection` that is being currently trimmed.
+        var text = selection.filter(function(data) {
+          return data === d;
+        });
+        // Then calculate horizontal translation (0,0 is at the center of the pie) of the text element by:
+        // a) Read the current transform of the element via text.attr("transform"). The transform has been applied by `this.get('labelAttrs')`. 
+        // b) parse the transform string to return instance of d3.transform()
+        // c) from transform object, read translate[0] property for horizontal translation
+        var xPos = d3.transform(text.attr("transform")).translate[0];
+        return maxLabelWidth - Math.abs(xPos);
       },
       getLabelText: function(d) {
         return d.data.label;
