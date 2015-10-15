@@ -1,3 +1,4 @@
+/* jshint node: true */
 var Writer = require('broccoli-writer');
 var fs = require('fs');
 var path = require('path');
@@ -6,7 +7,7 @@ var walk = require('walk-sync');
 
 // TODO(azirbel): Log ember version and register with Ember.libraries?
 var Globals = function (inputTree) {
-  options = {};
+  var options = {};
   if (!(this instanceof Globals)) {
     return new Globals(inputTree, options);
   }
@@ -54,8 +55,8 @@ Globals.prototype.write = function(readTree, destDir) {
   return new Promise(function(resolve) {
     readTree(_this.inputTree).then(function(srcDir) {
       var output = [
-        "define('ember', ['exports'], function(__exports__) {",
-        "  __exports__['default'] = window.Ember;",
+        "define('ember', ['exports', 'module'], function(exports, module) {",
+        "  module.exports = window.Ember;",
         "});",
         "",
         "window.Ember.Charts = Ember.Namespace.create();"];
@@ -82,13 +83,13 @@ Globals.prototype.write = function(readTree, destDir) {
       var toRegister = [];
 
       // Define globals and register on the container
-      for (key in _this.globalNameMapping) {
+      for (var key in _this.globalNameMapping) {
         // Define the global object, like Ember.Charts.EmberTableComponent = ...
         output.push("window." + _this.globalNameMapping[key] +
             " = require('" + key + "')['default'];");
         // Register on the container. We only need to register views and
         // components.
-        var type = key.split('/')[1].replace(/s$/, '')
+        var type = key.split('/')[1].replace(/s$/, '');
         if (type === 'view' || type === 'component') {
           toRegister.push({
             type: type,
@@ -124,11 +125,6 @@ Globals.prototype.write = function(readTree, destDir) {
         "layoutName: 'components/ember-charts'",
         "});"
       ]);
-
-      // Register table-component with handlebars so users can just use
-      // {{table-component}}
-      output.push("Ember.Handlebars.helper('table-component', " +
-                  "Ember.Charts.ChartComponent);");
 
       fs.writeFileSync(path.join(destDir, 'globals-output.js'),
           output.join("\n"));

@@ -1,7 +1,6 @@
 /* jshint node: true */
 var mergeTrees = require('broccoli-merge-trees');
-// TODO(azirbel): This is deprecated
-var pickFiles = require('broccoli-static-compiler');
+var Funnel = require('broccoli-funnel');
 var esTranspiler = require('broccoli-babel-transpiler');
 var concat = require('broccoli-concat');
 var es3Safe = require('broccoli-es3-safe-recast');
@@ -10,7 +9,7 @@ var less = require('broccoli-less-single');
 var wrap = require('./wrap');
 var globals = require('./globals');
 
-var addonTree = pickFiles('addon', {
+var addonTree = new Funnel('addon', {
   srcDir: '/',
   destDir: 'ember-charts'
 });
@@ -23,7 +22,7 @@ var templateTree = new HtmlbarsCompiler('app/templates', {
   templateCompiler: require('../bower_components/ember/ember-template-compiler')
 });
 
-templateTree = pickFiles(templateTree, {srcDir: '/', destDir: 'ember-charts/templates'});
+templateTree = new Funnel(templateTree, {srcDir: '/', destDir: 'ember-charts/templates'});
 
 var sourceTree = mergeTrees([templateTree, addonTree], {overwrite: true});
 
@@ -32,32 +31,31 @@ var sourceTree = mergeTrees([templateTree, addonTree], {overwrite: true});
 //   - Register all templates on Ember.TEMPLATES
 //   - Register views and components with the container so they can be looked up
 // Output goes into globals-output.js
-var globalExports = globals(pickFiles(sourceTree, {srcDir: '/ember-charts', destDir: '/'}));
+var globalExports = globals(new Funnel(sourceTree, {srcDir: '/ember-charts', destDir: '/'}));
 
 // Require.js module loader
-var loader = pickFiles('bower_components', {srcDir: '/loader.js', destDir: '/'});
+var loader = new Funnel('bower_components', {srcDir: '/loader.js', destDir: '/a.js'});
 
-var jsTree = mergeTrees([sourceTree, globalExports, loader]);
+// loader needs to be first
+var jsTree = mergeTrees([sourceTree]);
 
 // Transpile modules
 var compiled = esTranspiler(jsTree, {
-  filterExtensions:['js', 'es6'],
-  stage: 0,
   moduleIds: true,
   modules: 'amd'
 });
 
 // Wrap in a function which is executed
-compiled = concat(compiled, {
+var merged = mergeTrees([loader, compiled, globalExports]);
+compiled = wrap(concat(merged, {
   inputFiles: [
     '**/*.js'
   ],
   outputFile: '/ember-charts.js'
-});
-compiled = wrap(compiled);
+}));
 
 // Compile LESS
-var lessTree = pickFiles('addon/styles', { srcDir: '/', destDir: '/' });
+var lessTree = new Funnel('addon/styles', { srcDir: '/', destDir: '/' });
 var lessMain = 'addon.less';
 var lessOutput = 'ember-charts.css';
 lessTree = less(lessTree, lessMain, lessOutput);

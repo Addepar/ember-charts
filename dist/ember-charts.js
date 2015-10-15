@@ -4,6 +4,199 @@
 * See LICENSE.md
 */
 (function(){;
+var define, requireModule, require, requirejs;
+
+(function() {
+
+  var _isArray;
+  if (!Array.isArray) {
+    _isArray = function (x) {
+      return Object.prototype.toString.call(x) === "[object Array]";
+    };
+  } else {
+    _isArray = Array.isArray;
+  }
+
+  var registry = {}, seen = {};
+  var FAILED = false;
+
+  var uuid = 0;
+
+  function tryFinally(tryable, finalizer) {
+    try {
+      return tryable();
+    } finally {
+      finalizer();
+    }
+  }
+
+  function unsupportedModule(length) {
+    throw new Error("an unsupported module was defined, expected `define(name, deps, module)` instead got: `" + length + "` arguments to define`");
+  }
+
+  var defaultDeps = ['require', 'exports', 'module'];
+
+  function Module(name, deps, callback, exports) {
+    this.id       = uuid++;
+    this.name     = name;
+    this.deps     = !deps.length && callback.length ? defaultDeps : deps;
+    this.exports  = exports || { };
+    this.callback = callback;
+    this.state    = undefined;
+    this._require  = undefined;
+  }
+
+
+  Module.prototype.makeRequire = function() {
+    var name = this.name;
+
+    return this._require || (this._require = function(dep) {
+      return require(resolve(dep, name));
+    });
+  }
+
+  define = function(name, deps, callback) {
+    if (arguments.length < 2) {
+      unsupportedModule(arguments.length);
+    }
+
+    if (!_isArray(deps)) {
+      callback = deps;
+      deps     =  [];
+    }
+
+    registry[name] = new Module(name, deps, callback);
+  };
+
+  // we don't support all of AMD
+  // define.amd = {};
+  // we will support petals...
+  define.petal = { };
+
+  function Alias(path) {
+    this.name = path;
+  }
+
+  define.alias = function(path) {
+    return new Alias(path);
+  };
+
+  function reify(mod, name, seen) {
+    var deps = mod.deps;
+    var length = deps.length;
+    var reified = new Array(length);
+    var dep;
+    // TODO: new Module
+    // TODO: seen refactor
+    var module = { };
+
+    for (var i = 0, l = length; i < l; i++) {
+      dep = deps[i];
+      if (dep === 'exports') {
+        module.exports = reified[i] = seen;
+      } else if (dep === 'require') {
+        reified[i] = mod.makeRequire();
+      } else if (dep === 'module') {
+        mod.exports = seen;
+        module = reified[i] = mod;
+      } else {
+        reified[i] = requireFrom(resolve(dep, name), name);
+      }
+    }
+
+    return {
+      deps: reified,
+      module: module
+    };
+  }
+
+  function requireFrom(name, origin) {
+    var mod = registry[name];
+    if (!mod) {
+      throw new Error('Could not find module `' + name + '` imported from `' + origin + '`');
+    }
+    return require(name);
+  }
+
+  function missingModule(name) {
+    throw new Error('Could not find module ' + name);
+  }
+  requirejs = require = requireModule = function(name) {
+    var mod = registry[name];
+
+
+    if (mod && mod.callback instanceof Alias) {
+      mod = registry[mod.callback.name];
+    }
+
+    if (!mod) { missingModule(name); }
+
+    if (mod.state !== FAILED &&
+        seen.hasOwnProperty(name)) {
+      return seen[name];
+    }
+
+    var reified;
+    var module;
+    var loaded = false;
+
+    seen[name] = { }; // placeholder for run-time cycles
+
+    tryFinally(function() {
+      reified = reify(mod, name, seen[name]);
+      module = mod.callback.apply(this, reified.deps);
+      loaded = true;
+    }, function() {
+      if (!loaded) {
+        mod.state = FAILED;
+      }
+    });
+
+    var obj;
+    if (module === undefined && reified.module.exports) {
+      obj = reified.module.exports;
+    } else {
+      obj = seen[name] = module;
+    }
+
+    if (obj !== null &&
+        (typeof obj === 'object' || typeof obj === 'function') &&
+          obj['default'] === undefined) {
+      obj['default'] = obj;
+    }
+
+    return (seen[name] = obj);
+  };
+
+  function resolve(child, name) {
+    if (child.charAt(0) !== '.') { return child; }
+
+    var parts = child.split('/');
+    var nameParts = name.split('/');
+    var parentBase = nameParts.slice(0, -1);
+
+    for (var i = 0, l = parts.length; i < l; i++) {
+      var part = parts[i];
+
+      if (part === '..') {
+        if (parentBase.length === 0) {
+          throw new Error('Cannot access parent module of root');
+        }
+        parentBase.pop();
+      } else if (part === '.') { continue; }
+      else { parentBase.push(part); }
+    }
+
+    return parentBase.join('/');
+  }
+
+  requirejs.entries = requirejs._eak_seen = registry;
+  requirejs.clear = function(){
+    requirejs.entries = requirejs._eak_seen = registry = {};
+    seen = state = {};
+  };
+})();
+
 define('ember-charts/components/bubble-chart', ['exports', 'module', 'ember', './chart-component', '../mixins/floating-tooltip'], function (exports, module, _ember, _chartComponent, _mixinsFloatingTooltip) {
   'use strict';
 
@@ -4873,248 +5066,44 @@ define('ember-charts/utils/label-trimmer', ['exports', 'module', 'ember'], funct
     })
   });
 });
-define('globals-output', ['exports'], function (exports) {
-  'use strict';
-
-  define('ember', ['exports'], function (__exports__) {
-    __exports__['default'] = window.Ember;
-  });
-
-  window.Ember.Charts = Ember.Namespace.create();
-  window.Ember.TEMPLATES['components/chart-component'] = require('ember-charts/templates/components/chart-component')['default'];
-  window.Ember.Charts.BubbleComponent = require('ember-charts/components/bubble-chart')['default'];
-  window.Ember.Charts.ChartComponent = require('ember-charts/components/chart-component')['default'];
-  window.Ember.Charts.HorizontalBarComponent = require('ember-charts/components/horizontal-bar-chart')['default'];
-  window.Ember.Charts.PieComponent = require('ember-charts/components/pie-chart')['default'];
-  window.Ember.Charts.ScatterComponent = require('ember-charts/components/scatter-chart')['default'];
-  window.Ember.Charts.TimeSeriesComponent = require('ember-charts/components/time-series-chart')['default'];
-  window.Ember.Charts.VerticalBarComponent = require('ember-charts/components/vertical-bar-chart')['default'];
-  window.Ember.Charts.AxesMixin = require('ember-charts/mixins/axes')['default'];
-  window.Ember.Charts.Colorable = require('ember-charts/mixins/colorable')['default'];
-  window.Ember.Charts.FloatingTooltipMixin = require('ember-charts/mixins/floating-tooltip')['default'];
-  window.Ember.Charts.Formattable = require('ember-charts/mixins/formattable')['default'];
-  window.Ember.Charts.HasTimeSeriesRuleMixin = require('ember-charts/mixins/has-time-series-rule')['default'];
-  window.Ember.Charts.Legend = require('ember-charts/mixins/legend')['default'];
-  window.Ember.Charts.NoMarginChartMixin = require('ember-charts/mixins/no-margin-chart')['default'];
-  window.Ember.Charts.PieLegend = require('ember-charts/mixins/pie-legend')['default'];
-  window.Ember.Charts.ResizeHandlerMixin = require('ember-charts/mixins/resize-handler')['default'];
-  window.Ember.Charts.SortableChartMixin = require('ember-charts/mixins/sortable-chart')['default'];
-  window.Ember.Charts.TimeSeriesLabeler = require('ember-charts/mixins/time-series-labeler')['default'];
-  Ember.onLoad('Ember.Application', function (Application) {
-    Application.initializer({
-      name: 'ember-charts',
-      initialize: function initialize(container) {
-        container.register('component:bubble-chart', require('ember-charts/components/bubble-chart')['default']);
-        container.register('component:chart-component', require('ember-charts/components/chart-component')['default']);
-        container.register('component:horizontal-bar-chart', require('ember-charts/components/horizontal-bar-chart')['default']);
-        container.register('component:pie-chart', require('ember-charts/components/pie-chart')['default']);
-        container.register('component:scatter-chart', require('ember-charts/components/scatter-chart')['default']);
-        container.register('component:time-series-chart', require('ember-charts/components/time-series-chart')['default']);
-        container.register('component:vertical-bar-chart', require('ember-charts/components/vertical-bar-chart')['default']);
-      }
-    });
-  });
-  Ember.Charts.ChartComponent.reopen({
-    layoutName: 'components/ember-charts'
-  });
-  Ember.Handlebars.helper('table-component', Ember.Charts.ChartComponent);
+define('ember', ['exports', 'module'], function(exports, module) {
+  module.exports = window.Ember;
 });
-define("loader", ["exports"], function (exports) {
-  "use strict";
 
-  var define, requireModule, require, requirejs;
-
-  (function () {
-
-    var _isArray;
-    if (!Array.isArray) {
-      _isArray = function (x) {
-        return Object.prototype.toString.call(x) === "[object Array]";
-      };
-    } else {
-      _isArray = Array.isArray;
-    }
-
-    var registry = {},
-        seen = {};
-    var FAILED = false;
-
-    var uuid = 0;
-
-    function tryFinally(tryable, finalizer) {
-      try {
-        return tryable();
-      } finally {
-        finalizer();
-      }
-    }
-
-    function unsupportedModule(length) {
-      throw new Error("an unsupported module was defined, expected `define(name, deps, module)` instead got: `" + length + "` arguments to define`");
-    }
-
-    var defaultDeps = ['require', 'exports', 'module'];
-
-    function Module(name, deps, callback, exports) {
-      this.id = uuid++;
-      this.name = name;
-      this.deps = !deps.length && callback.length ? defaultDeps : deps;
-      this.exports = exports || {};
-      this.callback = callback;
-      this.state = undefined;
-      this._require = undefined;
-    }
-
-    Module.prototype.makeRequire = function () {
-      var name = this.name;
-
-      return this._require || (this._require = function (dep) {
-        return require(resolve(dep, name));
-      });
-    };
-
-    define = function (name, deps, callback) {
-      if (arguments.length < 2) {
-        unsupportedModule(arguments.length);
-      }
-
-      if (!_isArray(deps)) {
-        callback = deps;
-        deps = [];
-      }
-
-      registry[name] = new Module(name, deps, callback);
-    };
-
-    // we don't support all of AMD
-    // define.amd = {};
-    // we will support petals...
-    define.petal = {};
-
-    function Alias(path) {
-      this.name = path;
-    }
-
-    define.alias = function (path) {
-      return new Alias(path);
-    };
-
-    function reify(mod, name, seen) {
-      var deps = mod.deps;
-      var length = deps.length;
-      var reified = new Array(length);
-      var dep;
-      // TODO: new Module
-      // TODO: seen refactor
-      var module = {};
-
-      for (var i = 0, l = length; i < l; i++) {
-        dep = deps[i];
-        if (dep === 'exports') {
-          module.exports = reified[i] = seen;
-        } else if (dep === 'require') {
-          reified[i] = mod.makeRequire();
-        } else if (dep === 'module') {
-          mod.exports = seen;
-          module = reified[i] = mod;
-        } else {
-          reified[i] = requireFrom(resolve(dep, name), name);
-        }
-      }
-
-      return {
-        deps: reified,
-        module: module
-      };
-    }
-
-    function requireFrom(name, origin) {
-      var mod = registry[name];
-      if (!mod) {
-        throw new Error('Could not find module `' + name + '` imported from `' + origin + '`');
-      }
-      return require(name);
-    }
-
-    function missingModule(name) {
-      throw new Error('Could not find module ' + name);
-    }
-    requirejs = require = requireModule = function (name) {
-      var mod = registry[name];
-
-      if (mod && mod.callback instanceof Alias) {
-        mod = registry[mod.callback.name];
-      }
-
-      if (!mod) {
-        missingModule(name);
-      }
-
-      if (mod.state !== FAILED && seen.hasOwnProperty(name)) {
-        return seen[name];
-      }
-
-      var reified;
-      var module;
-      var loaded = false;
-
-      seen[name] = {}; // placeholder for run-time cycles
-
-      tryFinally(function () {
-        reified = reify(mod, name, seen[name]);
-        module = mod.callback.apply(this, reified.deps);
-        loaded = true;
-      }, function () {
-        if (!loaded) {
-          mod.state = FAILED;
-        }
-      });
-
-      var obj;
-      if (module === undefined && reified.module.exports) {
-        obj = reified.module.exports;
-      } else {
-        obj = seen[name] = module;
-      }
-
-      if (obj !== null && (typeof obj === 'object' || typeof obj === 'function') && obj['default'] === undefined) {
-        obj['default'] = obj;
-      }
-
-      return seen[name] = obj;
-    };
-
-    function resolve(child, name) {
-      if (child.charAt(0) !== '.') {
-        return child;
-      }
-
-      var parts = child.split('/');
-      var nameParts = name.split('/');
-      var parentBase = nameParts.slice(0, -1);
-
-      for (var i = 0, l = parts.length; i < l; i++) {
-        var part = parts[i];
-
-        if (part === '..') {
-          if (parentBase.length === 0) {
-            throw new Error('Cannot access parent module of root');
-          }
-          parentBase.pop();
-        } else if (part === '.') {
-          continue;
-        } else {
-          parentBase.push(part);
-        }
-      }
-
-      return parentBase.join('/');
-    }
-
-    requirejs.entries = requirejs._eak_seen = registry;
-    requirejs.clear = function () {
-      requirejs.entries = requirejs._eak_seen = registry = {};
-      seen = state = {};
-    };
-  })();
+window.Ember.Charts = Ember.Namespace.create();
+window.Ember.TEMPLATES['components/chart-component'] = require('ember-charts/templates/components/chart-component')['default'];
+window.Ember.Charts.BubbleComponent = require('ember-charts/components/bubble-chart')['default'];
+window.Ember.Charts.ChartComponent = require('ember-charts/components/chart-component')['default'];
+window.Ember.Charts.HorizontalBarComponent = require('ember-charts/components/horizontal-bar-chart')['default'];
+window.Ember.Charts.PieComponent = require('ember-charts/components/pie-chart')['default'];
+window.Ember.Charts.ScatterComponent = require('ember-charts/components/scatter-chart')['default'];
+window.Ember.Charts.TimeSeriesComponent = require('ember-charts/components/time-series-chart')['default'];
+window.Ember.Charts.VerticalBarComponent = require('ember-charts/components/vertical-bar-chart')['default'];
+window.Ember.Charts.AxesMixin = require('ember-charts/mixins/axes')['default'];
+window.Ember.Charts.Colorable = require('ember-charts/mixins/colorable')['default'];
+window.Ember.Charts.FloatingTooltipMixin = require('ember-charts/mixins/floating-tooltip')['default'];
+window.Ember.Charts.Formattable = require('ember-charts/mixins/formattable')['default'];
+window.Ember.Charts.HasTimeSeriesRuleMixin = require('ember-charts/mixins/has-time-series-rule')['default'];
+window.Ember.Charts.Legend = require('ember-charts/mixins/legend')['default'];
+window.Ember.Charts.NoMarginChartMixin = require('ember-charts/mixins/no-margin-chart')['default'];
+window.Ember.Charts.PieLegend = require('ember-charts/mixins/pie-legend')['default'];
+window.Ember.Charts.ResizeHandlerMixin = require('ember-charts/mixins/resize-handler')['default'];
+window.Ember.Charts.SortableChartMixin = require('ember-charts/mixins/sortable-chart')['default'];
+window.Ember.Charts.TimeSeriesLabeler = require('ember-charts/mixins/time-series-labeler')['default'];
+Ember.onLoad('Ember.Application', function(Application) {
+Application.initializer({
+name: 'ember-charts',
+initialize: function(container) {
+container.register('component:bubble-chart', require('ember-charts/components/bubble-chart')['default']);
+container.register('component:chart-component', require('ember-charts/components/chart-component')['default']);
+container.register('component:horizontal-bar-chart', require('ember-charts/components/horizontal-bar-chart')['default']);
+container.register('component:pie-chart', require('ember-charts/components/pie-chart')['default']);
+container.register('component:scatter-chart', require('ember-charts/components/scatter-chart')['default']);
+container.register('component:time-series-chart', require('ember-charts/components/time-series-chart')['default']);
+container.register('component:vertical-bar-chart', require('ember-charts/components/vertical-bar-chart')['default']);
+}
+});
+});
+Ember.Charts.ChartComponent.reopen({
+layoutName: 'components/ember-charts'
 });})();
