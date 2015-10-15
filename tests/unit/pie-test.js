@@ -86,36 +86,36 @@
     },
     	{
 		"label": "Label 19",
-		"value": 129
-	},
-	{
-		"label": "Label 20",
-		"value": 52
-	},
-	{
-		"label": "Label 21",
-		"value": 200
-	},
-	{
-		"label": "Label 22",
-		"value": 14
-	},
-	{
-		"label": "Label 23",
-		"value": 31
-	},
-	{
-		"label": "Label 24",
-		"value": 44
-	},
-	{
-		"label": "Label 25",
-		"value": 30
-	},
-	{
-		"label": "Label 26",
-		"value": 62
-	}
+  		"value": 129
+  	},
+  	{
+  		"label": "Label 20",
+  		"value": 52
+  	},
+  	{
+  		"label": "Label 21",
+  		"value": 200
+  	},
+  	{
+  		"label": "Label 22",
+  		"value": 14
+  	},
+  	{
+  		"label": "Label 23",
+  		"value": 31
+  	},
+  	{
+  		"label": "Label 24",
+  		"value": 44
+  	},
+  	{
+  		"label": "Label 25",
+  		"value": 30
+  	},
+  	{
+  		"label": "Label 26",
+  		"value": 62
+  	}
   ]
 };
 
@@ -129,17 +129,17 @@ test('Legend renders', function(assert) {
 });
 
 test('Margins are the right size when showLegend is no', function(assert) {
-  var component = this.subject( pieContent);
+  var component = this.subject(pieContent);
 
   Ember.run(function() {
-	component.set('showLegend', false);
+  	component.set('showLegend', false);
   });
 
   assert.equal(this.subject().get('hasLegend'), false, 'if showLegend is no, a legend is not made');
 });
 
 test('Slice percents by default', function(assert) {
-  var component = this.subject( pieContent);
+  var component = this.subject(pieContent);
 
   assert.equal(this.subject().get('finishedData').length, 8, 'There are 8 slices by default');
   assert.equal(this.subject().get('finishedData')[0].label, 'Other', 'First slice is Other');

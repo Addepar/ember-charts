@@ -255,7 +255,7 @@ export default Ember.Mixin.create({
   },
   filterLabels: function(array, interval){
     return array.filter(function filterLabels(d, i) {
-      return (i % interval) ? false : true;
+      return i % interval === 0;
     });
   },
   // Returns the function which returns the labelled intervals between
@@ -279,7 +279,12 @@ export default Ember.Mixin.create({
                 return d3.time.months(start, stop, this.MONTHS_IN_QUARTER);
               }
             } else {
-              interval = timeBetween > this.get('maxNumberOfLabels') ? Math.ceil(timeBetween / this.get('maxNumberOfLabels')) : 1;
+              if (timeBetween > this.get('maxNumberOfLabels')) {
+                interval = Math.ceil(timeBetween / this.get('maxNumberOfLabels'));
+              } else {
+                interval = 1;
+              }
+
               return this.filterLabels(d3.time[domainTypeToLabellerType[domain]](start, stop), interval);
             }
         }, this);

@@ -2,7 +2,7 @@ import Ember from 'ember';
 import ResizeHandlerMixin from '../mixins/resize-handler';
 import ColorableMixin from '../mixins/colorable';
 
-export default Ember.Component.extend( ColorableMixin, ResizeHandlerMixin, {
+export default Ember.Component.extend(ColorableMixin, ResizeHandlerMixin, {
   layoutName: 'components/chart-component',
   classNames: ['chart-frame', 'scroll-y'],
   isInteractive: true,
@@ -27,7 +27,7 @@ export default Ember.Component.extend( ColorableMixin, ResizeHandlerMixin, {
   outerWidth: Ember.computed.alias('defaultOuterWidth'),
 
   width: Ember.computed('outerWidth', 'marginLeft', 'marginRight', function() {
-    return (this.get('outerWidth') - this.get('marginLeft') - this.get('marginRight'));
+    return this.get('outerWidth') - this.get('marginLeft') - this.get('marginRight');
   }),
 
   height: Ember.computed('outerHeight', 'marginBottom', 'marginTop', function() {
@@ -48,7 +48,7 @@ export default Ember.Component.extend( ColorableMixin, ResizeHandlerMixin, {
 
   // Transform the view commonly displaced by the margin
   transformViewport: Ember.computed('marginLeft', 'marginTop', function() {
-    return ('translate(' + this.get('marginLeft') + ',' + this.get('marginTop') + ')');
+    return 'translate(' + this.get('marginLeft') + ',' + this.get('marginTop') + ')';
   }),
 
   // ----------------------------------------------------------------------------
@@ -62,11 +62,11 @@ export default Ember.Component.extend( ColorableMixin, ResizeHandlerMixin, {
   labelHeight: 15,
 
   labelWidthOffset: Ember.computed('labelWidth', 'labelPadding', function() {
-    return (this.get('labelWidth') + this.get('labelPadding'));
+    return this.get('labelWidth') + this.get('labelPadding');
   }),
 
   labelHeightOffset: Ember.computed('labelHeight', 'labelPadding', function() {
-    return (this.get('labelHeight') + this.get('labelPadding'));
+    return this.get('labelHeight') + this.get('labelPadding');
   }),
 
   // ----------------------------------------------------------------------------
@@ -84,11 +84,11 @@ export default Ember.Component.extend( ColorableMixin, ResizeHandlerMixin, {
   graphicHeight: Ember.computed.alias('height'),
 
   graphicBottom: Ember.computed('graphicTop', 'graphicHeight', function() {
-    return (this.get('graphicTop') + this.get('graphicHeight'));
+    return this.get('graphicTop') + this.get('graphicHeight');
   }),
 
   graphicRight: Ember.computed('graphicLeft', 'graphicWidth', function() {
-    return (this.get('graphicLeft') + this.get('graphicWidth'));
+    return this.get('graphicLeft') + this.get('graphicWidth');
   }),
 
   // ----------------------------------------------------------------------------
@@ -113,19 +113,17 @@ export default Ember.Component.extend( ColorableMixin, ResizeHandlerMixin, {
 
   init: function() {
     this._super();
-    var _this = this;
-    _.uniq(this.get('renderVars')).forEach(function(renderVar) {
-      _this.addObserver(renderVar, _this.drawOnce);
+    _.uniq(this.get('renderVars')).forEach((renderVar) => {
+      this.addObserver(renderVar, this.drawOnce);
       // This is just to ensure that observers added above fire even
       // if that renderVar is not consumed elsewhere.
-      _this.get(renderVar);
+      this.get(renderVar);
     });
   },
 
   willDestroyElement: function() {
-    var _this = this;
-    _.uniq(this.get('renderVars')).forEach(function(renderVar) {
-      _this.removeObserver(renderVar, _this, _this.drawOnce);
+    _.uniq(this.get('renderVars')).forEach((renderVar) => {
+      this.removeObserver(renderVar, this, this.drawOnce);
     });
     this._super();
   },
