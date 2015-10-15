@@ -108,7 +108,7 @@ export default ChartComponent.extend(LegendMixin, FloatingTooltipMixin, AxesMixi
       // a bunch of stuff to the prototype that gets enumerated by `_.values`
       // in `individualBarLabels`
     	return [];
-   	}
+    }
 
     data = groupBy(data, (d) => {
       return d.group || this.get('ungroupedSeriesName');
