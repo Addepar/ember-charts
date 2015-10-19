@@ -294,13 +294,14 @@ define('ember-charts/components/bubble-chart', ['exports', 'module', 'ember', '.
     }),
 
     nodeData: _Ember['default'].computed('radiusScale', function () {
+      var _this = this;
+
       var data = this.get('data');
       if (_Ember['default'].isEmpty(data)) {
         return [];
       }
 
       var radiusScale = this.get('radiusScale');
-      var _this = this;
       var nodes = data.map(function (d) {
         return {
           radius: radiusScale(d.value),
@@ -327,6 +328,8 @@ define('ember-charts/components/bubble-chart', ['exports', 'module', 'ember', '.
     },
 
     updateVis: function updateVis() {
+      var _this2 = this;
+
       var vis = this.get('viewport');
       var nodes = this.get('nodeData');
       var showDetails = this.get('showDetails');
@@ -362,20 +365,19 @@ define('ember-charts/components/bubble-chart', ['exports', 'module', 'ember', '.
 
       // Moves all circles towards the @center
       // of the visualization
-      var _this = this;
       var move_towards_center = function move_towards_center(alpha) {
         var center = {
-          x: _this.get('width') / 2,
-          y: _this.get('height') / 2
+          x: _this2.get('width') / 2,
+          y: _this2.get('height') / 2
         };
         return function (d) {
-          d.x = d.x + (center.x - d.x) * (_this.get('damper') + 0.02) * alpha;
-          d.y = d.y + (center.y - d.y) * (_this.get('damper') + 0.02) * alpha;
+          d.x = d.x + (center.x - d.x) * (_this2.get('damper') + 0.02) * alpha;
+          d.y = d.y + (center.y - d.y) * (_this2.get('damper') + 0.02) * alpha;
         };
       };
 
       // Start the forces
-      var force = d3.layout.force().nodes(nodes).size([_this.get('width'), _this.get('height')]);
+      var force = d3.layout.force().nodes(nodes).size([this.get('width'), this.get('height')]);
 
       // Display all
       force.gravity(this.get('layoutGravity')).charge(this.get('charge')).friction(0.9).on("tick", function (e) {
@@ -512,8 +514,9 @@ define('ember-charts/components/chart-component', ['exports', 'module', 'ember',
     renderVars: ['finishedData', 'width', 'height', 'margin', 'isInteractive'],
 
     init: function init() {
-      this._super();
       var _this = this;
+
+      this._super();
       _.uniq(this.get('renderVars')).forEach(function (renderVar) {
         _this.addObserver(renderVar, _this.drawOnce);
         // This is just to ensure that observers added above fire even
@@ -523,9 +526,10 @@ define('ember-charts/components/chart-component', ['exports', 'module', 'ember',
     },
 
     willDestroyElement: function willDestroyElement() {
-      var _this = this;
+      var _this2 = this;
+
       _.uniq(this.get('renderVars')).forEach(function (renderVar) {
-        _this.removeObserver(renderVar, _this, _this.drawOnce);
+        _this2.removeObserver(renderVar, _this2, _this2.drawOnce);
       });
       this._super();
     },
@@ -688,11 +692,12 @@ define('ember-charts/components/horizontal-bar-chart', ['exports', 'module', 'em
     // ----------------------------------------------------------------------------
 
     showDetails: _Ember['default'].computed('isInteractive', function () {
+      var _this = this;
+
       if (!this.get('isInteractive')) {
         return _Ember['default'].K;
       }
 
-      var _this = this;
       return function (data, i, element) {
         // Do hover detail style stuff here
         d3.select(element).classed('hovered', true);
@@ -709,16 +714,17 @@ define('ember-charts/components/horizontal-bar-chart', ['exports', 'module', 'em
     }),
 
     hideDetails: _Ember['default'].computed('isInteractive', function () {
+      var _this2 = this;
+
       if (!this.get('isInteractive')) {
         return _Ember['default'].K;
       }
 
-      var _this = this;
       return function (data, i, element) {
         // Undo hover style stuff
         d3.select(element).classed('hovered', false);
         // Hide Tooltip
-        return _this.hideTooltip();
+        return _this2.hideTooltip();
       };
     }),
 
@@ -738,8 +744,9 @@ define('ember-charts/components/horizontal-bar-chart', ['exports', 'module', 'em
     }),
 
     barAttrs: _Ember['default'].computed('xScale', 'mostTintedColor', 'leastTintedColor', 'barThickness', function () {
+      var _this3 = this;
+
       var xScale = this.get('xScale');
-      var _this = this;
       return {
         width: function width(d) {
           return Math.abs(xScale(d.value) - xScale(0));
@@ -750,23 +757,24 @@ define('ember-charts/components/horizontal-bar-chart', ['exports', 'module', 'em
           if (d.color) {
             return "fill:" + d.color;
           }
-          var color = d.value < 0 ? _this.get('mostTintedColor') : _this.get('leastTintedColor');
+          var color = d.value < 0 ? _this3.get('mostTintedColor') : _this3.get('leastTintedColor');
           return "fill:" + color;
         }
       };
     }),
 
     valueLabelAttrs: _Ember['default'].computed('xScale', 'barThickness', 'labelPadding', function () {
+      var _this4 = this;
+
       var xScale = this.get('xScale');
-      var _this = this;
       // Anchor the label 'labelPadding' away from the zero line
       // How to anchor the text depends on the direction of the bar
       return {
         x: function x(d) {
           if (d.value < 0) {
-            return -_this.get('labelPadding');
+            return -_this4.get('labelPadding');
           } else {
-            return xScale(d.value) - xScale(0) + _this.get('labelPadding');
+            return xScale(d.value) - xScale(0) + _this4.get('labelPadding');
           }
         },
         y: this.get('barThickness') / 2,
@@ -779,17 +787,18 @@ define('ember-charts/components/horizontal-bar-chart', ['exports', 'module', 'em
     }),
 
     groupLabelAttrs: _Ember['default'].computed('xScale', 'barThickness', 'labelPadding', function () {
+      var _this5 = this;
+
       var xScale = this.get('xScale');
 
       // Anchor the label 'labelPadding' away from the zero line
       // How to anchor the text depends on the direction of the bar
-      var _this = this;
       return {
         x: function x(d) {
           if (d.value < 0) {
-            return xScale(0) - xScale(d.value) + _this.get('labelPadding');
+            return xScale(0) - xScale(d.value) + _this5.get('labelPadding');
           } else {
-            return -_this.get('labelPadding');
+            return -_this5.get('labelPadding');
           }
         },
         y: this.get('barThickness') / 2,
@@ -864,13 +873,14 @@ define('ember-charts/components/horizontal-bar-chart', ['exports', 'module', 'em
     },
 
     updateGraphic: function updateGraphic() {
-      var _this = this;
+      var _this6 = this;
+
       var groups = this.get('groups').attr(this.get('groupAttrs'));
 
       groups.select('rect').attr(this.get('barAttrs'));
 
       groups.select('text.value').text(function (d) {
-        return _this.get('formatLabelFunction')(d.value);
+        return _this6.get('formatLabelFunction')(d.value);
       }).attr(this.get('valueLabelAttrs'));
 
       var labelWidth = this.get('labelWidth');
@@ -1062,11 +1072,17 @@ define('ember-charts/components/pie-chart', ['exports', 'module', 'ember', './ch
     }),
 
     otherData: _Ember['default'].computed('sortedDataWithOther.[]', 'sortFunction', function () {
-      var _ref;
       var otherSlice = _.find(this.get('sortedDataWithOther'), function (d) {
         return d._otherItems;
       });
-      var otherItems = (_ref = otherSlice != null ? otherSlice._otherItems : void 0) != null ? _ref : [];
+
+      var otherItems;
+      if (otherSlice != null && otherSlice._otherItems != null) {
+        otherItems = otherSlice._otherItems;
+      } else {
+        otherItems = [];
+      }
+
       return _.sortBy(otherItems, this.get('sortFunction')).reverse();
     }),
 
@@ -1146,9 +1162,10 @@ define('ember-charts/components/pie-chart', ['exports', 'module', 'ember', './ch
 
     getSliceColor: _Ember['default'].computed('numSlices', 'colorScale', function () {
       var _this = this;
+
       return function (d, i) {
-        var index, numSlices, _ref;
-        if ((_ref = d.data) != null ? _ref.color : void 0) {
+        var index, numSlices;
+        if (d.data && d.data.color) {
           return d.data.color;
         }
         numSlices = _this.get('numSlices');
@@ -1177,7 +1194,8 @@ define('ember-charts/components/pie-chart', ['exports', 'module', 'ember', './ch
     // ----------------------------------------------------------------------------
 
     showDetails: _Ember['default'].computed('isInteractive', function () {
-      var _this = this;
+      var _this2 = this;
+
       if (!this.get('isInteractive')) {
         return _Ember['default'].K;
       }
@@ -1186,31 +1204,32 @@ define('ember-charts/components/pie-chart', ['exports', 'module', 'ember', './ch
         d3.select(element).classed('hovered', true);
         data = d.data;
         if (data._otherItems) {
-          value = _this.get('otherDataValue');
+          value = _this2.get('otherDataValue');
         } else {
           value = data.value;
         }
-        formatLabelFunction = _this.get('formatLabelFunction');
+        formatLabelFunction = _this2.get('formatLabelFunction');
         content = "<span class=\"tip-label\">" + data.label + "</span>";
-        content += "<span class=\"name\">" + _this.get('tooltipValueDisplayName') + ": </span>";
+        content += "<span class=\"name\">" + _this2.get('tooltipValueDisplayName') + ": </span>";
         content += "<span class=\"value\">" + formatLabelFunction(value) + "</span>";
-        return _this.showTooltip(content, d3.event);
+        return _this2.showTooltip(content, d3.event);
       };
     }),
 
     hideDetails: _Ember['default'].computed('isInteractive', function () {
+      var _this3 = this;
+
       if (!this.get('isInteractive')) {
         return _Ember['default'].K;
       }
 
-      var _this = this;
       return function (d, i, element) {
         d3.select(element).classed('hovered', false);
         var data = d.data;
         if (data._otherItems) {
-          return _this.get('viewport').select('.legend').classed('hovered', false);
+          return _this3.get('viewport').select('.legend').classed('hovered', false);
         } else {
-          return _this.hideTooltip();
+          return _this3.hideTooltip();
         }
       };
     }),
@@ -1396,7 +1415,6 @@ define('ember-charts/components/pie-chart', ['exports', 'module', 'ember', './ch
         return "" + this.textContent + ", " + d.data.percent + "%";
       });
     }
-
   });
 });
 define('ember-charts/components/scatter-chart', ['exports', 'module', 'ember', './chart-component', '../mixins/legend', '../mixins/floating-tooltip', '../mixins/axes', '../mixins/no-margin-chart', '../utils/group-by'], function (exports, module, _ember, _chartComponent, _mixinsLegend, _mixinsFloatingTooltip, _mixinsAxes, _mixinsNoMarginChart, _utilsGroupBy) {
@@ -1472,8 +1490,8 @@ define('ember-charts/components/scatter-chart', ['exports', 'module', 'ember', '
 
     // Aggregate the raw data by group, into separate lists of data points
     groupedData: _Ember['default'].computed('filteredData.@each', function () {
-      // var k, v, _results;
       var _this = this;
+
       var data = this.get('filteredData');
       if (_Ember['default'].isEmpty(data)) {
         return [];
@@ -1612,25 +1630,27 @@ define('ember-charts/components/scatter-chart', ['exports', 'module', 'ember', '
     // Since we are only provided with the index of each dot within its <g>, we
     // decide the shape and color of the dot using the index of its group property
     getGroupShape: _Ember['default'].computed(function () {
-      var _this = this;
+      var _this2 = this;
+
       return function (d, i) {
-        i = _this.get('groupNames').indexOf(d.group);
-        if (!_this.get('displayGroups')) {
+        i = _this2.get('groupNames').indexOf(d.group);
+        if (!_this2.get('displayGroups')) {
           return 'circle';
         }
-        return _this.get('groupShapes')[i % _this.get('numGroupShapes')];
+        return _this2.get('groupShapes')[i % _this2.get('numGroupShapes')];
       };
     }),
 
     getGroupColor: _Ember['default'].computed(function () {
-      var _this = this;
+      var _this3 = this;
+
       return function (d, i) {
         var colorIndex = 0;
-        if (_this.get('displayGroups')) {
-          i = _this.get('groupNames').indexOf(d.group);
-          colorIndex = Math.floor(i / _this.get('numGroupShapes'));
+        if (_this3.get('displayGroups')) {
+          i = _this3.get('groupNames').indexOf(d.group);
+          colorIndex = Math.floor(i / _this3.get('numGroupShapes'));
         }
-        return _this.get('colorScale')(colorIndex / _this.get('numGroupColors'));
+        return _this3.get('colorScale')(colorIndex / _this3.get('numGroupColors'));
       };
     }),
 
@@ -1691,34 +1711,36 @@ define('ember-charts/components/scatter-chart', ['exports', 'module', 'ember', '
     yValueDisplayName: 'Y Factor',
 
     showDetails: _Ember['default'].computed('isInteractive', function () {
+      var _this4 = this;
+
       if (!this.get('isInteractive')) {
         return _Ember['default'].K;
       }
 
-      var _this = this;
       return function (data, i, element) {
         d3.select(element).classed('hovered', true);
-        var formatXValue = _this.get('formatXValue');
-        var formatYValue = _this.get('formatYValue');
+        var formatXValue = _this4.get('formatXValue');
+        var formatYValue = _this4.get('formatYValue');
         var content = "<span class=\"tip-label\">" + data.group + "</span>";
-        content += "<span class=\"name\">" + _this.get('xValueDisplayName') + ": </span>";
+        content += "<span class=\"name\">" + _this4.get('xValueDisplayName') + ": </span>";
         content += "<span class=\"value\">" + formatXValue(data.xValue) + "</span><br/>";
-        content += "<span class=\"name\">" + _this.get('yValueDisplayName') + ": </span>";
+        content += "<span class=\"name\">" + _this4.get('yValueDisplayName') + ": </span>";
         content += "<span class=\"value\">" + formatYValue(data.yValue) + "</span>";
 
-        return _this.showTooltip(content, d3.event);
+        return _this4.showTooltip(content, d3.event);
       };
     }),
 
     hideDetails: _Ember['default'].computed('isInteractive', function () {
+      var _this5 = this;
+
       if (!this.get('isInteractive')) {
         return _Ember['default'].K;
       }
 
-      var _this = this;
       return function (data, i, element) {
         d3.select(element).classed('hovered', false);
-        return _this.hideTooltip();
+        return _this5.hideTooltip();
       };
     }),
 
@@ -1735,15 +1757,16 @@ define('ember-charts/components/scatter-chart', ['exports', 'module', 'ember', '
     }),
 
     pointAttrs: _Ember['default'].computed('dotShapeArea', 'getGroupShape', 'xScale', 'yScale', 'displayGroups', 'getGroupColor', function () {
-      var _this = this;
+      var _this6 = this;
+
       return {
         d: d3.svg.symbol().size(this.get('dotShapeArea')).type(this.get('getGroupShape')),
         fill: this.get('displayGroups') ? this.get('getGroupColor') : 'transparent',
         stroke: this.get('getGroupColor'),
         'stroke-width': 1.5,
         transform: function transform(d) {
-          var dx = _this.get('xScale')(d.xValue);
-          var dy = _this.get('yScale')(d.yValue);
+          var dx = _this6.get('xScale')(d.xValue);
+          var dy = _this6.get('yScale')(d.yValue);
           return "translate(" + dx + ", " + dy + ")";
         }
       };
@@ -1810,21 +1833,22 @@ define('ember-charts/components/scatter-chart', ['exports', 'module', 'ember', '
     },
 
     totalPointShape: _Ember['default'].computed(function () {
+      var _this7 = this;
+
       var dotShapeArea = this.get('dotShapeArea');
 
-      var _this = this;
       return function (selection) {
         selection.append('path').attr({
           "class": 'totaldot',
           d: d3.svg.symbol().size(dotShapeArea).type('circle'),
-          fill: _this.get('getGroupColor')
+          fill: _this7.get('getGroupColor')
         });
 
         return selection.append('path').attr({
           "class": 'totaloutline',
           d: d3.svg.symbol().size(dotShapeArea * 3).type('circle'),
           fill: 'transparent',
-          stroke: _this.get('getGroupColor'),
+          stroke: _this7.get('getGroupColor'),
           'stroke-width': 2
         });
       };
@@ -1903,7 +1927,6 @@ define('ember-charts/components/scatter-chart', ['exports', 'module', 'ember', '
         return hideDetails(d, i, this);
       });
 
-      var _this = this;
       return this.get('viewport').select('.totalgroup').on("mouseover", function (d, i) {
         return showDetails(d, i, this);
       }).on("mouseout", function (d, i) {
@@ -1911,13 +1934,12 @@ define('ember-charts/components/scatter-chart', ['exports', 'module', 'ember', '
       }).attr({
         transform: function transform(d) {
           var dx, dy;
-          dx = _this.get('xScale')(d.xValue);
-          dy = _this.get('yScale')(d.yValue);
+          dx = this.get('xScale')(d.xValue);
+          dy = this.get('yScale')(d.yValue);
           return "translate(" + dx + ", " + dy + ")";
         }
       });
     }
-
   });
 });
 define('ember-charts/components/time-series-chart', ['exports', 'module', 'ember', './chart-component', '../mixins/legend', '../mixins/time-series-labeler', '../mixins/floating-tooltip', '../mixins/has-time-series-rule', '../mixins/axes', '../mixins/formattable', '../mixins/no-margin-chart', '../utils/group-by'], function (exports, module, _ember, _chartComponent, _mixinsLegend, _mixinsTimeSeriesLabeler, _mixinsFloatingTooltip, _mixinsHasTimeSeriesRule, _mixinsAxes, _mixinsFormattable, _mixinsNoMarginChart, _utilsGroupBy) {
@@ -2030,12 +2052,13 @@ define('ember-charts/components/time-series-chart', ['exports', 'module', 'ember
     // Resulting format is [{group: ..., values: ...}] where values are the
     // lineData values for that group.
     _groupedLineData: _Ember['default'].computed('lineData.@each', 'ungroupedSeriesName', function () {
+      var _this = this;
+
       var lineData = this.get('lineData');
       if (_Ember['default'].isEmpty(lineData)) {
         return [];
       }
 
-      var _this = this;
       var groups = (0, _utilsGroupBy.groupBy)(lineData, function (datum) {
         return _this._getLabelOrDefault(datum);
       });
@@ -2059,6 +2082,8 @@ define('ember-charts/components/time-series-chart', ['exports', 'module', 'ember
     // ...}, ...], [...]] where each internal array is an array of hashes
     // at the same time
     _groupedBarData: _Ember['default'].computed('barData.@each', 'ungroupedSeriesName', 'barLeftOffset', function () {
+      var _this2 = this;
+
       var barData = this.get('barData');
       if (_Ember['default'].isEmpty(barData)) {
         return [];
@@ -2069,12 +2094,11 @@ define('ember-charts/components/time-series-chart', ['exports', 'module', 'ember
         return d.time.getTime();
       });
 
-      var _this = this;
       return _.map(barTimes, function (groups) {
         return _.map(groups, function (g) {
-          var label = _this._getLabelOrDefault(g);
+          var label = _this2._getLabelOrDefault(g);
           var labelTime = g.time;
-          var drawTime = _this._transformCenter(g.time);
+          var drawTime = _this2._transformCenter(g.time);
           return {
             group: label,
             time: drawTime,
@@ -2144,13 +2168,15 @@ define('ember-charts/components/time-series-chart', ['exports', 'module', 'ember
     },
 
     _barGroups: _Ember['default'].computed('barData.@each', 'ungroupedSeriesName', function () {
+      var _this3 = this;
+
       var barData = this.get('barData');
       if (_Ember['default'].isEmpty(barData)) {
         return [];
       }
-      var _this = this;
+
       var barGroups = (0, _utilsGroupBy.groupBy)(barData, function (datum) {
-        return _this._getLabelOrDefault(datum);
+        return _this3._getLabelOrDefault(datum);
       });
       return _.keys(barGroups);
     }),
@@ -2420,17 +2446,18 @@ define('ember-charts/components/time-series-chart', ['exports', 'module', 'ember
     // ----------------------------------------------------------------------------
 
     showDetails: _Ember['default'].computed('isInteractive', function () {
+      var _this4 = this;
+
       if (!this.get('isInteractive')) {
         return _Ember['default'].K;
       }
 
-      var _this = this;
       return function (data, i, element) {
         d3.select(element).classed('hovered', true);
 
         var time = data.labelTime != null ? data.labelTime : data.time;
-        var content = "<span class=\"tip-label\">" + _this.get('formatTime')(time) + "</span>";
-        var formatLabelFunction = _this.get('formatLabelFunction');
+        var content = "<span class=\"tip-label\">" + _this4.get('formatTime')(time) + "</span>";
+        var formatLabelFunction = _this4.get('formatLabelFunction');
 
         var addValueLine = function addValueLine(d) {
           content += "<span class=\"name\">" + d.group + ": </span>";
@@ -2443,19 +2470,20 @@ define('ember-charts/components/time-series-chart', ['exports', 'module', 'ember
           addValueLine(data);
         }
 
-        return _this.showTooltip(content, d3.event);
+        return _this4.showTooltip(content, d3.event);
       };
     }),
 
     hideDetails: _Ember['default'].computed('isInteractive', function () {
+      var _this5 = this;
+
       if (!this.get('isInteractive')) {
         return _Ember['default'].K;
       }
 
-      var _this = this;
       return function (data, i, element) {
         d3.select(element).classed('hovered', false);
-        return _this.hideTooltip();
+        return _this5.hideTooltip();
       };
     }),
 
@@ -2467,10 +2495,11 @@ define('ember-charts/components/time-series-chart', ['exports', 'module', 'ember
     zeroDisplacement: 1,
 
     groupAttrs: _Ember['default'].computed('paddedGroupWidth', function () {
-      var _this = this;
+      var _this6 = this;
+
       return {
         transform: function transform() {
-          return "translate(" + -_this.get('paddedGroupWidth') / 2 + ",0)";
+          return "translate(" + -_this6.get('paddedGroupWidth') / 2 + ",0)";
         }
       };
     }),
@@ -2500,17 +2529,18 @@ define('ember-charts/components/time-series-chart', ['exports', 'module', 'ember
         height: function height(d) {
           // prevent zero-height bars from causing errors because of zeroDisplacement
           var zeroLine = Math.max(0, yScale.domain()[0]);
-          return Math.max(0, d.value > zeroLine ? Math.abs(yScale(zeroLine) - yScale(d.value)) - zeroDisplacement : Math.abs(yScale(d.value) - yScale(zeroLine)) - zeroDisplacement);
+          return Math.max(0, Math.abs(yScale(zeroLine) - yScale(d.value)) - zeroDisplacement);
         }
       };
     }),
 
     line: _Ember['default'].computed('xTimeScale', 'yScale', 'interpolate', function () {
-      var _this = this;
+      var _this7 = this;
+
       return d3.svg.line().x(function (d) {
-        return _this.get('xTimeScale')(d.time);
+        return _this7.get('xTimeScale')(d.time);
       }).y(function (d) {
-        return _this.get('yScale')(d.value);
+        return _this7.get('yScale')(d.value);
       }).interpolate(this.get('interpolate') ? 'basis' : 'linear');
     }),
 
@@ -2524,7 +2554,8 @@ define('ember-charts/components/time-series-chart', ['exports', 'module', 'ember
     // 5th line: ~3px, 33% tinted, solid
     // 6th line: ~3px, 33% tinted, dotted
     lineColorFn: _Ember['default'].computed(function () {
-      var _this = this;
+      var _this8 = this;
+
       return function (d, i) {
         var ii;
         switch (i) {
@@ -2549,18 +2580,19 @@ define('ember-charts/components/time-series-chart', ['exports', 'module', 'ember
           default:
             ii = i;
         }
-        return _this.get('getSeriesColor')(d, ii);
+        return _this8.get('getSeriesColor')(d, ii);
       };
     }),
 
     lineAttrs: _Ember['default'].computed('line', 'getSeriesColor', function () {
-      var _this = this;
+      var _this9 = this;
+
       return {
         'class': function _class(d, i) {
           return "line series-" + i;
         },
         d: function d(_d) {
-          return _this.get('line')(_d.values);
+          return _this9.get('line')(_d.values);
         },
         stroke: this.get('lineColorFn'),
         'stroke-width': function strokeWidth(d, i) {
@@ -2624,27 +2656,27 @@ define('ember-charts/components/time-series-chart', ['exports', 'module', 'ember
     }),
 
     legendItems: _Ember['default'].computed('xBetweenSeriesDomain', 'xWithinGroupDomain', 'getSeriesColor', 'getSecondarySeriesColor', function () {
+      var _this10 = this;
 
       // getSeriesColor = this.get('getSeriesColor');
       // lineAttrs = this.get('lineAttrs');
 
-      var _this = this;
       var result = this.get('xBetweenSeriesDomain').map(function (d, i) {
         // Line legend items
         var res = {
           label: d,
-          stroke: _this.get('lineAttrs')['stroke'](d, i),
-          width: _this.get('lineAttrs')['stroke-width'](d, i),
-          dotted: _this.get('lineAttrs')['stroke-dasharray'](d, i),
+          stroke: _this10.get('lineAttrs')['stroke'](d, i),
+          width: _this10.get('lineAttrs')['stroke-width'](d, i),
+          dotted: _this10.get('lineAttrs')['stroke-dasharray'](d, i),
           icon: function icon() {
             return 'line';
           },
           selector: ".series-" + i
         };
         return res;
-      }).concat(_this.get('xWithinGroupDomain').map(function (d, i) {
+      }).concat(this.get('xWithinGroupDomain').map(function (d, i) {
         // Bar legend items
-        var color = _this.get('getSecondarySeriesColor')(d, i);
+        var color = _this10.get('getSecondarySeriesColor')(d, i);
         var res = {
           stroke: color,
           fill: color,
@@ -2909,6 +2941,8 @@ define('ember-charts/components/vertical-bar-chart', ['exports', 'module', 'embe
 
     // Aggregates objects provided in `data` in a dictionary, keyed by group names
     groupedData: _Ember['default'].computed('sortedData', 'stackBars', 'ungroupedSeriesName', function () {
+      var _this = this;
+
       var data = this.get('sortedData');
       if (_Ember['default'].isEmpty(data)) {
         // TODO(embooglement): this can't be `Ember.A()` because it needs to be an
@@ -2918,7 +2952,6 @@ define('ember-charts/components/vertical-bar-chart', ['exports', 'module', 'embe
         return [];
       }
 
-      var _this = this;
       data = (0, _utilsGroupBy.groupBy)(data, function (d) {
         return d.group || _this.get('ungroupedSeriesName');
       });
@@ -3179,14 +3212,15 @@ define('ember-charts/components/vertical-bar-chart', ['exports', 'module', 'embe
     }),
 
     legendItems: _Ember['default'].computed('individualBarLabels.[]', 'getSeriesColor', 'stackBars', 'labelIDMapping.[]', function () {
-      var getSeriesColor,
-          _this = this;
+      var _this2 = this;
+
+      var getSeriesColor;
       getSeriesColor = this.get('getSeriesColor');
       return this.get('individualBarLabels').map(function (label, i) {
         var color;
         color = getSeriesColor(label, i);
-        if (_this.get('stackBars')) {
-          i = _this.get('labelIDMapping')[label];
+        if (_this2.get('stackBars')) {
+          i = _this2.get('labelIDMapping')[label];
         }
         return {
           label: label,
@@ -3205,12 +3239,13 @@ define('ember-charts/components/vertical-bar-chart', ['exports', 'module', 'embe
     // ----------------------------------------------------------------------------
 
     showDetails: _Ember['default'].computed('isInteractive', function () {
+      var _this3 = this;
+
       if (!this.get('isInteractive')) {
         return _Ember['default'].K;
       }
-      var _this = this;
-      return function (data, i, element) {
 
+      return function (data, i, element) {
         // Specify whether we are on an individual bar or group
         var isGroup = _Ember['default'].isArray(data.values);
 
@@ -3221,7 +3256,7 @@ define('ember-charts/components/vertical-bar-chart', ['exports', 'module', 'embe
         // Show tooltip
         var content = data.group ? "<span class=\"tip-label\">" + data.group + "</span>" : '';
 
-        var formatLabel = _this.get('formatLabelFunction');
+        var formatLabel = _this3.get('formatLabelFunction');
         var addValueLine = function addValueLine(d) {
           content += "<span class=\"name\">" + d.label + ": </span>";
           return content += "<span class=\"value\">" + formatLabel(d.value) + "</span><br/>";
@@ -3234,15 +3269,17 @@ define('ember-charts/components/vertical-bar-chart', ['exports', 'module', 'embe
           // Just hovering over single bar
           addValueLine(data);
         }
-        return _this.showTooltip(content, d3.event);
+        return _this3.showTooltip(content, d3.event);
       };
     }),
 
     hideDetails: _Ember['default'].computed('isInteractive', function () {
+      var _this4 = this;
+
       if (!this.get('isInteractive')) {
         return _Ember['default'].K;
       }
-      var _this = this;
+
       return function (data, i, element) {
         // if we exited the group label undo for the group
         if (_Ember['default'].isArray(data.values)) {
@@ -3252,7 +3289,7 @@ define('ember-charts/components/vertical-bar-chart', ['exports', 'module', 'embe
         d3.select(element).classed('hovered', false);
 
         // Hide Tooltip
-        return _this.hideTooltip();
+        return _this4.hideTooltip();
       };
     }),
 
@@ -3261,12 +3298,14 @@ define('ember-charts/components/vertical-bar-chart', ['exports', 'module', 'embe
     // ----------------------------------------------------------------------------
 
     groupAttrs: _Ember['default'].computed('graphicLeft', 'graphicTop', 'xBetweenGroupScale', function () {
+      var _this5 = this;
+
       var xBetweenGroupScale = this.get('xBetweenGroupScale');
-      var _this = this;
+
       return {
         transform: function transform(d) {
-          var dx = xBetweenGroupScale(d.group) ? _this.get('graphicLeft') + xBetweenGroupScale(d.group) : _this.get('graphicLeft');
-          var dy = _this.get('graphicTop');
+          var dx = xBetweenGroupScale(d.group) ? _this5.get('graphicLeft') + xBetweenGroupScale(d.group) : _this5.get('graphicLeft');
+          var dy = _this5.get('graphicTop');
 
           return "translate(" + dx + ", " + dy + ")";
         }
@@ -3274,20 +3313,20 @@ define('ember-charts/components/vertical-bar-chart', ['exports', 'module', 'embe
     }),
 
     stackedBarAttrs: _Ember['default'].computed('yScale', 'groupWidth', 'labelIDMapping.[]', function () {
-      var yScale,
-          zeroDisplacement,
-          _this = this;
+      var _this6 = this;
+
+      var yScale, zeroDisplacement;
       zeroDisplacement = 1;
       yScale = this.get('yScale');
       return {
         "class": function _class(barSection) {
           var id;
-          id = _this.get('labelIDMapping')[barSection.label];
+          id = _this6.get('labelIDMapping')[barSection.label];
           return "grouping-" + id;
         },
         'stroke-width': 0,
         width: function width() {
-          return _this.get('groupWidth');
+          return _this6.get('groupWidth');
         },
         x: null,
         y: function y(barSection) {
@@ -3300,19 +3339,21 @@ define('ember-charts/components/vertical-bar-chart', ['exports', 'module', 'embe
     }),
 
     groupedBarAttrs: _Ember['default'].computed('yScale', 'getSeriesColor', 'barWidth', 'xWithinGroupScale', function () {
+      var _this7 = this;
+
       var zeroDisplacement = 1;
       var yScale = this.get('yScale');
-      var _this = this;
+
       return {
         'class': function _class(d, i) {
           return "grouping-" + i;
         },
         'stroke-width': 0,
         width: function width() {
-          return _this.get('barWidth');
+          return _this7.get('barWidth');
         },
         x: function x(d) {
-          return _this.get('xWithinGroupScale')(d.label);
+          return _this7.get('xWithinGroupScale')(d.label);
         },
         height: function height(d) {
           return Math.max(0, Math.abs(yScale(d.value) - yScale(0)) - zeroDisplacement);
@@ -3328,18 +3369,18 @@ define('ember-charts/components/vertical-bar-chart', ['exports', 'module', 'embe
     }),
 
     labelAttrs: _Ember['default'].computed('barWidth', 'isGrouped', 'stackBars', 'groupWidth', 'xWithinGroupScale', 'graphicTop', 'graphicHeight', 'labelPadding', function () {
+      var _this8 = this;
 
-      var _this = this;
       return {
         'stroke-width': 0,
         transform: function transform(d) {
-          var dx = _this.get('barWidth') / 2;
-          if (_this.get('isGrouped') || _this.get('stackBars')) {
-            dx += _this.get('groupWidth') / 2 - _this.get('barWidth') / 2;
+          var dx = _this8.get('barWidth') / 2;
+          if (_this8.get('isGrouped') || _this8.get('stackBars')) {
+            dx += _this8.get('groupWidth') / 2 - _this8.get('barWidth') / 2;
           } else {
-            dx += _this.get('xWithinGroupScale')(d.group);
+            dx += _this8.get('xWithinGroupScale')(d.group);
           }
-          var dy = _this.get('graphicTop') + _this.get('graphicHeight') + _this.get('labelPadding');
+          var dy = _this8.get('graphicTop') + _this8.get('graphicHeight') + _this8.get('labelPadding');
           return "translate(" + dx + ", " + dy + ")";
         }
       };
@@ -3458,6 +3499,8 @@ define('ember-charts/components/vertical-bar-chart', ['exports', 'module', 'embe
     },
 
     updateLayout: function updateLayout() {
+      var _this9 = this;
+
       var groups = this.get('groups');
       var labels = groups.select('.groupLabel text').attr('transform', null) // remove any previous rotation attrs
       .text(function (d) {
@@ -3468,14 +3511,13 @@ define('ember-charts/components/vertical-bar-chart', ['exports', 'module', 'embe
       // group. Otherwise, rotate each label and anchor it at the top of its
       // first character.
       this.setRotateLabels();
-      var _this = this;
       var labelTrimmer;
 
       if (this.get('_shouldRotateLabels')) {
         var rotateLabelDegrees = this.get('rotateLabelDegrees');
         labelTrimmer = _LabelTrimmer['default'].create({
           getLabelSize: function getLabelSize() {
-            return _this.get('rotatedLabelLength');
+            return _this9.get('rotatedLabelLength');
           },
           getLabelText: function getLabelText(d) {
             return d.group;
@@ -3508,7 +3550,6 @@ define('ember-charts/components/vertical-bar-chart', ['exports', 'module', 'embe
     },
 
     updateAxes: function updateAxes() {
-
       //tickSize isn't doing anything here, it should take two arguments
       var yAxis = d3.svg.axis().scale(this.get('yScale')).orient('right').ticks(this.get('numYTicks')).tickSize(this.get('graphicWidth')).tickFormat(this.get('formatValueAxis'));
 
@@ -3539,7 +3580,6 @@ define('ember-charts/components/vertical-bar-chart', ['exports', 'module', 'embe
       groups.selectAll('rect').attr(barAttrs).style('fill', this.get('getSeriesColor'));
       return groups.select('g.groupLabel').attr(this.get('labelAttrs'));
     }
-
   });
 });
 define('ember-charts/mixins/axes', ['exports', 'module', 'ember'], function (exports, module, _ember) {
@@ -3778,19 +3818,25 @@ define('ember-charts/mixins/floating-tooltip', ['exports', 'module', 'ember'], f
       var curX = event.clientX + windowScrollLeft;
       var curY = event.clientY + windowScrollTop;
 
-      var tooltipLeftOffset = curX - windowScrollLeft + xOffset * 2 + width > $(window).width() ?
-      // # Not enough room to put tooltip to the right of the cursor
-      -(width + xOffset * 2) :
-      // # Offset the tooltip to the right
-      xOffset;
+      var tooltipLeftOffset;
+      if (curX - windowScrollLeft + xOffset * 2 + width > $(window).width()) {
+        // # Not enough room to put tooltip to the right of the cursor
+        tooltipLeftOffset = -(width + xOffset * 2);
+      } else {
+        // # Offset the tooltip to the right
+        tooltipLeftOffset = xOffset;
+      }
 
       var tooltipLeft = curX + tooltipLeftOffset;
 
-      var tooltipTopOffset = curY - windowScrollTop + yOffset * 2 + height > $(window).height() ?
-      // # Not enough room to put tooltip to the below the cursor
-      -(height + yOffset * 2) :
-      // # Offset the tooltip below the cursor
-      yOffset;
+      var tooltipTopOffset;
+      if (curY - windowScrollTop + yOffset * 2 + height > $(window).height()) {
+        // # Not enough room to put tooltip to the below the cursor
+        tooltipTopOffset = -(height + yOffset * 2);
+      } else {
+        // # Offset the tooltip below the cursor
+        tooltipTopOffset = yOffset;
+      }
 
       var tooltipTop = curY + tooltipTopOffset;
 
@@ -4525,7 +4571,9 @@ define('ember-charts/mixins/resize-handler', ['exports', 'module', 'ember'], fun
           return;
         }
         this.set('resizing', false);
-        return typeof this.onResizeEnd === "function" ? this.onResizeEnd(event) : void 0;
+        if (_.isFunction(this.onResizeEnd)) {
+          this.onResizeEnd(event);
+        }
       };
     }),
 
@@ -4535,11 +4583,11 @@ define('ember-charts/mixins/resize-handler', ['exports', 'module', 'ember'], fun
       }
       if (!this.get('resizing')) {
         this.set('resizing', true);
-        if (typeof this.onResizeStart === "function") {
+        if (_.isFunction(this.onResizeStart)) {
           this.onResizeStart(event);
         }
       }
-      if (typeof this.onResize === "function") {
+      if (_.isFunction(this.onResize)) {
         this.onResize(event);
       }
       return _Ember['default'].run.debounce(this, this.get('endResize'), event, this.get('resizeEndDelay'));
@@ -4864,7 +4912,7 @@ define('ember-charts/mixins/time-series-labeler', ['exports', 'module', 'ember']
     },
     filterLabels: function filterLabels(array, interval) {
       return array.filter(function filterLabels(d, i) {
-        return i % interval ? false : true;
+        return i % interval === 0;
       });
     },
     // Returns the function which returns the labelled intervals between
@@ -4886,7 +4934,12 @@ define('ember-charts/mixins/time-series-labeler', ['exports', 'module', 'ember']
               return d3.time.months(start, stop, this.MONTHS_IN_QUARTER);
             }
           } else {
-            interval = timeBetween > this.get('maxNumberOfLabels') ? Math.ceil(timeBetween / this.get('maxNumberOfLabels')) : 1;
+            if (timeBetween > this.get('maxNumberOfLabels')) {
+              interval = Math.ceil(timeBetween / this.get('maxNumberOfLabels'));
+            } else {
+              interval = 1;
+            }
+
             return this.filterLabels(d3.time[domainTypeToLabellerType[domain]](start, stop), interval);
           }
         }, this);
