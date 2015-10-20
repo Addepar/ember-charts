@@ -513,7 +513,7 @@ export default ChartComponent.extend(LegendMixin, FloatingTooltipMixin,
     }).on("mouseout", function(d, i) {
       return hideDetails(d, i, this);
     }).attr({
-      transform: function(d) {
+      transform: (d) => {
         var dx, dy;
         dx = this.get('xScale')(d.xValue);
         dy = this.get('yScale')(d.yValue);

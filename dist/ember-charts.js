@@ -1930,6 +1930,8 @@ define('ember-charts/components/scatter-chart', ['exports', 'module', 'ember', '
     },
 
     updateGraphic: function updateGraphic() {
+      var _this8 = this;
+
       var showDetails = this.get('showDetails');
       var hideDetails = this.get('hideDetails');
 
@@ -1946,8 +1948,8 @@ define('ember-charts/components/scatter-chart', ['exports', 'module', 'ember', '
       }).attr({
         transform: function transform(d) {
           var dx, dy;
-          dx = this.get('xScale')(d.xValue);
-          dy = this.get('yScale')(d.yValue);
+          dx = _this8.get('xScale')(d.xValue);
+          dy = _this8.get('yScale')(d.yValue);
           return "translate(" + dx + ", " + dy + ")";
         }
       });
