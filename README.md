@@ -7,7 +7,7 @@ best practices in chart interactivity and presentation.
 
 
 ## Demo and Documentation
-http://addepar.github.io/ember-charts/
+http://addepar.github.com/ember-charts/
 
 
 ## Getting Started
@@ -16,43 +16,66 @@ http://addepar.github.io/ember-charts/
 
 http://emberjs.jsbin.com/rekawobugu/1/edit
 
-#### Installation
+#### Installation with Ember CLI (Recommended)
 
-With bower: `bower install ember-charts --save`
+```bash
+# ember-cli >= 0.2.0
+ember install:addon ember-charts
 
-Or, just include `dist/ember-charts.js` and `dist/ember-charts.css` in your app.
+# ember-cli >= 0.2.3
+ember install ember-charts
+```
 
 Once it's installed, you can customize the look of ember-charts with CSS.
 
+#### Installation with Bower (Globals-Based Version)
+
+`bower install ember-charts --save`
+
+Or, just include `dist/ember-charts.js` and `dist/ember-charts.css` in your app.
+
+Using Ember Charts with bower is **deprecated** and will eventually be removed.
+We recommend that you migrate your apps to Ember CLI! Documentation has been
+updated to show Ember CLI usage. If you need documentation for globals-based
+use, please check out version 0.5.0 of Ember Charts and follow the setup
+instructions under "Running Old Versions" to display the old guides.
+
 #### Developing or Testing
 
-After cloning this repo, install dependencies and compile with grunt:
+After cloning this repo, install dependencies and run the demo app:
 
 ```bash
-$ npm install -g grunt-cli
 $ npm install
-$ grunt
+$ ember serve
 ```
 
-To view examples, start the node server. From the root directory:
+You can view the examples at http://localhost:4200.
 
-`$ node example.js`.
+You can run the tests at http://localhost:4200/tests.
 
-You can view the examples at http://localhost:8000/gh_pages.
-
-You can also run tests in the console by running:
+Before submitting a pull request, please compile the globals-based version of
+Ember Charts (the `dist` folder):
 
 ```bash
-$ grunt run_unit_tests
-$ grunt run_functional_tests
+$ npm install -g grunt-cli      # install grunt
+$ grunt dist
 ```
 
 ## Dependencies
-* d3
 * ember
-* jquery
-* jquery-ui
 * lodash
+* d3
+* jquery-ui
+
+
+## Browser Support
+
+We aim to support the last two major versions of every common browser.
+
+If you need to support further browsers, we welcome pull requests with fixes.
+
+Touch support may work but has not been tested.
+
 
 ## Contributing
 
@@ -77,7 +100,7 @@ In a nutshell, this means:
 * Making backwards-compatible bug fixes increases the patch version
 
 
-### Maintainers
+## Maintainers
 Update version numbers and release using https://github.com/webpro/grunt-release-it:
 
 ```
@@ -100,8 +123,8 @@ more soon.
 
 
 ## Copyright and License
-Copyright © 2015 Addepar, Inc. All Rights Reserved
+Copyright © 2013 Addepar, Inc. All Rights Reserved
 
 Licensed under the BSD License (the "License"); you may not use this work
 except in compliance with the License. You may obtain a copy of the License in
-the LICENSE file.
+the LICENSE.md file.

@@ -1,5 +1,14 @@
 # Ember Charts Changelog
 
+### Ember Charts 0.5.0 _(October 29, 2015)_
+  This release ports all coffeescript to javascript and moves our build to
+  use ember-cli.
+
+  * Javascript
+  * Ember-cli
+  * Fixes pie chart labels that were truncating even though there was ample
+    whitespace
+
 ### Ember Charts 0.4.0 _(February 18, 2015)_
 
 This will be the last ember-charts release to support Ember 1.8 and earlier
