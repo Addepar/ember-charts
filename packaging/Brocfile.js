@@ -4,7 +4,7 @@ var Funnel = require('broccoli-funnel');
 var esTranspiler = require('broccoli-babel-transpiler');
 var concat = require('broccoli-concat');
 var es3Safe = require('broccoli-es3-safe-recast');
-var HtmlbarsCompiler = require('ember-cli-htmlbars');
+var templateCompiler = require('broccoli-ember-hbs-template-compiler');
 var less = require('broccoli-less-single');
 var wrap = require('./wrap');
 var globals = require('./globals');
@@ -15,14 +15,11 @@ var addonTree = new Funnel('addon', {
 });
 
 // Compile templates
-var templateTree = new HtmlbarsCompiler('app/templates', {
-  isHtmlBars: true,
-
-  // provide the templateCompiler that is paired with your Ember version
-  templateCompiler: require('../bower_components/ember/ember-template-compiler')
+var templateTree = templateCompiler('app/templates', { module: true });
+templateTree = new Funnel(templateTree, {
+  srcDir: '/',
+  destDir: 'ember-charts/templates'
 });
-
-templateTree = new Funnel(templateTree, {srcDir: '/', destDir: 'ember-charts/templates'});
 
 var sourceTree = mergeTrees([templateTree, addonTree], {overwrite: true});
 
