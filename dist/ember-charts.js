@@ -5088,64 +5088,31 @@ define('ember-charts/mixins/time-series-labeler', ['exports', 'module', 'ember']
     })
   });
 });
-define("ember-charts/templates/components/chart-component", ["exports", "module"], function (exports, module) {
+define("ember-charts/templates/components/chart-component", ["exports", "module", "ember"], function (exports, module, _ember) {
   "use strict";
 
-  module.exports = Ember.HTMLBars.template((function () {
-    return {
-      isHTMLBars: true,
-      revision: "Ember@1.12.1",
-      blockParams: 0,
-      cachedFragment: null,
-      hasRendered: false,
-      build: function build(dom) {
-        var el0 = dom.createDocumentFragment();
-        dom.setNamespace("http://www.w3.org/2000/svg");
-        var el1 = dom.createElement("svg");
-        var el2 = dom.createTextNode("\n  ");
-        dom.appendChild(el1, el2);
-        var el2 = dom.createElement("g");
-        dom.setAttribute(el2, "class", "chart-viewport");
-        dom.appendChild(el1, el2);
-        var el2 = dom.createTextNode("\n");
-        dom.appendChild(el1, el2);
-        dom.appendChild(el0, el1);
-        return el0;
-      },
-      render: function render(context, env, contextualElement) {
-        var dom = env.dom;
-        var hooks = env.hooks,
-            get = hooks.get,
-            attribute = hooks.attribute;
-        dom.detectNamespace(contextualElement);
-        var fragment;
-        if (env.useFragmentCache && dom.canClone) {
-          if (this.cachedFragment === null) {
-            fragment = this.build(dom);
-            if (this.hasRendered) {
-              this.cachedFragment = fragment;
-            } else {
-              this.hasRendered = true;
-            }
-          }
-          if (this.cachedFragment) {
-            fragment = dom.cloneNode(this.cachedFragment, true);
-          }
-        } else {
-          fragment = this.build(dom);
-        }
-        var element0 = dom.childAt(fragment, [0]);
-        var element1 = dom.childAt(element0, [1]);
-        var attrMorph0 = dom.createAttrMorph(element0, 'width');
-        var attrMorph1 = dom.createAttrMorph(element0, 'height');
-        var attrMorph2 = dom.createAttrMorph(element1, 'transform');
-        attribute(env, attrMorph0, element0, "width", get(env, context, "outerWidth"));
-        attribute(env, attrMorph1, element0, "height", get(env, context, "outerHeight"));
-        attribute(env, attrMorph2, element1, "transform", get(env, context, "transformViewport"));
-        return fragment;
-      }
-    };
-  })());
+  function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+
+  var _Ember = _interopRequireDefault(_ember);
+
+  module.exports = _Ember["default"].Handlebars.template({ "compiler": [6, ">= 2.0.0-beta.1"], "main": function main(depth0, helpers, partials, data) {
+      var escapeExpression = this.escapeExpression,
+          buffer = '';
+      data.buffer.push("<svg ");
+      data.buffer.push(escapeExpression(helpers['bind-attr'].call(depth0, { "name": "bind-attr", "hash": {
+          'width': "outerWidth"
+        }, "hashTypes": { 'width': "ID" }, "hashContexts": { 'width': depth0 }, "types": [], "contexts": [], "data": data })));
+      data.buffer.push(" ");
+      data.buffer.push(escapeExpression(helpers['bind-attr'].call(depth0, { "name": "bind-attr", "hash": {
+          'height': "outerHeight"
+        }, "hashTypes": { 'height': "ID" }, "hashContexts": { 'height': depth0 }, "types": [], "contexts": [], "data": data })));
+      data.buffer.push(">\n  <g class=\"chart-viewport\" ");
+      data.buffer.push(escapeExpression(helpers['bind-attr'].call(depth0, { "name": "bind-attr", "hash": {
+          'transform': "transformViewport"
+        }, "hashTypes": { 'transform': "ID" }, "hashContexts": { 'transform': depth0 }, "types": [], "contexts": [], "data": data })));
+      data.buffer.push("></g>\n</svg>\n");
+      return buffer;
+    }, "useData": true });
 });
 define("ember-charts/utils/group-by", ["exports"], function (exports) {
 	"use strict";
