@@ -31,6 +31,9 @@ export default SlideController.extend({
   maxLabelHeight: 40,
   stackBars: false,
 
+  xValueDisplayName: 'X Axis',
+  yValueDisplayName: 'Y Axis',
+
   // ---------
   // Data Selection
   // ---------

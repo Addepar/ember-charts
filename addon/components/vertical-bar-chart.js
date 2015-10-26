@@ -6,12 +6,13 @@ import AxesMixin from '../mixins/axes';
 import FormattableMixin from '../mixins/formattable';
 import SortableChartMixin from '../mixins/sortable-chart';
 import NoMarginChartMixin from '../mixins/no-margin-chart';
+import AxisTitles from '../mixins/axis-titles';
 
 import { groupBy } from '../utils/group-by';
 import LabelTrimmer from '../utils/label-trimmer';
 
 export default ChartComponent.extend(LegendMixin, FloatingTooltipMixin, AxesMixin,
-  FormattableMixin, SortableChartMixin, NoMarginChartMixin, {
+  FormattableMixin, SortableChartMixin, NoMarginChartMixin, AxisTitles, {
 
   classNames: ['chart-vertical-bar'],
 
@@ -612,6 +613,7 @@ export default ChartComponent.extend(LegendMixin, FloatingTooltipMixin, AxesMixi
     this.updateLayout();
     this.updateAxes();
     this.updateGraphic();
+    this.updateAxisTitles();
     if (this.get('hasLegend')) {
       return this.drawLegend();
     } else {
@@ -710,7 +712,7 @@ export default ChartComponent.extend(LegendMixin, FloatingTooltipMixin, AxesMixi
       .classed('major', false)
       .classed('minor', true);
 
-    return gYAxis.selectAll('text')
+    gYAxis.selectAll('text')
       .style('text-anchor', 'end')
       .attr({
         x: -this.get('labelPadding')

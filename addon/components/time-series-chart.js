@@ -8,11 +8,12 @@ import HasTimeSeriesRuleMixin from '../mixins/has-time-series-rule';
 import AxesMixin from '../mixins/axes';
 import FormattableMixin from '../mixins/formattable';
 import NoMarginChartMixin from '../mixins/no-margin-chart';
+import AxisTitles from '../mixins/axis-titles';
 
 import { groupBy } from '../utils/group-by';
 
 export default ChartComponent.extend(LegendMixin, TimeSeriesLabelerMixin, FloatingTooltipMixin,
-  HasTimeSeriesRuleMixin, AxesMixin, FormattableMixin, NoMarginChartMixin, {
+  HasTimeSeriesRuleMixin, AxesMixin, FormattableMixin, NoMarginChartMixin, AxisTitles, {
 
   classNames: ['chart-time-series'],
 
@@ -785,6 +786,7 @@ export default ChartComponent.extend(LegendMixin, TimeSeriesLabelerMixin, Floati
     this.updateLineData();
     this.updateLineMarkers();
     this.updateAxes();
+    this.updateAxisTitles();
     this.updateBarGraphic();
     this.updateLineGraphic();
     if (this.get('hasLegend')) {

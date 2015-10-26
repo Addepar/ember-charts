@@ -5,11 +5,12 @@ import LegendMixin from '../mixins/legend';
 import FloatingTooltipMixin from '../mixins/floating-tooltip';
 import AxesMixin from '../mixins/axes';
 import NoMarginChartMixin from '../mixins/no-margin-chart';
+import AxisTitles from '../mixins/axis-titles';
 
 import { groupBy } from '../utils/group-by';
 
 export default ChartComponent.extend(LegendMixin, FloatingTooltipMixin,
-  AxesMixin, NoMarginChartMixin, {
+  AxesMixin, NoMarginChartMixin, AxisTitles, {
 
   classNames: ['chart-scatter'],
 
@@ -89,11 +90,6 @@ export default ChartComponent.extend(LegendMixin, FloatingTooltipMixin,
   // ----------------------------------------------------------------------------
   // Layout
   // ----------------------------------------------------------------------------
-  // TODO(tony): Consider making logic for whether we are showing the title or
-  // not and then axis mixin will calculate axis offset that will be added
-  axisTitleHeightOffset: Ember.computed('axisTitleHeight', 'labelPadding', function() {
-    return this.get('axisTitleHeight') + this.get('labelPadding');
-  }),
 
   // TODO(tony): Just use axisBottomOffset here
   legendChartPadding: Ember.computed('labelHeightOffset', 'axisTitleHeightOffset', function() {
@@ -356,29 +352,12 @@ export default ChartComponent.extend(LegendMixin, FloatingTooltipMixin,
     }
   },
 
-  selectOrCreateAxisTitle: function(selector) {
-    var title = this.get('viewport').select(selector);
-    if (title.empty()) {
-      return this.get('viewport').append('text');
-    } else {
-      return title;
-    }
-  },
-
   xAxis: Ember.computed(function() {
     return this.selectOrCreateAxis('.x.axis').attr('class', 'x axis');
   }).volatile(),
 
   yAxis: Ember.computed(function() {
     return this.selectOrCreateAxis('.y.axis').attr('class', 'y axis');
-  }).volatile(),
-
-  xAxisTitle: Ember.computed(function() {
-    return this.selectOrCreateAxisTitle('.x.axis-title').attr('class', 'x axis-title');
-  }).volatile(),
-
-  yAxisTitle: Ember.computed(function() {
-    return this.selectOrCreateAxisTitle('.y.axis-title').attr('class', 'y axis-title');
   }).volatile(),
 
   // ----------------------------------------------------------------------------
@@ -392,6 +371,7 @@ export default ChartComponent.extend(LegendMixin, FloatingTooltipMixin,
     this.updateData();
     this.updateAxes();
     this.updateGraphic();
+    this.updateAxisTitles();
     if (this.get('hasLegend')) {
       return this.drawLegend();
     } else {
@@ -481,17 +461,6 @@ export default ChartComponent.extend(LegendMixin, FloatingTooltipMixin,
 
     gYAxis.selectAll('text').style('text-anchor', 'end').attr({
       x: -this.get('labelPadding')
-    });
-
-    var xAxisPadding = this.get('labelHeightOffset') + this.get('labelPadding');
-    this.get('xAxisTitle').text(this.get('xValueDisplayName')).style('text-anchor', 'middle').attr({
-      x: this.get('graphicWidth') / 2 + this.get('labelWidthOffset'),
-      y: this.get('graphicBottom') + xAxisPadding
-    });
-
-    return this.get('yAxisTitle').text(this.get('yValueDisplayName')).style('text-anchor', 'start').attr({
-      y: 0,
-      x: 0
     });
   },
 

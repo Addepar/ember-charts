@@ -43,6 +43,9 @@ export default SlideController.extend({
   yAxisFromZero: false,
   dynamicXAxis: false,
 
+  xValueDisplayName: 'X Axis',
+  yValueDisplayName: 'Y Axis',
+
   // ---------
   // Data Selection
   // ---------
