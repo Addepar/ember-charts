@@ -20,6 +20,9 @@ export default ChartComponent.extend(LegendMixin, FloatingTooltipMixin, AxesMixi
   // Vertical Bar Chart Options
   // ----------------------------------------------------------------------------
 
+  horizontalMarginLeft: 20,
+  marginLeft: Ember.computed.alias('horizontalMarginLeft'),
+
   // Data without group will be merged into a group with this name
   ungroupedSeriesName: 'Other',
 
