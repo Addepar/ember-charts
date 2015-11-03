@@ -23,7 +23,7 @@ export default Ember.Mixin.create({
    * We used to have only one option to set tick spacing for both x and y axes.
    * We keep this attribute for backward compatibility.
    * @type {number}
-   * @deprecated This will be deprecated soon.
+   * @deprecated This will be deprecated in version 1.0.
    */
   tickSpacing: 50,
 
@@ -97,7 +97,7 @@ export default Ember.Mixin.create({
     // # hundreds of thousands into millions, use millions)
     const absMinAxisValue = Math.abs(this.get('minAxisValue'));
     const absMaxAxisValue = Math.abs(this.get('maxAxisValue'));
-    const magnitude = Math.max(absMinAxisValue, absMinAxisValue);
+    const magnitude = Math.max(absMinAxisValue, absMaxAxisValue);
     const prefix = d3.formatPrefix(magnitude);
     return function(value) {
       return "" + (prefix.scale(value)) + prefix.symbol;

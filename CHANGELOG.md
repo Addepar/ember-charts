@@ -1,5 +1,10 @@
 # Ember Charts Changelog
 
+### Ember Charts 0.5.1 _(November 03, 2015)_
+  Minor update
+  * Allow setting tick spacing for X and Y axes separately instead of one common
+    value. It is backward compatible.
+
 ### Ember Charts 0.5.0 _(October 29, 2015)_
   This release ports all coffeescript to javascript and moves our build to
   use ember-cli.

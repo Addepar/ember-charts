@@ -1,5 +1,5 @@
 /*!
-* ember-charts v0.4.0
+* ember-charts v0.5.1
 * Copyright 2012-2015 Addepar Inc.
 * See LICENSE.md
 */
@@ -3627,7 +3627,7 @@ define('ember-charts/mixins/axes', ['exports', 'module', 'ember'], function (exp
      * We used to have only one option to set tick spacing for both x and y axes.
      * We keep this attribute for backward compatibility.
      * @type {number}
-     * @deprecated This will be deprecated soon.
+     * @deprecated This will be deprecated in version 1.0.
      */
     tickSpacing: 50,
 
@@ -3697,7 +3697,7 @@ define('ember-charts/mixins/axes', ['exports', 'module', 'ember'], function (exp
       // # hundreds of thousands into millions, use millions)
       var absMinAxisValue = Math.abs(this.get('minAxisValue'));
       var absMaxAxisValue = Math.abs(this.get('maxAxisValue'));
-      var magnitude = Math.max(absMinAxisValue, absMinAxisValue);
+      var magnitude = Math.max(absMinAxisValue, absMaxAxisValue);
       var prefix = d3.formatPrefix(magnitude);
       return function (value) {
         return "" + prefix.scale(value) + prefix.symbol;
