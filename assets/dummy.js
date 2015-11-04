@@ -26795,7 +26795,7 @@ define('dummy/templates/overview', ['exports'], function (exports) {
         var el4 = dom.createTextNode("\n      ");
         dom.appendChild(el3, el4);
         var el4 = dom.createElement("p");
-        var el5 = dom.createTextNode("The current version is 0.4.0.");
+        var el5 = dom.createTextNode("The current version is 1.0.0.");
         dom.appendChild(el4, el5);
         dom.appendChild(el3, el4);
         var el4 = dom.createTextNode("\n      ");
@@ -30400,6 +30400,30 @@ define('dummy/tests/unit/time-series-test', ['ember', 'ember-qunit'], function (
     return assert.equal(ind >= ind2, true, 'The labels are not less specific than the max time specificity');
   });
 
+  ember_qunit.test('Tick Spacing', function (assert) {
+    var component = this.subject();
+    var tickSpacing = component.get('tickSpacing');
+
+    assert.expect(6);
+
+    assert.equal(component.get('_innerTickSpacingX'), tickSpacing, 'tickSpacingX should be equal to the tickSpacing if no default value is set');
+    assert.equal(component.get('_innerTickSpacingY'), tickSpacing, 'tickSpacingY should be equal to the tickSpacing if no default value is set');
+
+    // Because in testing mode, auto-run is disabled. So we have to put async
+    // code in a run loop
+    Ember['default'].run(function () {
+      component.set('tickSpacingX', 0);
+    });
+    assert.equal(component.get('_innerTickSpacingX'), 0, 'tickSpacingX should be changed to the new value');
+    assert.equal(component.get('_innerTickSpacingY'), tickSpacing, 'tickSpacingY should stay the same when tickSpacingX is changed');
+
+    Ember['default'].run(function () {
+      component.set('tickSpacingY', 40);
+    });
+    assert.equal(component.get('_innerTickSpacingY'), 40, 'tickSpacingY should be changed to the new value');
+    assert.equal(component.get('_innerTickSpacingX'), 0, 'tickSpacingX should stay the same when tickSpacingY is changed');
+  });
+
 });
 define('dummy/tests/unit/time-series-test.jshint', function () {
 
@@ -30630,7 +30654,7 @@ catch(err) {
 if (runningTests) {
   require("dummy/tests/test-helper");
 } else {
-  require("dummy/app")["default"].create({"name":"ember-charts","version":"0.4.0.660ae895"});
+  require("dummy/app")["default"].create({"name":"ember-charts","version":"1.0.0.d53a9393"});
 }
 
 /* jshint ignore:end */

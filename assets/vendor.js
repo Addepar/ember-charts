@@ -84382,10 +84382,58 @@ define('ember-charts/mixins/axes', ['exports', 'ember'], function (exports, Embe
     graphicHeight: null,
     minXTicks: 3,
     minYTicks: 3,
-    tickSpacing: 50,
-
     minAxisValue: 0,
     maxAxisValue: 0,
+
+    /**
+     * We used to have only one option to set tick spacing for both x and y axes.
+     * We keep this attribute for backward compatibility.
+     * @type {number}
+     * @deprecated This will be deprecated in version 1.0.
+     */
+    tickSpacing: 50,
+
+    /**
+     * Tick spacing on X axis. Set this value if we want a different tickSpacing
+     * for X axis other than the default one set in tickSpacing for both axes
+     * @type {number}
+     */
+    tickSpacingX: null,
+
+    /**
+     * Tick spacing on Y axis. Set this value if we want a different tickSpacing
+     * for Y axis other than the default one set in tickSpacing for both axes
+     * @type {number}
+     */
+    tickSpacingY: null,
+
+    /**
+     * This will be used for all internal calculation of tick spacing on X axis.
+     * We set higher priority if the specific tickSpacingX's value is set.
+     * @type {number}
+     * @private
+     */
+    _innerTickSpacingX: Ember['default'].computed('tickSpacingX', 'tickSpacing', function () {
+      var tickSpacingX = this.get('tickSpacingX');
+      if (Ember['default'].isNone(tickSpacingX)) {
+        return this.get('tickSpacing');
+      }
+      return tickSpacingX;
+    }),
+
+    /**
+     * This will be used for all internal calculation of tick spacing on Y axis.
+     * We set higher priority if the specific tickSpacingY's value is set.
+     * @type {number}
+     * @private
+     */
+    _innerTickSpacingY: Ember['default'].computed('tickSpacingY', 'tickSpacing', function () {
+      var tickSpacingY = this.get('tickSpacingY');
+      if (Ember['default'].isNone(tickSpacingY)) {
+        return this.get('tickSpacing');
+      }
+      return tickSpacingY;
+    }),
 
     // # ------------------------------------------------------------------------
     // # API -- Outputs
@@ -84394,20 +84442,24 @@ define('ember-charts/mixins/axes', ['exports', 'ember'], function (exports, Embe
     // # numYTicks: Number of ticks on the Y axis
     // # formatValueAxis: Overridable formatter for numeric values along an axis
     // # ------------------------------------------------------------------------
-    numXTicks: Ember['default'].computed('graphicWidth', 'tickSpacing', 'minXTicks', function () {
-      var calculatedTicks = Math.floor(this.get('graphicWidth') / this.get('tickSpacing'));
-      return Math.max(calculatedTicks, this.get('minXTicks'));
+    numXTicks: Ember['default'].computed('graphicWidth', '_innerTickSpacingX', 'minXTicks', function () {
+      var tickSpacing = this.get('_innerTickSpacingX');
+      var numOfTicks = Math.floor(this.get('graphicWidth') / tickSpacing);
+      return Math.max(numOfTicks, this.get('minXTicks'));
     }),
 
-    numYTicks: Ember['default'].computed('graphicHeight', 'tickSpacing', 'minYTicks', function () {
-      var calculatedTicks = Math.floor(this.get('graphicHeight') / this.get('tickSpacing'));
-      return Math.max(calculatedTicks, this.get('minYTicks'));
+    numYTicks: Ember['default'].computed('graphicHeight', '_innerTickSpacingY', 'minYTicks', function () {
+      var tickSpacing = this.get('_innerTickSpacingY');
+      var numOfTicks = Math.floor(this.get('graphicHeight') / tickSpacing);
+      return Math.max(numOfTicks, this.get('minYTicks'));
     }),
 
     formatValueAxis: Ember['default'].computed('minAxisValue', 'maxAxisValue', function () {
       // # Base the format prefix on largest magnitude (e.g. if we cross from
       // # hundreds of thousands into millions, use millions)
-      var magnitude = Math.max(Math.abs(this.get('minAxisValue')), Math.abs(this.get('maxAxisValue')));
+      var absMinAxisValue = Math.abs(this.get('minAxisValue'));
+      var absMaxAxisValue = Math.abs(this.get('maxAxisValue'));
+      var magnitude = Math.max(absMinAxisValue, absMaxAxisValue);
       var prefix = d3.formatPrefix(magnitude);
       return function (value) {
         return "" + prefix.scale(value) + prefix.symbol;
