@@ -1,7 +1,7 @@
 {
   "name": "ember-charts",
   "version": "1.0.0",
-  "description": "The default blueprint for ember-cli addons.",
+  "description": "A powerful and easy to use charting library for Ember.js.",
   "directories": {
     "doc": "doc",
     "test": "tests"
