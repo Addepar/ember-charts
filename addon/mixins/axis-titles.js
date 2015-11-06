@@ -1,8 +1,15 @@
 import Ember from 'ember';
 
 export default Ember.Mixin.create({
+  hasAxisTitles: false,
   xValueDisplayName: null,
   yValueDisplayName: null,
+
+  horizontalMarginLeft: Ember.computed('hasAxisTitles', function(){
+    return this.get('hasAxisTitles') === true ? 20 : 0;
+  }),
+  marginLeft: Ember.computed.alias('horizontalMarginLeft'),
+
   // TODO(tony): Consider making logic for whether we are showing the title or
   // not and then axis mixin will calculate axis offset that will be added
   axisTitleHeightOffset: Ember.computed('axisTitleHeight', 'labelPadding', function() {

@@ -44,8 +44,6 @@ export default ChartComponent.extend(LegendMixin, FloatingTooltipMixin,
   // NoMarginChartMixin makes right margin 0 but we need that room because the
   // last label of the axis is commonly too large
   marginRight: Ember.computed.alias('horizontalMarginRight'),
-  horizontalMarginLeft: 20,
-  marginLeft: Ember.computed.alias('horizontalMarginLeft'),
 
   // ----------------------------------------------------------------------------
   // Data
