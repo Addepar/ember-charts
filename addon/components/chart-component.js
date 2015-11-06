@@ -48,7 +48,9 @@ export default Ember.Component.extend(ColorableMixin, ResizeHandlerMixin, {
 
   // Transform the view commonly displaced by the margin
   transformViewport: Ember.computed('marginLeft', 'marginTop', function() {
-    return 'translate(' + this.get('marginLeft') + ',' + this.get('marginTop') + ')';
+    const left = this.get('marginLeft');
+    const top = this.get('marginTop');
+    return `translate(${left},${top})`;
   }),
 
   // ----------------------------------------------------------------------------

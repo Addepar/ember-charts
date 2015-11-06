@@ -4,10 +4,12 @@ import FormattableMixin from '../mixins/formattable';
 
 import FloatingTooltipMixin from '../mixins/floating-tooltip';
 import SortableChartMixin from '../mixins/sortable-chart';
+import LabelWidthMixin from '../mixins/label-width';
 
 import LabelTrimmer from '../utils/label-trimmer';
 
-export default ChartComponent.extend(FloatingTooltipMixin, FormattableMixin, SortableChartMixin, {
+export default ChartComponent.extend(FloatingTooltipMixin, FormattableMixin,
+  SortableChartMixin, LabelWidthMixin, {
   classNames: ['chart-horizontal-bar'],
 
   // ----------------------------------------------------------------------------
@@ -16,11 +18,6 @@ export default ChartComponent.extend(FloatingTooltipMixin, FormattableMixin, Sor
 
   // Minimum height of the whole chart, including padding
   defaultOuterHeight: 500,
-
-  // Override maximum width of labels to be a percentage of the total width
-  labelWidth: Ember.computed('outerWidth', function() {
-    return 0.25 * this.get('outerWidth');
-  }),
 
   // Space between label and zeroline (overrides ChartView)
   // Also used to pad labels against the edges of the viewport
@@ -128,7 +125,7 @@ export default ChartComponent.extend(FloatingTooltipMixin, FormattableMixin, Sor
 
   showDetails: Ember.computed('isInteractive', function() {
     if (!this.get('isInteractive')) {
-    	return Ember.K;
+      return Ember.K;
     }
 
     return (data, i, element) => {
@@ -148,7 +145,7 @@ export default ChartComponent.extend(FloatingTooltipMixin, FormattableMixin, Sor
 
   hideDetails: Ember.computed('isInteractive', function() {
     if (!this.get('isInteractive')) {
-    	return Ember.K;
+      return Ember.K;
     }
 
     return (data, i, element) => {
@@ -167,11 +164,11 @@ export default ChartComponent.extend(FloatingTooltipMixin, FormattableMixin, Sor
     var xScale = this.get('xScale');
     var yScale = this.get('yScale');
     return {
-	    transform: function(d, i) {
-	      var value = Math.min(0, d.value);
-	      return "translate(" + xScale(value) + ", " + yScale(i) + ")";
-	    }
-	  };
+      transform: function(d, i) {
+        var value = Math.min(0, d.value);
+        return "translate(" + xScale(value) + ", " + yScale(i) + ")";
+      }
+    };
   }),
 
   barAttrs: Ember.computed('xScale', 'mostTintedColor', 'leastTintedColor', 'barThickness', function() {

@@ -450,7 +450,9 @@ define('ember-charts/components/chart-component', ['exports', 'module', 'ember',
 
     // Transform the view commonly displaced by the margin
     transformViewport: _Ember['default'].computed('marginLeft', 'marginTop', function () {
-      return 'translate(' + this.get('marginLeft') + ',' + this.get('marginTop') + ')';
+      var left = this.get('marginLeft');
+      var top = this.get('marginTop');
+      return 'translate(' + left + ',' + top + ')';
     }),
 
     // ----------------------------------------------------------------------------
@@ -572,7 +574,7 @@ define('ember-charts/components/chart-component', ['exports', 'module', 'ember',
     }
   });
 });
-define('ember-charts/components/horizontal-bar-chart', ['exports', 'module', 'ember', './chart-component', '../mixins/formattable', '../mixins/floating-tooltip', '../mixins/sortable-chart', '../utils/label-trimmer'], function (exports, module, _ember, _chartComponent, _mixinsFormattable, _mixinsFloatingTooltip, _mixinsSortableChart, _utilsLabelTrimmer) {
+define('ember-charts/components/horizontal-bar-chart', ['exports', 'module', 'ember', './chart-component', '../mixins/formattable', '../mixins/floating-tooltip', '../mixins/sortable-chart', '../mixins/label-width', '../utils/label-trimmer'], function (exports, module, _ember, _chartComponent, _mixinsFormattable, _mixinsFloatingTooltip, _mixinsSortableChart, _mixinsLabelWidth, _utilsLabelTrimmer) {
   'use strict';
 
   function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
@@ -587,9 +589,11 @@ define('ember-charts/components/horizontal-bar-chart', ['exports', 'module', 'em
 
   var _SortableChartMixin = _interopRequireDefault(_mixinsSortableChart);
 
+  var _LabelWidthMixin = _interopRequireDefault(_mixinsLabelWidth);
+
   var _LabelTrimmer = _interopRequireDefault(_utilsLabelTrimmer);
 
-  module.exports = _ChartComponent['default'].extend(_FloatingTooltipMixin['default'], _FormattableMixin['default'], _SortableChartMixin['default'], {
+  module.exports = _ChartComponent['default'].extend(_FloatingTooltipMixin['default'], _FormattableMixin['default'], _SortableChartMixin['default'], _LabelWidthMixin['default'], {
     classNames: ['chart-horizontal-bar'],
 
     // ----------------------------------------------------------------------------
@@ -598,11 +602,6 @@ define('ember-charts/components/horizontal-bar-chart', ['exports', 'module', 'em
 
     // Minimum height of the whole chart, including padding
     defaultOuterHeight: 500,
-
-    // Override maximum width of labels to be a percentage of the total width
-    labelWidth: _Ember['default'].computed('outerWidth', function () {
-      return 0.25 * this.get('outerWidth');
-    }),
 
     // Space between label and zeroline (overrides ChartView)
     // Also used to pad labels against the edges of the viewport
@@ -912,7 +911,7 @@ define('ember-charts/components/horizontal-bar-chart', ['exports', 'module', 'em
     }
   });
 });
-define('ember-charts/components/pie-chart', ['exports', 'module', 'ember', './chart-component', '../mixins/formattable', '../mixins/floating-tooltip', '../mixins/sortable-chart', '../mixins/pie-legend', '../utils/label-trimmer'], function (exports, module, _ember, _chartComponent, _mixinsFormattable, _mixinsFloatingTooltip, _mixinsSortableChart, _mixinsPieLegend, _utilsLabelTrimmer) {
+define('ember-charts/components/pie-chart', ['exports', 'module', 'ember', './chart-component', '../mixins/formattable', '../mixins/floating-tooltip', '../mixins/sortable-chart', '../mixins/pie-legend', '../mixins/label-width', '../utils/label-trimmer'], function (exports, module, _ember, _chartComponent, _mixinsFormattable, _mixinsFloatingTooltip, _mixinsSortableChart, _mixinsPieLegend, _mixinsLabelWidth, _utilsLabelTrimmer) {
   'use strict';
 
   function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
@@ -929,9 +928,11 @@ define('ember-charts/components/pie-chart', ['exports', 'module', 'ember', './ch
 
   var _PieLegendMixin = _interopRequireDefault(_mixinsPieLegend);
 
+  var _LabelWidthMixin = _interopRequireDefault(_mixinsLabelWidth);
+
   var _LabelTrimmer = _interopRequireDefault(_utilsLabelTrimmer);
 
-  module.exports = _ChartComponent['default'].extend(_FloatingTooltipMixin['default'], _FormattableMixin['default'], _SortableChartMixin['default'], _PieLegendMixin['default'], {
+  module.exports = _ChartComponent['default'].extend(_FloatingTooltipMixin['default'], _FormattableMixin['default'], _SortableChartMixin['default'], _PieLegendMixin['default'], _LabelWidthMixin['default'], {
 
     classNames: ['chart-pie'],
     // ----------------------------------------------------------------------------
@@ -947,11 +948,6 @@ define('ember-charts/components/pie-chart', ['exports', 'module', 'ember', './ch
     // than this then the smallest slices will be combined into an "other"
     // slice until there are at most maxNumberOfSlices.
     maxNumberOfSlices: 8,
-
-    // Override maximum width of labels to be a percentage of the total width
-    labelWidth: _Ember['default'].computed('outerWidth', function () {
-      return 0.25 * this.get('outerWidth');
-    }),
 
     // Essentially we don't want a maximum pieRadius
     maxRadius: 2000,
@@ -4160,6 +4156,26 @@ define('ember-charts/mixins/has-time-series-rule', ['exports', 'module', 'ember'
     }
 
   });
+});
+define('ember-charts/mixins/label-width', ['exports', 'module', 'ember'], function (exports, module, _ember) {
+  'use strict';
+
+  function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+
+  var _Ember = _interopRequireDefault(_ember);
+
+  var LabelWidthMixin = _Ember['default'].Mixin.create({
+
+    // Override maximum width of labels to be a percentage of the total width
+    labelWidth: _Ember['default'].computed('outerWidth', 'labelWidthMultiplier', function () {
+      return this.get('labelWidthMultiplier') * this.get('outerWidth');
+    }),
+
+    // The proportion of the chart's width that should be reserved for labels
+    labelWidthMultiplier: 0.25
+  });
+
+  module.exports = LabelWidthMixin;
 });
 define('ember-charts/mixins/legend', ['exports', 'module', 'ember', '../utils/label-trimmer'], function (exports, module, _ember, _utilsLabelTrimmer) {
   'use strict';

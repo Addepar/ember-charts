@@ -4,11 +4,12 @@ import FormattableMixin from '../mixins/formattable';
 import FloatingTooltipMixin from '../mixins/floating-tooltip';
 import SortableChartMixin from '../mixins/sortable-chart';
 import PieLegendMixin from '../mixins/pie-legend';
+import LabelWidthMixin from '../mixins/label-width';
 
 import LabelTrimmer from '../utils/label-trimmer';
 
 export default ChartComponent.extend(FloatingTooltipMixin,
-  FormattableMixin, SortableChartMixin, PieLegendMixin, {
+  FormattableMixin, SortableChartMixin, PieLegendMixin, LabelWidthMixin, {
 
   classNames: ['chart-pie'],
   // ----------------------------------------------------------------------------
@@ -24,11 +25,6 @@ export default ChartComponent.extend(FloatingTooltipMixin,
   // than this then the smallest slices will be combined into an "other"
   // slice until there are at most maxNumberOfSlices.
   maxNumberOfSlices: 8,
-
-  // Override maximum width of labels to be a percentage of the total width
-  labelWidth: Ember.computed('outerWidth', function() {
-    return 0.25 * this.get('outerWidth');
-  }),
 
   // Essentially we don't want a maximum pieRadius
   maxRadius: 2000,
@@ -482,19 +478,19 @@ export default ChartComponent.extend(FloatingTooltipMixin,
   updateGraphic: function() {
     var groups = this.get('groups').attr(this.get('groupAttrs'));
     groups.select('path').attr(this.get('sliceAttrs'));
-    
+
     var maxLabelWidth = this.get('outerWidth') / 2 - this.get('labelPadding');
     var labelTrimmer = LabelTrimmer.create({
       getLabelSize: function(d, selection) {
         // To calculate the label size, we need to identify the horizontal position `xPos` of the current label from the center.
         // Subtracting `xPos` from `maxLabelWidth` will provide the maximum space available for the label.
-        
+
         // First select the text element from `selection` that is being currently trimmed.
         var text = selection.filter(function(data) {
           return data === d;
         });
         // Then calculate horizontal translation (0,0 is at the center of the pie) of the text element by:
-        // a) Read the current transform of the element via text.attr("transform"). The transform has been applied by `this.get('labelAttrs')`. 
+        // a) Read the current transform of the element via text.attr("transform"). The transform has been applied by `this.get('labelAttrs')`.
         // b) parse the transform string to return instance of d3.transform()
         // c) from transform object, read translate[0] property for horizontal translation
         var xPos = d3.transform(text.attr("transform")).translate[0];

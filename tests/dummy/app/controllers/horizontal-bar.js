@@ -23,6 +23,7 @@ export default SlideController.extend({
 
   maxBarThickness: 60,
   minBarThickness: 20,
+  labelWidthMultiplier: 0.25,
 
   // ---------
   // Data Selection

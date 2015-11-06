@@ -23,7 +23,8 @@ export default SlideController.extend({
 
   maxNumberOfSlices: 8,
   minSlicePercent: 2,
-  maxRadius: 100,
+  maxRadius: 250,
+  labelWidthMultiplier: 0.25,
 
   // ---------
   // Data Selection
@@ -31,7 +32,7 @@ export default SlideController.extend({
 
   availableDataSets: Ember.computed('rawDataHash', function() {
     return Ember.A(_.keys(this.get('rawDataHash')));
-  }), 
+  }),
 
   data: Ember.computed('selectedData', 'rawDataHash', function() {
     return this.get('rawDataHash')[this.get('selectedData')];
