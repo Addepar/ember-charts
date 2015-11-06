@@ -626,17 +626,30 @@ define('ember-charts/components/horizontal-bar-chart', ['exports', 'module', 'em
     // ----------------------------------------------------------------------------
 
     minOuterHeight: _Ember['default'].computed('numBars', 'minBarThickness', 'marginTop', 'marginBottom', function () {
-      var minBarSpace = this.get('numBars') * this.get('minBarThickness');
-      return minBarSpace + this.get('marginTop') + this.get('marginBottom');
+      var minBarThickness = this.get('minBarThickness');
+      // If minBarThickness is null or undefined, do not enforce minOuterHeight.
+      if (_Ember['default'].isNone(minBarThickness)) {
+        return null;
+      } else {
+        var minBarSpace = this.get('numBars') * minBarThickness;
+        return minBarSpace + this.get('marginTop') + this.get('marginBottom');
+      }
     }),
 
     maxOuterHeight: _Ember['default'].computed('numBars', 'maxBarThickness', 'marginTop', 'marginBottom', function () {
-      var maxBarSpace = this.get('numBars') * this.get('maxBarThickness');
-      return maxBarSpace + this.get('marginTop') + this.get('marginBottom');
+      var maxBarThickness = this.get('maxBarThickness');
+      // If maxBarThickness is null or undefined, do not enforce maxOuterHeight.
+      if (_Ember['default'].isNone(maxBarThickness)) {
+        return null;
+      } else {
+        var maxBarSpace = this.get('numBars') * maxBarThickness;
+        return maxBarSpace + this.get('marginTop') + this.get('marginBottom');
+      }
     }),
 
     // override the default outerHeight, so the graph scrolls
     outerHeight: _Ember['default'].computed('minOuterHeight', 'maxOuterHeight', 'defaultOuterHeight', function () {
+      // Note: d3.max and d3.min ignore null/undefined values
       var maxMinDefault = d3.max([this.get('defaultOuterHeight'), this.get('minOuterHeight')]);
       return d3.min([maxMinDefault, this.get('maxOuterHeight')]);
     }),

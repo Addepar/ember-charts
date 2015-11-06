@@ -44,17 +44,31 @@ export default ChartComponent.extend(FloatingTooltipMixin, FormattableMixin, Sor
   // ----------------------------------------------------------------------------
 
   minOuterHeight: Ember.computed('numBars', 'minBarThickness', 'marginTop', 'marginBottom', function() {
-    var minBarSpace = this.get('numBars') * this.get('minBarThickness');
-    return minBarSpace + this.get('marginTop') + this.get('marginBottom');
+    const minBarThickness = this.get('minBarThickness');
+    // If minBarThickness is null or undefined, do not enforce minOuterHeight.
+    if (Ember.isNone(minBarThickness)) {
+      return null;
+    } else {
+      const minBarSpace = this.get('numBars') * minBarThickness;
+      return minBarSpace + this.get('marginTop') + this.get('marginBottom');
+    }
   }),
 
   maxOuterHeight: Ember.computed('numBars', 'maxBarThickness', 'marginTop', 'marginBottom', function() {
-    var maxBarSpace = this.get('numBars') * this.get('maxBarThickness');
-    return maxBarSpace + this.get('marginTop') + this.get('marginBottom');
+    const maxBarThickness = this.get('maxBarThickness');
+    // If maxBarThickness is null or undefined, do not enforce maxOuterHeight.
+    if (Ember.isNone(maxBarThickness)) {
+      return null;
+    } else {
+      const maxBarSpace = this.get('numBars') * maxBarThickness;
+      return maxBarSpace + this.get('marginTop') + this.get('marginBottom');
+    }
+
   }),
 
   // override the default outerHeight, so the graph scrolls
   outerHeight: Ember.computed('minOuterHeight', 'maxOuterHeight', 'defaultOuterHeight', function() {
+    // Note: d3.max and d3.min ignore null/undefined values
     var maxMinDefault = d3.max([this.get('defaultOuterHeight'), this.get('minOuterHeight')]);
     return d3.min([maxMinDefault, this.get('maxOuterHeight')]);
   }),
