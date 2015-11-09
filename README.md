@@ -37,7 +37,7 @@ Or, just include `dist/ember-charts.js` and `dist/ember-charts.css` in your app.
 Using Ember Charts with bower is **deprecated** and will eventually be removed.
 We recommend that you migrate your apps to Ember CLI! Documentation has been
 updated to show Ember CLI usage. If you need documentation for globals-based
-use, please check out version 0.4.1 of Ember Charts and follow the setup
+use, please check out version 0.5.0 of Ember Charts and follow the setup
 instructions under "Running Old Versions" to display the old guides.
 
 #### Developing or Testing
@@ -51,8 +51,7 @@ $ ember serve
 
 You can view the examples at http://localhost:4200.
 
-You can run the tests at http://localhost:4200/tests. Tests are a work in
-progress - no need to run them right now.
+You can run the tests at http://localhost:4200/tests.
 
 Before submitting a pull request, please compile the globals-based version of
 Ember Charts (the `dist` folder):
@@ -62,31 +61,11 @@ $ npm install -g grunt-cli      # install grunt
 $ grunt dist
 ```
 
-#### Running Old Versions (pre-0.4.3)
-
-If you are running an old version of Ember Charts (pre-0.4.3), setup for
-development uses grunt and node rather than `ember serve`:
-
-```bash
-$ npm install -g grunt-cli
-$ npm install
-$ bower install
-$ grunt
-$ node examples.js              # run the demo app
-```
-
-You can then view the examples at http://localhost:8000/gh_pages.
-
-## Using with other Ember versions
-
-Support for Ember 1.9, 1.10, and 1.11 (1.11.1 required) is available via
-branches of that name (e.g. `ember-1.9`)
-
 ## Dependencies
 * ember
+* lodash
+* d3
 * jquery-ui
-* jquery.mousewheel
-* antiscroll
 
 
 ## Browser Support
