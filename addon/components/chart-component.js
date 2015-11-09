@@ -14,9 +14,10 @@ export default Ember.Component.extend(ColorableMixin, ResizeHandlerMixin, {
   // Margin between viewport and svg boundary
   horizontalMargin: 30,
   verticalMargin: 30,
-
-  marginRight: Ember.computed.alias('horizontalMargin'),
-  marginLeft: Ember.computed.alias('horizontalMargin'),
+  horizontalMarginLeft: Ember.computed.oneWay('horizontalMargin'),
+  horizontalMarginRight: Ember.computed.oneWay('horizontalMargin'),
+  marginRight: Ember.computed.alias('horizontalMarginRight'),
+  marginLeft: Ember.computed.alias('horizontalMarginLeft'),
   marginTop: Ember.computed.alias('verticalMargin'),
   marginBottom: Ember.computed.alias('verticalMargin'),
 

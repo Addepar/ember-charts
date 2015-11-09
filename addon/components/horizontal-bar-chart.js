@@ -7,7 +7,8 @@ import SortableChartMixin from '../mixins/sortable-chart';
 
 import LabelTrimmer from '../utils/label-trimmer';
 
-export default ChartComponent.extend(FloatingTooltipMixin, FormattableMixin, SortableChartMixin, {
+export default ChartComponent.extend(FloatingTooltipMixin,
+  FormattableMixin, SortableChartMixin, {
   classNames: ['chart-horizontal-bar'],
 
   // ----------------------------------------------------------------------------

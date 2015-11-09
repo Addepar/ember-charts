@@ -256,3 +256,33 @@ test('[Dynamic X Axis] Labels cannot be less specific than the maximum time spec
   ind2 = domainOrder.indexOf(this.subject().get('xAxisTimeInterval'));
   return assert.equal(ind >= ind2, true, 'The labels are not less specific than the max time specificity');
 });
+
+test('Tick Spacing', function(assert) {
+  var component = this.subject();
+  var tickSpacing = component.get('tickSpacing');
+
+  assert.expect(6);
+
+  assert.equal(component.get('_innerTickSpacingX'), tickSpacing,
+    'tickSpacingX should be equal to the tickSpacing if no default value is set');
+  assert.equal(component.get('_innerTickSpacingY'), tickSpacing,
+    'tickSpacingY should be equal to the tickSpacing if no default value is set');
+
+  // Because in testing mode, auto-run is disabled. So we have to put async
+  // code in a run loop
+  Ember.run(function() {
+    component.set('tickSpacingX', 0);
+  });
+  assert.equal(component.get('_innerTickSpacingX'), 0,
+    'tickSpacingX should be changed to the new value');
+  assert.equal(component.get('_innerTickSpacingY'), tickSpacing,
+    'tickSpacingY should stay the same when tickSpacingX is changed');
+
+  Ember.run(function() {
+    component.set('tickSpacingY', 40);
+  });
+  assert.equal(component.get('_innerTickSpacingY'), 40,
+    'tickSpacingY should be changed to the new value');
+  assert.equal(component.get('_innerTickSpacingX'), 0,
+    'tickSpacingX should stay the same when tickSpacingY is changed');
+});
