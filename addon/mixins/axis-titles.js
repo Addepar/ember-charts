@@ -5,6 +5,12 @@ export default Ember.Mixin.create({
   xValueDisplayName: null,
   yValueDisplayName: null,
 
+  xAxisTitleDisplayValue: Ember.computed('hasAxisTitles', 'xValueDisplayName', function(){
+    return this.get('hasAxisTitles') === true ? this.get('xValueDisplayName') : '';
+  }),
+  yAxisTitleDisplayValue: Ember.computed('hasAxisTitles', 'yValueDisplayName', function(){
+    return this.get('hasAxisTitles') === true ? this.get('yValueDisplayName') : '';
+  }),
   horizontalMarginLeft: Ember.computed('hasAxisTitles', function(){
     return this.get('hasAxisTitles') === true ? 20 : 0;
   }),
@@ -13,7 +19,11 @@ export default Ember.Mixin.create({
   // TODO(tony): Consider making logic for whether we are showing the title or
   // not and then axis mixin will calculate axis offset that will be added
   axisTitleHeightOffset: Ember.computed('axisTitleHeight', 'labelPadding', function() {
-    return this.get('axisTitleHeight') + this.get('labelPadding');
+    if(this.get('hasAxisTitles') === true){
+      return this.get('axisTitleHeight') + this.get('labelPadding');
+    }else{
+      return 0;
+    }
   }),
 
   xAxisTitle: Ember.computed(function() {
@@ -43,7 +53,7 @@ export default Ember.Mixin.create({
   }).property('graphicHeight', 'labelWidthOffset'),
 
   yAxisPositionY: Ember.computed(function(){
-    return -20;
+    return -20
   }),
 
   xAxisTransform: Ember.computed(function(){
@@ -51,7 +61,7 @@ export default Ember.Mixin.create({
   }),
 
   yAxisTransform: Ember.computed(function(){
-    return "rotate(-90)";
+    return "rotate(-90)"
   }),
 
   selectOrCreateAxisTitle: function(selector) {
@@ -62,22 +72,26 @@ export default Ember.Mixin.create({
       return title;
     }
   },
+
   updateXAxis: function(){
-    this.get('xAxisTitle').text(this.get('xValueDisplayName')).style('text-anchor', 'middle').attr({
+    this.get('xAxisTitle').text(this.get('xAxisTitleDisplayValue')).style('text-anchor', 'middle').attr({
       x: this.get('xAxisPositionX'),
       y: this.get('xAxisPositionY')
     });
   },
+
   updateYAxis: function(){
     console.log('X', this.get('yAxisPositionX'));
     console.log('Y', this.get('yAxisPositionY'));
-    this.get('yAxisTitle').text(this.get('yValueDisplayName')).style('text-anchor', 'start').attr({
+    this.get('yAxisTitle').text(this.get('yAxisTitleDisplayValue')).style('text-anchor', 'start').attr({
       x: this.get('yAxisPositionX'),
       y: this.get('yAxisPositionY'),
     }).attr("transform", this.get('yAxisTransform')).attr("dy", "1em");
   },
+
   updateAxisTitles: function(){
     this.updateXAxis();
     this.updateYAxis();
   }
+
 });

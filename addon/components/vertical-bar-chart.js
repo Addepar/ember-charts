@@ -605,8 +605,8 @@ export default ChartComponent.extend(LegendMixin, FloatingTooltipMixin, AxesMixi
   // Drawing Functions
   // ----------------------------------------------------------------------------
 
-  renderVars: ['xWithinGroupScale', 'xBetweenGroupScale', 'yScale',
-    'finishedData', 'getSeriesColor'],
+  renderVars: ['xWithinGroupScale', 'xBetweenGroupScale', 'yScale', 'finishedData',
+    'getSeriesColor', 'xValueDisplayName', 'yValueDisplayName', 'hasAxisTitles'],
 
   drawChart: function() {
     this.updateData();

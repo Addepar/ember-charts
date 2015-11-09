@@ -6,10 +6,9 @@ import FloatingTooltipMixin from '../mixins/floating-tooltip';
 import SortableChartMixin from '../mixins/sortable-chart';
 
 import LabelTrimmer from '../utils/label-trimmer';
-import AxisTitles from '../mixins/axis-titles';
 
 export default ChartComponent.extend(FloatingTooltipMixin,
-  FormattableMixin, SortableChartMixin, AxisTitles, {
+  FormattableMixin, SortableChartMixin, {
   classNames: ['chart-horizontal-bar'],
 
   // ----------------------------------------------------------------------------
@@ -260,7 +259,6 @@ export default ChartComponent.extend(FloatingTooltipMixin,
   drawChart: function() {
     this.updateData();
     this.updateAxes();
-    this.updateAxisTitles();
     this.updateGraphic();
   },
 

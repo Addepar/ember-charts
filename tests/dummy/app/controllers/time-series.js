@@ -110,15 +110,5 @@ export default SlideController.extend({
 
   dataIntervals: Ember.A(['day', 'week', 'month', 'year']),
   tickIntervals: Ember.A(['weeks', 'months', 'quarters', 'years']),
-  selectedInterval: 'months',
-  actions: {
-    onXValueDisplayNameChange: (value) => {
-      debugger
-      this.set('xValueDisplayName', value);
-    },
-    onYValueDisplayNameChange: (value) => {
-      debugger
-      this.set('yValueDisplayName', value);
-    }
-  }
+  selectedInterval: 'months'
 });

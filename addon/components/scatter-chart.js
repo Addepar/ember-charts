@@ -364,7 +364,8 @@ export default ChartComponent.extend(LegendMixin, FloatingTooltipMixin,
   // Drawing Functions
   // ----------------------------------------------------------------------------
 
-  renderVars: ['xScale', 'yScale', 'dotShapeArea', 'finishedData', 'xValueDisplayName', 'yValueDisplayName'],
+  renderVars: ['xScale', 'yScale', 'dotShapeArea', 'finishedData',
+    'xValueDisplayName', 'yValueDisplayName', 'hasAxisTitles'],
 
   drawChart: function() {
     this.updateTotalPointData();

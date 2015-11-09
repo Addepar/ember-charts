@@ -60,18 +60,21 @@
             </div>
           </div>
         </div>
-        <div class="form-group">
-          <label class="col-lg-4 control-label">X Display Name</label>
-          <div class="col-lg-8">
-            {{input value=xValueDisplayName}}
+
+        {{#if hasAxisTitles}}
+          <div class="form-group">
+            <label class="col-lg-4 control-label">X Display Name</label>
+            <div class="col-lg-8">
+              {{input value=xValueDisplayName}}
+            </div>
           </div>
-        </div>
-        <div class="form-group">
-          <label class="col-lg-4 control-label">Y Display Name</label>
-          <div class="col-lg-8">
-            {{input value=yValueDisplayName}}
+          <div class="form-group">
+            <label class="col-lg-4 control-label">Y Display Name</label>
+            <div class="col-lg-8">
+              {{input value=yValueDisplayName}}
+            </div>
           </div>
-        </div>
+        {{/if}}
         <div class="form-group">
           <div class="col-lg-offset-4 col-lg-8">
             <div class="checkbox">

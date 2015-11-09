@@ -779,16 +779,17 @@ export default ChartComponent.extend(LegendMixin, TimeSeriesLabelerMixin, Floati
   // Drawing Functions
   // ----------------------------------------------------------------------------
 
-  renderVars: ['barLeftOffset', 'labelledTicks', 'xGroupScale', 'xTimeScale', 'yScale'],
+  renderVars: ['barLeftOffset', 'labelledTicks', 'xGroupScale', 'xTimeScale',
+    'yScale', 'xValueDisplayName', 'yValueDisplayName', 'hasAxisTitles'],
 
   drawChart: function() {
     this.updateBarData();
     this.updateLineData();
     this.updateLineMarkers();
     this.updateAxes();
-    this.updateAxisTitles();
     this.updateBarGraphic();
     this.updateLineGraphic();
+    this.updateAxisTitles();
     if (this.get('hasLegend')) {
       this.drawLegend();
     } else {
