@@ -485,6 +485,8 @@ export default ChartComponent.extend(FloatingTooltipMixin,
 
     var maxLabelWidth = this.get('outerWidth') / 2 - this.get('labelPadding');
     var labelTrimmer = LabelTrimmer.create({
+      // override from LabelTrimmer
+      reservedCharLength: 4,
       getLabelSize: function(d, selection) {
         // To calculate the label size, we need to identify the horizontal position `xPos` of the current label from the center.
         // Subtracting `xPos` from `maxLabelWidth` will provide the maximum space available for the label.
