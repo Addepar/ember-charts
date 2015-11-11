@@ -1,6 +1,9 @@
 import Ember from 'ember';
 export default Ember.Object.extend({
 
+    // Reserved space for extra characters
+    reservedCharLength: 0,
+
     getLabelSize: function() {
       return 100;
     },
@@ -13,6 +16,7 @@ export default Ember.Object.extend({
 
       var getLabelSize = this.get('getLabelSize');
       var getLabelText = this.get('getLabelText');
+      var reservedCharLength = this.get('reservedCharLength');
 
       return function(selection) {
         
@@ -24,7 +28,7 @@ export default Ember.Object.extend({
             return '';
           }
           var charWidth = bbW / label.length;
-          var textLabelWidth = getLabelSize(d, selection) - 4 * charWidth;
+          var textLabelWidth = getLabelSize(d, selection) - reservedCharLength * charWidth;
           var numChars = Math.floor(textLabelWidth / charWidth);
 
           if (numChars - 3 <= 0) {

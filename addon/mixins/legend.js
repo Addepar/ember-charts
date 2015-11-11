@@ -1,5 +1,58 @@
 import Ember from 'ember';
 import LabelTrimmer from '../utils/label-trimmer';
+
+// Calculates maximum width of label in a row, before it gets truncated by label trimmer.
+// If labelWidth < average width per label (totalAvailableWidthForLabels/label count), then do not truncate
+// Else if labelWidth > average, then truncate it to average
+var calcMaxLabelWidth = function(labelWidthsArray, totalAvailableWidthForLabels) {
+  // Default the max label width to average width of an item
+  var maxLabelWidth = totalAvailableWidthForLabels / labelWidthsArray.length;
+
+  // Sort label widths to exclude all the short labels during iteration
+  labelWidthsArray = _.sortBy(labelWidthsArray);
+  for (var i = 0; i < labelWidthsArray.length; i++) {
+    var curLabelWidth = labelWidthsArray[i];
+    if (curLabelWidth < maxLabelWidth) {
+      // If the label is shorter than the max labelWidth, then it shouldn't be truncated 
+      // and hence subtract short labels from remaining totalAvailableWidthForLabels.
+      totalAvailableWidthForLabels -= curLabelWidth;
+      // Distribute the remaining width equally in remaining labels and set that as max.
+      var remainingLabelCount = labelWidthsArray.length - (i + 1);
+      maxLabelWidth = totalAvailableWidthForLabels / remainingLabelCount;
+    }
+  }
+  return maxLabelWidth;
+};
+
+// Select labels of current row (startIdx, endIdx) and truncate if greater than labelWidth
+var truncateLabels = function(labels, startIdx, endIdx, labelWidth) {
+  var labelTrimmer = LabelTrimmer.create({
+    getLabelSize: function() {
+      return labelWidth;
+    }
+  });
+  // Select labels from current row and apply label trimmer
+  labels.filter(function(data, idx) {
+    return (idx >= startIdx && idx < endIdx);
+  }).call(labelTrimmer.get('trim'));
+};
+
+// Select legendItems of current row (startIdx, endIdx) and calculate total row width
+var calcLegendRowWidth = function(legendItems, startIdx, endIdx, legendLabelPadding) {
+  var rowWidth = 0;
+  legendItems.filter(function(data, idx) {
+    return (idx >= startIdx && idx < endIdx);
+  }).each(function(val, col) {
+    if (col === 0) {
+      rowWidth = 0;
+    } else {
+      rowWidth += 2 * legendLabelPadding;
+    }
+    rowWidth += this.getBBox().width;
+  });
+  return rowWidth;
+};
+
 export default Ember.Mixin.create({
 
   // ----------------------------------------------------------------------------
@@ -49,12 +102,15 @@ export default Ember.Mixin.create({
     }
   }),
 
-  // Dynamically calculate the number of legend items in each row
+  // Dynamically calculate the number of legend items in each row.
+  // This is only an approximate value to estimate the maximum required space for legends
   numLegendItemsPerRow: Ember.computed('legendWidth', 'legendItemWidth', function() {
-    return Math.floor(this.get('legendWidth') / this.get('legendItemWidth'));
+    // There's always at least 1 legend item per row
+    return Math.max(Math.floor(this.get('legendWidth') / this.get('legendItemWidth')), 1);
   }),
 
   // Dynamically calculate the number of rows needed
+  // This is only an approximate value to estimate the maximum required space for legends
   numLegendRows: Ember.computed('legendItems.length', 'numLegendItemsPerRow', function() {
     return Math.ceil(this.get('legendItems.length') / this.get('numLegendItemsPerRow'));
   }),
@@ -63,6 +119,15 @@ export default Ember.Mixin.create({
   legendLabelWidth: Ember.computed('legendItemWidth', 'legendIconRadius', 'legendLabelPadding', function() {
     return this.get('legendItemWidth') - this.get('legendIconRadius') - this.get('legendLabelPadding') * 2;
   }),
+
+  // legendRowWidths is used to estimate how much to move the
+  // labels to make them seem roughly centered
+  // legendRowWidths is set every time legends are redrawn
+  legendRowWidths: [],
+
+  // numLegendItemsByRows is used to track how many legend rows will be added
+  // and how many items are placed in each row
+  numLegendItemsByRows: [],
 
   // ----------------------------------------------------------------------------
   // Styles
@@ -73,17 +138,12 @@ export default Ember.Mixin.create({
   // below the chart graphic like an axis or labels or axis title.
   legendChartPadding: 0,
 
-  // we use averageLegendLabelWidth in order to estimate how much to move the
-  // labels to make them seem roughly centered
-  // averageLegendLabelWidth is set every time we redraw the legend
-  averageLegendLabelWidth: 0,
-
   // Center the legend beneath the chart. Since the legend is inside the chart
   // viewport, which has already been positioned with regards to margins,
   // only consider the height of the chart.
   legendAttrs: Ember.computed('outerWidth', 'graphicBottom', 'legendTopPadding', 'legendChartPadding', function() {
     var dx, dy, offsetToLegend;
-    dx = this.get('outerWidth') / 2;
+    dx = this.get('width') / 2;
     offsetToLegend = this.get('legendChartPadding') + this.get('legendTopPadding');
     dy = this.get('graphicBottom') + offsetToLegend;
     return {
@@ -91,32 +151,44 @@ export default Ember.Mixin.create({
     };
   }),
 
-  // Place each legend item, breaking across rows. Center them if there is one
-  // row
-  // Ideally legend items would be centered to the very middle of the graph,
-  // this is made difficult by the fact that we want the icons to line up in
-  // nice columns and that the labels are variable length
-  legendItemAttrs: Ember.computed('legendItemWidth', 'legendItemHeight', 'numLegendItemsPerRow',
-     'legendItems.length', 'numLegendRows', 'averageLegendLabelWidth', function() {
+  // Place each legend item such that the legend rows appear centered to the graph.
+  // Spacing between legend items must be constant and equal to 2*legendLabelPadding = 20px.
+  legendItemAttrs: Ember.computed('legendItemWidth', 'legendItemHeight', 'legendIconRadius',
+     'legendLabelPadding', 'legendRowWidths', 'numLegendItemsByRows', function() {
 
-
+    var legendRowWidths = this.get('legendRowWidths');
     var legendItemWidth = this.get('legendItemWidth');
     var legendItemHeight = this.get('legendItemHeight');
-    var numItemsPerRow = this.get('numLegendItemsPerRow');
-    var numAllItems = this.get('legendItems.length');
-    var isSingleRow = this.get('numLegendRows') === 1;
+    var legendLabelPadding = this.get('legendLabelPadding');
+    var legendIconRadius = this.get('legendIconRadius');
+    var numLegendItemsByRows = this.get('numLegendItemsByRows');
 
-    var _this = this;
+    // Track the space already alloted to a legend.
+    // This is used to translate the next legend in the row.
+    var usedWidth = 0;
     return {
       "class": 'legend-item',
       width: legendItemWidth,
       'stroke-width': 0,
-      transform: function(d, i) {
-        var col = i % numItemsPerRow;
-        var row = Math.floor(i / numItemsPerRow);
-        var items = isSingleRow ? numAllItems : numItemsPerRow;
-        var dx = col * legendItemWidth - items / 2 * legendItemWidth + _this.get('averageLegendLabelWidth') / 2;
+      transform: function(d, col) {
+        // Compute the assigned row and column for the current legend
+        var row = 0;
+        while (col >= numLegendItemsByRows[row]) {
+          col -= numLegendItemsByRows[row];
+          ++row;
+        }
+
+        // If first item in the row, set usedWidth as 0.
+        if (col === 0) {
+          usedWidth = 0;
+        }
+        // Shifting the legend by "width of current legend row"/2 to the left and adding the used space
+        // Adding legend icon radius because center is off by that much in our legend layout
+        var dx = -legendRowWidths[row] / 2 + usedWidth + legendIconRadius;
         var dy = row * legendItemHeight + legendItemHeight / 2;
+
+        // Add 2*legendLabelPadding between items before putting the next legend
+        usedWidth += this.getBBox().width + 2 * legendLabelPadding;
         return "translate(" + dx + ", " + dy + ")";
       }
     };
@@ -226,6 +298,14 @@ export default Ember.Mixin.create({
     }
   }).volatile(),
 
+  // Create a list of all the legend Items, icon for each legend item and corresponding labels
+  // Calculate the number of legend item rows and items in each. Each time width should be bounded by min and max legend item width.
+  // Calculate the label width for each legend row that minimizes truncation. 
+  // And then apply legendItemAttrs to apply posisioning transforms.
+  // Legend layout => A legend item consists of an Icon and a label. Icon is always positioned centered at 0px within item. 
+  // Line icon width is 2*legendIconRadius, where other shapes are usually legendIconRadius px in width.
+  // Icon is followed by label that is positioned at (legendIconRadius/2 + legendLabelPadding) px. This adds some padding between icon and label.
+  // Finally we add a padding of (2*legendLabelPadding) px before next label
   drawLegend: function() {
     if (!this.get('showLegend')) {
       return;
@@ -241,7 +321,6 @@ export default Ember.Mixin.create({
             .data(this.get('legendItems'))
             .enter()
             .append('g')
-            .attr(this.get('legendItemAttrs'))
             .on("mouseover", function(d, i) {
                 return showLegendDetails(d, i, this);
             }).on("mouseout", function(d, i) {
@@ -262,26 +341,76 @@ export default Ember.Mixin.create({
                 .attr(legendIconAttrs);
       }
     });
-    var legendLabelWidth = this.get('legendLabelWidth');
-    var labelTrimmer = LabelTrimmer.create({
-      getLabelSize: function() {
-        return legendLabelWidth;
-      },
-      getLabelText: function(d) {
-        return d.label;
-      }
-    });
-
-    legendItems.append('text')
+    
+    var legendLabelWidths = [];
+    var labels = legendItems.append('text')
           .style('text-anchor', 'start')
           .text(function(d) { return d.label; })
           .attr(this.get('legendLabelAttrs'))
-          .call(labelTrimmer.get('trim'));
+          .each(function() {
+            legendLabelWidths.push(this.getComputedTextLength());
+          });
 
-    var totalLabelWidth = 0;
-    legend.selectAll('text').each(function() {
-      return totalLabelWidth += this.getComputedTextLength();
+    var minLegendItemWidth = this.get('minLegendItemWidth');
+    var maxLegendItemWidth = this.get('maxLegendItemWidth');
+    var legendLabelPadding = this.get('legendLabelPadding');
+
+    var numLegendItemsByRows = [0];
+    var rowNum = 0;
+    var legendWidth = this.get('legendWidth');
+    var availableLegendWidth = legendWidth;
+
+    // Calculate number of legend rows and number of items per row.
+    legendItems.each(function() {
+      // Calculate the current legend width with upper bound as maxLegendItemWidth
+      var itemWidth = Math.min(this.getBBox().width, maxLegendItemWidth);
+      // Remove padding space from available width if this is additional item in the row
+      if (numLegendItemsByRows[rowNum] > 0) {
+        availableLegendWidth -= (2 * legendLabelPadding);
+      }
+
+      // If available width is more than the minimum required width or the actual legend width, then add it to current row.
+      if (availableLegendWidth >= minLegendItemWidth || availableLegendWidth >= itemWidth) {
+        numLegendItemsByRows[rowNum]++;
+      } else {
+        ++rowNum;
+        numLegendItemsByRows[rowNum] = 1;
+        availableLegendWidth = legendWidth;
+      }
+      // Max width allotted for this legend must be minimum of availableLegendWidth or item width.
+      availableLegendWidth -= Math.min(availableLegendWidth, itemWidth);
     });
-    return this.set('averageLegendLabelWidth', totalLabelWidth / this.get('legendItems.length'));
+    this.set('numLegendItemsByRows', numLegendItemsByRows);
+    
+    var startIdxCurrentRow = 0;
+    var legendRowWidths = []; // Capture the width of each legend row
+    var iconRadius = this.get('legendIconRadius');
+    var iconToLabelPadding = iconRadius / 2 + legendLabelPadding;
+    var legendItemPadding = 2 * legendLabelPadding;
+
+    // Perform label truncation for legend items in each row.
+    for (rowNum = 0; rowNum < numLegendItemsByRows.length; rowNum++) {
+      var curRowItemCount = numLegendItemsByRows[rowNum];
+      var totalAvailableWidthForLabels = legendWidth - // Total width of a legend row available in the chart
+                                curRowItemCount * (iconRadius + iconToLabelPadding) - // Subtract width of each icon and it's padding
+                                (curRowItemCount - 1) * legendItemPadding; // Subtract width of all padding between items
+
+      // For current row, pick the label widths and caculate max allowed label width before truncation.
+      var labelWidthsForCurRow = legendLabelWidths.splice(0, curRowItemCount);
+      var maxLabelWidth = calcMaxLabelWidth(labelWidthsForCurRow, totalAvailableWidthForLabels);
+      truncateLabels(labels, startIdxCurrentRow, startIdxCurrentRow + curRowItemCount, maxLabelWidth);
+      
+      // After label trimming, calculate the final width of the current legend row. 
+      // This will be used by legenItemAttrs transform method to position the row in the center.
+      legendRowWidths[rowNum] = calcLegendRowWidth(legendItems, startIdxCurrentRow, 
+                                startIdxCurrentRow + curRowItemCount,
+                                legendLabelPadding);
+      startIdxCurrentRow += numLegendItemsByRows[rowNum];
+    }
+    this.set('legendRowWidths', legendRowWidths);
+
+    // Assign the legend item attrs and apply transformation
+    legendItems.attr(this.get('legendItemAttrs'));
+    return this;
   }
 });
