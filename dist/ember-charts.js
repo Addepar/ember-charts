@@ -5292,31 +5292,34 @@ define('ember-charts/mixins/time-series-labeler', ['exports', 'module', 'ember']
     })
   });
 });
-define("ember-charts/templates/components/chart-component", ["exports", "module", "ember"], function (exports, module, _ember) {
-  "use strict";
+define('ember-charts/templates/components/chart-component', ['exports', 'module', 'ember'], function (exports, module, _ember) {
+  'use strict';
 
-  function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+  function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
   var _Ember = _interopRequireDefault(_ember);
 
-  module.exports = _Ember["default"].Handlebars.template({ "compiler": [6, ">= 2.0.0-beta.1"], "main": function main(depth0, helpers, partials, data) {
-      var escapeExpression = this.escapeExpression,
-          buffer = '';
-      data.buffer.push("<svg ");
-      data.buffer.push(escapeExpression(helpers['bind-attr'].call(depth0, { "name": "bind-attr", "hash": {
-          'width': "outerWidth"
-        }, "hashTypes": { 'width': "ID" }, "hashContexts": { 'width': depth0 }, "types": [], "contexts": [], "data": data })));
-      data.buffer.push(" ");
-      data.buffer.push(escapeExpression(helpers['bind-attr'].call(depth0, { "name": "bind-attr", "hash": {
-          'height': "outerHeight"
-        }, "hashTypes": { 'height': "ID" }, "hashContexts": { 'height': depth0 }, "types": [], "contexts": [], "data": data })));
-      data.buffer.push(">\n  <g class=\"chart-viewport\" ");
-      data.buffer.push(escapeExpression(helpers['bind-attr'].call(depth0, { "name": "bind-attr", "hash": {
-          'transform': "transformViewport"
-        }, "hashTypes": { 'transform': "ID" }, "hashContexts": { 'transform': depth0 }, "types": [], "contexts": [], "data": data })));
-      data.buffer.push("></g>\n</svg>\n");
-      return buffer;
-    }, "useData": true });
+  module.exports = _Ember['default'].Handlebars.template(function anonymous(Handlebars, depth0, helpers, partials, data) {
+    this.compilerInfo = [4, '>= 1.0.0'];
+    helpers = this.merge(helpers, _Ember['default'].Handlebars.helpers);data = data || {};
+    var buffer = '',
+        escapeExpression = this.escapeExpression;
+
+    data.buffer.push("<svg ");
+    data.buffer.push(escapeExpression(helpers['bind-attr'].call(depth0, { hash: {
+        'width': "outerWidth"
+      }, hashTypes: { 'width': "ID" }, hashContexts: { 'width': depth0 }, contexts: [], types: [], data: data })));
+    data.buffer.push(" ");
+    data.buffer.push(escapeExpression(helpers['bind-attr'].call(depth0, { hash: {
+        'height': "outerHeight"
+      }, hashTypes: { 'height': "ID" }, hashContexts: { 'height': depth0 }, contexts: [], types: [], data: data })));
+    data.buffer.push(">\n  <g class=\"chart-viewport\" ");
+    data.buffer.push(escapeExpression(helpers['bind-attr'].call(depth0, { hash: {
+        'transform': "transformViewport"
+      }, hashTypes: { 'transform': "ID" }, hashContexts: { 'transform': depth0 }, contexts: [], types: [], data: data })));
+    data.buffer.push("></g>\n</svg>\n");
+    return buffer;
+  });
 });
 define("ember-charts/utils/group-by", ["exports"], function (exports) {
 	"use strict";
