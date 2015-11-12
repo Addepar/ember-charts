@@ -9,6 +9,7 @@ moduleForComponent('scatter-chart', '[Unit] Scatter chart component', {
 
 var scatterContent = {
   dotRadius: 7,
+  hasAxisTitles: false,
   xValueDisplayName: 'Risk',
   yValueDisplayName: 'Return',
   data: [
@@ -30,12 +31,15 @@ test("it exists", function(assert){
 });
 
 test('Margins are the right size', function(assert) {
-  var component = this.subject();
-  assert.expect(3);
+  var component = this.subject(scatterContent);
+  Ember.run(function(){
+    component.set('showLegend', false);
+    assert.expect(3);
 
-  assert.equal(component.get('marginLeft'), 0, 'no left margin');
-  assert.equal(component.get('marginRight'), 30, 'right margin exists');
-  assert.equal(component.get('marginBottom'), 0, 'no bottom margin');
+    assert.equal(component.get('marginLeft'), 0, 'no left margin');
+    assert.equal(component.get('marginRight'), 30, 'right margin exists');
+    assert.equal(component.get('marginBottom'), 0, 'no bottom margin');
+  });
 });
 
 test('Margins are the right size when there is a legend', function(assert) {

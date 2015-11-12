@@ -8,11 +8,12 @@ import HasTimeSeriesRuleMixin from '../mixins/has-time-series-rule';
 import AxesMixin from '../mixins/axes';
 import FormattableMixin from '../mixins/formattable';
 import NoMarginChartMixin from '../mixins/no-margin-chart';
+import AxisTitlesMixin from '../mixins/axis-titles';
 
 import { groupBy } from '../utils/group-by';
 
 export default ChartComponent.extend(LegendMixin, TimeSeriesLabelerMixin, FloatingTooltipMixin,
-  HasTimeSeriesRuleMixin, AxesMixin, FormattableMixin, NoMarginChartMixin, {
+  HasTimeSeriesRuleMixin, AxesMixin, FormattableMixin, NoMarginChartMixin, AxisTitlesMixin, {
 
   classNames: ['chart-time-series'],
 
@@ -366,10 +367,10 @@ export default ChartComponent.extend(LegendMixin, TimeSeriesLabelerMixin, Floati
   // the number of x ticks and the assigned value. This is to prevent
   // the assigned value from being so large that labels flood the x axis.
   maxNumberOfLabels: Ember.computed('numXTicks', 'dynamicXAxis', function(key, value){
-    if(this.get('dynamicXAxis')){
+    if (this.get('dynamicXAxis')) {
       value = _.isNaN(value) ? this.get('DEFAULT_MAX_NUMBER_OF_LABELS') : value;
       return Math.min(value, this.get('numXTicks'));
-    }else{
+    } else {
       return this.get('numXTicks');
     }
   }),
@@ -778,7 +779,16 @@ export default ChartComponent.extend(LegendMixin, TimeSeriesLabelerMixin, Floati
   // Drawing Functions
   // ----------------------------------------------------------------------------
 
-  renderVars: ['barLeftOffset', 'labelledTicks', 'xGroupScale', 'xTimeScale', 'yScale'],
+  renderVars: [
+    'barLeftOffset',
+    'labelledTicks',
+    'xGroupScale',
+    'xTimeScale',
+    'yScale',
+    'xValueDisplayName',
+    'yValueDisplayName',
+    'hasAxisTitles'
+  ],
 
   drawChart: function() {
     this.updateBarData();
@@ -787,6 +797,7 @@ export default ChartComponent.extend(LegendMixin, TimeSeriesLabelerMixin, Floati
     this.updateAxes();
     this.updateBarGraphic();
     this.updateLineGraphic();
+    this.updateAxisTitles();
     if (this.get('hasLegend')) {
       this.drawLegend();
     } else {

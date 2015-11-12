@@ -23,9 +23,11 @@ export default SlideController.extend({
 
   data: Ember.computed('selectedData', 'rawDataHash', function() {
     return this.get('rawDataHash')[this.get('selectedData')];
-  }), 
+  }),
 
   isShowingTotal: false,
+
+  hasAxisTitles: false,
 
   xValueDisplayName: 'Risk',
   yValueDisplayName: 'Return',
@@ -36,10 +38,10 @@ export default SlideController.extend({
     var data = this.get('data');
     return {
     	group: 'Portfolio Total',
-    	xValue: _.reduce(data, function(prev, d) { 
-    		return prev + d.xValue; 
+    	xValue: _.reduce(data, function(prev, d) {
+    		return prev + d.xValue;
     	}, 0),
-    	yValue: _.reduce(data, function(prev, d) { 
+    	yValue: _.reduce(data, function(prev, d) {
     		return  prev + d.yValue;
     	}, 0)
   	};

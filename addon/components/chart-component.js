@@ -15,8 +15,46 @@ export default Ember.Component.extend(ColorableMixin, ResizeHandlerMixin, {
   horizontalMargin: 30,
   verticalMargin: 30,
 
-  marginRight: Ember.computed.alias('horizontalMargin'),
-  marginLeft: Ember.computed.alias('horizontalMargin'),
+  /**
+   * Optional property to set specific left margin
+   * @type {Number}
+   */
+  horizontalMarginLeft: null,
+
+  /**
+   * Optional property to set specific right margin
+   * @type {Number}
+   */
+  horizontalMarginRight: null,
+
+  /**
+   * Either a passed in value from `horizontalMarginRight`
+   * or the default value from `horizontalMargin`
+   * @type {Number}
+   */
+  marginRight: Ember.computed('horizontalMarginRight', 'horizontalMargin', function(){
+    const horizontalMarginRight = this.get('horizontalMarginRight');
+    if (Ember.isNone(horizontalMarginRight)) {
+      return this.get('horizontalMargin');
+    } else {
+      return horizontalMarginRight;
+    }
+  }),
+
+  /**
+   * Either a passed in value from `horizontalMarginLeft`
+   * or the default value from `horizontalMargin`
+   * @type {Number}
+   */
+  marginLeft: Ember.computed('horizontalMarginLeft', 'horizontalMargin', function(){
+    const horizontalMarginLeft = this.get('horizontalMarginLeft');
+    if (Ember.isNone(horizontalMarginLeft)) {
+      return this.get('horizontalMargin');
+    } else {
+      return horizontalMarginLeft;
+    }
+  }),
+
   marginTop: Ember.computed.alias('verticalMargin'),
   marginBottom: Ember.computed.alias('verticalMargin'),
 
@@ -111,7 +149,13 @@ export default Ember.Component.extend(ColorableMixin, ResizeHandlerMixin, {
   // Every chart will trigger a redraw when these variables change, through the
   // magic of concatenatedProperties any class that overrides the variable
   // renderVars will actually just be appending names to the list
-  renderVars: ['finishedData', 'width', 'height', 'margin', 'isInteractive'],
+  renderVars: [
+    'finishedData',
+    'width',
+    'height',
+    'margin',
+    'isInteractive'
+  ],
 
   init: function() {
     this._super();

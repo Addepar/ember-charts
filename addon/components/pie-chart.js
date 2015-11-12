@@ -445,7 +445,11 @@ export default ChartComponent.extend(FloatingTooltipMixin,
   // Drawing Functions
   // ----------------------------------------------------------------------------
 
-  renderVars: ['pieRadius', 'labelWidth', 'finishedData'],
+  renderVars: [
+    'pieRadius',
+    'labelWidth',
+    'finishedData'
+  ],
 
   drawChart: function() {
     this.updateData();
