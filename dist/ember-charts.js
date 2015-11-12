@@ -694,9 +694,7 @@ define('ember-charts/components/horizontal-bar-chart', ['exports', 'module', 'em
     marginTop: _Ember['default'].computed.alias('labelPadding'),
     marginBottom: _Ember['default'].computed.alias('labelPadding'),
 
-    horizontalMargin: _Ember['default'].computed('labelWidth', 'labelPadding', function () {
-      return this.get('labelWidth') + this.get('labelPadding') * 2;
-    }),
+    horizontalMargin: _Ember['default'].computed.readOnly('labelWidth'),
 
     // ----------------------------------------------------------------------------
     // Graphics Properties

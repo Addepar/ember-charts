@@ -73,9 +73,7 @@ export default ChartComponent.extend(FloatingTooltipMixin,
   marginTop: Ember.computed.alias('labelPadding'),
   marginBottom: Ember.computed.alias('labelPadding'),
 
-  horizontalMargin: Ember.computed('labelWidth', 'labelPadding', function() {
-    return this.get('labelWidth') + this.get('labelPadding') * 2;
-  }),
+  horizontalMargin: Ember.computed.readOnly('labelWidth'),
 
   // ----------------------------------------------------------------------------
   // Graphics Properties
