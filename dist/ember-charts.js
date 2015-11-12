@@ -417,8 +417,46 @@ define('ember-charts/components/chart-component', ['exports', 'module', 'ember',
     horizontalMargin: 30,
     verticalMargin: 30,
 
-    marginRight: _Ember['default'].computed.alias('horizontalMargin'),
-    marginLeft: _Ember['default'].computed.alias('horizontalMargin'),
+    /**
+     * Optional property to set specific left margin
+     * @type {Number}
+     */
+    horizontalMarginLeft: null,
+
+    /**
+     * Optional property to set specific right margin
+     * @type {Number}
+     */
+    horizontalMarginRight: null,
+
+    /**
+     * Either a passed in value from `horizontalMarginRight`
+     * or the default value from `horizontalMargin`
+     * @type {Number}
+     */
+    marginRight: _Ember['default'].computed('horizontalMarginRight', 'horizontalMargin', function () {
+      var horizontalMarginRight = this.get('horizontalMarginRight');
+      if (_Ember['default'].isNone(horizontalMarginRight)) {
+        return this.get('horizontalMargin');
+      } else {
+        return horizontalMarginRight;
+      }
+    }),
+
+    /**
+     * Either a passed in value from `horizontalMarginLeft`
+     * or the default value from `horizontalMargin`
+     * @type {Number}
+     */
+    marginLeft: _Ember['default'].computed('horizontalMarginLeft', 'horizontalMargin', function () {
+      var horizontalMarginLeft = this.get('horizontalMarginLeft');
+      if (_Ember['default'].isNone(horizontalMarginLeft)) {
+        return this.get('horizontalMargin');
+      } else {
+        return horizontalMarginLeft;
+      }
+    }),
+
     marginTop: _Ember['default'].computed.alias('verticalMargin'),
     marginBottom: _Ember['default'].computed.alias('verticalMargin'),
 
@@ -1438,7 +1476,7 @@ define('ember-charts/components/pie-chart', ['exports', 'module', 'ember', './ch
     }
   });
 });
-define('ember-charts/components/scatter-chart', ['exports', 'module', 'ember', './chart-component', '../mixins/legend', '../mixins/floating-tooltip', '../mixins/axes', '../mixins/no-margin-chart', '../utils/group-by'], function (exports, module, _ember, _chartComponent, _mixinsLegend, _mixinsFloatingTooltip, _mixinsAxes, _mixinsNoMarginChart, _utilsGroupBy) {
+define('ember-charts/components/scatter-chart', ['exports', 'module', 'ember', './chart-component', '../mixins/legend', '../mixins/floating-tooltip', '../mixins/axes', '../mixins/no-margin-chart', '../mixins/axis-titles', '../utils/group-by'], function (exports, module, _ember, _chartComponent, _mixinsLegend, _mixinsFloatingTooltip, _mixinsAxes, _mixinsNoMarginChart, _mixinsAxisTitles, _utilsGroupBy) {
   'use strict';
 
   function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
@@ -1455,7 +1493,9 @@ define('ember-charts/components/scatter-chart', ['exports', 'module', 'ember', '
 
   var _NoMarginChartMixin = _interopRequireDefault(_mixinsNoMarginChart);
 
-  module.exports = _ChartComponent['default'].extend(_LegendMixin['default'], _FloatingTooltipMixin['default'], _AxesMixin['default'], _NoMarginChartMixin['default'], {
+  var _AxisTitlesMixin = _interopRequireDefault(_mixinsAxisTitles);
+
+  module.exports = _ChartComponent['default'].extend(_LegendMixin['default'], _FloatingTooltipMixin['default'], _AxesMixin['default'], _NoMarginChartMixin['default'], _AxisTitlesMixin['default'], {
 
     classNames: ['chart-scatter'],
 
@@ -1539,11 +1579,6 @@ define('ember-charts/components/scatter-chart', ['exports', 'module', 'ember', '
     // ----------------------------------------------------------------------------
     // Layout
     // ----------------------------------------------------------------------------
-    // TODO(tony): Consider making logic for whether we are showing the title or
-    // not and then axis mixin will calculate axis offset that will be added
-    axisTitleHeightOffset: _Ember['default'].computed('axisTitleHeight', 'labelPadding', function () {
-      return this.get('axisTitleHeight') + this.get('labelPadding');
-    }),
 
     // TODO(tony): Just use axisBottomOffset here
     legendChartPadding: _Ember['default'].computed('labelHeightOffset', 'axisTitleHeightOffset', function () {
@@ -1810,15 +1845,6 @@ define('ember-charts/components/scatter-chart', ['exports', 'module', 'ember', '
       }
     },
 
-    selectOrCreateAxisTitle: function selectOrCreateAxisTitle(selector) {
-      var title = this.get('viewport').select(selector);
-      if (title.empty()) {
-        return this.get('viewport').append('text');
-      } else {
-        return title;
-      }
-    },
-
     xAxis: _Ember['default'].computed(function () {
       return this.selectOrCreateAxis('.x.axis').attr('class', 'x axis');
     })["volatile"](),
@@ -1827,25 +1853,18 @@ define('ember-charts/components/scatter-chart', ['exports', 'module', 'ember', '
       return this.selectOrCreateAxis('.y.axis').attr('class', 'y axis');
     })["volatile"](),
 
-    xAxisTitle: _Ember['default'].computed(function () {
-      return this.selectOrCreateAxisTitle('.x.axis-title').attr('class', 'x axis-title');
-    })["volatile"](),
-
-    yAxisTitle: _Ember['default'].computed(function () {
-      return this.selectOrCreateAxisTitle('.y.axis-title').attr('class', 'y axis-title');
-    })["volatile"](),
-
     // ----------------------------------------------------------------------------
     // Drawing Functions
     // ----------------------------------------------------------------------------
 
-    renderVars: ['xScale', 'yScale', 'dotShapeArea', 'finishedData', 'xValueDisplayName', 'yValueDisplayName'],
+    renderVars: ['xScale', 'yScale', 'dotShapeArea', 'finishedData', 'xValueDisplayName', 'yValueDisplayName', 'hasAxisTitles'],
 
     drawChart: function drawChart() {
       this.updateTotalPointData();
       this.updateData();
       this.updateAxes();
       this.updateGraphic();
+      this.updateAxisTitles();
       if (this.get('hasLegend')) {
         return this.drawLegend();
       } else {
@@ -1925,17 +1944,6 @@ define('ember-charts/components/scatter-chart', ['exports', 'module', 'ember', '
       gYAxis.selectAll('text').style('text-anchor', 'end').attr({
         x: -this.get('labelPadding')
       });
-
-      var xAxisPadding = this.get('labelHeightOffset') + this.get('labelPadding');
-      this.get('xAxisTitle').text(this.get('xValueDisplayName')).style('text-anchor', 'middle').attr({
-        x: this.get('graphicWidth') / 2 + this.get('labelWidthOffset'),
-        y: this.get('graphicBottom') + xAxisPadding
-      });
-
-      return this.get('yAxisTitle').text(this.get('yValueDisplayName')).style('text-anchor', 'start').attr({
-        y: 0,
-        x: 0
-      });
     },
 
     updateGraphic: function updateGraphic() {
@@ -1965,7 +1973,7 @@ define('ember-charts/components/scatter-chart', ['exports', 'module', 'ember', '
     }
   });
 });
-define('ember-charts/components/time-series-chart', ['exports', 'module', 'ember', './chart-component', '../mixins/legend', '../mixins/time-series-labeler', '../mixins/floating-tooltip', '../mixins/has-time-series-rule', '../mixins/axes', '../mixins/formattable', '../mixins/no-margin-chart', '../utils/group-by'], function (exports, module, _ember, _chartComponent, _mixinsLegend, _mixinsTimeSeriesLabeler, _mixinsFloatingTooltip, _mixinsHasTimeSeriesRule, _mixinsAxes, _mixinsFormattable, _mixinsNoMarginChart, _utilsGroupBy) {
+define('ember-charts/components/time-series-chart', ['exports', 'module', 'ember', './chart-component', '../mixins/legend', '../mixins/time-series-labeler', '../mixins/floating-tooltip', '../mixins/has-time-series-rule', '../mixins/axes', '../mixins/formattable', '../mixins/no-margin-chart', '../mixins/axis-titles', '../utils/group-by'], function (exports, module, _ember, _chartComponent, _mixinsLegend, _mixinsTimeSeriesLabeler, _mixinsFloatingTooltip, _mixinsHasTimeSeriesRule, _mixinsAxes, _mixinsFormattable, _mixinsNoMarginChart, _mixinsAxisTitles, _utilsGroupBy) {
   'use strict';
 
   function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
@@ -1988,7 +1996,9 @@ define('ember-charts/components/time-series-chart', ['exports', 'module', 'ember
 
   var _NoMarginChartMixin = _interopRequireDefault(_mixinsNoMarginChart);
 
-  module.exports = _ChartComponent['default'].extend(_LegendMixin['default'], _TimeSeriesLabelerMixin['default'], _FloatingTooltipMixin['default'], _HasTimeSeriesRuleMixin['default'], _AxesMixin['default'], _FormattableMixin['default'], _NoMarginChartMixin['default'], {
+  var _AxisTitlesMixin = _interopRequireDefault(_mixinsAxisTitles);
+
+  module.exports = _ChartComponent['default'].extend(_LegendMixin['default'], _TimeSeriesLabelerMixin['default'], _FloatingTooltipMixin['default'], _HasTimeSeriesRuleMixin['default'], _AxesMixin['default'], _FormattableMixin['default'], _NoMarginChartMixin['default'], _AxisTitlesMixin['default'], {
 
     classNames: ['chart-time-series'],
 
@@ -2756,7 +2766,7 @@ define('ember-charts/components/time-series-chart', ['exports', 'module', 'ember
     // Drawing Functions
     // ----------------------------------------------------------------------------
 
-    renderVars: ['barLeftOffset', 'labelledTicks', 'xGroupScale', 'xTimeScale', 'yScale'],
+    renderVars: ['barLeftOffset', 'labelledTicks', 'xGroupScale', 'xTimeScale', 'yScale', 'xValueDisplayName', 'yValueDisplayName', 'hasAxisTitles'],
 
     drawChart: function drawChart() {
       this.updateBarData();
@@ -2765,6 +2775,7 @@ define('ember-charts/components/time-series-chart', ['exports', 'module', 'ember
       this.updateAxes();
       this.updateBarGraphic();
       this.updateLineGraphic();
+      this.updateAxisTitles();
       if (this.get('hasLegend')) {
         this.drawLegend();
       } else {
@@ -2850,7 +2861,7 @@ define('ember-charts/components/time-series-chart', ['exports', 'module', 'ember
     }
   });
 });
-define('ember-charts/components/vertical-bar-chart', ['exports', 'module', 'ember', './chart-component', '../mixins/legend', '../mixins/floating-tooltip', '../mixins/axes', '../mixins/formattable', '../mixins/sortable-chart', '../mixins/no-margin-chart', '../utils/group-by', '../utils/label-trimmer'], function (exports, module, _ember, _chartComponent, _mixinsLegend, _mixinsFloatingTooltip, _mixinsAxes, _mixinsFormattable, _mixinsSortableChart, _mixinsNoMarginChart, _utilsGroupBy, _utilsLabelTrimmer) {
+define('ember-charts/components/vertical-bar-chart', ['exports', 'module', 'ember', './chart-component', '../mixins/legend', '../mixins/floating-tooltip', '../mixins/axes', '../mixins/formattable', '../mixins/sortable-chart', '../mixins/no-margin-chart', '../mixins/axis-titles', '../utils/group-by', '../utils/label-trimmer'], function (exports, module, _ember, _chartComponent, _mixinsLegend, _mixinsFloatingTooltip, _mixinsAxes, _mixinsFormattable, _mixinsSortableChart, _mixinsNoMarginChart, _mixinsAxisTitles, _utilsGroupBy, _utilsLabelTrimmer) {
   'use strict';
 
   function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
@@ -2871,9 +2882,11 @@ define('ember-charts/components/vertical-bar-chart', ['exports', 'module', 'embe
 
   var _NoMarginChartMixin = _interopRequireDefault(_mixinsNoMarginChart);
 
+  var _AxisTitlesMixin = _interopRequireDefault(_mixinsAxisTitles);
+
   var _LabelTrimmer = _interopRequireDefault(_utilsLabelTrimmer);
 
-  module.exports = _ChartComponent['default'].extend(_LegendMixin['default'], _FloatingTooltipMixin['default'], _AxesMixin['default'], _FormattableMixin['default'], _SortableChartMixin['default'], _NoMarginChartMixin['default'], {
+  module.exports = _ChartComponent['default'].extend(_LegendMixin['default'], _FloatingTooltipMixin['default'], _AxesMixin['default'], _FormattableMixin['default'], _SortableChartMixin['default'], _NoMarginChartMixin['default'], _AxisTitlesMixin['default'], {
 
     classNames: ['chart-vertical-bar'],
 
@@ -3474,13 +3487,14 @@ define('ember-charts/components/vertical-bar-chart', ['exports', 'module', 'embe
     // Drawing Functions
     // ----------------------------------------------------------------------------
 
-    renderVars: ['xWithinGroupScale', 'xBetweenGroupScale', 'yScale', 'finishedData', 'getSeriesColor'],
+    renderVars: ['xWithinGroupScale', 'xBetweenGroupScale', 'yScale', 'finishedData', 'getSeriesColor', 'xValueDisplayName', 'yValueDisplayName', 'hasAxisTitles'],
 
     drawChart: function drawChart() {
       this.updateData();
       this.updateLayout();
       this.updateAxes();
       this.updateGraphic();
+      this.updateAxisTitles();
       if (this.get('hasLegend')) {
         return this.drawLegend();
       } else {
@@ -3589,7 +3603,7 @@ define('ember-charts/components/vertical-bar-chart', ['exports', 'module', 'embe
         return d !== 0;
       }).classed('major', false).classed('minor', true);
 
-      return gYAxis.selectAll('text').style('text-anchor', 'end').attr({
+      gYAxis.selectAll('text').style('text-anchor', 'end').attr({
         x: -this.get('labelPadding')
       });
     },
@@ -3713,6 +3727,197 @@ define('ember-charts/mixins/axes', ['exports', 'module', 'ember'], function (exp
       };
     })
   });
+});
+define('ember-charts/mixins/axis-titles', ['exports', 'module', 'ember'], function (exports, module, _ember) {
+  'use strict';
+
+  function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+
+  var _Ember = _interopRequireDefault(_ember);
+
+  /**
+   * Adds axis titles to a chart and sets left/bottom margins to allow space
+   * for the axis titles
+   * Axis titles are set through the `xValueDisplayName` and `yValueDisplayName`
+   * Spacing on the left is managed through the `horizontalMarginLeft`
+   * Spacing on the bottom is managed through `axisTitleHeight` and `labelPadding`
+   *
+   * @mixin
+   */
+  var AxisTitlesMixin = _Ember['default'].Mixin.create({
+    /**
+     * Toggle axis titles on/off
+     * @type {Boolean}
+     */
+    hasAxisTitles: false,
+
+    /**
+     * Title for the x axis
+     * @type {String}
+     */
+    xValueDisplayName: null,
+
+    /**
+     * Title for the y axis
+     * @type {String}
+     */
+    yValueDisplayName: null,
+
+    /**
+     * Computed title for the x axis, if the `hasAxisTitles` boolean is false
+     * `xAxisTitleDisplayValue` should be an empty string
+     * @type {String}
+     */
+    xAxisTitleDisplayValue: _Ember['default'].computed('hasAxisTitles', 'xValueDisplayName', function () {
+      return this.get('hasAxisTitles') ? this.get('xValueDisplayName') : '';
+    }),
+
+    /**
+     * Computed title for the x axis, if the `hasAxisTitles` boolean is false
+     * `yAxisTitleDisplayValue` should be an empty string
+     * @type {String}
+     */
+    yAxisTitleDisplayValue: _Ember['default'].computed('hasAxisTitles', 'yValueDisplayName', function () {
+      return this.get('hasAxisTitles') ? this.get('yValueDisplayName') : '';
+    }),
+
+    /**
+     * Default left margin, allows for enough space for the y axis label
+     * @type {Number}
+     */
+    horizontalMarginLeft: 20,
+
+    /**
+     * If `hasAxisTitles` is false there should be no margin on the left side,
+     * while if true the left margin should be the value of `horizontalMarginLeft`
+     * @type {Number}
+     */
+    marginLeft: _Ember['default'].computed('hasAxisTitles', 'horizontalMarginLeft', function () {
+      return this.get('hasAxisTitles') ? this.get('horizontalMarginLeft') : 0;
+    }),
+
+    /**
+     * Computed title height plus label padding or 0 if `hasAxisTitles` is false
+     * @type {Number}
+     */
+    axisTitleHeightOffset: _Ember['default'].computed('axisTitleHeight', 'labelPadding', function () {
+      if (this.get('hasAxisTitles')) {
+        return this.get('axisTitleHeight') + this.get('labelPadding');
+      } else {
+        return 0;
+      }
+    }),
+
+    /**
+     * References and/or creates the d3 element for x axis title
+     * @type {Object}
+     */
+    xAxisTitle: _Ember['default'].computed(function () {
+      return this.selectOrCreateAxisTitle('.x.axis-title').attr('class', 'x axis-title');
+    })["volatile"](),
+
+    /**
+     * References and/or creates the d3 element for y axis title
+     * @type {Object}
+     */
+    yAxisTitle: _Ember['default'].computed(function () {
+      return this.selectOrCreateAxisTitle('.y.axis-title').attr('class', 'y axis-title');
+    })["volatile"](),
+
+    /**
+     * Amount of padding for the axis, `labelHeightOffset` + `labelPadding`
+     * @type {Number}
+     */
+    axisPadding: _Ember['default'].computed('labelHeightOffset', 'labelPadding', function () {
+      return this.get('labelHeightOffset') + this.get('labelPadding');
+    }),
+
+    /**
+     * Position of x axis title on the x axis
+     * @type {Number}
+     */
+    xAxisPositionX: _Ember['default'].computed('graphicWidth', 'labelWidthOffset', function () {
+      return this.get('graphicWidth') / 2 + this.get('labelWidthOffset');
+    }),
+
+    /**
+     * Position of x axis title on the y axis
+     * @type {Number}
+     */
+    xAxisPositionY: _Ember['default'].computed('graphicBottom', 'axisPadding', function () {
+      return this.get('graphicBottom') + this.get('axisPadding');
+    }),
+
+    /**
+     * Position of y axis title on the x axis
+     * @type {Number}
+     */
+    yAxisPositionX: _Ember['default'].computed('graphicHeight', 'labelWidthOffset', function () {
+      return -(this.get('graphicHeight') / 2 + this.get('labelWidthOffset'));
+    }),
+
+    /**
+     * Position of y axis title on the y axis
+     * @type {Number}
+     */
+    yAxisPositionY: -20,
+
+    /**
+     * X axis transform
+     * @type {string}
+     */
+    xAxisTransform: "rotate(0)",
+    /**
+     * Y axis transform
+     * @type {string}
+     */
+    yAxisTransform: "rotate(-90)",
+
+    /**
+     * If no axis title has been created for the selector create a new one
+     * @param  {String} selector
+     * @return {Object}
+     */
+    selectOrCreateAxisTitle: function selectOrCreateAxisTitle(selector) {
+      var title = this.get('viewport').select(selector);
+      if (title.empty()) {
+        return this.get('viewport').append('text');
+      } else {
+        return title;
+      }
+    },
+
+    /**
+     * Update the x axis title and position
+     */
+    updateXAxisTitle: function updateXAxisTitle() {
+      this.get('xAxisTitle').text(this.get('xAxisTitleDisplayValue')).style('text-anchor', 'middle').attr({
+        x: this.get('xAxisPositionX'),
+        y: this.get('xAxisPositionY')
+      });
+    },
+
+    /**
+     * Update the y axis title and position
+     */
+    updateYAxisTitle: function updateYAxisTitle() {
+      this.get('yAxisTitle').text(this.get('yAxisTitleDisplayValue')).style('text-anchor', 'start').attr({
+        x: this.get('yAxisPositionX'),
+        y: this.get('yAxisPositionY')
+      }).attr("transform", this.get('yAxisTransform')).attr("dy", "1em");
+    },
+
+    /**
+     * Updates axis titles
+     */
+    updateAxisTitles: function updateAxisTitles() {
+      this.updateXAxisTitle();
+      this.updateYAxisTitle();
+    }
+
+  });
+
+  module.exports = AxisTitlesMixin;
 });
 define('ember-charts/mixins/colorable', ['exports', 'module', 'ember'], function (exports, module, _ember) {
   'use strict';
@@ -4465,7 +4670,6 @@ define('ember-charts/mixins/no-margin-chart', ['exports', 'module', 'ember'], fu
   var _Ember = _interopRequireDefault(_ember);
 
   module.exports = _Ember['default'].Mixin.create({
-    marginLeft: 0,
     marginRight: 0,
 
     // There should be no padding if there is no legend

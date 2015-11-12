@@ -3,7 +3,6 @@
 import Ember from 'ember';
 
 export default Ember.Mixin.create({
-  marginLeft: 0,
   marginRight: 0,
 
   // There should be no padding if there is no legend

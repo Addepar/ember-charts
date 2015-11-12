@@ -25,6 +25,9 @@ export default SlideController.extend({
   minBarThickness: 20,
   labelWidthMultiplier: 0.25,
 
+  xValueDisplayName: 'X Axis',
+  yValueDisplayName: 'Y Axis',
+
   // ---------
   // Data Selection
   // ---------

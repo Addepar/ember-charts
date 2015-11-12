@@ -74,9 +74,9 @@ export default Ember.Mixin.create({
   MONTHS_IN_QUARTER: 3,
   xAxisTimeInterval: Ember.computed('selectedInterval', 'dynamicXAxis', function(key, value) {
     var domain;
-    if(this.get('dynamicXAxis')){
+    if (this.get('dynamicXAxis')) {
       domain = value || 'M';
-    }else{
+    } else {
       domain = this.get('selectedInterval');
     }
     // to maintain consistency, convert the domain type into its

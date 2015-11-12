@@ -8,8 +8,8 @@ import LabelWidthMixin from '../mixins/label-width';
 
 import LabelTrimmer from '../utils/label-trimmer';
 
-export default ChartComponent.extend(FloatingTooltipMixin, FormattableMixin,
-  SortableChartMixin, LabelWidthMixin, {
+export default ChartComponent.extend(FloatingTooltipMixin,
+  FormattableMixin, SortableChartMixin, LabelWidthMixin, {
   classNames: ['chart-horizontal-bar'],
 
   // ----------------------------------------------------------------------------
@@ -264,7 +264,12 @@ export default ChartComponent.extend(FloatingTooltipMixin, FormattableMixin,
   // Drawing Functions
   // ----------------------------------------------------------------------------
 
-  renderVars: ['barThickness', 'yScale', 'finishedData', 'colorRange'],
+  renderVars: [
+    'barThickness',
+    'yScale',
+    'finishedData',
+    'colorRange'
+  ],
 
   drawChart: function() {
     this.updateData();
