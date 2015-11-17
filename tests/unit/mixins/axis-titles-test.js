@@ -20,7 +20,8 @@ test('No left margin', function(assert) {
 test('Has left margin', function(assert) {
   const AxisTitlesObject = Ember.Object.extend(AxisTitlesMixin);
   const subject = AxisTitlesObject.create({
-    hasAxisTitles: true
+    hasXAxisTitle: true,
+    hasYAxisTitle: true
   });
   assert.equal(subject.get('marginLeft'), 20);
 });
@@ -59,3 +60,40 @@ test('Has y title vertical offset', function(assert) {
   assert.equal(subject2.get('yAxisPositionX'), -80);
 });
 
+test('x & y toggle flags', function(assert) {
+  const AxisTitlesObject = Ember.Object.extend(AxisTitlesMixin);
+  const subject1 = AxisTitlesObject.create({
+    xValueDisplayName: "X Title",
+    yValueDisplayName: "Y Title",
+    hasXAxisTitle: false,
+    hasYAxisTitle: false,
+  });
+  assert.equal(subject1.get('xAxisTitleDisplayValue'), '');
+  assert.equal(subject1.get('yAxisTitleDisplayValue'), '');
+  assert.equal(subject1.get('hasAxisTitles'), false);
+
+  subject1.set('hasXAxisTitle', true);
+  subject1.set('hasYAxisTitle', true);
+
+  assert.equal(subject1.get('xAxisTitleDisplayValue'), 'X Title');
+  assert.equal(subject1.get('yAxisTitleDisplayValue'), 'Y Title');
+  assert.equal(subject1.get('hasAxisTitles'), true);
+});
+
+test('legend chart padding', function(assert) {
+  const AxisTitlesObject = Ember.Object.extend(AxisTitlesMixin);
+  const subject1 = AxisTitlesObject.create({
+    axisTitleHeightOffset: 10,
+    labelHeightOffset: 13,
+  });
+  assert.equal(subject1.get('legendChartPadding'), 23);
+});
+
+test('support hasAxisTitles', function(assert) {
+  const AxisTitlesObject = Ember.Object.extend(AxisTitlesMixin);
+  const subject1 = AxisTitlesObject.create({
+    hasAxisTitles: true
+  });
+  assert.equal(subject1.get('hasXAxisTitle'), true);
+  assert.equal(subject1.get('hasYAxisTitle'), true);
+});

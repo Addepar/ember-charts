@@ -16,11 +16,13 @@
         maxNumberOfLabels=maxNumberOfLabels
         yAxisFromZero=yAxisFromZero
         dynamicXAxis=dynamicXAxis
-        hasAxisTitles=hasAxisTitles
+        hasXAxisTitle=hasXAxisTitle
+        hasYAxisTitle=hasYAxisTitle
         xValueDisplayName=xValueDisplayName
         yValueDisplayName=yValueDisplayName
         xTitleHorizontalOffset=xTitleHorizontalOffset
         yTitleVerticalOffset=yTitleVerticalOffset
+        xTitleVerticalOffset=10
       }}
     </div>
   </div>
@@ -71,20 +73,7 @@
             }}
           </div>
         </div>
-        <div class="form-group">
-          <div class="col-lg-offset-4 col-lg-8">
-            <div class="checkbox">
-              <label>
-                {{input type="checkbox" checked=hasAxisTitles }} Has axis titles
-              </label>
-            </div>
-          </div>
-        </div>
-        {{#if hasAxisTitles}}
-          {{#if hasAxisTitles}}
-            {{partial "axis-title-config"}}
-          {{/if}}
-        {{/if}}
+        {{partial "axis-title-config"}}
         <div class="form-group">
           <label class="col-lg-4 control-label">Bar Padding</label>
           <div class="col-lg-8">

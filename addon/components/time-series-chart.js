@@ -85,9 +85,6 @@ export default ChartComponent.extend(LegendMixin, TimeSeriesLabelerMixin, Floati
   // Overrides of Legend methods
   // ----------------------------------------------------------------------------
 
-  // Vertical spacing for legend, x axis labels and x axis title
-  legendChartPadding: Ember.computed.alias('labelHeightOffset'),
-
   // ----------------------------------------------------------------------------
   // Data
   // ----------------------------------------------------------------------------
@@ -787,7 +784,9 @@ export default ChartComponent.extend(LegendMixin, TimeSeriesLabelerMixin, Floati
     'yScale',
     'xValueDisplayName',
     'yValueDisplayName',
-    'hasAxisTitles',
+    'hasAxisTitles', // backward compatibility support.
+    'hasXAxisTitle',
+    'hasYAxisTitle',
     'xTitleHorizontalOffset',
     'yTitleVerticalOffset'
   ],

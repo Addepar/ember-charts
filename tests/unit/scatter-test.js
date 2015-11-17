@@ -9,7 +9,7 @@ moduleForComponent('scatter-chart', '[Unit] Scatter chart component', {
 
 var scatterContent = {
   dotRadius: 7,
-  hasAxisTitles: false,
+  hasXAxisTitle: false,
   xValueDisplayName: 'Risk',
   yValueDisplayName: 'Return',
   data: [
