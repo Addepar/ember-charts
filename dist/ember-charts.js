@@ -1857,7 +1857,7 @@ define('ember-charts/components/scatter-chart', ['exports', 'module', 'ember', '
     // Drawing Functions
     // ----------------------------------------------------------------------------
 
-    renderVars: ['xScale', 'yScale', 'dotShapeArea', 'finishedData', 'xValueDisplayName', 'yValueDisplayName', 'hasAxisTitles'],
+    renderVars: ['xScale', 'yScale', 'dotShapeArea', 'finishedData', 'xValueDisplayName', 'yValueDisplayName', 'hasAxisTitles', 'xTitleHorizontalOffset', 'yTitleVerticalOffset'],
 
     drawChart: function drawChart() {
       this.updateTotalPointData();
@@ -2766,7 +2766,7 @@ define('ember-charts/components/time-series-chart', ['exports', 'module', 'ember
     // Drawing Functions
     // ----------------------------------------------------------------------------
 
-    renderVars: ['barLeftOffset', 'labelledTicks', 'xGroupScale', 'xTimeScale', 'yScale', 'xValueDisplayName', 'yValueDisplayName', 'hasAxisTitles'],
+    renderVars: ['barLeftOffset', 'labelledTicks', 'xGroupScale', 'xTimeScale', 'yScale', 'xValueDisplayName', 'yValueDisplayName', 'hasAxisTitles', 'xTitleHorizontalOffset', 'yTitleVerticalOffset'],
 
     drawChart: function drawChart() {
       this.updateBarData();
@@ -3487,7 +3487,7 @@ define('ember-charts/components/vertical-bar-chart', ['exports', 'module', 'embe
     // Drawing Functions
     // ----------------------------------------------------------------------------
 
-    renderVars: ['xWithinGroupScale', 'xBetweenGroupScale', 'yScale', 'finishedData', 'getSeriesColor', 'xValueDisplayName', 'yValueDisplayName', 'hasAxisTitles'],
+    renderVars: ['xWithinGroupScale', 'xBetweenGroupScale', 'yScale', 'finishedData', 'getSeriesColor', 'xValueDisplayName', 'yValueDisplayName', 'hasAxisTitles', 'xTitleHorizontalOffset', 'yTitleVerticalOffset'],
 
     drawChart: function drawChart() {
       this.updateData();
@@ -3764,6 +3764,18 @@ define('ember-charts/mixins/axis-titles', ['exports', 'module', 'ember'], functi
     yValueDisplayName: null,
 
     /**
+     * A variable to allow user to config the amount of offset for x axis title.
+     * @type {Number}
+     */
+    xTitleHorizontalOffset: 0,
+
+    /**
+     * A variable to allow user to config the amount of offset for y axis title.
+     * @type {Number}
+     */
+    yTitleVerticalOffset: 0,
+
+    /**
      * Computed title for the x axis, if the `hasAxisTitles` boolean is false
      * `xAxisTitleDisplayValue` should be an empty string
      * @type {String}
@@ -3836,8 +3848,12 @@ define('ember-charts/mixins/axis-titles', ['exports', 'module', 'ember'], functi
      * Position of x axis title on the x axis
      * @type {Number}
      */
-    xAxisPositionX: _Ember['default'].computed('graphicWidth', 'labelWidthOffset', function () {
-      return this.get('graphicWidth') / 2 + this.get('labelWidthOffset');
+    xAxisPositionX: _Ember['default'].computed('graphicWidth', 'labelWidthOffset', 'xTitleHorizontalOffset', function () {
+      var position = this.get('graphicWidth') / 2 + this.get('labelWidthOffset');
+      if (!_Ember['default'].isNone(this.get('xTitleHorizontalOffset'))) {
+        position += this.get('xTitleHorizontalOffset');
+      }
+      return position;
     }),
 
     /**
@@ -3852,8 +3868,12 @@ define('ember-charts/mixins/axis-titles', ['exports', 'module', 'ember'], functi
      * Position of y axis title on the x axis
      * @type {Number}
      */
-    yAxisPositionX: _Ember['default'].computed('graphicHeight', 'labelWidthOffset', function () {
-      return -(this.get('graphicHeight') / 2 + this.get('labelWidthOffset'));
+    yAxisPositionX: _Ember['default'].computed('graphicHeight', 'labelHeightOffset', 'yTitleVerticalOffset', function () {
+      var position = -(this.get('graphicHeight') / 2 + this.get('labelHeightOffset'));
+      if (!_Ember['default'].isNone(this.get('yTitleVerticalOffset'))) {
+        position += this.get('yTitleVerticalOffset');
+      }
+      return position;
     }),
 
     /**
