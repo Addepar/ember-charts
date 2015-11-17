@@ -613,7 +613,9 @@ export default ChartComponent.extend(LegendMixin, FloatingTooltipMixin, AxesMixi
     'getSeriesColor',
     'xValueDisplayName',
     'yValueDisplayName',
-    'hasAxisTitles'
+    'hasAxisTitles',
+    'xTitleHorizontalOffset',
+    'yTitleVerticalOffset'
   ],
 
   drawChart: function() {

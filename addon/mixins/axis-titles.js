@@ -29,6 +29,18 @@ const AxisTitlesMixin = Ember.Mixin.create({
   yValueDisplayName: null,
 
   /**
+   * A variable to allow user to config the amount of offset for x axis title.
+   * @type {Number}
+   */
+  xTitleHorizontalOffset: 0,
+
+  /**
+   * A variable to allow user to config the amount of offset for y axis title.
+   * @type {Number}
+   */
+  yTitleVerticalOffset: 0,
+
+  /**
    * Computed title for the x axis, if the `hasAxisTitles` boolean is false
    * `xAxisTitleDisplayValue` should be an empty string
    * @type {String}
@@ -101,8 +113,13 @@ const AxisTitlesMixin = Ember.Mixin.create({
    * Position of x axis title on the x axis
    * @type {Number}
    */
-  xAxisPositionX: Ember.computed('graphicWidth', 'labelWidthOffset', function(){
-    return this.get('graphicWidth') / 2 + this.get('labelWidthOffset');
+  xAxisPositionX: Ember.computed('graphicWidth', 'labelWidthOffset',
+      'xTitleHorizontalOffset', function() {
+    var position = this.get('graphicWidth') / 2 + this.get('labelWidthOffset');
+    if (!Ember.isNone(this.get('xTitleHorizontalOffset'))) {
+      position += this.get('xTitleHorizontalOffset');
+    }
+    return position;
   }),
 
   /**
@@ -117,8 +134,13 @@ const AxisTitlesMixin = Ember.Mixin.create({
    * Position of y axis title on the x axis
    * @type {Number}
    */
-  yAxisPositionX: Ember.computed('graphicHeight', 'labelWidthOffset', function(){
-    return -(this.get('graphicHeight') / 2 + this.get('labelWidthOffset'));
+  yAxisPositionX: Ember.computed('graphicHeight', 'labelHeightOffset',
+      'yTitleVerticalOffset', function() {
+    var position = -(this.get('graphicHeight') / 2 + this.get('labelHeightOffset'));
+    if (!Ember.isNone(this.get('yTitleVerticalOffset'))) {
+      position += this.get('yTitleVerticalOffset');
+    }
+    return position;
   }),
 
   /**
