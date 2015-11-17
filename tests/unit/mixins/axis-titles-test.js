@@ -47,14 +47,14 @@ test('Has y title vertical offset', function(assert) {
   const subject1 = AxisTitlesObject.create({
     yTitleVerticalOffset: 0,
     graphicHeight: 100,
-    labelWidthOffset: 0
+    labelHeightOffset: 0
   });
   assert.equal(subject1.get('yAxisPositionX'), -50);
 
   const subject2 = AxisTitlesObject.create({
     yTitleVerticalOffset: -30,
     graphicHeight: 100,
-    labelWidthOffset: 0
+    labelHeightOffset: 0
   });
   assert.equal(subject2.get('yAxisPositionX'), -80);
 });
