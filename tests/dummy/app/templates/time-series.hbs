@@ -19,6 +19,8 @@
         hasAxisTitles=hasAxisTitles
         xValueDisplayName=xValueDisplayName
         yValueDisplayName=yValueDisplayName
+        xTitleHorizontalOffset=xTitleHorizontalOffset
+        yTitleVerticalOffset=yTitleVerticalOffset
       }}
     </div>
   </div>
@@ -79,18 +81,9 @@
           </div>
         </div>
         {{#if hasAxisTitles}}
-          <div class="form-group">
-            <label class="col-lg-4 control-label">X Display Name</label>
-            <div class="col-lg-8">
-              {{input value=xValueDisplayName}}
-            </div>
-          </div>
-          <div class="form-group">
-            <label class="col-lg-4 control-label">Y Display Name</label>
-            <div class="col-lg-8">
-              {{input value=yValueDisplayName}}
-            </div>
-          </div>
+          {{#if hasAxisTitles}}
+            {{partial "axis-title-config"}}
+          {{/if}}
         {{/if}}
         <div class="form-group">
           <label class="col-lg-4 control-label">Bar Padding</label>

@@ -371,7 +371,9 @@ export default ChartComponent.extend(LegendMixin, FloatingTooltipMixin,
     'finishedData',
     'xValueDisplayName',
     'yValueDisplayName',
-    'hasAxisTitles'
+    'hasAxisTitles',
+    'xTitleHorizontalOffset',
+    'yTitleVerticalOffset'
   ],
 
   drawChart: function() {

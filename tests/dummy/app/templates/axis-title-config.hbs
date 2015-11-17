@@ -1,0 +1,26 @@
+<div class="form-group">
+  <label class="col-lg-4 control-label">X Display Name</label>
+  <div class="col-lg-8">
+    {{input value=xValueDisplayName}}
+  </div>
+</div>
+<div class="form-group">
+  <label class="col-lg-4 control-label">X Title Offset</label>
+  <div class="col-lg-8">
+    {{scrubber-component min="-400" max="400" step="25" value=xTitleHorizontalOffset}}
+    <span class="help-block">Offset: {{xTitleHorizontalOffset}}</span>
+  </div>
+</div>
+<div class="form-group">
+  <label class="col-lg-4 control-label">Y Display Name</label>
+  <div class="col-lg-8">
+    {{input value=yValueDisplayName}}
+  </div>
+</div>
+<div class="form-group">
+  <label class="col-lg-4 control-label">Y Title Offset</label>
+  <div class="col-lg-8">
+    {{scrubber-component min="-200" max="200" step="25" value=yTitleVerticalOffset}}
+    <span class="help-block">Offset: {{yTitleVerticalOffset}}</span>
+  </div>
+</div>

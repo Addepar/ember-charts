@@ -787,7 +787,9 @@ export default ChartComponent.extend(LegendMixin, TimeSeriesLabelerMixin, Floati
     'yScale',
     'xValueDisplayName',
     'yValueDisplayName',
-    'hasAxisTitles'
+    'hasAxisTitles',
+    'xTitleHorizontalOffset',
+    'yTitleVerticalOffset'
   ],
 
   drawChart: function() {

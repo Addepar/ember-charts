@@ -14,6 +14,8 @@
         xValueDisplayName=xValueDisplayName
         yValueDisplayName=yValueDisplayName
         hasAxisTitles=hasAxisTitles
+        xTitleHorizontalOffset=xTitleHorizontalOffset
+        yTitleVerticalOffset=yTitleVerticalOffset
       }}
     </div>
   </div>
@@ -65,18 +67,7 @@
         </div>
 
         {{#if hasAxisTitles}}
-          <div class="form-group">
-            <label class="col-lg-4 control-label">X Display Name</label>
-            <div class="col-lg-8">
-              {{input value=xValueDisplayName}}
-            </div>
-          </div>
-          <div class="form-group">
-            <label class="col-lg-4 control-label">Y Display Name</label>
-            <div class="col-lg-8">
-              {{input value=yValueDisplayName}}
-            </div>
-          </div>
+          {{partial "axis-title-config"}}
         {{/if}}
         <div class="form-group">
           <div class="col-lg-offset-4 col-lg-8">
@@ -96,7 +87,7 @@
     <div class="col-md-6">
       <h4>JSON Data</h4>
       <div class="chart-json">
-<pre>{{prettyPrintedData}}</pre>
+        <pre>{{prettyPrintedData}}</pre>
       </div>
     </div>
   </div>
