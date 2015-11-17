@@ -43,7 +43,8 @@ export default SlideController.extend({
   yAxisFromZero: false,
   dynamicXAxis: false,
 
-  hasAxisTitles: false,
+  hasXAxisTitle: false,
+  hasYAxisTitle: false,
   xValueDisplayName: 'X Axis',
   yValueDisplayName: 'Y Axis',
 

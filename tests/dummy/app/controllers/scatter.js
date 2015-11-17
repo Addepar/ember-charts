@@ -27,7 +27,8 @@ export default SlideController.extend({
 
   isShowingTotal: false,
 
-  hasAxisTitles: false,
+  hasXAxisTitle: false,
+  hasYAxisTitle: false,
 
   xValueDisplayName: 'Risk',
   yValueDisplayName: 'Return',

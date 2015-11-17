@@ -219,8 +219,6 @@ export default ChartComponent.extend(LegendMixin, FloatingTooltipMixin, AxesMixi
     return labelSize + this.get('labelPadding');
   }),
 
-  legendChartPadding: Ember.computed.alias('labelHeightOffset'),
-
   // Chart Graphic Dimensions
   graphicLeft: Ember.computed.alias('labelWidthOffset'),
 
@@ -613,7 +611,9 @@ export default ChartComponent.extend(LegendMixin, FloatingTooltipMixin, AxesMixi
     'getSeriesColor',
     'xValueDisplayName',
     'yValueDisplayName',
-    'hasAxisTitles',
+    'hasAxisTitles', // backward compatibility support.
+    'hasXAxisTitle',
+    'hasYAxisTitle',
     'xTitleHorizontalOffset',
     'yTitleVerticalOffset'
   ],

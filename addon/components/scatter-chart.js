@@ -91,11 +91,6 @@ export default ChartComponent.extend(LegendMixin, FloatingTooltipMixin,
   // Layout
   // ----------------------------------------------------------------------------
 
-  // TODO(tony): Just use axisBottomOffset here
-  legendChartPadding: Ember.computed('labelHeightOffset', 'axisTitleHeightOffset', function() {
-    return this.get('axisTitleHeightOffset') + this.get('labelHeightOffset');
-  }),
-
   // Chart Graphic Dimensions
   graphicTop: Ember.computed.alias('axisTitleHeight'),
   graphicLeft: Ember.computed.alias('labelWidthOffset'),
@@ -107,9 +102,6 @@ export default ChartComponent.extend(LegendMixin, FloatingTooltipMixin,
   graphicWidth: Ember.computed('width', 'labelWidthOffset', function() {
     return this.get('width') - this.get('labelWidthOffset');
   }),
-
-  // Height of the text for the axis titles
-  axisTitleHeight: 18,
 
   // ----------------------------------------------------------------------------
   // Ticks and Scales
@@ -371,7 +363,9 @@ export default ChartComponent.extend(LegendMixin, FloatingTooltipMixin,
     'finishedData',
     'xValueDisplayName',
     'yValueDisplayName',
-    'hasAxisTitles',
+    'hasAxisTitles', // backward compatibility support.
+    'hasXAxisTitle',
+    'hasYAxisTitle',
     'xTitleHorizontalOffset',
     'yTitleVerticalOffset'
   ],

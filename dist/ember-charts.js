@@ -1580,11 +1580,6 @@ define('ember-charts/components/scatter-chart', ['exports', 'module', 'ember', '
     // Layout
     // ----------------------------------------------------------------------------
 
-    // TODO(tony): Just use axisBottomOffset here
-    legendChartPadding: _Ember['default'].computed('labelHeightOffset', 'axisTitleHeightOffset', function () {
-      return this.get('axisTitleHeightOffset') + this.get('labelHeightOffset');
-    }),
-
     // Chart Graphic Dimensions
     graphicTop: _Ember['default'].computed.alias('axisTitleHeight'),
     graphicLeft: _Ember['default'].computed.alias('labelWidthOffset'),
@@ -1596,9 +1591,6 @@ define('ember-charts/components/scatter-chart', ['exports', 'module', 'ember', '
     graphicWidth: _Ember['default'].computed('width', 'labelWidthOffset', function () {
       return this.get('width') - this.get('labelWidthOffset');
     }),
-
-    // Height of the text for the axis titles
-    axisTitleHeight: 18,
 
     // ----------------------------------------------------------------------------
     // Ticks and Scales
@@ -1857,7 +1849,8 @@ define('ember-charts/components/scatter-chart', ['exports', 'module', 'ember', '
     // Drawing Functions
     // ----------------------------------------------------------------------------
 
-    renderVars: ['xScale', 'yScale', 'dotShapeArea', 'finishedData', 'xValueDisplayName', 'yValueDisplayName', 'hasAxisTitles', 'xTitleHorizontalOffset', 'yTitleVerticalOffset'],
+    renderVars: ['xScale', 'yScale', 'dotShapeArea', 'finishedData', 'xValueDisplayName', 'yValueDisplayName', 'hasAxisTitles', // backward compatibility support.
+    'hasXAxisTitle', 'hasYAxisTitle', 'xTitleHorizontalOffset', 'yTitleVerticalOffset'],
 
     drawChart: function drawChart() {
       this.updateTotalPointData();
@@ -2069,9 +2062,6 @@ define('ember-charts/components/time-series-chart', ['exports', 'module', 'ember
     // ----------------------------------------------------------------------------
     // Overrides of Legend methods
     // ----------------------------------------------------------------------------
-
-    // Vertical spacing for legend, x axis labels and x axis title
-    legendChartPadding: _Ember['default'].computed.alias('labelHeightOffset'),
 
     // ----------------------------------------------------------------------------
     // Data
@@ -2766,7 +2756,8 @@ define('ember-charts/components/time-series-chart', ['exports', 'module', 'ember
     // Drawing Functions
     // ----------------------------------------------------------------------------
 
-    renderVars: ['barLeftOffset', 'labelledTicks', 'xGroupScale', 'xTimeScale', 'yScale', 'xValueDisplayName', 'yValueDisplayName', 'hasAxisTitles', 'xTitleHorizontalOffset', 'yTitleVerticalOffset'],
+    renderVars: ['barLeftOffset', 'labelledTicks', 'xGroupScale', 'xTimeScale', 'yScale', 'xValueDisplayName', 'yValueDisplayName', 'hasAxisTitles', // backward compatibility support.
+    'hasXAxisTitle', 'hasYAxisTitle', 'xTitleHorizontalOffset', 'yTitleVerticalOffset'],
 
     drawChart: function drawChart() {
       this.updateBarData();
@@ -3092,8 +3083,6 @@ define('ember-charts/components/vertical-bar-chart', ['exports', 'module', 'embe
       var labelSize = this.get('_shouldRotateLabels') ? this.get('maxLabelHeight') : this.get('labelHeight');
       return labelSize + this.get('labelPadding');
     }),
-
-    legendChartPadding: _Ember['default'].computed.alias('labelHeightOffset'),
 
     // Chart Graphic Dimensions
     graphicLeft: _Ember['default'].computed.alias('labelWidthOffset'),
@@ -3487,7 +3476,8 @@ define('ember-charts/components/vertical-bar-chart', ['exports', 'module', 'embe
     // Drawing Functions
     // ----------------------------------------------------------------------------
 
-    renderVars: ['xWithinGroupScale', 'xBetweenGroupScale', 'yScale', 'finishedData', 'getSeriesColor', 'xValueDisplayName', 'yValueDisplayName', 'hasAxisTitles', 'xTitleHorizontalOffset', 'yTitleVerticalOffset'],
+    renderVars: ['xWithinGroupScale', 'xBetweenGroupScale', 'yScale', 'finishedData', 'getSeriesColor', 'xValueDisplayName', 'yValueDisplayName', 'hasAxisTitles', // backward compatibility support.
+    'hasXAxisTitle', 'hasYAxisTitle', 'xTitleHorizontalOffset', 'yTitleVerticalOffset'],
 
     drawChart: function drawChart() {
       this.updateData();
@@ -3746,10 +3736,31 @@ define('ember-charts/mixins/axis-titles', ['exports', 'module', 'ember'], functi
    */
   var AxisTitlesMixin = _Ember['default'].Mixin.create({
     /**
-     * Toggle axis titles on/off
+     * Toggle axis X title on/off
      * @type {Boolean}
      */
-    hasAxisTitles: false,
+    hasXAxisTitle: false,
+
+    /**
+     * Toggle axis Y title on/off
+     * @type {Boolean}
+     */
+    hasYAxisTitle: false,
+
+    /**
+     * A deprecated property to support backward compatability.
+     * TODO: Add ember deprecated helper function for this property.
+     * @deprecated
+     */
+    hasAxisTitles: _Ember['default'].computed('hasXAxisTitle', 'hasYAxisTitle', function (key, value) {
+      if (arguments.length > 1) {
+        // Setter case.
+        this.set('hasXAxisTitle', value);
+        this.set('hasYAxisTitle', value);
+      }
+
+      return this.get('hasXAxisTitle') || this.get('hasYAxisTitle');
+    }),
 
     /**
      * Title for the x axis
@@ -3764,10 +3775,18 @@ define('ember-charts/mixins/axis-titles', ['exports', 'module', 'ember'], functi
     yValueDisplayName: null,
 
     /**
-     * A variable to allow user to config the amount of offset for x axis title.
+     * A variable to allow user to config the amount of horizontal offset for x
+     * axis title.
      * @type {Number}
      */
     xTitleHorizontalOffset: 0,
+
+    /**
+     * A variable to allow user to config the amount of veritcal offset for x
+     * axis title.
+     * @type {Number}
+     */
+    xTitleVerticalOffset: 0,
 
     /**
      * A variable to allow user to config the amount of offset for y axis title.
@@ -3776,21 +3795,21 @@ define('ember-charts/mixins/axis-titles', ['exports', 'module', 'ember'], functi
     yTitleVerticalOffset: 0,
 
     /**
-     * Computed title for the x axis, if the `hasAxisTitles` boolean is false
+     * Computed title for the x axis, if the `hasXAxisTitle` boolean is false
      * `xAxisTitleDisplayValue` should be an empty string
      * @type {String}
      */
-    xAxisTitleDisplayValue: _Ember['default'].computed('hasAxisTitles', 'xValueDisplayName', function () {
-      return this.get('hasAxisTitles') ? this.get('xValueDisplayName') : '';
+    xAxisTitleDisplayValue: _Ember['default'].computed('hasXAxisTitle', 'xValueDisplayName', function () {
+      return this.get('hasXAxisTitle') ? this.get('xValueDisplayName') : '';
     }),
 
     /**
-     * Computed title for the x axis, if the `hasAxisTitles` boolean is false
+     * Computed title for the x axis, if the `hasYAxisTitle` boolean is false
      * `yAxisTitleDisplayValue` should be an empty string
      * @type {String}
      */
-    yAxisTitleDisplayValue: _Ember['default'].computed('hasAxisTitles', 'yValueDisplayName', function () {
-      return this.get('hasAxisTitles') ? this.get('yValueDisplayName') : '';
+    yAxisTitleDisplayValue: _Ember['default'].computed('hasYAxisTitle', 'yValueDisplayName', function () {
+      return this.get('hasYAxisTitle') ? this.get('yValueDisplayName') : '';
     }),
 
     /**
@@ -3799,21 +3818,29 @@ define('ember-charts/mixins/axis-titles', ['exports', 'module', 'ember'], functi
      */
     horizontalMarginLeft: 20,
 
+    // Height of the text for the axis titles
+    axisTitleHeight: 10,
+
     /**
-     * If `hasAxisTitles` is false there should be no margin on the left side,
+     * If `hasYAxisTitle` is false there should be no margin on the left side,
      * while if true the left margin should be the value of `horizontalMarginLeft`
      * @type {Number}
      */
-    marginLeft: _Ember['default'].computed('hasAxisTitles', 'horizontalMarginLeft', function () {
-      return this.get('hasAxisTitles') ? this.get('horizontalMarginLeft') : 0;
+    marginLeft: _Ember['default'].computed('hasYAxisTitle', 'horizontalMarginLeft', function () {
+      return this.get('hasYAxisTitle') ? this.get('horizontalMarginLeft') : 0;
+    }),
+
+    // TODO(tony): Just use axisBottomOffset here
+    legendChartPadding: _Ember['default'].computed('labelHeightOffset', 'axisTitleHeightOffset', function () {
+      return this.get('axisTitleHeightOffset') + this.get('labelHeightOffset');
     }),
 
     /**
-     * Computed title height plus label padding or 0 if `hasAxisTitles` is false
+     * Computed title height plus label padding or 0 if `hasXAxisTitle` is false
      * @type {Number}
      */
-    axisTitleHeightOffset: _Ember['default'].computed('axisTitleHeight', 'labelPadding', function () {
-      if (this.get('hasAxisTitles')) {
+    axisTitleHeightOffset: _Ember['default'].computed('hasXAxisTitle', 'axisTitleHeight', 'labelPadding', function () {
+      if (this.get('hasXAxisTitle')) {
         return this.get('axisTitleHeight') + this.get('labelPadding');
       } else {
         return 0;
@@ -3837,14 +3864,6 @@ define('ember-charts/mixins/axis-titles', ['exports', 'module', 'ember'], functi
     })["volatile"](),
 
     /**
-     * Amount of padding for the axis, `labelHeightOffset` + `labelPadding`
-     * @type {Number}
-     */
-    axisPadding: _Ember['default'].computed('labelHeightOffset', 'labelPadding', function () {
-      return this.get('labelHeightOffset') + this.get('labelPadding');
-    }),
-
-    /**
      * Position of x axis title on the x axis
      * @type {Number}
      */
@@ -3857,19 +3876,22 @@ define('ember-charts/mixins/axis-titles', ['exports', 'module', 'ember'], functi
     }),
 
     /**
-     * Position of x axis title on the y axis
+     * Position of x axis title on the y axis. The y-coordinate of x Axis Title
+     * depends on the y-coordinate of the bottom of the graph, label height &
+     * padding and optional title offset. Caller can set `xTitleVerticalOffset`
+     * to adjust the y-coordinate of the label on the graph.
      * @type {Number}
      */
-    xAxisPositionY: _Ember['default'].computed('graphicBottom', 'axisPadding', function () {
-      return this.get('graphicBottom') + this.get('axisPadding');
+    xAxisPositionY: _Ember['default'].computed('graphicBottom', 'labelHeightOffset', 'labelPadding', 'xTitleVerticalOffset', function () {
+      return this.get('graphicBottom') + this.get('labelHeightOffset') + this.get('labelPadding') + this.get('xTitleVerticalOffset');
     }),
 
     /**
      * Position of y axis title on the x axis
      * @type {Number}
      */
-    yAxisPositionX: _Ember['default'].computed('graphicHeight', 'labelHeightOffset', 'yTitleVerticalOffset', function () {
-      var position = -(this.get('graphicHeight') / 2 + this.get('labelHeightOffset'));
+    yAxisPositionX: _Ember['default'].computed('graphicHeight', 'yTitleVerticalOffset', function () {
+      var position = -(this.get('graphicHeight') / 2);
       if (!_Ember['default'].isNone(this.get('yTitleVerticalOffset'))) {
         position += this.get('yTitleVerticalOffset');
       }
@@ -3921,7 +3943,7 @@ define('ember-charts/mixins/axis-titles', ['exports', 'module', 'ember'], functi
      * Update the y axis title and position
      */
     updateYAxisTitle: function updateYAxisTitle() {
-      this.get('yAxisTitle').text(this.get('yAxisTitleDisplayValue')).style('text-anchor', 'start').attr({
+      this.get('yAxisTitle').text(this.get('yAxisTitleDisplayValue')).style('text-anchor', 'middle').attr({
         x: this.get('yAxisPositionX'),
         y: this.get('yAxisPositionY')
       }).attr("transform", this.get('yAxisTransform')).attr("dy", "1em");
