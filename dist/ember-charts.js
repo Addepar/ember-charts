@@ -644,7 +644,7 @@ define('ember-charts/components/chart-component', ['exports', 'module', 'ember',
     }
   });
 });
-define('ember-charts/components/horizontal-bar-chart', ['exports', 'module', 'ember', './chart-component', '../mixins/formattable', '../mixins/floating-tooltip', '../mixins/sortable-chart', '../mixins/label-width', '../utils/label-trimmer'], function (exports, module, _ember, _chartComponent, _mixinsFormattable, _mixinsFloatingTooltip, _mixinsSortableChart, _mixinsLabelWidth, _utilsLabelTrimmer) {
+define('ember-charts/components/horizontal-bar-chart', ['exports', 'module', 'ember', './chart-component', '../mixins/formattable', '../mixins/floating-tooltip', '../mixins/sortable-chart', '../mixins/label-width', '../utils/label-trimmer', '../mixins/axis-titles'], function (exports, module, _ember, _chartComponent, _mixinsFormattable, _mixinsFloatingTooltip, _mixinsSortableChart, _mixinsLabelWidth, _utilsLabelTrimmer, _mixinsAxisTitles) {
   'use strict';
 
   function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
@@ -663,7 +663,9 @@ define('ember-charts/components/horizontal-bar-chart', ['exports', 'module', 'em
 
   var _LabelTrimmer = _interopRequireDefault(_utilsLabelTrimmer);
 
-  module.exports = _ChartComponent['default'].extend(_FloatingTooltipMixin['default'], _FormattableMixin['default'], _SortableChartMixin['default'], _LabelWidthMixin['default'], {
+  var _AxisTitlesMixin = _interopRequireDefault(_mixinsAxisTitles);
+
+  module.exports = _ChartComponent['default'].extend(_FloatingTooltipMixin['default'], _FormattableMixin['default'], _SortableChartMixin['default'], _LabelWidthMixin['default'], _AxisTitlesMixin['default'], {
     classNames: ['chart-horizontal-bar'],
 
     // ----------------------------------------------------------------------------
@@ -687,12 +689,55 @@ define('ember-charts/components/horizontal-bar-chart', ['exports', 'module', 'em
     // ----------------------------------------------------------------------------
     // Data
     // ----------------------------------------------------------------------------
-
     finishedData: _Ember['default'].computed.alias('sortedData'),
 
     // ----------------------------------------------------------------------------
     // Layout
     // ----------------------------------------------------------------------------
+
+    /**
+     * Overrides values in addon/mixins/axis-titles.js
+     * Location of axis title should track the actual axis
+     *   - If there are both positive and negative values
+     *   - Since the chart axis will be close to center
+     * @override
+     */
+    xAxisPositionX: _Ember['default'].computed('graphicWidth', 'xTitleHorizontalOffset', function () {
+      var position = this.get('graphicWidth') / 2;
+      if (!_Ember['default'].isNone(this.get('xTitleHorizontalOffset'))) {
+        position += this.get('xTitleHorizontalOffset');
+      }
+      return position;
+    }),
+
+    /**
+     * X Axis Titles needs extra padding, else will intersect with the lowest bar
+     * @override
+     */
+    xAxisPositionY: _Ember['default'].computed('graphicBottom', 'xTitleVerticalOffset', function () {
+      return this.get('graphicBottom') + this.get('xTitleVerticalOffset');
+    }),
+
+    /**
+     * @override
+     */
+    yAxisPositionY: _Ember['default'].computed('labelWidthOffset', function () {
+      return -this.get('labelWidthOffset');
+    }),
+
+    /**
+     * MarginLeft is dependent on 'horizontalMargin'
+     *  - Otherwise, without override will result in marginLeft ~= 0
+     *  - Axis location will always be flush on the left, with labels cutoff
+     * @override
+     */
+    marginLeft: _Ember['default'].computed('hasAxisTitles', 'horizontalMarginLeft', 'horizontalMargin', function () {
+      if (this.get('hasAxisTitles')) {
+        return this.get('horizontalMarginLeft') + this.get('horizontalMargin');
+      } else {
+        return this.get('horizontalMargin');
+      }
+    }),
 
     minOuterHeight: _Ember['default'].computed('numBars', 'minBarThickness', 'marginTop', 'marginBottom', function () {
       var minBarThickness = this.get('minBarThickness');
@@ -788,10 +833,10 @@ define('ember-charts/components/horizontal-bar-chart', ['exports', 'module', 'em
         // Show tooltip
         var formatLabel = _this.get('formatLabelFunction');
         // Line 1
-        var content = "<span class=\"tip-label\">" + data.label + "</span>";
+        var content = '<span class=\'tip-label\'>' + data.label + '</span>';
         // Line 2
-        content += "<span class=\"name\">" + _this.get('tooltipValueDisplayName') + ": </span>";
-        content += "<span class=\"value\">" + formatLabel(data.value) + "</span>";
+        content += '<span class=\'name\'>' + _this.get('tooltipValueDisplayName') + ': </span>';
+        content += '<span class=\'value\'>' + formatLabel(data.value) + '</span>';
         return _this.showTooltip(content, d3.event);
       };
     }),
@@ -821,7 +866,7 @@ define('ember-charts/components/horizontal-bar-chart', ['exports', 'module', 'em
       return {
         transform: function transform(d, i) {
           var value = Math.min(0, d.value);
-          return "translate(" + xScale(value) + ", " + yScale(i) + ")";
+          return 'translate(' + xScale(value) + ', ' + yScale(i) + ')';
         }
       };
     }),
@@ -838,10 +883,10 @@ define('ember-charts/components/horizontal-bar-chart', ['exports', 'module', 'em
         'stroke-width': 0,
         style: function style(d) {
           if (d.color) {
-            return "fill:" + d.color;
+            return 'fill:' + d.color;
           }
           var color = d.value < 0 ? _this3.get('mostTintedColor') : _this3.get('leastTintedColor');
-          return "fill:" + color;
+          return 'fill:' + color;
         }
       };
     }),
@@ -926,12 +971,13 @@ define('ember-charts/components/horizontal-bar-chart', ['exports', 'module', 'em
     // Drawing Functions
     // ----------------------------------------------------------------------------
 
-    renderVars: ['barThickness', 'yScale', 'finishedData', 'colorRange'],
+    renderVars: ['barThickness', 'yScale', 'finishedData', 'colorRange', 'xValueDisplayName', 'yValueDisplayName', 'hasAxisTitles', 'hasXAxisTitle', 'hasYAxisTitle', 'xTitleHorizontalOffset', 'yTitleVerticalOffset'],
 
     drawChart: function drawChart() {
       this.updateData();
       this.updateAxes();
       this.updateGraphic();
+      this.updateAxisTitles();
     },
 
     updateData: function updateData() {
@@ -939,9 +985,9 @@ define('ember-charts/components/horizontal-bar-chart', ['exports', 'module', 'em
       var showDetails = this.get('showDetails');
       var hideDetails = this.get('hideDetails');
 
-      var entering = groups.enter().append('g').attr('class', 'bar').on("mouseover", function (d, i) {
+      var entering = groups.enter().append('g').attr('class', 'bar').on('mouseover', function (d, i) {
         return showDetails(d, i, this);
-      }).on("mouseout", function (d, i) {
+      }).on('mouseout', function (d, i) {
         return hideDetails(d, i, this);
       });
       entering.append('rect');

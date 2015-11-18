@@ -11,6 +11,12 @@
         selectedSeedColor=selectedSeedColor
         data=data
         labelWidthMultiplier=labelWidthMultiplier
+        hasXAxisTitle=hasXAxisTitle
+        hasYAxisTitle=hasYAxisTitle
+        xTitleHorizontalOffset=xTitleHorizontalOffset
+        yTitleVerticalOffset=yTitleVerticalOffset
+        xValueDisplayName=xValueDisplayName
+        yValueDisplayName=yValueDisplayName
       }}
     </div>
   </div>
@@ -72,6 +78,7 @@
             <span class="help-block">Label Width Multiplier: {{labelWidthMultiplier}}</span>
           </div>
         </div>
+        {{partial "axis-title-config"}}
       </div>
     </div>
 
