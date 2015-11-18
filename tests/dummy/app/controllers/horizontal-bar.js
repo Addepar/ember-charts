@@ -28,6 +28,9 @@ export default SlideController.extend({
 
   xValueDisplayName: 'X Axis',
   yValueDisplayName: 'Y Axis',
+  xTitleHorizontalOffset: 0,
+  yTitleVerticalOffset: 0,
+
 
   // ---------
   // Data Selection

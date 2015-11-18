@@ -7,9 +7,10 @@ import SortableChartMixin from '../mixins/sortable-chart';
 import LabelWidthMixin from '../mixins/label-width';
 
 import LabelTrimmer from '../utils/label-trimmer';
+import AxisTitlesMixin from '../mixins/axis-titles';
 
 export default ChartComponent.extend(FloatingTooltipMixin,
-  FormattableMixin, SortableChartMixin, LabelWidthMixin, {
+  FormattableMixin, SortableChartMixin, LabelWidthMixin, AxisTitlesMixin, {
   classNames: ['chart-horizontal-bar'],
 
   // ----------------------------------------------------------------------------
@@ -33,12 +34,56 @@ export default ChartComponent.extend(FloatingTooltipMixin,
   // ----------------------------------------------------------------------------
   // Data
   // ----------------------------------------------------------------------------
-
   finishedData: Ember.computed.alias('sortedData'),
 
   // ----------------------------------------------------------------------------
   // Layout
   // ----------------------------------------------------------------------------
+
+  /**
+   * Overrides values in addon/mixins/axis-titles.js
+   * Location of axis title should track the actual axis
+   *   - If there are both positive and negative values
+   *   - Since the chart axis will be close to center
+   * @override
+   */
+  xAxisPositionX: Ember.computed('graphicWidth',
+      'xTitleHorizontalOffset', function() {
+    var position = this.get('graphicWidth') / 2 ;
+    if (!Ember.isNone(this.get('xTitleHorizontalOffset'))) {
+      position += this.get('xTitleHorizontalOffset');
+    }
+    return position;
+  }),
+
+  /**
+   * X Axis Titles needs extra padding, else will intersect with the lowest bar
+   * @override
+   */
+  xAxisPositionY: Ember.computed('graphicBottom', 'xTitleVerticalOffset', function(){
+    return this.get('graphicBottom') + this.get('xTitleVerticalOffset');
+  }),
+
+  /**
+   * @override
+   */
+  yAxisPositionY: Ember.computed('labelWidthOffset', function(){
+    return -(this.get('labelWidthOffset'));
+  }),
+
+  /**
+   * MarginLeft is dependent on 'horizontalMargin'
+   *  - Otherwise, without override will result in marginLeft ~= 0
+   *  - Axis location will always be flush on the left, with labels cutoff
+   * @override
+   */
+  marginLeft: Ember.computed('hasAxisTitles', 'horizontalMarginLeft', 'horizontalMargin', function(){
+    if (this.get('hasAxisTitles')) {
+      return this.get('horizontalMarginLeft') + this.get('horizontalMargin');
+    } else {
+      return this.get('horizontalMargin');
+    }
+  }),
 
   minOuterHeight: Ember.computed('numBars', 'minBarThickness', 'marginTop', 'marginBottom', function() {
     const minBarThickness = this.get('minBarThickness');
@@ -138,10 +183,10 @@ export default ChartComponent.extend(FloatingTooltipMixin,
       // Show tooltip
       var formatLabel = this.get('formatLabelFunction');
       // Line 1
-      var content = "<span class=\"tip-label\">" + data.label + "</span>";
+      var content = '<span class=\'tip-label\'>' + data.label + '</span>';
       // Line 2
-      content += "<span class=\"name\">" + this.get('tooltipValueDisplayName') + ": </span>";
-      content += "<span class=\"value\">" + formatLabel(data.value) + "</span>";
+      content += '<span class=\'name\'>' + this.get('tooltipValueDisplayName') + ': </span>';
+      content += '<span class=\'value\'>' + formatLabel(data.value) + '</span>';
       return this.showTooltip(content, d3.event);
     };
   }),
@@ -169,7 +214,7 @@ export default ChartComponent.extend(FloatingTooltipMixin,
     return {
       transform: function(d, i) {
         var value = Math.min(0, d.value);
-        return "translate(" + xScale(value) + ", " + yScale(i) + ")";
+        return 'translate(' + xScale(value) + ', ' + yScale(i) + ')';
       }
     };
   }),
@@ -182,10 +227,10 @@ export default ChartComponent.extend(FloatingTooltipMixin,
       'stroke-width': 0,
       style: (d) => {
         if (d.color) {
-          return "fill:" + d.color;
+          return 'fill:' + d.color;
         }
         var color = (d.value < 0) ? this.get('mostTintedColor') : this.get('leastTintedColor');
-        return "fill:" + color;
+        return 'fill:' + color;
       }
     };
   }),
@@ -271,13 +316,21 @@ export default ChartComponent.extend(FloatingTooltipMixin,
     'barThickness',
     'yScale',
     'finishedData',
-    'colorRange'
+    'colorRange',
+    'xValueDisplayName',
+    'yValueDisplayName',
+    'hasAxisTitles',
+    'hasXAxisTitle',
+    'hasYAxisTitle',
+    'xTitleHorizontalOffset',
+    'yTitleVerticalOffset'
   ],
 
   drawChart: function() {
     this.updateData();
     this.updateAxes();
     this.updateGraphic();
+    this.updateAxisTitles();
   },
 
   updateData: function() {
@@ -287,8 +340,8 @@ export default ChartComponent.extend(FloatingTooltipMixin,
 
     var entering = groups.enter()
       .append('g').attr('class', 'bar')
-      .on("mouseover", function(d, i) { return showDetails(d, i, this); })
-      .on("mouseout", function(d, i) { return hideDetails(d, i, this); });
+      .on('mouseover', function(d, i) { return showDetails(d, i, this); })
+      .on('mouseout', function(d, i) { return hideDetails(d, i, this); });
     entering.append('rect');
     entering.append('text').attr('class', 'value');
     entering.append('text').attr('class', 'group');
