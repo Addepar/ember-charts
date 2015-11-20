@@ -3779,14 +3779,16 @@ define('ember-charts/mixins/axis-titles', ['exports', 'module', 'ember'], functi
      * axis title.
      * @type {Number}
      */
-    xTitleHorizontalOffset: 0,
+    xTitleHorizontalOffset: _Ember['default'].computed('width', 'graphicWidth', function () {
+      return -(this.get('width') - this.get('graphicWidth')) / 2;
+    }),
 
     /**
      * A variable to allow user to config the amount of veritcal offset for x
      * axis title.
      * @type {Number}
      */
-    xTitleVerticalOffset: 0,
+    xTitleVerticalOffset: 10,
 
     /**
      * A variable to allow user to config the amount of offset for y axis title.
@@ -5469,7 +5471,8 @@ define('ember-charts/templates/components/chart-component', ['exports', 'module'
 
   var _Ember = _interopRequireDefault(_ember);
 
-  module.exports = _Ember['default'].Handlebars.template(function anonymous(Handlebars, depth0, helpers, partials, data) {
+  module.exports = _Ember['default'].Handlebars.template(function anonymous(Handlebars, depth0, helpers, partials, data
+  /**/) {
     this.compilerInfo = [4, '>= 1.0.0'];
     helpers = this.merge(helpers, _Ember['default'].Handlebars.helpers);data = data || {};
     var buffer = '',
