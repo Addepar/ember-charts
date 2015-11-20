@@ -55,14 +55,16 @@ const AxisTitlesMixin = Ember.Mixin.create({
    * axis title.
    * @type {Number}
    */
-  xTitleHorizontalOffset: 0,
+  xTitleHorizontalOffset: Ember.computed('width', 'graphicWidth', function(){
+    return -(this.get('width') - this.get('graphicWidth')) / 2;
+  }),
 
   /**
    * A variable to allow user to config the amount of veritcal offset for x
    * axis title.
    * @type {Number}
    */
-  xTitleVerticalOffset: 0,
+  xTitleVerticalOffset: 10,
 
   /**
    * A variable to allow user to config the amount of offset for y axis title.
