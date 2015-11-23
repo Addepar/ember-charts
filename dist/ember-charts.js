@@ -3779,14 +3779,16 @@ define('ember-charts/mixins/axis-titles', ['exports', 'module', 'ember'], functi
      * axis title.
      * @type {Number}
      */
-    xTitleHorizontalOffset: 0,
+    xTitleHorizontalOffset: _Ember['default'].computed('width', 'graphicWidth', function () {
+      return -(this.get('width') - this.get('graphicWidth')) / 2;
+    }),
 
     /**
      * A variable to allow user to config the amount of veritcal offset for x
      * axis title.
      * @type {Number}
      */
-    xTitleVerticalOffset: 0,
+    xTitleVerticalOffset: 10,
 
     /**
      * A variable to allow user to config the amount of offset for y axis title.

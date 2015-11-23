@@ -14,6 +14,7 @@ import zero from '../models/single_group/zero';
 import zeroes from '../models/single_group/zeroes';
 import sum_to_zero from '../models/single_group/sum_to_zero';
 import bad_range from '../models/single_group/bad_range';
+import all_negatives from '../models/single_group/all_negatives';
 
 export default SlideController.extend({
 
@@ -41,19 +42,20 @@ export default SlideController.extend({
   }),
 
   rawDataHash: Ember.computed(function() {
-  	return {
-	    asset_values: asset_values,
-	    many_values: many_values,
-	    monthly_return_single_period: monthly_return_single_period,
-	    high_net_worth_duration: high_net_worth_duration,
-	    '----': data.null,
-	    empty: data.empty,
-	    one_value: one_value,
-	    two_values: two_values,
-	    zero: zero,
-	    zeroes: zeroes,
-	    sum_to_zero: sum_to_zero,
-	    bad_range: bad_range
+    return {
+      asset_values: asset_values,
+      many_values: many_values,
+      monthly_return_single_period: monthly_return_single_period,
+      high_net_worth_duration: high_net_worth_duration,
+      '----': data.null,
+      empty: data.empty,
+      one_value: one_value,
+      two_values: two_values,
+      zero: zero,
+      zeroes: zeroes,
+      sum_to_zero: sum_to_zero,
+      bad_range: bad_range,
+      all_negatives: all_negatives
     };
   }),
 
