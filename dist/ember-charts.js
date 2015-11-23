@@ -430,6 +430,38 @@ define('ember-charts/components/chart-component', ['exports', 'module', 'ember',
     horizontalMarginRight: null,
 
     /**
+     * The minimum value of the data in the chart
+     * @type {Number}
+     */
+    minValue: _Ember['default'].computed('finishedData.@each.value', function () {
+      return d3.min(this.get('finishedData').map(function (d) {
+        return d.value;
+      }));
+    }),
+
+    /**
+     * The maximum value of the data in the chart
+     * @type {Number}
+     */
+    maxValue: _Ember['default'].computed('finishedData.@each.value', function () {
+      return d3.max(this.get('finishedData').map(function (d) {
+        return d.value;
+      }));
+    }),
+
+    /**
+     * Whether or not the data contains negative values.
+     * @type {Boolean}
+     */
+    hasNegativeValues: _Ember['default'].computed.lt('minValue', 0),
+
+    /**
+     * Whether or not the data contains positive values.
+     * @type {Boolean}
+     */
+    hasPositiveValues: _Ember['default'].computed.gt('maxValue', 0),
+
+    /**
      * Either a passed in value from `horizontalMarginRight`
      * or the default value from `horizontalMargin`
      * @type {Number}
@@ -703,16 +735,19 @@ define('ember-charts/components/horizontal-bar-chart', ['exports', 'module', 'em
     numBars: _Ember['default'].computed.alias('finishedData.length'),
 
     // Range of values used to size the graph, within which bars will be drawn
-    xDomain: _Ember['default'].computed('finishedData', 'xDomainPadding', function () {
-      var values = this.get('finishedData').map(function (d) {
-        return d.value;
-      });
-      var minValue = d3.min(values);
-      var maxValue = d3.max(values);
-      if (minValue < 0) {
-        // Balance negative and positive axes if we have negative values
-        var absMax = Math.max(-minValue, maxValue);
-        return [-absMax, absMax];
+    xDomain: _Ember['default'].computed('minValue', 'maxValue', function () {
+      var minValue = this.get('minValue');
+      var maxValue = this.get('maxValue');
+      if (this.get('hasNegativeValues')) {
+        if (this.get('hasPositiveValues')) {
+          // Balance negative and positive axes if we have a mix of positive and
+          // negative values
+          var absMax = d3.max([-minValue, maxValue]);
+          return [-absMax, absMax];
+        } else {
+          // Only negative values domain
+          return [minValue, 0];
+        }
       } else {
         // Only positive values domain
         return [0, maxValue];
@@ -931,7 +966,15 @@ define('ember-charts/components/horizontal-bar-chart', ['exports', 'module', 'em
         return _this6.get('formatLabelFunction')(d.value);
       }).attr(this.get('valueLabelAttrs'));
 
-      var labelWidth = this.get('labelWidth');
+      var labelWidth;
+      // If the chart contains a mix of negative and positive values, the axis
+      // and labels are in the middle of the chart, not at the edges of the chart,
+      // so allow more space to compute how the label is trimmed.
+      if (this.get('hasNegativeValues') && this.get('hasPositiveValues')) {
+        labelWidth = this.get('outerWidth') / 2;
+      } else {
+        labelWidth = this.get('labelWidth');
+      }
       var labelTrimmer = _LabelTrimmer['default'].create({
         getLabelSize: function getLabelSize() {
           return labelWidth;
