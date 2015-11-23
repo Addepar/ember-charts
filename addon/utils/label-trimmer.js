@@ -19,7 +19,7 @@ export default Ember.Object.extend({
       var reservedCharLength = this.get('reservedCharLength');
 
       return function(selection) {
-        
+
         return selection.text(function(d) {
 
           var bbW = this.getBBox().width;

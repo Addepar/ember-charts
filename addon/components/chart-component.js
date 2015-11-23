@@ -28,6 +28,34 @@ export default Ember.Component.extend(ColorableMixin, ResizeHandlerMixin, {
   horizontalMarginRight: null,
 
   /**
+   * The minimum value of the data in the chart
+   * @type {Number}
+   */
+  minValue: Ember.computed('finishedData.@each.value', function() {
+    return d3.min(this.get('finishedData').map( (d) => d.value ));
+  }),
+
+  /**
+   * The maximum value of the data in the chart
+   * @type {Number}
+   */
+  maxValue: Ember.computed('finishedData.@each.value', function() {
+    return d3.max(this.get('finishedData').map( (d) => d.value ));
+  }),
+
+  /**
+   * Whether or not the data contains negative values.
+   * @type {Boolean}
+   */
+  hasNegativeValues: Ember.computed.lt('minValue', 0),
+
+  /**
+   * Whether or not the data contains positive values.
+   * @type {Boolean}
+   */
+  hasPositiveValues: Ember.computed.gt('maxValue', 0),
+
+  /**
    * Either a passed in value from `horizontalMarginRight`
    * or the default value from `horizontalMargin`
    * @type {Number}

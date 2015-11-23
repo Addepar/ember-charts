@@ -82,14 +82,19 @@ export default ChartComponent.extend(FloatingTooltipMixin,
   numBars: Ember.computed.alias('finishedData.length'),
 
   // Range of values used to size the graph, within which bars will be drawn
-  xDomain: Ember.computed('finishedData', 'xDomainPadding', function() {
-    var values = this.get('finishedData').map(function(d) { return d.value; });
-    var minValue = d3.min(values);
-    var maxValue = d3.max(values);
-    if (minValue < 0) {
-      // Balance negative and positive axes if we have negative values
-      var absMax = Math.max(-minValue, maxValue);
-      return [-absMax, absMax];
+  xDomain: Ember.computed('minValue', 'maxValue', function() {
+    const minValue = this.get('minValue');
+    const maxValue = this.get('maxValue');
+    if (this.get('hasNegativeValues')) {
+      if (this.get('hasPositiveValues')) {
+        // Balance negative and positive axes if we have a mix of positive and
+        // negative values
+        const absMax = d3.max([-minValue, maxValue]);
+        return [-absMax, absMax];
+      } else {
+        // Only negative values domain
+        return [minValue, 0];
+      }
     } else {
       // Only positive values domain
       return [0, maxValue];
@@ -306,7 +311,15 @@ export default ChartComponent.extend(FloatingTooltipMixin,
       .text((d) => this.get('formatLabelFunction')(d.value))
       .attr(this.get('valueLabelAttrs'));
 
-    var labelWidth = this.get('labelWidth');
+    var labelWidth;
+    // If the chart contains a mix of negative and positive values, the axis
+    // and labels are in the middle of the chart, not at the edges of the chart,
+    // so allow more space to compute how the label is trimmed.
+    if (this.get('hasNegativeValues') && this.get('hasPositiveValues')) {
+      labelWidth = this.get('outerWidth') / 2;
+    } else {
+      labelWidth = this.get('labelWidth');
+    }
     var labelTrimmer = LabelTrimmer.create({
       getLabelSize: () => labelWidth,
       getLabelText: (d) => d.label
