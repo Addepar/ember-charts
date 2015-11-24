@@ -7,7 +7,7 @@ export default [{
     value: 8231078.16438347,
     type: "money",
   }, {
-    label: "Equity",
+    label: "asdfpiuhasdfoiuhasdfoiuhasdfiouhasdfiuhasdfoiuhasdf",
     value: 12935781.176999997,
     type: "money",
   }, {
@@ -19,7 +19,7 @@ export default [{
     value: 1574677.59,
     type: "money",
   }, {
-    label: "Real Assets",
+    label: "asdfgoiuhasdfuhdfguhsdfgpiushdfgpiuhsdfgpiuhsdfgpiuhsdfgpiuhsdfgipuhsdfg",
     value: 10475849.276172025,
     type: "money"
 }];

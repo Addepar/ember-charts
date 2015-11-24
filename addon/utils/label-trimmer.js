@@ -19,7 +19,6 @@ export default Ember.Object.extend({
       var reservedCharLength = this.get('reservedCharLength');
 
       return function(selection) {
-
         return selection.text(function(d) {
 
           var bbW = this.getBBox().width;
@@ -30,7 +29,6 @@ export default Ember.Object.extend({
           var charWidth = bbW / label.length;
           var textLabelWidth = getLabelSize(d, selection) - reservedCharLength * charWidth;
           var numChars = Math.floor(textLabelWidth / charWidth);
-
           if (numChars - 3 <= 0) {
             return '...';
           } else if (bbW > textLabelWidth) {

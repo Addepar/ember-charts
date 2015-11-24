@@ -27,20 +27,24 @@ export default Ember.Component.extend(ColorableMixin, ResizeHandlerMixin, {
    */
   horizontalMarginRight: null,
 
+  allValues: Ember.computed('finishedData.@each.value', function() {
+    return this.get('finishedData').map((d) => d.value);
+  }),
+
   /**
    * The minimum value of the data in the chart
    * @type {Number}
    */
-  minValue: Ember.computed('finishedData.@each.value', function() {
-    return d3.min(this.get('finishedData').map( (d) => d.value ));
+  minValue: Ember.computed('allValues.[]', function() {
+    return d3.min(this.get('allValues'));
   }),
 
   /**
    * The maximum value of the data in the chart
    * @type {Number}
    */
-  maxValue: Ember.computed('finishedData.@each.value', function() {
-    return d3.max(this.get('finishedData').map( (d) => d.value ));
+  maxValue: Ember.computed('allValues.[]', function() {
+    return d3.max(this.get('allValues'));
   }),
 
   /**
@@ -54,6 +58,20 @@ export default Ember.Component.extend(ColorableMixin, ResizeHandlerMixin, {
    * @type {Boolean}
    */
   hasPositiveValues: Ember.computed.gt('maxValue', 0),
+
+  /**
+   * Whether or not the data contains only positive values.
+   * @type {Boolean}
+   */
+  hasAllNegativeValues: Ember.computed.lte('maxValue', 0),
+
+  /**
+   * Whether or not the data contains only negative values.
+   * @type {Boolean}
+   */
+  hasAllPositiveValues: Ember.computed.gte('minValue', 0),
+
+  maxLabelWidth: null,
 
   /**
    * Either a passed in value from `horizontalMarginRight`
@@ -182,11 +200,7 @@ export default Ember.Component.extend(ColorableMixin, ResizeHandlerMixin, {
     'width',
     'height',
     'margin',
-    'isInteractive',
-    'marginLeft',
-    'marginRight',
-    'marginTop',
-    'marginBottom'
+    'isInteractive'
   ],
 
   init: function() {

@@ -60,7 +60,6 @@ export default ChartComponent.extend(FloatingTooltipMixin,
       const maxBarSpace = this.get('numBars') * maxBarThickness;
       return maxBarSpace + this.get('marginTop') + this.get('marginBottom');
     }
-
   }),
 
   // override the default outerHeight, so the graph scrolls
@@ -89,8 +88,7 @@ export default ChartComponent.extend(FloatingTooltipMixin,
       if (this.get('hasPositiveValues')) {
         // Balance negative and positive axes if we have a mix of positive and
         // negative values
-        const absMax = d3.max([-minValue, maxValue]);
-        return [-absMax, absMax];
+        return [minValue, maxValue];
       } else {
         // Only negative values domain
         return [minValue, 0];
@@ -300,6 +298,68 @@ export default ChartComponent.extend(FloatingTooltipMixin,
     return this.get('yAxis').attr(this.get('axisAttrs'));
   },
 
+  /**
+   * Given the list of elements for the group labels and value labels,
+   * determine the left and right margin of the chart so that the labels are
+   * flush with the edges of the chart
+   * @private
+   * @param {Array<SVGTextElement>} groupLabelElements The text elements
+   *  representing the group labels for the chart
+   * @param {Array<SVGTextElement>} valueLabelElements The text elements
+   *  representing the value labels for the chart
+   */
+  _computeMargins: function(groupLabelElements, valueLabelElements) {
+    const maxValueLabelWidth = d3.max(_.map(valueLabelElements, (element) => {
+      return element.getComputedTextLength();
+    }));
+
+    const maxGroupLabelWidth = d3.max(_.map(groupLabelElements, (element) => {
+      return element.getComputedTextLength();
+    }));
+
+    const labelPadding = this.get('labelPadding');
+
+    // Add a small amount of extra padding to insure the labels are not cut off
+    const extraPadding = 4;
+    const maxLabelWidth = this.get('maxLabelWidth');
+
+    // If all values are positive, the grouping labels are on the left and the
+    // value labels are on the right
+    if (this.get('hasAllPositiveValues')) {
+      return {
+        left: d3.min([maxLabelWidth, maxGroupLabelWidth + labelPadding + extraPadding]),
+        right: maxValueLabelWidth + labelPadding + extraPadding
+      };
+    // If all values are negative, the value labels are on the left and the
+    // grouping labels are on the right
+    } else if (this.get('hasAllNegativeValues')) {
+      return {
+        left: maxValueLabelWidth + labelPadding + extraPadding,
+        right: d3.min([maxLabelWidth, maxGroupLabelWidth + labelPadding + extraPadding])
+      };
+    // If the values are a mix of positive and negative values, the left
+    // margin is the size of the value label representing the smallest value,
+    // and the right margin is the size of the value label representing the
+    // largest value
+    } else {
+      // Find the index in the data corresponding to the min and max values,
+      // and then get the value label with the same index.
+      const minValue = this.get('minValue');
+      const maxValue = this.get('maxValue');
+      const minValueIndex = this.get('allValues').indexOf(minValue);
+      const maxValueIndex = this.get('allValues').indexOf(maxValue);
+
+      const valueLabelWithMinValue = valueLabelElements[minValueIndex];
+      const valueLabelWithMaxValue = valueLabelElements[maxValueIndex];
+      const leftLabelWidth = valueLabelWithMinValue.getComputedTextLength();
+      const rightLabelWidth = valueLabelWithMaxValue.getComputedTextLength();
+      return {
+        left: leftLabelWidth + labelPadding + extraPadding,
+        right: rightLabelWidth + labelPadding + extraPadding
+      }
+    }
+  },
+
   updateGraphic: function() {
     var groups = this.get('groups')
       .attr(this.get('groupAttrs'));
@@ -309,29 +369,25 @@ export default ChartComponent.extend(FloatingTooltipMixin,
       .attr(this.get('valueLabelAttrs'));
 
     const valueLabelElements = groups.select('text.value')[0];
-    const maxValueLabelWidth = d3.max(_.map(valueLabelElements, (element) => {
-      return element.getComputedTextLength();
-    }));
-
     const groupLabelElements = groups.select('text.group')[0];
-    const maxGroupLabelWidth = d3.max(_.map(groupLabelElements, (element) => {
-      return element.getComputedTextLength();
-    }));
+    const margins = this._computeMargins(groupLabelElements, valueLabelElements);
 
-    this.set('horizontalMarginLeft', maxGroupLabelWidth + this.get('labelPadding') + 5);
-    this.set('horizontalMarginRight', maxValueLabelWidth + this.get('labelPadding') + 5);
+    this.setProperties({
+      horizontalMarginLeft: margins.left,
+      horizontalMarginRight: margins.right
+    });
 
     groups.select('rect')
       .attr(this.get('barAttrs'));
 
     var labelWidth;
-    // If the chart contains a mix of negative and positive values, the axis
-    // and labels are in the middle of the chart, not at the edges of the chart,
-    // so allow more space to compute how the label is trimmed.
-    if (this.get('hasNegativeValues') && this.get('hasPositiveValues')) {
-      labelWidth = this.get('outerWidth') / 2;
+    if (this.get('hasAllPositiveValues')) {
+      console.log(margins.left)
+      labelWidth = margins.left - this.get('labelPadding');
+    } else if (this.get('hasAllNegativeValues')) {
+      labelWidth = margins.right;
     } else {
-      labelWidth = this.get('labelWidth');
+      labelWidth = this.get('outerWidth') / 2;
     }
     var labelTrimmer = LabelTrimmer.create({
       getLabelSize: () => labelWidth,
