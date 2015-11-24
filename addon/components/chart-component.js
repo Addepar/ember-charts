@@ -16,7 +16,7 @@ export default Ember.Component.extend(ColorableMixin, ResizeHandlerMixin, {
    * use `horizontalMarginLeft`/`horizontalMarginRight`
    * @type {Number}
    */
-  horizontalMargin: 0,
+  horizontalMargin: 30,
 
   /**
    * Allows for enough space for the top label on the y axis to protude half the
