@@ -83,7 +83,7 @@ test('x & y toggle flags', function(assert) {
 test('legend chart padding', function(assert) {
   const AxisTitlesObject = Ember.Object.extend(AxisTitlesMixin);
   const subject1 = AxisTitlesObject.create({
-    axisTitleHeightOffset: 10,
+    xAxisTitleHeightOffset: 10,
     labelHeightOffset: 13,
   });
   assert.equal(subject1.get('legendChartPadding'), 23);
