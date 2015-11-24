@@ -182,7 +182,11 @@ export default Ember.Component.extend(ColorableMixin, ResizeHandlerMixin, {
     'width',
     'height',
     'margin',
-    'isInteractive'
+    'isInteractive',
+    'marginLeft',
+    'marginRight',
+    'marginTop',
+    'marginBottom'
   ],
 
   init: function() {

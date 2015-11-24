@@ -73,7 +73,7 @@ export default ChartComponent.extend(FloatingTooltipMixin,
   marginTop: Ember.computed.alias('labelPadding'),
   marginBottom: Ember.computed.alias('labelPadding'),
 
-  horizontalMargin: Ember.computed.readOnly('labelWidth'),
+  // horizontalMargin: Ember.computed.readOnly('labelWidth'),
 
   // ----------------------------------------------------------------------------
   // Graphics Properties
@@ -304,12 +304,25 @@ export default ChartComponent.extend(FloatingTooltipMixin,
     var groups = this.get('groups')
       .attr(this.get('groupAttrs'));
 
-    groups.select('rect')
-      .attr(this.get('barAttrs'));
-
     groups.select('text.value')
       .text((d) => this.get('formatLabelFunction')(d.value))
       .attr(this.get('valueLabelAttrs'));
+
+    const valueLabelElements = groups.select('text.value')[0];
+    const maxValueLabelWidth = d3.max(_.map(valueLabelElements, (element) => {
+      return element.getComputedTextLength();
+    }));
+
+    const groupLabelElements = groups.select('text.group')[0];
+    const maxGroupLabelWidth = d3.max(_.map(groupLabelElements, (element) => {
+      return element.getComputedTextLength();
+    }));
+
+    this.set('horizontalMarginLeft', maxGroupLabelWidth + this.get('labelPadding') + 5);
+    this.set('horizontalMarginRight', maxValueLabelWidth + this.get('labelPadding') + 5);
+
+    groups.select('rect')
+      .attr(this.get('barAttrs'));
 
     var labelWidth;
     // If the chart contains a mix of negative and positive values, the axis
