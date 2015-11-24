@@ -4,13 +4,12 @@ import FormattableMixin from '../mixins/formattable';
 
 import FloatingTooltipMixin from '../mixins/floating-tooltip';
 import SortableChartMixin from '../mixins/sortable-chart';
-import LabelWidthMixin from '../mixins/label-width';
 
 import LabelTrimmer from '../utils/label-trimmer';
 import AxisTitlesMixin from '../mixins/axis-titles';
 
 export default ChartComponent.extend(FloatingTooltipMixin,
-  FormattableMixin, SortableChartMixin, LabelWidthMixin, AxisTitlesMixin, {
+  FormattableMixin, SortableChartMixin, AxisTitlesMixin, {
   classNames: ['chart-horizontal-bar'],
 
   // ----------------------------------------------------------------------------
@@ -67,22 +66,8 @@ export default ChartComponent.extend(FloatingTooltipMixin,
   /**
    * @override
    */
-  yAxisPositionY: Ember.computed('labelWidthOffset', function(){
-    return -(this.get('labelWidthOffset'));
-  }),
-
-  /**
-   * MarginLeft is dependent on 'horizontalMargin'
-   *  - Otherwise, without override will result in marginLeft ~= 0
-   *  - Axis location will always be flush on the left, with labels cutoff
-   * @override
-   */
-  marginLeft: Ember.computed('hasAxisTitles', 'horizontalMarginLeft', 'horizontalMargin', function(){
-    if (this.get('hasAxisTitles')) {
-      return this.get('horizontalMarginLeft') + this.get('horizontalMargin');
-    } else {
-      return this.get('horizontalMargin');
-    }
+  yAxisPositionY: Ember.computed('labelWidthOffset', 'yAxisTitleHeightOffset', function(){
+    return -(this.get('labelWidthOffset') + this.get('yAxisTitleHeightOffset'));
   }),
 
   minOuterHeight: Ember.computed('numBars', 'minBarThickness', 'marginTop', 'marginBottom', function() {
@@ -105,7 +90,6 @@ export default ChartComponent.extend(FloatingTooltipMixin,
       const maxBarSpace = this.get('numBars') * maxBarThickness;
       return maxBarSpace + this.get('marginTop') + this.get('marginBottom');
     }
-
   }),
 
   // override the default outerHeight, so the graph scrolls
@@ -131,7 +115,7 @@ export default ChartComponent.extend(FloatingTooltipMixin,
     return this.get('labelPadding');
   }),
 
-  horizontalMargin: Ember.computed.readOnly('labelWidth'),
+  marginLeft: Ember.computed.alias('horizontalMarginLeft'),
 
   // ----------------------------------------------------------------------------
   // Graphics Properties
@@ -145,10 +129,8 @@ export default ChartComponent.extend(FloatingTooltipMixin,
     const maxValue = this.get('maxValue');
     if (this.get('hasNegativeValues')) {
       if (this.get('hasPositiveValues')) {
-        // Balance negative and positive axes if we have a mix of positive and
-        // negative values
-        const absMax = d3.max([-minValue, maxValue]);
-        return [-absMax, absMax];
+        // Mix of positive and negative values
+        return [minValue, maxValue];
       } else {
         // Only negative values domain
         return [minValue, 0];
@@ -325,10 +307,20 @@ export default ChartComponent.extend(FloatingTooltipMixin,
   // Drawing Functions
   // ----------------------------------------------------------------------------
 
+  didInsertElement: function() {
+    this._super(...arguments);
+    // TODO (philn): This `Ember.run.next` was added to fix a bug where
+    // a horizontal bar chart was rendered incorrectly the first time, but
+    // correctly on subsequent renders. Still not entirely clear why that is.
+    Ember.run.next( () => {
+      this._updateDimensions();
+      this.drawOnce();
+    });
+  },
+
   renderVars: [
     'barThickness',
     'yScale',
-    'finishedData',
     'colorRange',
     'xValueDisplayName',
     'yValueDisplayName',
@@ -367,9 +359,84 @@ export default ChartComponent.extend(FloatingTooltipMixin,
     return this.get('yAxis').attr(this.get('axisAttrs'));
   },
 
+  /**
+   * Given the list of elements for the group labels and value labels,
+   * determine the width of the largest label on either side of the chart.
+   * @private
+   * @param {Array.<SVGTextElement>} groupLabelElements The text elements
+   *  representing the group labels for the chart
+   * @param {Array.<SVGTextElement>} valueLabelElements The text elements
+   *  representing the value labels for the chart
+   * @return {Object.<String, Number>}
+   */
+  _computeLabelWidths: function(groupLabelElements, valueLabelElements) {
+    const maxValueLabelWidth = this._maxWidthOfElements(valueLabelElements);
+    const maxGroupLabelWidth = this._maxWidthOfElements(groupLabelElements);
+
+    // If all values are positive, the grouping labels are on the left and the
+    // value labels are on the right
+    if (this.get('hasAllPositiveValues')) {
+      return {
+        left: maxGroupLabelWidth,
+        right: maxValueLabelWidth
+      };
+    // If all values are negative, the value labels are on the left and the
+    // grouping labels are on the right
+    } else if (this.get('hasAllNegativeValues')) {
+      return {
+        left: maxValueLabelWidth,
+        right: maxGroupLabelWidth
+      };
+    // If the values are a mix of positive and negative values, the left
+    // label width is the size of the value label representing the smallest
+    // value, and the right label width is the size of the value label
+    // representing the largest value
+    } else {
+      const minValue = this.get('minValue');
+      const maxValue = this.get('maxValue');
+      const [leftWidth, rightWidth] = [minValue, maxValue].map((val) => {
+        const label = this._getElementForValue(valueLabelElements, val);
+        return label.getComputedTextLength();
+      });
+      return {
+        left: leftWidth,
+        right: rightWidth
+      };
+    }
+  },
+
+  /**
+   * Given an array of elements and a value, return the element in the array
+   * at the same index as the value is in the list of all values
+   * @private
+   * @param {Array.<HTMLElement>} elements The elements to search in
+   * @param {Number} value The value to search for
+   * @return {HTMLElement}
+   */
+  _getElementForValue: function(elements, value) {
+    const index = this.get('allFinishedDataValues').indexOf(value);
+    return elements[index];
+  },
+
+  /**
+   * Given an array of SVG elements, return the largest computed length
+   * @private
+   * @param {Array.<SVGElement>} elements The array of elements
+   * @return {Number}
+   */
+  _maxWidthOfElements: function(elements) {
+    return d3.max(_.map(elements, (element) => {
+      return element.getComputedTextLength();
+    }));
+  },
+
   updateGraphic: function() {
-    var groups = this.get('groups')
+    const groups = this.get('groups')
       .attr(this.get('groupAttrs'));
+
+    groups.select('text.group')
+      .text((d) => d.label)
+      .attr(this.get('groupLabelAttrs'));
 
     groups.select('rect')
       .attr(this.get('barAttrs'));
@@ -378,23 +445,44 @@ export default ChartComponent.extend(FloatingTooltipMixin,
       .text((d) => this.get('formatLabelFunction')(d.value))
       .attr(this.get('valueLabelAttrs'));
 
+    const valueLabelElements = groups.select('text.value')[0];
+    const groupLabelElements = groups.select('text.group')[0];
+    const labelWidths = this._computeLabelWidths(groupLabelElements, valueLabelElements);
+    // labelWidth is used for computations around the left margin, so set it
+    // to the width of the left label
+    this.set('labelWidth', labelWidths.left);
+
+    // Add a few extra pixels of padding to ensure that labels don't clip off
+    // the edge of the chart
+    const labelPadding = this.get('labelPadding');
+    const axisTitleOffset = this.get('yAxisTitleHeightOffset') + 5;
+    const margins = {
+      left: labelWidths.left + labelPadding + axisTitleOffset,
+      right: labelWidths.right + labelPadding
+    };
+
+    this.setProperties({
+      horizontalMarginLeft: margins.left,
+      horizontalMarginRight: margins.right
+    });
+
     var labelWidth;
-    // If the chart contains a mix of negative and positive values, the axis
-    // and labels are in the middle of the chart, not at the edges of the chart,
-    // so allow more space to compute how the label is trimmed.
-    if (this.get('hasNegativeValues') && this.get('hasPositiveValues')) {
-      labelWidth = this.get('outerWidth') / 2;
+    if (this.get('hasAllPositiveValues')) {
+      labelWidth = labelWidths.left;
+    } else if (this.get('hasAllNegativeValues')) {
+      labelWidth = labelWidths.right;
     } else {
-      labelWidth = this.get('labelWidth');
+      // If the chart contains a mix of negative and positive values, the axis
+      // and labels are in the middle of the chart, not at the edges of the
+      // chart, so allow more space to compute how the label is trimmed.
+      labelWidth = this.get('outerWidth') / 2;
     }
-    var labelTrimmer = LabelTrimmer.create({
+    const labelTrimmer = LabelTrimmer.create({
       getLabelSize: () => labelWidth,
       getLabelText: (d) => d.label
     });
 
-    return groups.select('text.group')
-      .text((d) => d.label)
-      .attr(this.get('groupLabelAttrs'))
+    groups.select('text.group')
       .call(labelTrimmer.get('trim'));
   }
 });

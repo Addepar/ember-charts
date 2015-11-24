@@ -109,18 +109,33 @@ const AxisTitlesMixin = Ember.Mixin.create({
   }),
 
   // TODO(tony): Just use axisBottomOffset here
-  legendChartPadding: Ember.computed('labelHeightOffset', 'axisTitleHeightOffset', function() {
-    return this.get('axisTitleHeightOffset') + this.get('labelHeightOffset');
+  legendChartPadding: Ember.computed('labelHeightOffset', 'xAxisTitleHeightOffset', function() {
+    return this.get('xAxisTitleHeightOffset') + this.get('labelHeightOffset');
   }),
 
   /**
    * Computed title height plus label padding or 0 if `hasXAxisTitle` is false
    * @type {Number}
    */
-  axisTitleHeightOffset: Ember.computed('hasXAxisTitle', 'axisTitleHeight',
+  xAxisTitleHeightOffset: Ember.computed('hasXAxisTitle', 'axisTitleHeight',
       'labelPadding', function() {
     if (this.get('hasXAxisTitle')) {
       return this.get('axisTitleHeight') + this.get('labelPadding');
+    } else {
+      return 0;
+    }
+  }),
+
+  /**
+   * The horizontal offset of the Y axis title, if there is a Y axis title
+   * Computed based on the height of the axis title, plus 10 pixels of extra
+   * margin
+   * @type {Number}
+   */
+  yAxisTitleHeightOffset: Ember.computed('hasYAxisTitle', 'axisTitleHeight',
+      function() {
+    if (this.get('hasYAxisTitle')) {
+      return this.get('axisTitleHeight') + 10;
     } else {
       return 0;
     }

@@ -461,7 +461,6 @@ export default ChartComponent.extend(FloatingTooltipMixin,
     }
   },
 
-
   updateData: function() {
     var entering, groups, hideDetails, showDetails;
     groups = this.get('groups');
