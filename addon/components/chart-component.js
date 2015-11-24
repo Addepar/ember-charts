@@ -11,9 +11,19 @@ export default Ember.Component.extend(ColorableMixin, ResizeHandlerMixin, {
   // Layout
   // ----------------------------------------------------------------------------
 
-  // Margin between viewport and svg boundary
-  horizontalMargin: 30,
-  verticalMargin: 30,
+  /**
+   * Default horizontal margin, for more granular control of left/right margins
+   * use `horizontalMarginLeft`/`horizontalMarginRight`
+   * @type {Number}
+   */
+  horizontalMargin: 0,
+
+  /**
+   * Allows for enough space for the top label on the y axis to protude half the
+   * line height above the top of the chart.
+   * @type {Number}
+   */
+  verticalMargin: 5,
 
   /**
    * Optional property to set specific left margin
