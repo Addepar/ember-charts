@@ -116,7 +116,20 @@ export default ChartComponent.extend(FloatingTooltipMixin,
   }),
 
   marginTop: Ember.computed.alias('labelPadding'),
-  marginBottom: Ember.computed.alias('labelPadding'),
+
+  /**
+   * The margin at the bottom depends on the label and title padding and height.
+   * @override
+   * @type {Number}
+   */
+  marginBottom: Ember.computed('labelPadding', 'xTitleVerticalOffset',
+      'hasXAxisTitle', function() {
+    if (this.get('hasXAxisTitle')) {
+      return this.get('labelPadding') + this.get('xTitleVerticalOffset');
+    }
+
+    return this.get('labelPadding');
+  }),
 
   horizontalMargin: Ember.computed.readOnly('labelWidth'),
 
@@ -323,7 +336,8 @@ export default ChartComponent.extend(FloatingTooltipMixin,
     'hasXAxisTitle',
     'hasYAxisTitle',
     'xTitleHorizontalOffset',
-    'yTitleVerticalOffset'
+    'yTitleVerticalOffset',
+    'xTitleVerticalOffset'
   ],
 
   drawChart: function() {

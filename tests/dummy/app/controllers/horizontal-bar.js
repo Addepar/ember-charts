@@ -30,6 +30,7 @@ export default SlideController.extend({
   yValueDisplayName: 'Y Axis',
   xTitleHorizontalOffset: 0,
   yTitleVerticalOffset: 0,
+  xTitleVerticalOffset: 15,
 
 
   // ---------
