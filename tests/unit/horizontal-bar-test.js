@@ -116,3 +116,23 @@ test("X & Y titles coordinates are correct", function(assert){
   assert.equal(component.get('yAxisPositionX'), -90,
     'when graphicWidth is changed, y position of Y axis Title is correct');
 });
+
+test("Margin bottom depends on the label padding and title offset",
+    function(assert) {
+  assert.expect(2);
+
+  const component = this.subject({
+    labelPadding: 100,
+    xTitleVerticalOffset: 30
+  });
+  assert.equal(component.get('marginBottom'), 100,
+    'Margin bottom is independent of the xTitleVerticalOffset when there is ' +
+        'no xAxis title');
+
+  Ember.run(function(){
+    component.set('hasXAxisTitle', true);
+  });
+  assert.equal(component.get('marginBottom'), 130,
+    'Margin bottom is depedent on the xTitleVerticalOffset when there is x ' +
+        'Axis title');
+});

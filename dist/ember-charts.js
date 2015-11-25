@@ -769,7 +769,19 @@ define('ember-charts/components/horizontal-bar-chart', ['exports', 'module', 'em
     }),
 
     marginTop: _Ember['default'].computed.alias('labelPadding'),
-    marginBottom: _Ember['default'].computed.alias('labelPadding'),
+
+    /**
+     * The margin at the bottom depends on the label and title padding and height.
+     * @override
+     * @type {Number}
+     */
+    marginBottom: _Ember['default'].computed('labelPadding', 'xTitleVerticalOffset', 'hasXAxisTitle', function () {
+      if (this.get('hasXAxisTitle')) {
+        return this.get('labelPadding') + this.get('xTitleVerticalOffset');
+      }
+
+      return this.get('labelPadding');
+    }),
 
     horizontalMargin: _Ember['default'].computed.readOnly('labelWidth'),
 
@@ -971,7 +983,7 @@ define('ember-charts/components/horizontal-bar-chart', ['exports', 'module', 'em
     // Drawing Functions
     // ----------------------------------------------------------------------------
 
-    renderVars: ['barThickness', 'yScale', 'finishedData', 'colorRange', 'xValueDisplayName', 'yValueDisplayName', 'hasAxisTitles', 'hasXAxisTitle', 'hasYAxisTitle', 'xTitleHorizontalOffset', 'yTitleVerticalOffset'],
+    renderVars: ['barThickness', 'yScale', 'finishedData', 'colorRange', 'xValueDisplayName', 'yValueDisplayName', 'hasAxisTitles', 'hasXAxisTitle', 'hasYAxisTitle', 'xTitleHorizontalOffset', 'yTitleVerticalOffset', 'xTitleVerticalOffset'],
 
     drawChart: function drawChart() {
       this.updateData();
