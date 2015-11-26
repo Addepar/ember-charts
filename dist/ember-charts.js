@@ -992,11 +992,25 @@ define('ember-charts/components/horizontal-bar-chart', ['exports', 'module', 'em
       // TODO (philn): This `Ember.run.next` was added to fix a bug where
       // a horizontal bar chart was rendered incorrectly the first time, but
       // correctly on subsequent renders. Still not entirely clear why that is.
-      _Ember['default'].run.next(function () {
+      this._scheduledRedraw = _Ember['default'].run.next(function () {
         _this6._updateDimensions();
         _this6.drawOnce();
       });
     },
+
+    /*
+     * Tear down the scheduled redraw timer
+     * @override
+     */
+    willDestroyElement: function willDestroyElement() {
+      this._super.apply(this, arguments);
+      _Ember['default'].run.cancel(this._scheduledRedraw);
+    },
+
+    /**
+     * Store the timer information from scheduling the chart's redraw
+     */
+    _scheduledRedraw: null,
 
     renderVars: ['barThickness', 'yScale', 'colorRange', 'xValueDisplayName', 'yValueDisplayName', 'hasAxisTitles', 'hasXAxisTitle', 'hasYAxisTitle', 'xTitleHorizontalOffset', 'yTitleVerticalOffset', 'xTitleVerticalOffset'],
 

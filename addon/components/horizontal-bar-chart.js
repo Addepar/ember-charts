@@ -312,11 +312,25 @@ export default ChartComponent.extend(FloatingTooltipMixin,
     // TODO (philn): This `Ember.run.next` was added to fix a bug where
     // a horizontal bar chart was rendered incorrectly the first time, but
     // correctly on subsequent renders. Still not entirely clear why that is.
-    Ember.run.next( () => {
+    this._scheduledRedraw = Ember.run.next( () => {
       this._updateDimensions();
       this.drawOnce();
     });
   },
+
+  /*
+   * Tear down the scheduled redraw timer
+   * @override
+   */
+  willDestroyElement: function() {
+    this._super(...arguments);
+    Ember.run.cancel(this._scheduledRedraw);
+  },
+
+  /**
+   * Store the timer information from scheduling the chart's redraw
+   */
+  _scheduledRedraw: null,
 
   renderVars: [
     'barThickness',
