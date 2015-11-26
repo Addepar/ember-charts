@@ -404,7 +404,7 @@ define('ember-charts/components/chart-component', ['exports', 'module', 'ember',
 
   var _ColorableMixin = _interopRequireDefault(_mixinsColorable);
 
-  module.exports = _Ember['default'].Component.extend(_ColorableMixin['default'], _ResizeHandlerMixin['default'], {
+  var ChartComponent = _Ember['default'].Component.extend(_ColorableMixin['default'], _ResizeHandlerMixin['default'], {
     layoutName: 'components/chart-component',
     classNames: ['chart-frame', 'scroll-y'],
     isInteractive: true,
@@ -681,6 +681,8 @@ define('ember-charts/components/chart-component', ['exports', 'module', 'ember',
       }
     }
   });
+
+  module.exports = ChartComponent;
 });
 define('ember-charts/components/horizontal-bar-chart', ['exports', 'module', 'ember', './chart-component', '../mixins/formattable', '../mixins/floating-tooltip', '../mixins/sortable-chart', '../utils/label-trimmer', '../mixins/axis-titles'], function (exports, module, _ember, _chartComponent, _mixinsFormattable, _mixinsFloatingTooltip, _mixinsSortableChart, _utilsLabelTrimmer, _mixinsAxisTitles) {
   'use strict';
@@ -703,7 +705,7 @@ define('ember-charts/components/horizontal-bar-chart', ['exports', 'module', 'em
 
   var _AxisTitlesMixin = _interopRequireDefault(_mixinsAxisTitles);
 
-  module.exports = _ChartComponent['default'].extend(_FloatingTooltipMixin['default'], _FormattableMixin['default'], _SortableChartMixin['default'], _AxisTitlesMixin['default'], {
+  var HorizontalBarChartComponent = _ChartComponent['default'].extend(_FloatingTooltipMixin['default'], _FormattableMixin['default'], _SortableChartMixin['default'], _AxisTitlesMixin['default'], {
     classNames: ['chart-horizontal-bar'],
 
     // ----------------------------------------------------------------------------
@@ -723,6 +725,14 @@ define('ember-charts/components/horizontal-bar-chart', ['exports', 'module', 'em
     // Constraints on size of each bar
     maxBarThickness: 60,
     minBarThickness: 20,
+
+    /*
+     * The maximum width of grouping labels. The text of the label will be
+     * trimmed if it exceeds this width. This max won't be enforced if it is
+     * null or undefined
+     * @type {Number}
+     */
+    maxLabelWidth: null,
 
     // ----------------------------------------------------------------------------
     // Data
@@ -1032,7 +1042,7 @@ define('ember-charts/components/horizontal-bar-chart', ['exports', 'module', 'em
      */
     _scheduledRedraw: null,
 
-    renderVars: ['barThickness', 'yScale', 'colorRange', 'xValueDisplayName', 'yValueDisplayName', 'hasAxisTitles', 'hasXAxisTitle', 'hasYAxisTitle', 'xTitleHorizontalOffset', 'yTitleVerticalOffset', 'xTitleVerticalOffset'],
+    renderVars: ['barThickness', 'yScale', 'colorRange', 'xValueDisplayName', 'yValueDisplayName', 'hasAxisTitles', 'hasXAxisTitle', 'hasYAxisTitle', 'xTitleHorizontalOffset', 'yTitleVerticalOffset', 'xTitleVerticalOffset', 'maxLabelWidth'],
 
     drawChart: function drawChart() {
       this.updateData();
@@ -1078,11 +1088,13 @@ define('ember-charts/components/horizontal-bar-chart', ['exports', 'module', 'em
       var maxValueLabelWidth = this._maxWidthOfElements(valueLabelElements);
       var maxGroupLabelWidth = this._maxWidthOfElements(groupLabelElements);
 
+      var maxLabelWidth = this.get('maxLabelWidth');
+
       // If all values are positive, the grouping labels are on the left and the
       // value labels are on the right
       if (this.get('hasAllPositiveValues')) {
         return {
-          left: maxGroupLabelWidth,
+          left: d3.min([maxGroupLabelWidth, maxLabelWidth]),
           right: maxValueLabelWidth
         };
         // If all values are negative, the value labels are on the left and the
@@ -1090,7 +1102,7 @@ define('ember-charts/components/horizontal-bar-chart', ['exports', 'module', 'em
       } else if (this.get('hasAllNegativeValues')) {
           return {
             left: maxValueLabelWidth,
-            right: maxGroupLabelWidth
+            right: d3.min([maxGroupLabelWidth, maxLabelWidth])
           };
           // If the values are a mix of positive and negative values, there is a mix
           // value and grouping labels on each side. Find the largest one on either
@@ -1215,6 +1227,8 @@ define('ember-charts/components/horizontal-bar-chart', ['exports', 'module', 'em
       groups.select('text.group').call(labelTrimmer.get('trim'));
     }
   });
+
+  module.exports = HorizontalBarChartComponent;
 });
 define('ember-charts/components/pie-chart', ['exports', 'module', 'ember', './chart-component', '../mixins/formattable', '../mixins/floating-tooltip', '../mixins/sortable-chart', '../mixins/pie-legend', '../mixins/label-width', '../utils/label-trimmer'], function (exports, module, _ember, _chartComponent, _mixinsFormattable, _mixinsFloatingTooltip, _mixinsSortableChart, _mixinsPieLegend, _mixinsLabelWidth, _utilsLabelTrimmer) {
   'use strict';
@@ -1237,7 +1251,7 @@ define('ember-charts/components/pie-chart', ['exports', 'module', 'ember', './ch
 
   var _LabelTrimmer = _interopRequireDefault(_utilsLabelTrimmer);
 
-  module.exports = _ChartComponent['default'].extend(_FloatingTooltipMixin['default'], _FormattableMixin['default'], _SortableChartMixin['default'], _PieLegendMixin['default'], _LabelWidthMixin['default'], {
+  var PieChartComponent = _ChartComponent['default'].extend(_FloatingTooltipMixin['default'], _FormattableMixin['default'], _SortableChartMixin['default'], _PieLegendMixin['default'], _LabelWidthMixin['default'], {
 
     classNames: ['chart-pie'],
     // ----------------------------------------------------------------------------
@@ -1744,6 +1758,8 @@ define('ember-charts/components/pie-chart', ['exports', 'module', 'ember', './ch
       });
     }
   });
+
+  module.exports = PieChartComponent;
 });
 define('ember-charts/components/scatter-chart', ['exports', 'module', 'ember', './chart-component', '../mixins/legend', '../mixins/floating-tooltip', '../mixins/axes', '../mixins/no-margin-chart', '../mixins/axis-titles', '../utils/group-by'], function (exports, module, _ember, _chartComponent, _mixinsLegend, _mixinsFloatingTooltip, _mixinsAxes, _mixinsNoMarginChart, _mixinsAxisTitles, _utilsGroupBy) {
   'use strict';
@@ -1764,7 +1780,7 @@ define('ember-charts/components/scatter-chart', ['exports', 'module', 'ember', '
 
   var _AxisTitlesMixin = _interopRequireDefault(_mixinsAxisTitles);
 
-  module.exports = _ChartComponent['default'].extend(_LegendMixin['default'], _FloatingTooltipMixin['default'], _AxesMixin['default'], _NoMarginChartMixin['default'], _AxisTitlesMixin['default'], {
+  var ScatterChartComponent = _ChartComponent['default'].extend(_LegendMixin['default'], _FloatingTooltipMixin['default'], _AxesMixin['default'], _NoMarginChartMixin['default'], _AxisTitlesMixin['default'], {
 
     classNames: ['chart-scatter'],
 
@@ -2234,6 +2250,8 @@ define('ember-charts/components/scatter-chart', ['exports', 'module', 'ember', '
       });
     }
   });
+
+  module.exports = ScatterChartComponent;
 });
 define('ember-charts/components/time-series-chart', ['exports', 'module', 'ember', './chart-component', '../mixins/legend', '../mixins/time-series-labeler', '../mixins/floating-tooltip', '../mixins/has-time-series-rule', '../mixins/axes', '../mixins/formattable', '../mixins/no-margin-chart', '../mixins/axis-titles', '../utils/group-by'], function (exports, module, _ember, _chartComponent, _mixinsLegend, _mixinsTimeSeriesLabeler, _mixinsFloatingTooltip, _mixinsHasTimeSeriesRule, _mixinsAxes, _mixinsFormattable, _mixinsNoMarginChart, _mixinsAxisTitles, _utilsGroupBy) {
   'use strict';
@@ -2260,7 +2278,7 @@ define('ember-charts/components/time-series-chart', ['exports', 'module', 'ember
 
   var _AxisTitlesMixin = _interopRequireDefault(_mixinsAxisTitles);
 
-  module.exports = _ChartComponent['default'].extend(_LegendMixin['default'], _TimeSeriesLabelerMixin['default'], _FloatingTooltipMixin['default'], _HasTimeSeriesRuleMixin['default'], _AxesMixin['default'], _FormattableMixin['default'], _NoMarginChartMixin['default'], _AxisTitlesMixin['default'], {
+  var TimeSeriesChartComponent = _ChartComponent['default'].extend(_LegendMixin['default'], _TimeSeriesLabelerMixin['default'], _FloatingTooltipMixin['default'], _HasTimeSeriesRuleMixin['default'], _AxesMixin['default'], _FormattableMixin['default'], _NoMarginChartMixin['default'], _AxisTitlesMixin['default'], {
 
     classNames: ['chart-time-series'],
 
@@ -3120,6 +3138,8 @@ define('ember-charts/components/time-series-chart', ['exports', 'module', 'ember
       return series.select('path.line').attr(this.get('lineAttrs'));
     }
   });
+
+  module.exports = TimeSeriesChartComponent;
 });
 define('ember-charts/components/vertical-bar-chart', ['exports', 'module', 'ember', './chart-component', '../mixins/legend', '../mixins/floating-tooltip', '../mixins/axes', '../mixins/formattable', '../mixins/sortable-chart', '../mixins/no-margin-chart', '../mixins/axis-titles', '../utils/group-by', '../utils/label-trimmer'], function (exports, module, _ember, _chartComponent, _mixinsLegend, _mixinsFloatingTooltip, _mixinsAxes, _mixinsFormattable, _mixinsSortableChart, _mixinsNoMarginChart, _mixinsAxisTitles, _utilsGroupBy, _utilsLabelTrimmer) {
   'use strict';
@@ -3146,7 +3166,7 @@ define('ember-charts/components/vertical-bar-chart', ['exports', 'module', 'embe
 
   var _LabelTrimmer = _interopRequireDefault(_utilsLabelTrimmer);
 
-  module.exports = _ChartComponent['default'].extend(_LegendMixin['default'], _FloatingTooltipMixin['default'], _AxesMixin['default'], _FormattableMixin['default'], _SortableChartMixin['default'], _NoMarginChartMixin['default'], _AxisTitlesMixin['default'], {
+  var VerticalBarChartComponent = _ChartComponent['default'].extend(_LegendMixin['default'], _FloatingTooltipMixin['default'], _AxesMixin['default'], _FormattableMixin['default'], _SortableChartMixin['default'], _NoMarginChartMixin['default'], _AxisTitlesMixin['default'], {
 
     classNames: ['chart-vertical-bar'],
 
@@ -3877,6 +3897,8 @@ define('ember-charts/components/vertical-bar-chart', ['exports', 'module', 'embe
       return groups.select('g.groupLabel').attr(this.get('labelAttrs'));
     }
   });
+
+  module.exports = VerticalBarChartComponent;
 });
 define('ember-charts/mixins/axes', ['exports', 'module', 'ember'], function (exports, module, _ember) {
   'use strict';

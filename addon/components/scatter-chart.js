@@ -9,7 +9,7 @@ import AxisTitlesMixin from '../mixins/axis-titles';
 
 import { groupBy } from '../utils/group-by';
 
-export default ChartComponent.extend(LegendMixin, FloatingTooltipMixin,
+const ScatterChartComponent = ChartComponent.extend(LegendMixin, FloatingTooltipMixin,
   AxesMixin, NoMarginChartMixin, AxisTitlesMixin, {
 
   classNames: ['chart-scatter'],
@@ -495,3 +495,5 @@ export default ChartComponent.extend(LegendMixin, FloatingTooltipMixin,
     });
   }
 });
+
+export default ScatterChartComponent;

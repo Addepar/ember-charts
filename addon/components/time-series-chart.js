@@ -12,8 +12,9 @@ import AxisTitlesMixin from '../mixins/axis-titles';
 
 import { groupBy } from '../utils/group-by';
 
-export default ChartComponent.extend(LegendMixin, TimeSeriesLabelerMixin, FloatingTooltipMixin,
-  HasTimeSeriesRuleMixin, AxesMixin, FormattableMixin, NoMarginChartMixin, AxisTitlesMixin, {
+const TimeSeriesChartComponent = ChartComponent.extend(LegendMixin,
+  TimeSeriesLabelerMixin, FloatingTooltipMixin, HasTimeSeriesRuleMixin,
+  AxesMixin, FormattableMixin, NoMarginChartMixin, AxisTitlesMixin, {
 
   classNames: ['chart-time-series'],
 
@@ -906,3 +907,5 @@ export default ChartComponent.extend(LegendMixin, TimeSeriesLabelerMixin, Floati
       .attr(this.get('lineAttrs'));
   }
 });
+
+export default TimeSeriesChartComponent;

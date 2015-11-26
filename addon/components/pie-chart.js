@@ -8,7 +8,7 @@ import LabelWidthMixin from '../mixins/label-width';
 
 import LabelTrimmer from '../utils/label-trimmer';
 
-export default ChartComponent.extend(FloatingTooltipMixin,
+const PieChartComponent = ChartComponent.extend(FloatingTooltipMixin,
   FormattableMixin, SortableChartMixin, PieLegendMixin, LabelWidthMixin, {
 
   classNames: ['chart-pie'],
@@ -515,3 +515,5 @@ export default ChartComponent.extend(FloatingTooltipMixin,
     });
   }
 });
+
+export default PieChartComponent;

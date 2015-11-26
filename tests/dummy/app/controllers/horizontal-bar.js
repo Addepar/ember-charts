@@ -31,6 +31,18 @@ export default SlideController.extend({
   yTitleVerticalOffset: 0,
   xTitleVerticalOffset: 15,
 
+  hasMaxLabelWidth: false,
+
+  configuredMaxLabelWidth: 100,
+
+  maxLabelWidth: Ember.computed('hasMaxLabelWidth', 'configuredMaxLabelWidth', function() {
+    if (this.get('hasMaxLabelWidth')) {
+      return this.get('configuredMaxLabelWidth');
+    } else {
+      return null;
+    }
+  }),
+
 
   // ---------
   // Data Selection
