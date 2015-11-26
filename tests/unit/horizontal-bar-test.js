@@ -3,6 +3,7 @@ import { test, moduleForComponent } from 'ember-qunit';
 
 import sum_to_zero from '../../models/single_group/sum_to_zero';
 import asset_values from '../../models/single_group/asset_values';
+import all_negatives from '../../models/single_group/all_negatives';
 
 moduleForComponent('horizontal-bar-chart', '[Unit] Horizontal bar component', {
   needs: [ 'template:components/chart-component'],
@@ -95,4 +96,25 @@ test("Margin bottom depends on the label padding and title offset",
   assert.equal(component.get('marginBottom'), 130,
     'Margin bottom is depedent on the xTitleVerticalOffset when there is x ' +
         'Axis title');
+});
+
+test("Value/Grouping Labels appear on the left/right when all data is 0 or negative",
+    function(assert) {
+  assert.expect(1);
+
+  const component = this.subject({
+    data: all_negatives,
+  });
+
+  this.render();
+
+  const barGroups = component.$('g.bar');
+  const allLabelsCorrectlyPositioned = _.all(barGroups, function(group) {
+    const groupLabel = $('text.group', group);
+    const valueLabel = $('text.value', group);
+    return valueLabel.offset().left < groupLabel.offset().left;
+  });
+
+  assert.ok(allLabelsCorrectlyPositioned,
+    'The value labels are all to the left of the group labels');
 });

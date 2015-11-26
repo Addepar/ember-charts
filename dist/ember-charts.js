@@ -935,15 +935,35 @@ define('ember-charts/components/horizontal-bar-chart', ['exports', 'module', 'em
       };
     }),
 
+    /*
+     * Determines whether Value Labels should go on the left side of the Y-Axis
+     * Returns true if data is negative, or data is 0 and all other data is negative
+     * @private
+     * @param {Object}
+     * @return {Boolean}
+     */
+    _isValueLabelLeft: function _isValueLabelLeft(d) {
+      if (d.value < 0) {
+        return true;
+      }
+
+      if (d.value === 0 && this.get('hasAllNegativeValues')) {
+        return true;
+      }
+
+      return false;
+    },
+
     valueLabelAttrs: _Ember['default'].computed('xScale', 'barThickness', 'labelPadding', function () {
       var _this4 = this;
 
       var xScale = this.get('xScale');
       // Anchor the label 'labelPadding' away from the zero line
       // How to anchor the text depends on the direction of the bar
+
       return {
         x: function x(d) {
-          if (d.value < 0) {
+          if (_this4._isValueLabelLeft(d)) {
             return -_this4.get('labelPadding');
           } else {
             return xScale(d.value) - xScale(0) + _this4.get('labelPadding');
@@ -952,7 +972,7 @@ define('ember-charts/components/horizontal-bar-chart', ['exports', 'module', 'em
         y: this.get('barThickness') / 2,
         dy: '.35em',
         'text-anchor': function textAnchor(d) {
-          return d.value < 0 ? 'end' : 'start';
+          return _this4._isValueLabelLeft(d) ? 'end' : 'start';
         },
         'stroke-width': 0
       };
@@ -967,7 +987,7 @@ define('ember-charts/components/horizontal-bar-chart', ['exports', 'module', 'em
       // How to anchor the text depends on the direction of the bar
       return {
         x: function x(d) {
-          if (d.value < 0) {
+          if (_this5._isValueLabelLeft(d)) {
             return xScale(0) - xScale(d.value) + _this5.get('labelPadding');
           } else {
             return -_this5.get('labelPadding');
@@ -976,7 +996,7 @@ define('ember-charts/components/horizontal-bar-chart', ['exports', 'module', 'em
         y: this.get('barThickness') / 2,
         dy: '.35em',
         'text-anchor': function textAnchor(d) {
-          return d.value < 0 ? 'start' : 'end';
+          return _this5._isValueLabelLeft(d) ? 'start' : 'end';
         },
         'stroke-width': 0
       };
