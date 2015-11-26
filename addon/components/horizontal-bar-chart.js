@@ -145,8 +145,7 @@ export default ChartComponent.extend(FloatingTooltipMixin,
   xScale: Ember.computed('width', 'xDomain', function() {
     return d3.scale.linear()
       .domain(this.get('xDomain'))
-      .range([0, this.get('width')])
-      .nice();
+      .range([0, this.get('width')]);
   }),
 
   // Scale to map bar index to its horizontal position
