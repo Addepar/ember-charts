@@ -8,7 +8,7 @@ import SortableChartMixin from '../mixins/sortable-chart';
 import LabelTrimmer from '../utils/label-trimmer';
 import AxisTitlesMixin from '../mixins/axis-titles';
 
-export default ChartComponent.extend(FloatingTooltipMixin,
+const HorizontalBarChartComponent = ChartComponent.extend(FloatingTooltipMixin,
   FormattableMixin, SortableChartMixin, AxisTitlesMixin, {
   classNames: ['chart-horizontal-bar'],
 
@@ -29,6 +29,14 @@ export default ChartComponent.extend(FloatingTooltipMixin,
   // Constraints on size of each bar
   maxBarThickness: 60,
   minBarThickness: 20,
+
+  /*
+   * The maximum width of grouping labels. The text of the label will be
+   * trimmed if it exceeds this width. This max won't be enforced if it is
+   * null or undefined
+   * @type {Number}
+   */
+  maxLabelWidth: null,
 
   // ----------------------------------------------------------------------------
   // Data
@@ -342,7 +350,8 @@ export default ChartComponent.extend(FloatingTooltipMixin,
     'hasYAxisTitle',
     'xTitleHorizontalOffset',
     'yTitleVerticalOffset',
-    'xTitleVerticalOffset'
+    'xTitleVerticalOffset',
+    'maxLabelWidth'
   ],
 
   drawChart: function() {
@@ -386,11 +395,13 @@ export default ChartComponent.extend(FloatingTooltipMixin,
     const maxValueLabelWidth = this._maxWidthOfElements(valueLabelElements);
     const maxGroupLabelWidth = this._maxWidthOfElements(groupLabelElements);
 
+    const maxLabelWidth = this.get('maxLabelWidth');
+
     // If all values are positive, the grouping labels are on the left and the
     // value labels are on the right
     if (this.get('hasAllPositiveValues')) {
       return {
-        left: maxGroupLabelWidth,
+        left: d3.min([maxGroupLabelWidth, maxLabelWidth]),
         right: maxValueLabelWidth
       };
     // If all values are negative, the value labels are on the left and the
@@ -398,7 +409,7 @@ export default ChartComponent.extend(FloatingTooltipMixin,
     } else if (this.get('hasAllNegativeValues')) {
       return {
         left: maxValueLabelWidth,
-        right: maxGroupLabelWidth
+        right: d3.min([maxGroupLabelWidth, maxLabelWidth])
       };
     // If the values are a mix of positive and negative values, there is a mix
     // value and grouping labels on each side. Find the largest one on either
@@ -514,3 +525,5 @@ export default ChartComponent.extend(FloatingTooltipMixin,
       .call(labelTrimmer.get('trim'));
   }
 });
+
+export default HorizontalBarChartComponent;

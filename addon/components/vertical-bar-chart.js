@@ -11,8 +11,9 @@ import AxisTitlesMixin from '../mixins/axis-titles';
 import { groupBy } from '../utils/group-by';
 import LabelTrimmer from '../utils/label-trimmer';
 
-export default ChartComponent.extend(LegendMixin, FloatingTooltipMixin, AxesMixin,
-  FormattableMixin, SortableChartMixin, NoMarginChartMixin, AxisTitlesMixin, {
+const VerticalBarChartComponent = ChartComponent.extend(LegendMixin,
+  FloatingTooltipMixin, AxesMixin, FormattableMixin, SortableChartMixin,
+  NoMarginChartMixin, AxisTitlesMixin, {
 
   classNames: ['chart-vertical-bar'],
 
@@ -742,3 +743,5 @@ export default ChartComponent.extend(LegendMixin, FloatingTooltipMixin, AxesMixi
       .attr(this.get('labelAttrs') );
   }
 });
+
+export default VerticalBarChartComponent;

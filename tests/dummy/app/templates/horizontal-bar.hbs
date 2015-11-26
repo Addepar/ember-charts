@@ -17,6 +17,7 @@
         yTitleVerticalOffset=yTitleVerticalOffset
         xValueDisplayName=xValueDisplayName
         yValueDisplayName=yValueDisplayName
+        maxLabelWidth=maxLabelWidth
       }}
     </div>
   </div>
@@ -72,6 +73,31 @@
           </div>
         </div>
         {{partial "axis-title-config"}}
+
+        <div class="form-group">
+          <div class="col-lg-offset-4 col-lg-8">
+            <div class="checkbox">
+              <label>
+                {{input
+                  type="checkbox"
+                  checked=hasMaxLabelWidth
+                }}
+                Has max label width
+              </label>
+            </div>
+          </div>
+        </div>
+
+        {{#if hasMaxLabelWidth}}
+          <div class="form-group">
+            <label class="col-lg-4 control-label">Max Label Width</label>
+            <div class="col-lg-8">
+              {{scrubber-component min=0 max=300 step=25 value=maxLabelWidth}}
+              <span class="help-block">Max label width: {{maxLabelWidth}}</span>
+            </div>
+          </div>
+        {{/if}}
+
       </div>
     </div>
 
