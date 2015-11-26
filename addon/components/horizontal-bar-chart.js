@@ -237,13 +237,33 @@ const HorizontalBarChartComponent = ChartComponent.extend(FloatingTooltipMixin,
     };
   }),
 
+  /*
+   * Determines whether Value Labels should go on the left side of the Y-Axis
+   * Returns true if data is negative, or data is 0 and all other data is negative
+   * @private
+   * @param {Object}
+   * @return {Boolean}
+   */
+  _isValueLabelLeft: function(d) {
+    if (d.value < 0) {
+      return true;
+    }
+
+    if (d.value === 0 && this.get('hasAllNegativeValues')) {
+      return true;
+    }
+
+    return false;
+  },
+
   valueLabelAttrs: Ember.computed('xScale', 'barThickness', 'labelPadding', function() {
     var xScale = this.get('xScale');
     // Anchor the label 'labelPadding' away from the zero line
     // How to anchor the text depends on the direction of the bar
+
     return {
       x: (d) => {
-        if (d.value < 0) {
+        if (this._isValueLabelLeft(d)) {
           return -this.get('labelPadding');
         } else {
           return xScale(d.value) - xScale(0) + this.get('labelPadding');
@@ -251,7 +271,7 @@ const HorizontalBarChartComponent = ChartComponent.extend(FloatingTooltipMixin,
       },
       y: this.get('barThickness') / 2,
       dy: '.35em',
-      'text-anchor': (d) => d.value < 0 ? 'end' : 'start',
+      'text-anchor': (d) => (this._isValueLabelLeft(d)) ? 'end' : 'start',
       'stroke-width': 0
     };
   }),
@@ -263,7 +283,7 @@ const HorizontalBarChartComponent = ChartComponent.extend(FloatingTooltipMixin,
     // How to anchor the text depends on the direction of the bar
     return {
       x: (d) => {
-        if (d.value < 0) {
+        if (this._isValueLabelLeft(d))  {
           return xScale(0) - xScale(d.value) + this.get('labelPadding');
         } else {
           return -this.get('labelPadding');
@@ -271,7 +291,7 @@ const HorizontalBarChartComponent = ChartComponent.extend(FloatingTooltipMixin,
       },
       y: this.get('barThickness') / 2,
       dy: '.35em',
-      'text-anchor': (d) => d.value < 0 ? 'start' : 'end',
+      'text-anchor': (d) => (this._isValueLabelLeft(d)) ? 'start' : 'end',
       'stroke-width': 0
     };
   }),
