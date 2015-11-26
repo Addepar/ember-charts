@@ -430,23 +430,29 @@ define('ember-charts/components/chart-component', ['exports', 'module', 'ember',
     horizontalMarginRight: null,
 
     /**
+     * An array of the values in the data that is passed into the chart
+     * @type {Array.<Number>}
+     */
+    allFinishedDataValues: _Ember['default'].computed('finishedData.@each.value', function () {
+      return this.get('finishedData').map(function (d) {
+        return d.value;
+      });
+    }),
+
+    /**
      * The minimum value of the data in the chart
      * @type {Number}
      */
-    minValue: _Ember['default'].computed('finishedData.@each.value', function () {
-      return d3.min(this.get('finishedData').map(function (d) {
-        return d.value;
-      }));
+    minValue: _Ember['default'].computed('allFinishedDataValues.[]', function () {
+      return d3.min(this.get('allFinishedDataValues'));
     }),
 
     /**
      * The maximum value of the data in the chart
      * @type {Number}
      */
-    maxValue: _Ember['default'].computed('finishedData.@each.value', function () {
-      return d3.max(this.get('finishedData').map(function (d) {
-        return d.value;
-      }));
+    maxValue: _Ember['default'].computed('allFinishedDataValues.[]', function () {
+      return d3.max(this.get('allFinishedDataValues'));
     }),
 
     /**
@@ -460,6 +466,18 @@ define('ember-charts/components/chart-component', ['exports', 'module', 'ember',
      * @type {Boolean}
      */
     hasPositiveValues: _Ember['default'].computed.gt('maxValue', 0),
+
+    /**
+     * Whether or not the data contains only positive values.
+     * @type {Boolean}
+     */
+    hasAllNegativeValues: _Ember['default'].computed.lte('maxValue', 0),
+
+    /**
+     * Whether or not the data contains only negative values.
+     * @type {Boolean}
+     */
+    hasAllPositiveValues: _Ember['default'].computed.gte('minValue', 0),
 
     /**
      * Either a passed in value from `horizontalMarginRight`
@@ -644,8 +662,10 @@ define('ember-charts/components/chart-component', ['exports', 'module', 'ember',
     }
   });
 });
-define('ember-charts/components/horizontal-bar-chart', ['exports', 'module', 'ember', './chart-component', '../mixins/formattable', '../mixins/floating-tooltip', '../mixins/sortable-chart', '../mixins/label-width', '../utils/label-trimmer', '../mixins/axis-titles'], function (exports, module, _ember, _chartComponent, _mixinsFormattable, _mixinsFloatingTooltip, _mixinsSortableChart, _mixinsLabelWidth, _utilsLabelTrimmer, _mixinsAxisTitles) {
+define('ember-charts/components/horizontal-bar-chart', ['exports', 'module', 'ember', './chart-component', '../mixins/formattable', '../mixins/floating-tooltip', '../mixins/sortable-chart', '../utils/label-trimmer', '../mixins/axis-titles'], function (exports, module, _ember, _chartComponent, _mixinsFormattable, _mixinsFloatingTooltip, _mixinsSortableChart, _utilsLabelTrimmer, _mixinsAxisTitles) {
   'use strict';
+
+  var _slicedToArray = (function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i['return']) _i['return'](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError('Invalid attempt to destructure non-iterable instance'); } }; })();
 
   function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
@@ -659,13 +679,11 @@ define('ember-charts/components/horizontal-bar-chart', ['exports', 'module', 'em
 
   var _SortableChartMixin = _interopRequireDefault(_mixinsSortableChart);
 
-  var _LabelWidthMixin = _interopRequireDefault(_mixinsLabelWidth);
-
   var _LabelTrimmer = _interopRequireDefault(_utilsLabelTrimmer);
 
   var _AxisTitlesMixin = _interopRequireDefault(_mixinsAxisTitles);
 
-  module.exports = _ChartComponent['default'].extend(_FloatingTooltipMixin['default'], _FormattableMixin['default'], _SortableChartMixin['default'], _LabelWidthMixin['default'], _AxisTitlesMixin['default'], {
+  module.exports = _ChartComponent['default'].extend(_FloatingTooltipMixin['default'], _FormattableMixin['default'], _SortableChartMixin['default'], _AxisTitlesMixin['default'], {
     classNames: ['chart-horizontal-bar'],
 
     // ----------------------------------------------------------------------------
@@ -721,22 +739,8 @@ define('ember-charts/components/horizontal-bar-chart', ['exports', 'module', 'em
     /**
      * @override
      */
-    yAxisPositionY: _Ember['default'].computed('labelWidthOffset', function () {
-      return -this.get('labelWidthOffset');
-    }),
-
-    /**
-     * MarginLeft is dependent on 'horizontalMargin'
-     *  - Otherwise, without override will result in marginLeft ~= 0
-     *  - Axis location will always be flush on the left, with labels cutoff
-     * @override
-     */
-    marginLeft: _Ember['default'].computed('hasAxisTitles', 'horizontalMarginLeft', 'horizontalMargin', function () {
-      if (this.get('hasAxisTitles')) {
-        return this.get('horizontalMarginLeft') + this.get('horizontalMargin');
-      } else {
-        return this.get('horizontalMargin');
-      }
+    yAxisPositionY: _Ember['default'].computed('labelWidthOffset', 'yAxisTitleHeightOffset', function () {
+      return -(this.get('labelWidthOffset') + this.get('yAxisTitleHeightOffset'));
     }),
 
     minOuterHeight: _Ember['default'].computed('numBars', 'minBarThickness', 'marginTop', 'marginBottom', function () {
@@ -783,7 +787,7 @@ define('ember-charts/components/horizontal-bar-chart', ['exports', 'module', 'em
       return this.get('labelPadding');
     }),
 
-    horizontalMargin: _Ember['default'].computed.readOnly('labelWidth'),
+    marginLeft: _Ember['default'].computed.alias('horizontalMarginLeft'),
 
     // ----------------------------------------------------------------------------
     // Graphics Properties
@@ -797,10 +801,8 @@ define('ember-charts/components/horizontal-bar-chart', ['exports', 'module', 'em
       var maxValue = this.get('maxValue');
       if (this.get('hasNegativeValues')) {
         if (this.get('hasPositiveValues')) {
-          // Balance negative and positive axes if we have a mix of positive and
-          // negative values
-          var absMax = d3.max([-minValue, maxValue]);
-          return [-absMax, absMax];
+          // Mix of positive and negative values
+          return [minValue, maxValue];
         } else {
           // Only negative values domain
           return [minValue, 0];
@@ -983,7 +985,20 @@ define('ember-charts/components/horizontal-bar-chart', ['exports', 'module', 'em
     // Drawing Functions
     // ----------------------------------------------------------------------------
 
-    renderVars: ['barThickness', 'yScale', 'finishedData', 'colorRange', 'xValueDisplayName', 'yValueDisplayName', 'hasAxisTitles', 'hasXAxisTitle', 'hasYAxisTitle', 'xTitleHorizontalOffset', 'yTitleVerticalOffset', 'xTitleVerticalOffset'],
+    didInsertElement: function didInsertElement() {
+      var _this6 = this;
+
+      this._super.apply(this, arguments);
+      // TODO (philn): This `Ember.run.next` was added to fix a bug where
+      // a horizontal bar chart was rendered incorrectly the first time, but
+      // correctly on subsequent renders. Still not entirely clear why that is.
+      _Ember['default'].run.next(function () {
+        _this6._updateDimensions();
+        _this6.drawOnce();
+      });
+    },
+
+    renderVars: ['barThickness', 'yScale', 'colorRange', 'xValueDisplayName', 'yValueDisplayName', 'hasAxisTitles', 'hasXAxisTitle', 'hasYAxisTitle', 'xTitleHorizontalOffset', 'yTitleVerticalOffset', 'xTitleVerticalOffset'],
 
     drawChart: function drawChart() {
       this.updateData();
@@ -1013,25 +1028,132 @@ define('ember-charts/components/horizontal-bar-chart', ['exports', 'module', 'em
       return this.get('yAxis').attr(this.get('axisAttrs'));
     },
 
+    /**
+     * Given the list of elements for the group labels and value labels,
+     * determine the width of the largest label on either side of the chart.
+     * @private
+     * @param {Array.<SVGTextElement>} groupLabelElements The text elements
+     *  representing the group labels for the chart
+     * @param {Array.<SVGTextElement>} valueLabelElements The text elements
+     *  representing the value labels for the chart
+     * @return {Object.<String, Number>}
+     */
+    _computeLabelWidths: function _computeLabelWidths(groupLabelElements, valueLabelElements) {
+      var _this7 = this;
+
+      var maxValueLabelWidth = this._maxWidthOfElements(valueLabelElements);
+      var maxGroupLabelWidth = this._maxWidthOfElements(groupLabelElements);
+
+      // If all values are positive, the grouping labels are on the left and the
+      // value labels are on the right
+      if (this.get('hasAllPositiveValues')) {
+        return {
+          left: maxGroupLabelWidth,
+          right: maxValueLabelWidth
+        };
+        // If all values are negative, the value labels are on the left and the
+        // grouping labels are on the right
+      } else if (this.get('hasAllNegativeValues')) {
+          return {
+            left: maxValueLabelWidth,
+            right: maxGroupLabelWidth
+          };
+          // If the values are a mix of positive and negative values, the left
+          // label width is the size of the value label representing the smallest
+          // value, and the right label width is the size of the value label
+          // representing the largest value
+        } else {
+            var minValue = this.get('minValue');
+            var maxValue = this.get('maxValue');
+
+            var _map = [minValue, maxValue].map(function (val) {
+              var label = _this7._getElementForValue(valueLabelElements, val);
+              return label.getComputedTextLength();
+            });
+
+            var _map2 = _slicedToArray(_map, 2);
+
+            var leftWidth = _map2[0];
+            var rightWidth = _map2[1];
+
+            return {
+              left: leftWidth,
+              right: rightWidth
+            };
+          }
+    },
+
+    /**
+     * Given an array of elements and a value, return the element in the array
+     * at the same index as the value is in the list of all values
+     * @private
+     * @param {Array.<HTMLElement>} elements The elements to search in
+     * @param {Number} value The value to search for
+     * @return {HTMLElement}
+     */
+    _getElementForValue: function _getElementForValue(elements, value) {
+      var index = this.get('allFinishedDataValues').indexOf(value);
+      return elements[index];
+    },
+
+    /**
+     * Given an array of SVG elements, return the largest computed length
+     * @private
+     * @param {Array.<SVGElement>} elements The array of elements
+     * @return {Number}
+     */
+    _maxWidthOfElements: function _maxWidthOfElements(elements) {
+      return d3.max(_.map(elements, function (element) {
+        return element.getComputedTextLength();
+      }));
+    },
+
     updateGraphic: function updateGraphic() {
-      var _this6 = this;
+      var _this8 = this;
 
       var groups = this.get('groups').attr(this.get('groupAttrs'));
+
+      groups.select('text.group').text(function (d) {
+        return d.label;
+      }).attr(this.get('groupLabelAttrs'));
 
       groups.select('rect').attr(this.get('barAttrs'));
 
       groups.select('text.value').text(function (d) {
-        return _this6.get('formatLabelFunction')(d.value);
+        return _this8.get('formatLabelFunction')(d.value);
       }).attr(this.get('valueLabelAttrs'));
 
+      var valueLabelElements = groups.select('text.value')[0];
+      var groupLabelElements = groups.select('text.group')[0];
+      var labelWidths = this._computeLabelWidths(groupLabelElements, valueLabelElements);
+      // labelWidth is used for computations around the left margin, so set it
+      // to the width of the left label
+      this.set('labelWidth', labelWidths.left);
+
+      // Add a few extra pixels of padding to ensure that labels don't clip off
+      // the edge of the chart
+      var labelPadding = this.get('labelPadding');
+      var axisTitleOffset = this.get('yAxisTitleHeightOffset') + 5;
+      var margins = {
+        left: labelWidths.left + labelPadding + axisTitleOffset,
+        right: labelWidths.right + labelPadding
+      };
+
+      this.setProperties({
+        horizontalMarginLeft: margins.left,
+        horizontalMarginRight: margins.right
+      });
+
       var labelWidth;
-      // If the chart contains a mix of negative and positive values, the axis
-      // and labels are in the middle of the chart, not at the edges of the chart,
-      // so allow more space to compute how the label is trimmed.
-      if (this.get('hasNegativeValues') && this.get('hasPositiveValues')) {
-        labelWidth = this.get('outerWidth') / 2;
+      if (this.get('hasAllPositiveValues')) {
+        labelWidth = labelWidths.left;
+      } else if (this.get('hasAllNegativeValues')) {
+        labelWidth = labelWidths.right;
       } else {
-        labelWidth = this.get('labelWidth');
+        // If the chart contains a mix of negative and positive values, the axis
+        // and labels are in the middle of the chart, not at the edges of the
+        // chart, so allow more space to compute how the label is trimmed.
+        labelWidth = this.get('outerWidth') / 2;
       }
       var labelTrimmer = _LabelTrimmer['default'].create({
         getLabelSize: function getLabelSize() {
@@ -1042,9 +1164,7 @@ define('ember-charts/components/horizontal-bar-chart', ['exports', 'module', 'em
         }
       });
 
-      return groups.select('text.group').text(function (d) {
-        return d.label;
-      }).attr(this.get('groupLabelAttrs')).call(labelTrimmer.get('trim'));
+      groups.select('text.group').call(labelTrimmer.get('trim'));
     }
   });
 });
@@ -3934,17 +4054,31 @@ define('ember-charts/mixins/axis-titles', ['exports', 'module', 'ember'], functi
     }),
 
     // TODO(tony): Just use axisBottomOffset here
-    legendChartPadding: _Ember['default'].computed('labelHeightOffset', 'axisTitleHeightOffset', function () {
-      return this.get('axisTitleHeightOffset') + this.get('labelHeightOffset');
+    legendChartPadding: _Ember['default'].computed('labelHeightOffset', 'xAxisTitleHeightOffset', function () {
+      return this.get('xAxisTitleHeightOffset') + this.get('labelHeightOffset');
     }),
 
     /**
      * Computed title height plus label padding or 0 if `hasXAxisTitle` is false
      * @type {Number}
      */
-    axisTitleHeightOffset: _Ember['default'].computed('hasXAxisTitle', 'axisTitleHeight', 'labelPadding', function () {
+    xAxisTitleHeightOffset: _Ember['default'].computed('hasXAxisTitle', 'axisTitleHeight', 'labelPadding', function () {
       if (this.get('hasXAxisTitle')) {
         return this.get('axisTitleHeight') + this.get('labelPadding');
+      } else {
+        return 0;
+      }
+    }),
+
+    /**
+     * The horizontal offset of the Y axis title, if there is a Y axis title
+     * Computed based on the height of the axis title, plus 10 pixels of extra
+     * margin
+     * @type {Number}
+     */
+    yAxisTitleHeightOffset: _Ember['default'].computed('hasYAxisTitle', 'axisTitleHeight', function () {
+      if (this.get('hasYAxisTitle')) {
+        return this.get('axisTitleHeight') + 10;
       } else {
         return 0;
       }
