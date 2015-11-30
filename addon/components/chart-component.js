@@ -52,6 +52,22 @@ export default Ember.Component.extend(ColorableMixin, ResizeHandlerMixin, {
   }),
 
   /**
+   * An array of the values which are at least 0
+   * @type {Array<Number>}
+   */
+  positiveValues: Ember.computed('allFinishedDataValues.[]', function() {
+    return this.get('allFinishedDataValues').filter((val) => val >= 0);
+  }),
+
+  /**
+   * An array of the values which are less than 0
+   * @type {Array<Number>}
+   */
+  negativeValues: Ember.computed('allFinishedDataValues.[]', function() {
+    return this.get('allFinishedDataValues').filter((val) => val < 0);
+  }),
+
+  /**
    * Whether or not the data contains negative values.
    * @type {Boolean}
    */

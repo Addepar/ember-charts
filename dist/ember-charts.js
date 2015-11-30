@@ -456,6 +456,26 @@ define('ember-charts/components/chart-component', ['exports', 'module', 'ember',
     }),
 
     /**
+     * An array of the values which are at least 0
+     * @type {Array<Number>}
+     */
+    positiveValues: _Ember['default'].computed('allFinishedDataValues.[]', function () {
+      return this.get('allFinishedDataValues').filter(function (val) {
+        return val >= 0;
+      });
+    }),
+
+    /**
+     * An array of the values which are less than 0
+     * @type {Array<Number>}
+     */
+    negativeValues: _Ember['default'].computed('allFinishedDataValues.[]', function () {
+      return this.get('allFinishedDataValues').filter(function (val) {
+        return val < 0;
+      });
+    }),
+
+    /**
      * Whether or not the data contains negative values.
      * @type {Boolean}
      */
@@ -1072,17 +1092,31 @@ define('ember-charts/components/horizontal-bar-chart', ['exports', 'module', 'em
             left: maxValueLabelWidth,
             right: maxGroupLabelWidth
           };
-          // If the values are a mix of positive and negative values, the left
-          // label width is the size of the value label representing the smallest
-          // value, and the right label width is the size of the value label
-          // representing the largest value
+          // If the values are a mix of positive and negative values, there is a mix
+          // value and grouping labels on each side. Find the largest one on either
+          // side.
         } else {
-            var minValue = this.get('minValue');
-            var maxValue = this.get('maxValue');
+            var positiveValues = this.get('positiveValues');
+            var negativeValues = this.get('negativeValues');
 
-            var _map = [minValue, maxValue].map(function (val) {
-              var label = _this7._getElementForValue(valueLabelElements, val);
-              return label.getComputedTextLength();
+            var positiveGroupingLabels = positiveValues.map(function (val) {
+              return _this7._getElementForValue(groupLabelElements, val);
+            });
+            var positiveValueLabels = positiveValues.map(function (val) {
+              return _this7._getElementForValue(valueLabelElements, val);
+            });
+            var negativeGroupingLabels = negativeValues.map(function (val) {
+              return _this7._getElementForValue(groupLabelElements, val);
+            });
+            var negativeValueLabels = negativeValues.map(function (val) {
+              return _this7._getElementForValue(valueLabelElements, val);
+            });
+
+            var leftLabels = negativeValueLabels.concat(positiveGroupingLabels);
+            var rightLabels = positiveValueLabels.concat(negativeGroupingLabels);
+
+            var _map = [leftLabels, rightLabels].map(function (elements) {
+              return _this7._maxWidthOfElements(elements);
             });
 
             var _map2 = _slicedToArray(_map, 2);
