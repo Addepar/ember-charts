@@ -400,16 +400,31 @@ export default ChartComponent.extend(FloatingTooltipMixin,
         left: maxValueLabelWidth,
         right: maxGroupLabelWidth
       };
-    // If the values are a mix of positive and negative values, the left
-    // label width is the size of the value label representing the smallest
-    // value, and the right label width is the size of the value label
-    // representing the largest value
+    // If the values are a mix of positive and negative values, there is a mix
+    // value and grouping labels on each side. Find the largest one on either
+    // side.
     } else {
-      const minValue = this.get('minValue');
-      const maxValue = this.get('maxValue');
-      const [leftWidth, rightWidth] = [minValue, maxValue].map((val) => {
-        const label = this._getElementForValue(valueLabelElements, val);
-        return label.getComputedTextLength();
+      const positiveValues = this.get('positiveValues');
+      const negativeValues = this.get('negativeValues');
+
+      const positiveGroupingLabels = positiveValues.map((val) => {
+        return this._getElementForValue(groupLabelElements, val);
+      });
+      const positiveValueLabels = positiveValues.map((val) => {
+        return this._getElementForValue(valueLabelElements, val);
+      });
+      const negativeGroupingLabels = negativeValues.map((val) => {
+        return this._getElementForValue(groupLabelElements, val);
+      });
+      const negativeValueLabels = negativeValues.map((val) => {
+        return this._getElementForValue(valueLabelElements, val);
+      });
+
+      const leftLabels = negativeValueLabels.concat(positiveGroupingLabels);
+      const rightLabels = positiveValueLabels.concat(negativeGroupingLabels);
+
+      const [leftWidth, rightWidth] = [leftLabels, rightLabels].map((elements) => {
+        return this._maxWidthOfElements(elements);
       });
       return {
         left: leftWidth,
