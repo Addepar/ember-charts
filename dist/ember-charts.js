@@ -5194,7 +5194,7 @@ define('ember-charts/mixins/pie-legend', ['exports', 'module', 'ember'], functio
 
   var _Ember = _interopRequireDefault(_ember);
 
-  module.exports = _Ember['default'].Mixin.create({
+  var PieLegendMixin = _Ember['default'].Mixin.create({
 
     // ----------------------------------------------------------------------------
     // Legend settings
@@ -5288,7 +5288,7 @@ define('ember-charts/mixins/pie-legend', ['exports', 'module', 'ember'], functio
     },
 
     drawLegend: function drawLegend() {
-      var currentText, nextLabel, rowNode;
+      var currentText, rowNode;
       if (!this.get('showLegend')) {
         return;
       }
@@ -5324,9 +5324,9 @@ define('ember-charts/mixins/pie-legend', ['exports', 'module', 'ember'], functio
       // cause labelTop to exceed the space allocated for the legend.
       var labelTop = 0;
 
-      var arr = labelStrings.slice(1).length;
-      for (var i = 0, len = arr.length; i < len; i++) {
-        nextLabel = arr[i];
+      var remainingLabelStrings = labelStrings.slice(1);
+      for (var i = 0; i < remainingLabelStrings.length; i++) {
+        var nextLabel = remainingLabelStrings[i];
         currentText = row.text();
         row.text("" + currentText + ", " + nextLabel);
         rowNode = row.node();
@@ -5345,6 +5345,8 @@ define('ember-charts/mixins/pie-legend', ['exports', 'module', 'ember'], functio
       return labels.attr('transform', "translate(0, " + -labelTop + ")");
     }
   });
+
+  module.exports = PieLegendMixin;
 });
 define('ember-charts/mixins/resize-handler', ['exports', 'module', 'ember'], function (exports, module, _ember) {
   // TODO(azirbel): This needs to be an external dependency.

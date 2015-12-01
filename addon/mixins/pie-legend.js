@@ -1,5 +1,5 @@
 import Ember from 'ember';
-export default Ember.Mixin.create({
+const PieLegendMixin = Ember.Mixin.create({
 
   // ----------------------------------------------------------------------------
   // Legend settings
@@ -58,7 +58,7 @@ export default Ember.Mixin.create({
     // evaluates to 0.
     var offsetToLegend = 0.15 * (this.get('marginBottom')) - (this.get('marginTop')) / 2;
     var dy = this.get('outerHeight') / 2 + offsetToLegend;
-    
+
     return {
       transform: "translate(" + dx + ", " + dy + ")"
     };
@@ -93,7 +93,7 @@ export default Ember.Mixin.create({
   },
 
   drawLegend: function() {
-    var currentText, nextLabel, rowNode;
+    var currentText, rowNode;
     if (!this.get('showLegend')) {
       return;
     }
@@ -124,16 +124,16 @@ export default Ember.Mixin.create({
     var row = labels.append('text')
                 .text("Other: " + labelStrings[0])
                 .attr(this.get('legendLabelAttrs'));
-    
+
     // Try adding each label. If that makes the current line too long,
     // remove it and insert the label on the next line in its own <text>
     // element, incrementing labelTop. Stop adding rows if that would
     // cause labelTop to exceed the space allocated for the legend.
     var labelTop = 0;
 
-    var arr = labelStrings.slice(1).length;
-    for (var i = 0, len = arr.length; i < len; i++) {
-      nextLabel = arr[i];
+    const remainingLabelStrings = labelStrings.slice(1);
+    for (var i = 0; i < remainingLabelStrings.length; i++) {
+      let nextLabel = remainingLabelStrings[i];
       currentText = row.text();
       row.text("" + currentText + ", " + nextLabel);
       rowNode = row.node();
@@ -152,3 +152,5 @@ export default Ember.Mixin.create({
     return labels.attr('transform', "translate(0, " + (-labelTop) + ")");
   }
 });
+
+export default PieLegendMixin;
