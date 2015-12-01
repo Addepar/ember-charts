@@ -1,5 +1,6 @@
  import Ember from "ember";
  import { test, moduleForComponent } from 'ember-qunit';
+ import asset_values from '../../models/single_group/asset_values';
 
  moduleForComponent('pie-chart', '[Unit] PieChartComponent', {
    needs: [ 'template:components/chart-component'],
@@ -84,38 +85,38 @@
       "label": "Label 18",
       "value": 19
     },
-    	{
-		"label": "Label 19",
-  		"value": 129
-  	},
-  	{
-  		"label": "Label 20",
-  		"value": 52
-  	},
-  	{
-  		"label": "Label 21",
-  		"value": 200
-  	},
-  	{
-  		"label": "Label 22",
-  		"value": 14
-  	},
-  	{
-  		"label": "Label 23",
-  		"value": 31
-  	},
-  	{
-  		"label": "Label 24",
-  		"value": 44
-  	},
-  	{
-  		"label": "Label 25",
-  		"value": 30
-  	},
-  	{
-  		"label": "Label 26",
-  		"value": 62
-  	}
+      {
+    "label": "Label 19",
+      "value": 129
+    },
+    {
+      "label": "Label 20",
+      "value": 52
+    },
+    {
+      "label": "Label 21",
+      "value": 200
+    },
+    {
+      "label": "Label 22",
+      "value": 14
+    },
+    {
+      "label": "Label 23",
+      "value": 31
+    },
+    {
+      "label": "Label 24",
+      "value": 44
+    },
+    {
+      "label": "Label 25",
+      "value": 30
+    },
+    {
+      "label": "Label 26",
+      "value": 62
+    }
   ]
 };
 
@@ -123,16 +124,24 @@ test("it exists", function(assert){
   assert.ok(this.subject());
 });
 
-test('Legend renders', function(assert) {
-  var component = this.subject(pieContent);
-  assert.equal(this.$().find('.legend').length, 1, 'Has a legend for other slice');
+test('Legend renders correctly', function(assert) {
+  const component = this.subject({
+    data: asset_values,
+    minSlicePercent: 15
+  });
+  const legend = this.$().find('.legend');
+  const legendText = $('text', legend).text();
+  const expectedLegendText = "Other: Private Equity (4%), Hedge Fund (4%), Cash & Cash Equivalent (13%)";
+  assert.equal(legend.length, 1, 'Has a legend for other slice');
+  assert.equal(legendText, expectedLegendText,
+    'Legend contains text for all values in the other slice');
 });
 
 test('Margins are the right size when showLegend is no', function(assert) {
   var component = this.subject(pieContent);
 
   Ember.run(function() {
-  	component.set('showLegend', false);
+    component.set('showLegend', false);
   });
 
   assert.equal(this.subject().get('hasLegend'), false, 'if showLegend is no, a legend is not made');
