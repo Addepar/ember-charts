@@ -23,4 +23,4 @@ export default [{
     value: 0,
     type: "percent"
 }];
-  
+

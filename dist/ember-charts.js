@@ -1214,14 +1214,10 @@ define('ember-charts/components/horizontal-bar-chart', ['exports', 'module', 'em
       // the edge of the chart
       var labelPadding = this.get('labelPadding');
       var axisTitleOffset = this.get('yAxisTitleHeightOffset') + 5;
-      var margins = {
-        left: labelWidths.left + labelPadding + axisTitleOffset,
-        right: labelWidths.right + labelPadding
-      };
 
       this.setProperties({
-        horizontalMarginLeft: margins.left,
-        horizontalMarginRight: margins.right
+        horizontalMarginLeft: labelWidths.left + labelPadding + axisTitleOffset,
+        horizontalMarginRight: labelWidths.right + labelPadding
       });
 
       var labelWidth;
@@ -1230,10 +1226,9 @@ define('ember-charts/components/horizontal-bar-chart', ['exports', 'module', 'em
       } else if (this.get('hasAllNegativeValues')) {
         labelWidth = labelWidths.right;
       } else {
-        // If the chart contains a mix of negative and positive values, the axis
-        // and labels are in the middle of the chart, not at the edges of the
-        // chart, so allow more space to compute how the label is trimmed.
-        labelWidth = this.get('outerWidth') / 2;
+        // If the chart contains a mix of negative and positive values, there are
+        // grouping labels on both sides of the chart
+        labelWidth = d3.max([labelWidths.left, labelWidths.right]);
       }
       var labelTrimmer = _LabelTrimmer['default'].create({
         getLabelSize: function getLabelSize() {
