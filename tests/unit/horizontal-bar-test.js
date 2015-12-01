@@ -147,3 +147,54 @@ test("Labels aren't trimmed when width is small", function(assert) {
     `For charts with a mix of positive and negative values, labels are not
       truncated when width is small`);
 });
+
+test("Labels are flush with edges of the chart", function(assert) {
+  assert.expect(2);
+
+  const testData = [{
+    label: "some really long label that is really long",
+    value: 100,
+    type: "money"
+  }, {
+    label: "another label",
+    value: 10000,
+    type: "money"
+  }];
+
+  const component = this.subject({
+    data: testData
+  });
+
+  this.render();
+  const longGroupLabel = component.$("text.group:first");
+  const longValueLabel = component.$("text.value:last");
+  const chartViewport = component.$('.chart-viewport');
+  assert.equal(longGroupLabel.position().left, chartViewport.position().left,
+    'The largest group label is flush with the left of the chart');
+
+  const groupLabels = component.$('text.group');
+  const noLabelsTruncated = _.all(groupLabels, function(label) {
+    return label.textContent.indexOf('...') === -1;
+  });
+
+  assert.ok(noLabelsTruncated,
+    'Labels are not truncated when no maxLabelWidth is specified');
+});
+
+test("Can use maxLabelWidth to trim labels", function(assert) {
+  assert.expect(1);
+
+  const component = this.subject({
+    data: asset_values,
+    maxLabelWidth: 50
+  });
+
+  this.render();
+  const groupLabels = component.$('text.group');
+  const anyLabelsTruncated = _.some(groupLabels, function(label) {
+    return label.textContent.indexOf('...') > -1;
+  });
+
+  assert.ok(anyLabelsTruncated,
+    'Labels are truncated when a small maxLabelWidth is specified');
+});
