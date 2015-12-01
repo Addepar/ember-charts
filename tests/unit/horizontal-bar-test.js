@@ -118,3 +118,32 @@ test("Value/Grouping Labels appear on the left/right when all data is 0 or negat
   assert.ok(allLabelsCorrectlyPositioned,
     'The value labels are all to the left of the group labels');
 });
+
+test("Labels aren't trimmed when width is small", function(assert) {
+  const testData = [{
+    label: "some really long label that is really long",
+    value: 10000,
+    type: "money"
+  }, {
+    label: "another label",
+    value: -100,
+    type: "money"
+  }];
+
+  const component = this.subject({
+    data: testData,
+  });
+
+  this.render();
+  // Charts set their defaultOuterWidth when they're rendered, so it has to be
+  // set after rendering
+  Ember.run(() => component.set('defaultOuterWidth', 300));
+
+  const groupLabels = component.$('text.group');
+  const noLabelsTruncated = _.all(groupLabels, function(label) {
+    return label.textContent.indexOf('...') === -1;
+  });
+  assert.ok(noLabelsTruncated,
+    `For charts with a mix of positive and negative values, labels are not
+      truncated when width is small`);
+});
