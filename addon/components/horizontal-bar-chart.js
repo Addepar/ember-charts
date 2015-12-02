@@ -451,12 +451,42 @@ const HorizontalBarChartComponent = ChartComponent.extend(FloatingTooltipMixin,
         return this._getElementForValue(valueLabelElements, val);
       });
 
-      const leftLabels = negativeValueLabels.concat(positiveGroupingLabels);
+      var maxNegativeValueLabelWidth = this._maxWidthOfElements(negativeValueLabels);
+      var maxPositiveGroupingLabelWidth = this._maxWidthOfElements(positiveGroupingLabels);
+
+      var maxPositiveValueLabelWidth = this._maxWidthOfElements(positiveValueLabels);
+      var maxNegativeGroupingLabelWidth = this._maxWidthOfElements(negativeGroupingLabels);
+
+      var padding = this.get('labelPadding');
+      var minValue = Math.abs(this.get('minValue'));
+      var maxValue = this.get('maxValue');
+      var valueRange = maxValue + minValue;
+      var containerWidth = this.get('width');
+      var chartWidth = containerWidth - maxNegativeValueLabelWidth - maxPositiveValueLabelWidth;
+
+      var leftGroupLabelWidthRatio = (maxPositiveGroupingLabelWidth+padding)/containerWidth;
+      var leftChartWidthRatio = (maxNegativeValueLabelWidth+padding)/containerWidth + minValue/valueRange * chartWidth/containerWidth;
+
+
+      var rightGroupLabelWidthRatio = (maxNegativeGroupingLabelWidth + padding)/containerWidth;
+      var rightChartWidthRatio = (maxPositiveValueLabelWidth+padding)/containerWidth + maxValue/valueRange * chartWidth/containerWidth;
+
+      var leftWidth = maxNegativeValueLabelWidth;
+      if (leftGroupLabelWidthRatio > leftChartWidthRatio) {
+        leftWidth += (leftGroupLabelWidthRatio-leftChartWidthRatio)*containerWidth;
+      }
+
+      var rightWidth = maxPositiveValueLabelWidth;
+      if (rightGroupLabelWidthRatio > rightChartWidthRatio) {
+        rightWidth += (rightGroupLabelWidthRatio-rightChartWidthRatio)*containerWidth;
+      }
+
+      /*const leftLabels = negativeValueLabels.concat(positiveGroupingLabels);
       const rightLabels = positiveValueLabels.concat(negativeGroupingLabels);
 
       const [leftWidth, rightWidth] = [leftLabels, rightLabels].map((elements) => {
         return this._maxWidthOfElements(elements);
-      });
+      });*/
       return {
         left: leftWidth,
         right: rightWidth
@@ -536,8 +566,8 @@ const HorizontalBarChartComponent = ChartComponent.extend(FloatingTooltipMixin,
       getLabelText: (d) => d.label
     });
 
-    groups.select('text.group')
-      .call(labelTrimmer.get('trim'));
+    /*groups.select('text.group')
+      .call(labelTrimmer.get('trim'));*/
   }
 });
 

@@ -1,5 +1,5 @@
 export default [{
-    label: "Label 1",
+    label: "A very long Label 1 that should add a lot of left padding",
     value: 0,
     type: "percent"
   }, {
