@@ -462,8 +462,9 @@ const HorizontalBarChartComponent = ChartComponent.extend(FloatingTooltipMixin,
       var maxValue = this.get('maxValue');
       var valueRange = maxValue + minValue;
       var containerWidth = this.get('outerWidth');
-      const axisTitleOffset = this.get('yAxisTitleHeightOffset') + 5;
-      var chartWidth = containerWidth - maxNegativeValueLabelWidth - maxPositiveValueLabelWidth - 2 * padding - axisTitleOffset;
+      var axisTitleOffset = this.get('yAxisTitleHeightOffset') + 5;
+      var chartPadding = 2 * padding + axisTitleOffset;
+      var chartWidth = containerWidth - maxNegativeValueLabelWidth - maxPositiveValueLabelWidth - chartPadding;
 
       var leftGroupLabelWidth = maxPositiveGroupingLabelWidth;
       var leftChartWidth = maxNegativeValueLabelWidth + minValue/valueRange * chartWidth;
@@ -474,7 +475,6 @@ const HorizontalBarChartComponent = ChartComponent.extend(FloatingTooltipMixin,
 
       var leftWidth = maxNegativeValueLabelWidth;
       var rightWidth = maxPositiveValueLabelWidth;
-      var chartPadding = 2 * padding + axisTitleOffset;
 
       if (leftGroupLabelWidth > leftChartWidth) {
         leftWidth = leftGroupLabelWidth - minValue * (containerWidth - leftGroupLabelWidth - rightWidth - chartPadding) / maxValue;
