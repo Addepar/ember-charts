@@ -15,6 +15,9 @@ import zeroes from '../models/single_group/zeroes';
 import sum_to_zero from '../models/single_group/sum_to_zero';
 import bad_range from '../models/single_group/bad_range';
 import all_negatives from '../models/single_group/all_negatives';
+import long_grouping_labels from '../models/single_group/long_grouping_labels';
+import long_value_labels from '../models/single_group/long_value_labels';
+import long_grouping_and_value_labels from '../models/single_group/long_grouping_and_value_labels';
 
 export default SlideController.extend({
 
@@ -70,7 +73,10 @@ export default SlideController.extend({
       zeroes: zeroes,
       sum_to_zero: sum_to_zero,
       bad_range: bad_range,
-      all_negatives: all_negatives
+      all_negatives: all_negatives,
+      long_grouping_labels: long_grouping_labels,
+      long_value_labels: long_value_labels,
+      long_grouping_and_value_labels: long_grouping_and_value_labels
     };
   }),
 
