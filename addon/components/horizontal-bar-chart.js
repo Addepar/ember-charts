@@ -452,10 +452,10 @@ const HorizontalBarChartComponent = ChartComponent.extend(FloatingTooltipMixin,
       });
 
       var maxNegativeValueLabelWidth = this._maxWidthOfElements(negativeValueLabels);
-      var maxPositiveGroupingLabelWidth = maxLabelWidth || this._maxWidthOfElements(positiveGroupingLabels);
+      var maxPositiveGroupingLabelWidth = Math.min(maxLabelWidth, this._maxWidthOfElements(positiveGroupingLabels));
 
       var maxPositiveValueLabelWidth = this._maxWidthOfElements(positiveValueLabels);
-      var maxNegativeGroupingLabelWidth = maxLabelWidth || this._maxWidthOfElements(negativeGroupingLabels);
+      var maxNegativeGroupingLabelWidth = Math.min(maxLabelWidth, this._maxWidthOfElements(negativeGroupingLabels));
 
       var padding = this.get('labelPadding');
       var minValue = Math.abs(this.get('minValue'));
