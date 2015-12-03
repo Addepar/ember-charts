@@ -462,8 +462,8 @@ const HorizontalBarChartComponent = ChartComponent.extend(FloatingTooltipMixin,
       var maxValue = this.get('maxValue');
       var valueRange = maxValue + minValue;
       var containerWidth = this.get('outerWidth');
-      var chartWidth = containerWidth - maxNegativeValueLabelWidth - maxPositiveValueLabelWidth - 2 * padding;
       const axisTitleOffset = this.get('yAxisTitleHeightOffset') + 5;
+      var chartWidth = containerWidth - maxNegativeValueLabelWidth - maxPositiveValueLabelWidth - 2 * padding - axisTitleOffset;
 
       var leftGroupLabelWidth = maxPositiveGroupingLabelWidth;
       var leftChartWidth = maxNegativeValueLabelWidth + minValue/valueRange * chartWidth;
@@ -474,11 +474,14 @@ const HorizontalBarChartComponent = ChartComponent.extend(FloatingTooltipMixin,
 
       var leftWidth = maxNegativeValueLabelWidth;
       var rightWidth = maxPositiveValueLabelWidth;
+      var chartPadding = 2 * padding + axisTitleOffset;
 
       if (leftGroupLabelWidth > leftChartWidth) {
-        leftWidth = leftGroupLabelWidth - minValue * (containerWidth - leftGroupLabelWidth - rightWidth - 2 * padding - axisTitleOffset) / maxValue;
+        leftWidth = leftGroupLabelWidth - minValue * (containerWidth - leftGroupLabelWidth - rightWidth - chartPadding) / maxValue;
+        leftWidth = Math.min(leftWidth, containerWidth - rightWidth - chartPadding);
       } else if (rightGroupLabelWidth > rightChartWidth) {
-        rightWidth = rightGroupLabelWidth - maxValue * (containerWidth - rightGroupLabelWidth - leftWidth - 2 * padding) / minValue;
+        rightWidth = rightGroupLabelWidth - maxValue * (containerWidth - rightGroupLabelWidth - leftWidth - chartPadding) / minValue;
+        rightWidth = Math.min(rightWidth, containerWidth - leftWidth - chartPadding);
       }
 
       /*const leftLabels = negativeValueLabels.concat(positiveGroupingLabels);
