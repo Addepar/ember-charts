@@ -149,11 +149,21 @@ const HorizontalBarChartComponent = ChartComponent.extend(FloatingTooltipMixin,
     }
   }),
 
-  // Scale to map value to horizontal length of bar
-  xScale: Ember.computed('width', 'xDomain', function() {
+  /*
+   * Returns a function which scales a value in the data to a horizontal position
+   * @private
+   * @param {Number} width The width of the chart to use for scaling
+   * @return {Function}
+   */
+  _xScaleForWidth: function(width) {
     return d3.scale.linear()
       .domain(this.get('xDomain'))
-      .range([0, this.get('width')]);
+      .range([0, width]);
+  },
+
+  // Scale to map value to horizontal length of bar
+  xScale: Ember.computed('width', 'xDomain', function() {
+    return this._xScaleForWidth(this.get('width'));
   }),
 
   // Scale to map bar index to its horizontal position
@@ -224,7 +234,7 @@ const HorizontalBarChartComponent = ChartComponent.extend(FloatingTooltipMixin,
   barAttrs: Ember.computed('xScale', 'mostTintedColor', 'leastTintedColor', 'barThickness', function() {
     var xScale = this.get('xScale');
     return {
-      width: (d) => Math.abs(xScale(d.value) - xScale(0)),
+      width: (d) => this._computeBarWidth(d.value, xScale),
       height: this.get('barThickness'),
       'stroke-width': 0,
       style: (d) => {
@@ -414,7 +424,6 @@ const HorizontalBarChartComponent = ChartComponent.extend(FloatingTooltipMixin,
   _computeLabelWidths: function(groupLabelElements, valueLabelElements) {
     const maxValueLabelWidth = this._maxWidthOfElements(valueLabelElements);
     const maxGroupLabelWidth = this._maxWidthOfElements(groupLabelElements);
-
     const maxLabelWidth = this.get('maxLabelWidth');
 
     // If all values are positive, the grouping labels are on the left and the
@@ -431,37 +440,129 @@ const HorizontalBarChartComponent = ChartComponent.extend(FloatingTooltipMixin,
         left: maxValueLabelWidth,
         right: d3.min([maxGroupLabelWidth, maxLabelWidth])
       };
-    // If the values are a mix of positive and negative values, there is a mix
-    // value and grouping labels on each side. Find the largest one on either
-    // side.
     } else {
-      const positiveValues = this.get('positiveValues');
-      const negativeValues = this.get('negativeValues');
-
-      const positiveGroupingLabels = positiveValues.map((val) => {
-        return this._getElementForValue(groupLabelElements, val);
-      });
-      const positiveValueLabels = positiveValues.map((val) => {
-        return this._getElementForValue(valueLabelElements, val);
-      });
-      const negativeGroupingLabels = negativeValues.map((val) => {
-        return this._getElementForValue(groupLabelElements, val);
-      });
-      const negativeValueLabels = negativeValues.map((val) => {
-        return this._getElementForValue(valueLabelElements, val);
-      });
-
-      const leftLabels = negativeValueLabels.concat(positiveGroupingLabels);
-      const rightLabels = positiveValueLabels.concat(negativeGroupingLabels);
-
-      const [leftWidth, rightWidth] = [leftLabels, rightLabels].map((elements) => {
-        return this._maxWidthOfElements(elements);
-      });
-      return {
-        left: leftWidth,
-        right: rightWidth
-      };
+      return this._computeMixedLabelWidths(groupLabelElements, valueLabelElements);
     }
+  },
+
+  /*
+   * Determine the label widths on either side of a chart which contains a mix of positive
+   * and negative values
+   * @private
+   * @param {Array.<SVGTextElement>} groupLabelElements The text elements
+   *  representing the group labels for the chart
+   * @param {Array.<SVGTextElement>} valueLabelElements The text elements
+   *  representing the value labels for the chart
+   * @return {Object.<String, Number>}
+   */
+  _computeMixedLabelWidths: function(groupLabelElements, valueLabelElements) {
+    const minValue = this.get('minValue');
+    const maxValue = this.get('maxValue');
+    const maxLabelWidth = this.get('maxLabelWidth');
+
+    // The grouping labels for positive values appear on the left side of the chart axis, and
+    // vice-versa for negative values and right labels
+    const leftGroupingLabels = this.get('positiveValues').map((val) => {
+      return this._getElementForValue(groupLabelElements, val);
+    });
+    const rightGroupingLabels = this.get('negativeValues').map((val) => {
+      return this._getElementForValue(groupLabelElements, val);
+    });
+    const maxLeftGroupingLabelWidth = d3.min([maxLabelWidth,
+      this._maxWidthOfElements(leftGroupingLabels)]);
+    const maxRightGroupingLabelWidth = d3.min([maxLabelWidth,
+      this._maxWidthOfElements(rightGroupingLabels)]);
+
+    // The value label that is furthest to the left is the one representing the minimum
+    // value in the chart, and vice-versa for the right side and maximum value
+    const leftMostValueLabelWidth = this._getElementWidthForValue(valueLabelElements, minValue);
+    const rightMostValueLabelWidth = this._getElementWidthForValue(valueLabelElements, maxValue);
+
+    const padding = (2 * this.get('labelPadding')) + this.get('yAxisTitleHeightOffset');
+    const outerWidth = this.get('outerWidth');
+    const width = outerWidth - leftMostValueLabelWidth - rightMostValueLabelWidth - padding;
+    const xScale = this._xScaleForWidth(width);
+
+    const maxNegativeBarWidth = this._computeBarWidth(minValue, xScale);
+    const maxPositiveBarWidth = this._computeBarWidth(maxValue, xScale);
+
+    var leftWidth, rightWidth;
+    // If the sum of the widths of the longest bar in a direction and its value label is larger
+    // than the longest grouping label on the same side of the chart, then the relevant width on
+    // that side is the width of the value label
+    if (maxNegativeBarWidth + leftMostValueLabelWidth > maxLeftGroupingLabelWidth) {
+      leftWidth = leftMostValueLabelWidth;
+    // In the case where the left grouping label is wider than the sum of the largest left bar
+    // and its value label, the goal is to find the distance between the left edge of the chart
+    // and the end of the left bar.
+    } else {
+      // We can no longer use `maxNegativeBarWidth` from above, because it was computed with the
+      // assumption that the value labels made up the outer margins of the chart, which is not
+      // true in this case.
+      // The amount of space to the left of the axis is fixed at the width of the grouping label.
+      // The amount of space to the right of most positive bar is fixed at the width of the
+      // value label for that bar. Knowing this, we can compute the width of the positive bar.
+      let realPositiveBarWidth = outerWidth - maxLeftGroupingLabelWidth - rightMostValueLabelWidth - padding;
+      // From the positive bar width, we can compute the negative bar width
+      let realNegativeBarWidth = this._getMostNegativeBarWidth(realPositiveBarWidth);
+      leftWidth = maxLeftGroupingLabelWidth - realNegativeBarWidth;
+    }
+
+    // This is the inverse of the logic above used for leftWidth
+    if (maxPositiveBarWidth + rightMostValueLabelWidth > maxRightGroupingLabelWidth) {
+      rightWidth = rightMostValueLabelWidth;
+    } else {
+      let realNegativeBarWidth = outerWidth - maxRightGroupingLabelWidth - leftMostValueLabelWidth - padding;
+      let realPositiveBarWidth = this._getMostPositiveBarWidth(realNegativeBarWidth);
+      rightWidth = maxRightGroupingLabelWidth - realPositiveBarWidth;
+    }
+
+    return {
+      left: leftWidth,
+      right: rightWidth
+    };
+  },
+
+  /*
+   * Compute the width of a bar in the chart, given its value and a scaling function
+   * @see _xScaleForWidth
+   * @private
+   * @param {Number} value The value to compute the bar width for
+   * @param {Function} scaleFunction The function that scales values to the width of the chart
+   * @return {Number}
+   */
+  _computeBarWidth: function(value, scaleFunction) {
+    return Math.abs(scaleFunction(value) - scaleFunction(0));
+  },
+
+  /*
+   * For charts with a mix of positive and negative values, given the width of
+   * the most positive bar, get the width of the most negative bar. The ratio
+   * of the widths of the two bars is the same as the ratio between the min and
+   * max values
+   * @private
+   * @param {Number} mostPositiveBarWidth
+   * @return {Number}
+   */
+  _getMostNegativeBarWidth: function(mostPositiveBarWidth) {
+    const max = this.get('maxValue');
+    const min = Math.abs(this.get('minValue'));
+    return mostPositiveBarWidth * (min / max);
+  },
+
+  /*
+   * For charts with a mix of positive and negative values, given the width of
+   * the most negative bar, get the width of the most positive bar. The ratio
+   * of the widths of the two bars is the same as the ratio between the max and
+   * min values
+   * @private
+   * @param {Number} mostNegativeBarWidth
+   * @return {Number}
+   */
+  _getMostPositiveBarWidth: function(mostNegativeBarWidth) {
+    const max = this.get('maxValue');
+    const min = Math.abs(this.get('minValue'));
+    return mostNegativeBarWidth * (max / min);
   },
 
   /**
@@ -475,6 +576,18 @@ const HorizontalBarChartComponent = ChartComponent.extend(FloatingTooltipMixin,
   _getElementForValue: function(elements, value) {
     const index = this.get('allFinishedDataValues').indexOf(value);
     return elements[index];
+  },
+
+  /**
+   * Given an array of SVG elements and a value, return the width of the element in the array
+   * at the same index as the value is in the list of all values
+   * @private
+   * @param {Array.<SVGElement>} elements The elements to search in
+   * @param {Number} value The value to search for
+   * @return {Number}
+   */
+  _getElementWidthForValue: function(elements, value) {
+    return this._getElementForValue(elements, value).getComputedTextLength();
   },
 
   /**
@@ -514,30 +627,24 @@ const HorizontalBarChartComponent = ChartComponent.extend(FloatingTooltipMixin,
     // Add a few extra pixels of padding to ensure that labels don't clip off
     // the edge of the chart
     const labelPadding = this.get('labelPadding');
-    const axisTitleOffset = this.get('yAxisTitleHeightOffset') + 5;
+    const axisTitleOffset = this.get('yAxisTitleHeightOffset');
 
     this.setProperties({
       horizontalMarginLeft: labelWidths.left + labelPadding + axisTitleOffset,
       horizontalMarginRight: labelWidths.right + labelPadding
     });
 
-    var labelWidth;
-    if (this.get('hasAllPositiveValues')) {
-      labelWidth = labelWidths.left;
-    } else if (this.get('hasAllNegativeValues')) {
-      labelWidth = labelWidths.right;
-    } else {
-      // If the chart contains a mix of negative and positive values, there are
-      // grouping labels on both sides of the chart
-      labelWidth = d3.max([labelWidths.left, labelWidths.right]);
-    }
-    const labelTrimmer = LabelTrimmer.create({
-      getLabelSize: () => labelWidth,
-      getLabelText: (d) => d.label
-    });
+    const maxLabelWidth = this.get('maxLabelWidth');
+    if (!Ember.isNone(maxLabelWidth)) {
+      const labelTrimmer = LabelTrimmer.create({
+        getLabelSize: () => maxLabelWidth,
+        getLabelText: (d) => d.label
+      });
 
-    groups.select('text.group')
-      .call(labelTrimmer.get('trim'));
+      groups.select('text.group')
+        .call(labelTrimmer.get('trim'));
+    }
+
   }
 });
 
