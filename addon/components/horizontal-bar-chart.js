@@ -452,10 +452,10 @@ const HorizontalBarChartComponent = ChartComponent.extend(FloatingTooltipMixin,
       });
 
       var maxNegativeValueLabelWidth = this._maxWidthOfElements(negativeValueLabels);
-      var maxPositiveGroupingLabelWidth = this._maxWidthOfElements(positiveGroupingLabels);
+      var maxPositiveGroupingLabelWidth = maxLabelWidth || this._maxWidthOfElements(positiveGroupingLabels);
 
       var maxPositiveValueLabelWidth = this._maxWidthOfElements(positiveValueLabels);
-      var maxNegativeGroupingLabelWidth = this._maxWidthOfElements(negativeGroupingLabels);
+      var maxNegativeGroupingLabelWidth = maxLabelWidth || this._maxWidthOfElements(negativeGroupingLabels);
 
       var padding = this.get('labelPadding');
       var minValue = Math.abs(this.get('minValue'));
@@ -550,7 +550,7 @@ const HorizontalBarChartComponent = ChartComponent.extend(FloatingTooltipMixin,
       horizontalMarginRight: labelWidths.right + labelPadding
     });
 
-    var labelWidth;
+    /*var labelWidth;
     if (this.get('hasAllPositiveValues')) {
       labelWidth = labelWidths.left;
     } else if (this.get('hasAllNegativeValues')) {
@@ -559,14 +559,15 @@ const HorizontalBarChartComponent = ChartComponent.extend(FloatingTooltipMixin,
       // If the chart contains a mix of negative and positive values, there are
       // grouping labels on both sides of the chart
       labelWidth = d3.max([labelWidths.left, labelWidths.right]);
-    }
+    }*/
+    var labelWidth = this.get('maxLabelWidth') || this.get('outerWidth');
     const labelTrimmer = LabelTrimmer.create({
       getLabelSize: () => labelWidth,
       getLabelText: (d) => d.label
     });
 
-    /*groups.select('text.group')
-      .call(labelTrimmer.get('trim'));*/
+    groups.select('text.group')
+      .call(labelTrimmer.get('trim'));
   }
 });
 
