@@ -463,6 +463,7 @@ const HorizontalBarChartComponent = ChartComponent.extend(FloatingTooltipMixin,
       var valueRange = maxValue + minValue;
       var containerWidth = this.get('outerWidth');
       var chartWidth = containerWidth - maxNegativeValueLabelWidth - maxPositiveValueLabelWidth - 2 * padding;
+      const axisTitleOffset = this.get('yAxisTitleHeightOffset') + 5;
 
       var leftGroupLabelWidth = maxPositiveGroupingLabelWidth;
       var leftChartWidth = maxNegativeValueLabelWidth + minValue/valueRange * chartWidth;
@@ -475,7 +476,7 @@ const HorizontalBarChartComponent = ChartComponent.extend(FloatingTooltipMixin,
       var rightWidth = maxPositiveValueLabelWidth;
 
       if (leftGroupLabelWidth > leftChartWidth) {
-        leftWidth = leftGroupLabelWidth - minValue * (containerWidth - leftGroupLabelWidth - rightWidth - 2 * padding) / maxValue;
+        leftWidth = leftGroupLabelWidth - minValue * (containerWidth - leftGroupLabelWidth - rightWidth - 2 * padding - axisTitleOffset) / maxValue;
       } else if (rightGroupLabelWidth > rightChartWidth) {
         rightWidth = rightGroupLabelWidth - maxValue * (containerWidth - rightGroupLabelWidth - leftWidth - 2 * padding) / minValue;
       }
@@ -538,7 +539,7 @@ const HorizontalBarChartComponent = ChartComponent.extend(FloatingTooltipMixin,
     const labelWidths = this._computeLabelWidths(groupLabelElements, valueLabelElements);
     // labelWidth is used for computations around the left margin, so set it
     // to the width of the left label
-    //this.set('labelWidth', labelWidths.left);
+    this.set('labelWidth', labelWidths.left);
 
     // Add a few extra pixels of padding to ensure that labels don't clip off
     // the edge of the chart
