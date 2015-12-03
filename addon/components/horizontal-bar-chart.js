@@ -461,24 +461,24 @@ const HorizontalBarChartComponent = ChartComponent.extend(FloatingTooltipMixin,
       var minValue = Math.abs(this.get('minValue'));
       var maxValue = this.get('maxValue');
       var valueRange = maxValue + minValue;
-      var containerWidth = this.get('width');
+      var containerWidth = this.get('outerWidth');
       var chartWidth = containerWidth - maxNegativeValueLabelWidth - maxPositiveValueLabelWidth - 2*padding;
 
-      var leftGroupLabelWidth = maxPositiveGroupingLabelWidth + padding;
-      var leftChartWidth = maxNegativeValueLabelWidth + padding + minValue/valueRange * chartWidth;
+      var leftGroupLabelWidth = maxPositiveGroupingLabelWidth;
+      var leftChartWidth = maxNegativeValueLabelWidth + minValue/valueRange * chartWidth;
 
 
-      var rightGroupLabelWidth = maxNegativeGroupingLabelWidth + padding;
-      var rightChartWidth = maxPositiveValueLabelWidth + padding + maxValue/valueRange * chartWidth;
+      var rightGroupLabelWidth = maxNegativeGroupingLabelWidth;
+      var rightChartWidth = maxPositiveValueLabelWidth + maxValue/valueRange * chartWidth;
 
       var leftWidth = maxNegativeValueLabelWidth;
       if (leftGroupLabelWidth > leftChartWidth) {
-        leftWidth += leftGroupLabelWidth - leftChartWidth - padding;
+        leftWidth += leftGroupLabelWidth - leftChartWidth;
       }
 
       var rightWidth = maxPositiveValueLabelWidth;
       if (rightGroupLabelWidth > rightChartWidth) {
-        rightWidth += rightGroupLabelWidth - rightChartWidth - padding;
+        rightWidth += rightGroupLabelWidth - rightChartWidth;
       }
 
       /*const leftLabels = negativeValueLabels.concat(positiveGroupingLabels);
@@ -539,7 +539,7 @@ const HorizontalBarChartComponent = ChartComponent.extend(FloatingTooltipMixin,
     const labelWidths = this._computeLabelWidths(groupLabelElements, valueLabelElements);
     // labelWidth is used for computations around the left margin, so set it
     // to the width of the left label
-    this.set('labelWidth', labelWidths.left);
+    //this.set('labelWidth', labelWidths.left);
 
     // Add a few extra pixels of padding to ensure that labels don't clip off
     // the edge of the chart
