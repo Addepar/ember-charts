@@ -415,7 +415,7 @@ const HorizontalBarChartComponent = ChartComponent.extend(FloatingTooltipMixin,
     const maxValueLabelWidth = this._maxWidthOfElements(valueLabelElements);
     const maxGroupLabelWidth = this._maxWidthOfElements(groupLabelElements);
 
-    const maxLabelWidth = this.get('maxLabelWidth');
+    const maxLabelWidth = this.get('maxLabelWidth') || this.get('outerWidth');
 
     // If all values are positive, the grouping labels are on the left and the
     // value labels are on the right
