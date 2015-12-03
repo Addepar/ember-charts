@@ -472,13 +472,12 @@ const HorizontalBarChartComponent = ChartComponent.extend(FloatingTooltipMixin,
       var rightChartWidth = maxPositiveValueLabelWidth + maxValue/valueRange * chartWidth;
 
       var leftWidth = maxNegativeValueLabelWidth;
-      if (leftGroupLabelWidth > leftChartWidth) {
-        leftWidth += leftGroupLabelWidth - leftChartWidth;
-      }
-
       var rightWidth = maxPositiveValueLabelWidth;
-      if (rightGroupLabelWidth > rightChartWidth) {
-        rightWidth += rightGroupLabelWidth - rightChartWidth;
+
+      if (leftGroupLabelWidth > leftChartWidth) {
+        leftWidth = leftGroupLabelWidth - minValue * (containerWidth - leftGroupLabelWidth - rightWidth) / maxValue;
+      } else if (rightGroupLabelWidth > rightChartWidth) {
+        rightWidth = rightGroupLabelWidth - maxValue * (containerWidth - rightGroupLabelWidth - leftWidth) / minValue;
       }
 
       /*const leftLabels = negativeValueLabels.concat(positiveGroupingLabels);
