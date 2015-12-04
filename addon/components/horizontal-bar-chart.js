@@ -405,6 +405,27 @@ const HorizontalBarChartComponent = ChartComponent.extend(FloatingTooltipMixin,
     return this.get('yAxis').attr(this.get('axisAttrs'));
   },
 
+  _computeBarWidth: function(xScale, value) {
+    return Math.abs(xScale(value) - xScale(0));
+  },
+
+  _checkGroupingLabelOverflow: function(groupingLabelWidth, valueLabelWidth, value, xScale) {
+    const chartSectionWidth = this._computeBarWidth(xScale, value) + valueLabelWidth;
+    return groupingLabelWidth > chartSectionWidth;
+  },
+
+  _computeMarginForGroupingLabel: function(containerWidth, maxGroupingLabelWidth, maxValueLabelWidth, barWidthRatio) {
+    const chartPadding = 2 * this.get('labelPadding') + this._getYAxisTitleOffset();
+    const maxMargin = containerWidth - maxValueLabelWidth - chartPadding;
+    const oppositeBarWidth = containerWidth - chartPadding - maxGroupingLabelWidth - maxValueLabelWidth;
+    const requiredLabelMargin = maxGroupingLabelWidth - oppositeBarWidth * barWidthRatio;
+    return Math.min(requiredLabelMargin, maxMargin);
+  },
+
+  _getYAxisTitleOffset: function() {
+    return this.get('yAxisTitleHeightOffset') + 5;
+  },
+
   /**
    * Given the list of elements for the group labels and value labels,
    * determine the width of the largest label on either side of the chart.
@@ -456,38 +477,27 @@ const HorizontalBarChartComponent = ChartComponent.extend(FloatingTooltipMixin,
       });
 
       const maxNegativeValueLabelWidth = this._maxWidthOfElements(negativeValueLabels);
-      const maxPositiveGroupingLabelWidth = Math.min(maxLabelWidth, this._maxWidthOfElements(positiveGroupingLabels));
+      const maxNegativeGroupingLabelWidth = Math.min(maxLabelWidth, this._maxWidthOfElements(negativeGroupingLabels));
 
       const maxPositiveValueLabelWidth = this._maxWidthOfElements(positiveValueLabels);
-      const maxNegativeGroupingLabelWidth = Math.min(maxLabelWidth, this._maxWidthOfElements(negativeGroupingLabels));
+      const maxPositiveGroupingLabelWidth = Math.min(maxLabelWidth, this._maxWidthOfElements(positiveGroupingLabels));
 
       const minValue = Math.abs(this.get('minValue'));
       const maxValue = this.get('maxValue');
       const containerWidth = this.get('outerWidth');
-      const axisTitleOffset = this.get('yAxisTitleHeightOffset') + 5;
-      const chartPadding = 2 * this.get('labelPadding') + axisTitleOffset;
+      const chartPadding = 2 * this.get('labelPadding') + this._getYAxisTitleOffset();
       const chartWidth = containerWidth - maxNegativeValueLabelWidth - maxPositiveValueLabelWidth - chartPadding;
-
       const xScale = this.xScaleForWidth(chartWidth);
-      const maxNegativeBarWidth = Math.abs(xScale(minValue) - xScale(0));
-      const maxPositiveBarWidth = Math.abs(xScale(maxValue) - xScale(0));
 
-      const leftGroupLabelWidth = maxPositiveGroupingLabelWidth;
-      const leftChartWidth = maxNegativeValueLabelWidth + maxNegativeBarWidth;
-
-      const rightGroupLabelWidth = maxNegativeGroupingLabelWidth;
-      const rightChartWidth = maxPositiveValueLabelWidth + maxPositiveBarWidth;
-
-      var barLength;
       var leftWidth = maxNegativeValueLabelWidth;
       var rightWidth = maxPositiveValueLabelWidth;
 
-      if (leftGroupLabelWidth > leftChartWidth) {
-        barLength = (containerWidth - leftGroupLabelWidth - rightWidth - chartPadding) * minValue / maxValue;
-        leftWidth = Math.min(leftGroupLabelWidth - barLength, containerWidth - rightWidth - chartPadding);
-      } else if (rightGroupLabelWidth > rightChartWidth) {
-        barLength = (containerWidth - rightGroupLabelWidth - leftWidth - chartPadding) * maxValue / minValue;
-        rightWidth = Math.min(rightGroupLabelWidth - barLength, containerWidth - leftWidth - chartPadding);
+      // Compute either left or right width since there's only 1-degree of freedom. 
+      // Hence, Y-axis can only be positioned either from left or from right.
+      if (this._checkGroupingLabelOverflow(maxPositiveGroupingLabelWidth, maxNegativeValueLabelWidth, minValue, xScale)) {
+        leftWidth = this._computeMarginForGroupingLabel(containerWidth, maxPositiveGroupingLabelWidth, maxPositiveValueLabelWidth, minValue/maxValue);
+      } else if (this._checkGroupingLabelOverflow(maxNegativeGroupingLabelWidth, maxPositiveValueLabelWidth, maxValue, xScale)) {
+        rightWidth = this._computeMarginForGroupingLabel(containerWidth, maxNegativeGroupingLabelWidth, maxNegativeValueLabelWidth, maxValue/minValue);
       }
 
       return {
@@ -547,10 +557,9 @@ const HorizontalBarChartComponent = ChartComponent.extend(FloatingTooltipMixin,
     // Add a few extra pixels of padding to ensure that labels don't clip off
     // the edge of the chart
     const labelPadding = this.get('labelPadding');
-    const axisTitleOffset = this.get('yAxisTitleHeightOffset') + 5;
 
     this.setProperties({
-      horizontalMarginLeft: labelWidths.left + labelPadding + axisTitleOffset,
+      horizontalMarginLeft: labelWidths.left + labelPadding + this._getYAxisTitleOffset(),
       horizontalMarginRight: labelWidths.right + labelPadding
     });
 
