@@ -120,6 +120,7 @@ test("Value/Grouping Labels appear on the left/right when all data is 0 or negat
 });
 
 test("Labels aren't trimmed when width is small", function(assert) {
+   assert.expect(1);
   const testData = [{
     label: "some really long label that is really long",
     value: 10000,
@@ -143,7 +144,68 @@ test("Labels aren't trimmed when width is small", function(assert) {
   const noLabelsTruncated = _.all(groupLabels, function(label) {
     return label.textContent.indexOf('...') === -1;
   });
-  assert.ok(noLabelsTruncated,
-    `For charts with a mix of positive and negative values, labels are not
-      truncated when width is small`);
+  assert.ok(noLabelsTruncated, 'For charts with a mix of positive and negative values, labels are not' +
+      'truncated when width is small');
+});
+
+test("Labels are flush with edges of the chart", function(assert) {
+  assert.expect(3);
+
+  const testData = [{
+    label: "Label 1",
+    value: -5,
+    type: "percent"
+  }, {
+    label: "Label 2 - There is a long grouping lable on the right that should be flush",
+    value: -1,
+    type: "percent"
+  }, {
+    label: "Label 3",
+    value: 0,
+    type: "percent"
+  }, {
+    label: "Label 4",
+    value: 0,
+    type: "percent"
+  }, {
+    label: "Label 5",
+    value: 0,
+    type: "percent"
+  }, {
+    label: "Label 6 - There is a long grouping label on the right that is not flush",
+    value: 2,
+    type: "percent"
+  }];
+
+  const component = this.subject({
+    data: testData
+  });
+
+  this.render();
+
+  const longValueLabel = component.$("text.value:first");
+  const longGroupLabel = component.$("text.group:eq(1)");
+  const chartViewport = component.$('.chart-viewport');
+
+  debugger;
+
+  assert.equal(longValueLabel.position().left, chartViewport.position().left,
+    'Largest Left Value Label + Bar Width is longer than Left Group Labels, ' +
+        'therefore Left Value Label should be flush on the left');
+  assert.equal(longGroupLabel.position().right, chartViewport.position().right,
+    'Right Group label is longer than Largest Left Value Labels + Bar Widths,' +
+        'therefore Right Group Label should be flush on the right');
+
+
+  const groupLabels = component.$('text.group');
+  const valueLabels = component.$('text.value');
+  const noValueLabelsTruncated = _.all(valueLabels, function(label) {
+    return label.textContent.indexOf('...') === -1;
+  });
+
+  const noGroupLabelsTruncated = _.all(groupLabels, function(label) {
+    return label.textContent.indexOf('...') === -1;
+  });
+
+  assert.ok(noGroupLabelsTruncated && noValueLabelsTruncated, 'Labels are not truncated');
 });
