@@ -148,7 +148,7 @@ test("Labels aren't trimmed when width is small", function(assert) {
       'truncated when width is small');
 });
 
-test("Labels are flush with edges of the chart", function(assert) {
+test("Positve and Negative Data 1 - Labels are flush with edges of the chart", function(assert) {
   assert.expect(3);
 
   const testData = [{
@@ -156,7 +156,7 @@ test("Labels are flush with edges of the chart", function(assert) {
     value: -5,
     type: "percent"
   }, {
-    label: "Label 2 - There is a long grouping lable on the right that should be flush",
+    label: "Label 2 - There is a long grouping label on the right that should be flush",
     value: -1,
     type: "percent"
   }, {
@@ -172,7 +172,7 @@ test("Labels are flush with edges of the chart", function(assert) {
     value: 0,
     type: "percent"
   }, {
-    label: "Label 6 - There is a long grouping label on the right that is not flush",
+    label: "Label 6 - There is a long grouping label on the left that is not flush",
     value: 2,
     type: "percent"
   }];
@@ -191,7 +191,7 @@ test("Labels are flush with edges of the chart", function(assert) {
     'Largest Left Value Label + Bar Width is longer than Left Group Labels, ' +
         'therefore Left Value Label should be flush on the left');
   assert.equal(longGroupLabel.position().right, chartViewport.position().right,
-    'Right Group label is longer than Largest Left Value Labels + Bar Widths,' +
+    'Right Group label is longer than Largest Right Value Labels + Bar Widths, ' +
         'therefore Right Group Label should be flush on the right');
 
 
@@ -207,3 +207,64 @@ test("Labels are flush with edges of the chart", function(assert) {
 
   assert.ok(noGroupLabelsTruncated && noValueLabelsTruncated, 'Labels are not truncated');
 });
+
+test("Positve and Negative Data 2 - Labels are flush with edges of the chart", function(assert) {
+  assert.expect(3);
+
+  const testData = [{
+    label: "Label 1",
+    value: -2,
+    type: "percent"
+  }, {
+    label: "Label 2 - There is a long grouping label on the right that should not be flush",
+    value: -1,
+    type: "percent"
+  }, {
+    label: "Label 3",
+    value: 0,
+    type: "percent"
+  }, {
+    label: "Label 4",
+    value: 1,
+    type: "percent"
+  }, {
+    label: "Label 5 - There is a long grouping label on the left that should be flush" +
+        "ADDING EXTRA WORDS HERE TO MAKE IT LONGER THAN THE BAR",
+    value: 2,
+    type: "percent"
+  }, {
+    label: "Label 6",
+    value: 4,
+    type: "percent"
+  }];
+
+  const component = this.subject({
+    data: testData
+  });
+
+  this.render();
+
+  const longValueLabel = component.$("text.value:last");
+  const longGroupLabel = component.$("text.group:eq(4)");
+  const chartViewport = component.$('.chart-viewport');
+
+  assert.equal(longValueLabel.position().right, chartViewport.position().right,
+    'Largest Right Value Label + Bar Width is longer than Right Group Labels, ' +
+        'therefore Right Value Label should be flush on the right');
+  assert.equal(longGroupLabel.position().left, chartViewport.position().left,
+    'Left Group label is longer than Largest Left Value Labels + Bar Widths, ' +
+        'therefore Left Group Label should be flush on the left');
+
+  const groupLabels = component.$('text.group');
+  const valueLabels = component.$('text.value');
+  const noValueLabelsTruncated = _.all(valueLabels, function(label) {
+    return label.textContent.indexOf('...') === -1;
+  });
+
+  const noGroupLabelsTruncated = _.all(groupLabels, function(label) {
+    return label.textContent.indexOf('...') === -1;
+  });
+
+  assert.ok(noGroupLabelsTruncated && noValueLabelsTruncated, 'Labels are not truncated');
+});
+
