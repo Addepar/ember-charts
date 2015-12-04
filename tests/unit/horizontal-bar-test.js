@@ -244,8 +244,6 @@ test("Positve and Negative Data 2 - Labels are flush with edges of the chart", f
 
   this.render();
 
-  debugger;
-
   const longValueLabel = component.$("text.value:last");
   const longGroupLabel = component.$("text.group:eq(4)");
   const chartViewport = component.$('.chart-viewport');
