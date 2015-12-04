@@ -1,5 +1,5 @@
 export default [{
-    label: "A very long Label 1 that should add a lot of left padding",
+    label: "Label 1 - There is a long grouping label on the left",
     value: 0,
     type: "percent"
   }, {
@@ -11,7 +11,7 @@ export default [{
     value: 3,
     type: "percent"
   }, {
-    label: "Label 4",
+    label: "Label 4 - There is a long grouping lable on the right that should be flush",
     value: -5,
     type: "percent"
   }, {

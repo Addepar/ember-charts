@@ -149,11 +149,15 @@ const HorizontalBarChartComponent = ChartComponent.extend(FloatingTooltipMixin,
     }
   }),
 
-  // Scale to map value to horizontal length of bar
-  xScale: Ember.computed('width', 'xDomain', function() {
+  xScaleForWidth: function(width) {
     return d3.scale.linear()
       .domain(this.get('xDomain'))
-      .range([0, this.get('width')]);
+      .range([0, width]);
+  },
+
+  // Scale to map value to horizontal length of bar
+  xScale: Ember.computed('width', 'xDomain', function() {
+    return this.xScaleForWidth(this.get('width'));
   }),
 
   // Scale to map bar index to its horizontal position
@@ -401,6 +405,27 @@ const HorizontalBarChartComponent = ChartComponent.extend(FloatingTooltipMixin,
     return this.get('yAxis').attr(this.get('axisAttrs'));
   },
 
+  _computeBarWidth: function(xScale, value) {
+    return Math.abs(xScale(value) - xScale(0));
+  },
+
+  _checkGroupingLabelOverflow: function(groupingLabelWidth, valueLabelWidth, value, xScale) {
+    const chartSectionWidth = this._computeBarWidth(xScale, value) + valueLabelWidth;
+    return groupingLabelWidth > chartSectionWidth;
+  },
+
+  _computeMarginForGroupingLabel: function(containerWidth, maxGroupingLabelWidth, maxValueLabelWidth, barWidthRatio) {
+    const chartPadding = 2 * this.get('labelPadding') + this._getYAxisTitleOffset();
+    const maxMargin = containerWidth - maxValueLabelWidth - chartPadding;
+    const oppositeBarWidth = containerWidth - chartPadding - maxGroupingLabelWidth - maxValueLabelWidth;
+    const requiredLabelMargin = maxGroupingLabelWidth - oppositeBarWidth * barWidthRatio;
+    return Math.min(requiredLabelMargin, maxMargin);
+  },
+
+  _getYAxisTitleOffset: function() {
+    return this.get('yAxisTitleHeightOffset') + 5;
+  },
+
   /**
    * Given the list of elements for the group labels and value labels,
    * determine the width of the largest label on either side of the chart.
@@ -415,7 +440,7 @@ const HorizontalBarChartComponent = ChartComponent.extend(FloatingTooltipMixin,
     const maxValueLabelWidth = this._maxWidthOfElements(valueLabelElements);
     const maxGroupLabelWidth = this._maxWidthOfElements(groupLabelElements);
 
-    const maxLabelWidth = this.get('maxLabelWidth');
+    const maxLabelWidth = this.get('maxLabelWidth') || this.get('outerWidth');
 
     // If all values are positive, the grouping labels are on the left and the
     // value labels are on the right
@@ -451,12 +476,30 @@ const HorizontalBarChartComponent = ChartComponent.extend(FloatingTooltipMixin,
         return this._getElementForValue(valueLabelElements, val);
       });
 
-      const leftLabels = negativeValueLabels.concat(positiveGroupingLabels);
-      const rightLabels = positiveValueLabels.concat(negativeGroupingLabels);
+      const maxNegativeValueLabelWidth = this._maxWidthOfElements(negativeValueLabels);
+      const maxNegativeGroupingLabelWidth = Math.min(maxLabelWidth, this._maxWidthOfElements(negativeGroupingLabels));
 
-      const [leftWidth, rightWidth] = [leftLabels, rightLabels].map((elements) => {
-        return this._maxWidthOfElements(elements);
-      });
+      const maxPositiveValueLabelWidth = this._maxWidthOfElements(positiveValueLabels);
+      const maxPositiveGroupingLabelWidth = Math.min(maxLabelWidth, this._maxWidthOfElements(positiveGroupingLabels));
+
+      const minValue = Math.abs(this.get('minValue'));
+      const maxValue = this.get('maxValue');
+      const containerWidth = this.get('outerWidth');
+      const chartPadding = 2 * this.get('labelPadding') + this._getYAxisTitleOffset();
+      const chartWidth = containerWidth - maxNegativeValueLabelWidth - maxPositiveValueLabelWidth - chartPadding;
+      const xScale = this.xScaleForWidth(chartWidth);
+
+      var leftWidth = maxNegativeValueLabelWidth;
+      var rightWidth = maxPositiveValueLabelWidth;
+
+      // Compute either left or right width since there's only 1-degree of freedom. 
+      // Hence, Y-axis can only be positioned either from left or from right.
+      if (this._checkGroupingLabelOverflow(maxPositiveGroupingLabelWidth, maxNegativeValueLabelWidth, minValue, xScale)) {
+        leftWidth = this._computeMarginForGroupingLabel(containerWidth, maxPositiveGroupingLabelWidth, maxPositiveValueLabelWidth, minValue/maxValue);
+      } else if (this._checkGroupingLabelOverflow(maxNegativeGroupingLabelWidth, maxPositiveValueLabelWidth, maxValue, xScale)) {
+        rightWidth = this._computeMarginForGroupingLabel(containerWidth, maxNegativeGroupingLabelWidth, maxNegativeValueLabelWidth, maxValue/minValue);
+      }
+
       return {
         left: leftWidth,
         right: rightWidth
@@ -514,23 +557,13 @@ const HorizontalBarChartComponent = ChartComponent.extend(FloatingTooltipMixin,
     // Add a few extra pixels of padding to ensure that labels don't clip off
     // the edge of the chart
     const labelPadding = this.get('labelPadding');
-    const axisTitleOffset = this.get('yAxisTitleHeightOffset') + 5;
 
     this.setProperties({
-      horizontalMarginLeft: labelWidths.left + labelPadding + axisTitleOffset,
+      horizontalMarginLeft: labelWidths.left + labelPadding + this._getYAxisTitleOffset(),
       horizontalMarginRight: labelWidths.right + labelPadding
     });
 
-    var labelWidth;
-    if (this.get('hasAllPositiveValues')) {
-      labelWidth = labelWidths.left;
-    } else if (this.get('hasAllNegativeValues')) {
-      labelWidth = labelWidths.right;
-    } else {
-      // If the chart contains a mix of negative and positive values, there are
-      // grouping labels on both sides of the chart
-      labelWidth = d3.max([labelWidths.left, labelWidths.right]);
-    }
+    var labelWidth = this.get('maxLabelWidth') || this.get('outerWidth');
     const labelTrimmer = LabelTrimmer.create({
       getLabelSize: () => labelWidth,
       getLabelText: (d) => d.label
