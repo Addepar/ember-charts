@@ -187,8 +187,6 @@ test("Labels are flush with edges of the chart", function(assert) {
   const longGroupLabel = component.$("text.group:eq(1)");
   const chartViewport = component.$('.chart-viewport');
 
-  debugger;
-
   assert.equal(longValueLabel.position().left, chartViewport.position().left,
     'Largest Left Value Label + Bar Width is longer than Left Group Labels, ' +
         'therefore Left Value Label should be flush on the left');
