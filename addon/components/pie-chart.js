@@ -34,6 +34,9 @@ const PieChartComponent = ChartComponent.extend(FloatingTooltipMixin,
   // the top / bottom when your labels are large or the chart is very small
   minimumTopBottomMargin: 0,
 
+  // Allows the user to configure the maximum number of decimal places in data labels
+  maxDecimalPlace: 0,
+
   // ----------------------------------------------------------------------------
   // Data
   // ----------------------------------------------------------------------------
@@ -61,7 +64,7 @@ const PieChartComponent = ChartComponent.extend(FloatingTooltipMixin,
   }),
 
   // Valid data points that have been sorted by selectedSortType
-  sortedData: Ember.computed('filteredData', 'sortKey', function() {
+  sortedData: Ember.computed('filteredData', 'sortKey', 'maxDecimalPlace', function() {
     var data = this.get('filteredData');
     var total = data.reduce(function(p, child) {
       return child.value + p;
@@ -75,7 +78,7 @@ const PieChartComponent = ChartComponent.extend(FloatingTooltipMixin,
         color: d.color,
         label: d.label,
         value: d.value,
-        percent: d3.round(100.0 * d.value / total)
+        percent: d3.round(100.0 * d.value / total, this.get('maxDecimalPlace'))
       };
     });
 
@@ -84,7 +87,7 @@ const PieChartComponent = ChartComponent.extend(FloatingTooltipMixin,
 
   // This takes the sorted slices that have percents calculated and returns
   // sorted slices that obey the "other" slice aggregation rules
-  sortedDataWithOther: Ember.computed('sortedData', 'maxNumberOfSlices', 'minSlicePercent', function() {
+  sortedDataWithOther: Ember.computed('sortedData', 'maxNumberOfSlices', 'minSlicePercent', 'maxDecimalPlace', function() {
     var lastItem, overflowSlices, slicesLeft;
 
     var data = _.cloneDeep(this.get('sortedData')).reverse();
@@ -144,12 +147,14 @@ const PieChartComponent = ChartComponent.extend(FloatingTooltipMixin,
       slicesLeft = _.take(slicesLeft, maxNumberOfSlices);
     }
 
-    // only push other slice if there is more than one other item
+    // Only push other slice if there is more than one other item
     if (otherItems.length === 1) {
       slicesLeft.push(otherItems[0]);
     } else if (otherSlice.percent > 0) {
       slicesLeft.push(otherSlice);
     }
+
+    otherSlice.percent = d3.round(otherSlice.percent, this.get('maxDecimalPlace'));
 
     // make slices appear in descending order
     return slicesLeft.reverse();
@@ -222,12 +227,19 @@ const PieChartComponent = ChartComponent.extend(FloatingTooltipMixin,
   numSlices: Ember.computed.alias('finishedData.length'),
 
   // Offset slices so that the largest slice finishes at 12 o'clock
+  // If there is an excessively largest slice, have all of the smaller slices
+  // concentrate on the left hand side.
   startOffset: Ember.computed('finishedData', function() {
     var data = this.get('finishedData');
     var sum = data.reduce(function(p, d) {
       return d.percent + p;
     }, 0);
-    return _.last(data).percent / sum * 2 * Math.PI;
+
+    if (_.last(data).percent / sum > 0.65) {
+      return 4/3 * Math.PI;
+    } else {
+      return _.last(data).percent / sum * 2 * Math.PI;
+    }
   }),
 
   // Radius of the pie graphic, resized to fit the viewport.
@@ -366,12 +378,9 @@ const PieChartComponent = ChartComponent.extend(FloatingTooltipMixin,
     // assumes height of all the labels are the same
     var labelOverlap = function(side, ypos, height) {
       var positions = usedLabelPositions[side];
-      _.each(positions, function(pos) {
-        if (Math.abs(ypos - pos) < height) {
-          return true;
-        }
+      return _.some(positions, function(pos) {
+        return Math.abs(ypos - pos) < height;
       });
-      return false;
     };
     if (this.get('numSlices') > 1) {
       return {
@@ -405,11 +414,18 @@ const PieChartComponent = ChartComponent.extend(FloatingTooltipMixin,
           var labelYPos = f(y);
           var labelHeight = this.getBBox().height;
           var side = labelXPos > 0 ? 'right' : 'left';
+
+          // Adjusts labelXPos after labelYPos is moved if labels overlap
+          var updateXPos = function(labelYPos) {
+            return Math.sqrt(Math.max(Math.pow(labelRadius,2) - Math.pow(labelYPos,2), 0));
+          };
           if (labelOverlap(side, labelYPos, labelHeight)) {
             if (side === 'right') {
               labelYPos = _.max(usedLabelPositions[side]) + labelHeight;
+              labelXPos = updateXPos(labelYPos);
             } else {
               labelYPos = _.min(usedLabelPositions[side]) - labelHeight;
+              labelXPos = -1 * updateXPos(labelYPos);
             }
           }
           usedLabelPositions[side].push(labelYPos);
@@ -448,7 +464,8 @@ const PieChartComponent = ChartComponent.extend(FloatingTooltipMixin,
   renderVars: [
     'pieRadius',
     'labelWidth',
-    'finishedData'
+    'finishedData',
+    'startOffset'
   ],
 
   drawChart: function() {
