@@ -222,13 +222,7 @@ const PieChartComponent = ChartComponent.extend(FloatingTooltipMixin,
   numSlices: Ember.computed.alias('finishedData.length'),
 
   // Offset slices so that the largest slice finishes at 12 o'clock
-  startOffset: Ember.computed('finishedData', function() {
-    var data = this.get('finishedData');
-    var sum = data.reduce(function(p, d) {
-      return d.percent + p;
-    }, 0);
-    return _.last(data).percent / sum * 2 * Math.PI;
-  }),
+  startOffset: Math.PI / 4,
 
   // Radius of the pie graphic, resized to fit the viewport.
   pieRadius: Ember.computed('maxRadius', 'width', 'height', function() {
@@ -448,7 +442,8 @@ const PieChartComponent = ChartComponent.extend(FloatingTooltipMixin,
   renderVars: [
     'pieRadius',
     'labelWidth',
-    'finishedData'
+    'finishedData',
+    'startOffset'
   ],
 
   drawChart: function() {
