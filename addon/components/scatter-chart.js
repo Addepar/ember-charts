@@ -45,6 +45,22 @@ const ScatterChartComponent = ChartComponent.extend(LegendMixin, FloatingTooltip
   // last label of the axis is commonly too large
   marginRight: Ember.computed.alias('horizontalMargin'),
 
+  /**
+   * A flag to indicate if the chart view should have left & right margin based
+   * on maximum & minimum X values. If this is set to false, the left & right
+   * sides of the chart will not have extra padding column.
+   * @type {Boolean}
+  **/
+  hasXDomainPadding: true,
+
+  /**
+   * A flag to indicate if the chart view should have top & bottom margin based
+   * on maximum & minimum Y values. If this is set to false, the top & bottom
+   * sides of the chart will not have extra padding column.
+   * @type {Boolean}
+  **/
+  hasYDomainPadding: true,
+
   // ----------------------------------------------------------------------------
   // Data
   // ----------------------------------------------------------------------------
@@ -145,7 +161,10 @@ const ScatterChartComponent = ChartComponent.extend(LegendMixin, FloatingTooltip
     var xDomain = this.get('xDomain');
     var graphicLeft = this.get('graphicLeft');
     var graphicWidth = this.get('graphicWidth');
-    var padding = (xDomain[1] - xDomain[0]) * this.get('graphPadding');
+    var padding = 0;
+    if (this.get('hasXDomainPadding')) {
+      padding = (xDomain[1] - xDomain[0]) * this.get('graphPadding');
+    }
 
     return d3.scale.linear()
             .domain([xDomain[0] - padding, xDomain[1] + padding]).range([graphicLeft, graphicLeft + graphicWidth])
@@ -157,7 +176,10 @@ const ScatterChartComponent = ChartComponent.extend(LegendMixin, FloatingTooltip
     var yDomain = this.get('yDomain');
     var graphicTop = this.get('graphicTop');
     var graphicHeight = this.get('graphicHeight');
-    var padding = (yDomain[1] - yDomain[0]) * this.get('graphPadding');
+    var padding = 0;
+    if (this.get('hasYDomainPadding')) {
+      padding = (yDomain[1] - yDomain[0]) * this.get('graphPadding');
+    }
 
     return d3.scale.linear().domain([yDomain[0] - padding, yDomain[1] + padding])
             .range([graphicTop + graphicHeight, graphicTop])
@@ -435,8 +457,12 @@ const ScatterChartComponent = ChartComponent.extend(LegendMixin, FloatingTooltip
   },
 
   updateAxes: function() {
-    var xAxis = d3.svg.axis().scale(this.get('xScale')).orient('top').ticks(this.get('numXTicks')).tickSize(this.get('graphicHeight')).tickFormat(this.get('formatXValue'));
-    var yAxis = d3.svg.axis().scale(this.get('yScale')).orient('right').ticks(this.get('numYTicks')).tickSize(this.get('graphicWidth')).tickFormat(this.get('formatYValue'));
+    var xAxis = d3.svg.axis().scale(this.get('xScale')).orient('top')
+        .ticks(this.get('numXTicks')).tickSize(this.get('graphicHeight'))
+        .tickFormat(this.get('formatXValue'));
+    var yAxis = d3.svg.axis().scale(this.get('yScale')).orient('right')
+        .ticks(this.get('numYTicks')).tickSize(this.get('graphicWidth'))
+        .tickFormat(this.get('formatYValue'));
     var graphicTop = this.get('graphicTop');
     var graphicHeight = this.get('graphicHeight');
     var gXAxis = this.get('xAxis')
