@@ -63,3 +63,45 @@ test('Margins are the right size when showLegend is no', function(assert) {
   assert.equal(component.get('marginRight'), 30, 'right margin exists');
   assert.equal(component.get('marginBottom'), 0, 'no bottom margin if showLegend is no');
 });
+
+function getDomainPaddingChartContent() {
+  var chartContent = Ember.copy(scatterContent, true);
+
+  // Numbers inside this object are taken from dummy app.
+  chartContent.xDomain = [-0.9, 0.39];
+  chartContent.graphicLeft = 40;
+  chartContent.graphicWidth = 630;
+  chartContent.numXTicks = 7;
+
+
+  chartContent.yDomain = [-0.92, 0.83];
+  chartContent.graphicTop = 10;
+  chartContent.graphicHeight = 379;
+  chartContent.numYTicks = 4;
+
+  chartContent.graphPadding = 10;
+
+  return chartContent;
+}
+
+test('Test domain with domain padding', function(assert) {
+  var chartContent = getDomainPaddingChartContent();
+  chartContent.hasXDomainPadding = true;
+  chartContent.hasYDomainPadding = true;
+
+  const component = this.subject(chartContent);
+
+  assert.equal(component.get('xScale')(0.017), 355.35699999999997);
+  assert.equal(component.get('yScale')(0.03), 199.21574999999999);
+});
+
+test('Test domain without domain padding', function(assert) {
+  const chartContent = getDomainPaddingChartContent();
+  chartContent.hasXDomainPadding = false;
+  chartContent.hasYDomainPadding = false;
+
+  const component = this.subject(chartContent);
+
+  assert.equal(component.get('xScale')(0.017), 497.65);
+  assert.equal(component.get('yScale')(0.03), 193.815);
+});
