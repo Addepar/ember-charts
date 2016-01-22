@@ -1,6 +1,6 @@
 /*!
 * ember-charts v1.0.0
-* Copyright 2012-2015 Addepar Inc.
+* Copyright 2012-2016 Addepar Inc.
 * See LICENSE.md
 */
 (function(){;
