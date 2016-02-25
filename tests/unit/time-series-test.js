@@ -161,6 +161,39 @@ test('The number of labels should not exceed the max number of labels', function
   return assert.equal(this.subject().get('labelledTicks').length <= maxLabels, true, 'The number of labels does not exceed the max number of labels');
 });
 
+test('Tick Filtering', function(assert) {
+  var content, tickFilter, timeSeriesComponent;
+  content = $.extend({}, timeSeriesContentLineNonDynamic);
+  content.lineData = [
+    {
+      time: d3.time.format('%Y-%m-%d').parse("2011-08-31"),
+      value: 1
+    }, {
+      time: d3.time.format('%Y-%m-%d').parse("2012-03-03"),
+      value: 2
+    }
+  ];
+  content.selectedInterval = 'M';
+  timeSeriesComponent = this.subject(content);
+
+  assert.equal(timeSeriesComponent.get('labelledTicks').some(function(date) {
+    return date.getFullYear() === 2012;
+  }), true, 'Ticks from year 2012 were present without filter');
+
+  Ember.run(function() {
+    tickFilter = function(date) {
+      var UPPER_DATE_BOUND = d3.time.format('%Y-%m-%d').parse("2011-12-31");
+      return UPPER_DATE_BOUND.getTime() > date.getTime();
+    };
+    timeSeriesComponent.set('tickFilter', tickFilter);
+  });
+
+  assert.equal(timeSeriesComponent.get('labelledTicks').some(function(date) {
+    return date.getFullYear() === 2012;
+  }), false, 'Ticks from year 2012 have been filtered out');
+  assert.equal(timeSeriesComponent.get('labelledTicks').length > 0, true, 'Not all ticks were filtered out');
+});
+
 var timeSeriesContentLineDynamic = {
   yAxisFromZero: false,
   dynamicXAxis: true,

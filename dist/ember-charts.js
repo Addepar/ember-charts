@@ -5603,7 +5603,8 @@ define('ember-charts/mixins/time-series-labeler', ['exports', 'module', 'ember']
   };
 
   // Creates time series labels that are spaced reasonably.
-  // Provides @formattedTime. Depends on @xDomain and @selectedInterval.
+  // Provides @formattedTime.
+  // Depends on @xDomain, @selectedInterval, and @tickFilter.
   module.exports = _Ember['default'].Mixin.create({
 
     // When set to true, ticks are drawn in the middle of an interval. By default,
@@ -5705,8 +5706,8 @@ define('ember-charts/mixins/time-series-labeler', ['exports', 'module', 'ember']
       return secondIndex - firstIndex - 1;
     }),
 
-    //  This is the set of ticks on which labels appear.
-    labelledTicks: _Ember['default'].computed('xDomain', 'centerAxisLabels', 'xAxisTimeInterval', function () {
+    // A candidate set of ticks on which labels can appear.
+    unfilteredLabelledTicks: _Ember['default'].computed('xDomain', 'centerAxisLabels', 'xAxisTimeInterval', function () {
       var count, domain, interval, j, len, results, tick, ticks;
       domain = this.get('xDomain');
       ticks = this.get('tickLabelerFn')(domain[0], domain[1]);
@@ -5726,6 +5727,27 @@ define('ember-charts/mixins/time-series-labeler', ['exports', 'module', 'ember']
         }
         return results;
       }
+    }),
+
+    /**
+     * A function that can be passed in if there's tick labels we specifically
+     * wish to filter out (for example first label, last label, overflows, etc)
+     *
+     * NOTE: This function filters the ticks after they have been centered (when
+     * specified), meaning that the functionality here is not trivially replicable
+     * simply by modifying `this.filterLabels` in the `tickLabelerFn` implementation.
+     *
+     * @type {function}
+     */
+    tickFilter: _Ember['default'].computed(function () {
+      return function () {
+        return true;
+      };
+    }),
+
+    //  This is the set of ticks on which labels appear.
+    labelledTicks: _Ember['default'].computed('unfilteredLabelledTicks', 'tickFilter', function () {
+      return this.get('unfilteredLabelledTicks').filter(this.get('tickFilter'));
     }),
 
     _advanceMiddle: function _advanceMiddle(time, interval, count) {
@@ -5911,8 +5933,7 @@ define('ember-charts/templates/components/chart-component', ['exports', 'module'
 
   var _Ember = _interopRequireDefault(_ember);
 
-  module.exports = _Ember['default'].Handlebars.template(function anonymous(Handlebars, depth0, helpers, partials, data
-  /**/) {
+  module.exports = _Ember['default'].Handlebars.template(function anonymous(Handlebars, depth0, helpers, partials, data) {
     this.compilerInfo = [4, '>= 1.0.0'];
     helpers = this.merge(helpers, _Ember['default'].Handlebars.helpers);data = data || {};
     var buffer = '',
