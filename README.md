@@ -7,7 +7,7 @@ best practices in chart interactivity and presentation.
 
 
 ## Demo and Documentation
-http://addepar.github.com/ember-charts/
+http://opensource.addepar.com/ember-charts/
 
 
 ## Getting Started
