@@ -34,7 +34,8 @@ domainTypeToLongDomainType = {
 };
 
 // Creates time series labels that are spaced reasonably.
-// Provides @formattedTime. Depends on @xDomain and @selectedInterval.
+// Provides @formattedTime.
+// Depends on @xDomain, @selectedInterval, and @tickFilter.
 export default Ember.Mixin.create({
 
   // When set to true, ticks are drawn in the middle of an interval. By default,
@@ -136,8 +137,8 @@ export default Ember.Mixin.create({
     return secondIndex - firstIndex - 1;
   }),
 
-  //  This is the set of ticks on which labels appear.
-  labelledTicks: Ember.computed('xDomain', 'centerAxisLabels', 'xAxisTimeInterval', function() {
+  // A candidate set of ticks on which labels should appear.
+  unfilteredLabelledTicks: Ember.computed('xDomain', 'centerAxisLabels', 'xAxisTimeInterval', function() {
     var count, domain, interval, j, len, results, tick, ticks;
     domain = this.get('xDomain');
     ticks = this.get('tickLabelerFn')(domain[0], domain[1]);
@@ -157,6 +158,17 @@ export default Ember.Mixin.create({
       }
       return results;
     }
+  }),
+
+  // A function that can be passed in if there's tick labels we specifically
+  // wish to filter out (for example first, last, overflow, etc)
+  tickFilter: function() {
+    return true;
+  },
+
+  //  This is the set of ticks on which labels appear.
+  labelledTicks: Ember.computed('unfilteredLabelledTicks', 'tickFilter', function() {
+    return this.get('unfilteredLabelledTicks').filter(this.get('tickFilter'));
   }),
 
   _advanceMiddle: function(time, interval, count) {
