@@ -34,42 +34,41 @@
         <div class="form-group" data-test="line-data">
           <label class="col-lg-4 control-label">Line Data</label>
           <div class="col-lg-8">
-            {{view "select"
-              content=availableLineDataSets
-              value=selectedLineData
-              class="form-control"
-            }}
+            <select class="form-control ember-select" onchange={{action (mut selectedLineData) value="target.value"}}>
+              {{#each availableLineDataSets as |lineDataSet|}}
+                <option value="{{lineDataSet}}">{{lineDataSet}}</option>
+              {{/each}}
+            </select>
           </div>
         </div>
         <div class="form-group" data-test="bar-data">
           <label class="col-lg-4 control-label">Bar Data</label>
           <div class="col-lg-8">
-            {{view "select"
-                content=availableBarDataSets
-                value=selectedBarData
-                class="form-control"
-            }}
+            <select class="form-control ember-select" onchange={{action (mut selectedBarData) value="target.value"}}>
+              {{#each availableBarDataSets as |dataSet|}}
+                <option value="{{dataSet}}">{{dataSet}}</option>
+              {{/each}}
+            </select>
           </div>
         </div>
         <div class="form-group">
           <label class="col-lg-4 control-label" data-test="color">Color</label>
           <div class="col-lg-8">
-            {{view "select"
-              content=seedColorNames
-              value=selectedSeedColorName
-              class="form-control"
-            }}
+              <select class="form-control ember-select" onchange={{action (mut selectedSeedColorName) value="target.value"}}>
+              {{#each seedColorNames as |seedColorName|}}
+                <option value="{{seedColorName}}">{{seedColorName}}</option>
+              {{/each}}
+            </select>
           </div>
         </div>
         <div class="form-group">
           <label class="col-lg-4 control-label" data-test="tick-interval">Tick Interval</label>
           <div class="col-lg-8">
-            {{view "select"
-                content=tickIntervals
-                value=selectedInterval
-                class="form-control"
-                disabled=dynamicXAxis
-            }}
+            <select class="form-control ember-select" onchange={{action (mut selectedInterval) value="target.value"}} disabled="{{dynamicXAxis}}">
+              {{#each tickIntervals as |tickInterval|}}
+                <option value="{{tickInterval}}">{{tickInterval}}</option>
+              {{/each}}
+            </select>
           </div>
         </div>
         {{partial "axis-title-config"}}

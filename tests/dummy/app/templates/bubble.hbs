@@ -17,19 +17,19 @@
       <ol>
         <li>
           <label>Data</label>
-          {{view "select"
-           content=availableDataSets
-           value=selectedData
-           class="form-control"
-          }}
+          <select class="form-control ember-select" value="{{selectedData}}">
+            {{#each availableDataSets as |dataSet|}}
+              <option value="{{dataSet}}">{{dataSet}}</option>
+            {{/each}}
+          </select>
         </li>
         <li>
           <label>Color</label>
-          {{view "select"
-           content=seedColorNames
-           value=selectedSeedColorName
-           class="form-control"
-          }}
+            <select class="form-control ember-select" onchange={{action (mut selectedSeedColorName) value="target.value"}}>
+              {{#each seedColorNames as |seedColorName|}}
+                <option value="{{seedColorName}}">{{seedColorName}}</option>
+              {{/each}}
+            </select>
         </li>
       </ol>
     </div>
