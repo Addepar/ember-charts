@@ -5910,7 +5910,6 @@ define("ember-charts/templates/components/chart-component", ["exports", "module"
   module.exports = Ember.HTMLBars.template((function () {
     return {
       isHTMLBars: true,
-      revision: "Ember@1.12.1",
       blockParams: 0,
       cachedFragment: null,
       hasRendered: false,
@@ -5926,13 +5925,15 @@ define("ember-charts/templates/components/chart-component", ["exports", "module"
         var el2 = dom.createTextNode("\n");
         dom.appendChild(el1, el2);
         dom.appendChild(el0, el1);
+        var el1 = dom.createTextNode("\n");
+        dom.appendChild(el0, el1);
         return el0;
       },
       render: function render(context, env, contextualElement) {
         var dom = env.dom;
         var hooks = env.hooks,
             get = hooks.get,
-            attribute = hooks.attribute;
+            element = hooks.element;
         dom.detectNamespace(contextualElement);
         var fragment;
         if (env.useFragmentCache && dom.canClone) {
@@ -5952,12 +5953,8 @@ define("ember-charts/templates/components/chart-component", ["exports", "module"
         }
         var element0 = dom.childAt(fragment, [0]);
         var element1 = dom.childAt(element0, [1]);
-        var attrMorph0 = dom.createAttrMorph(element0, 'width');
-        var attrMorph1 = dom.createAttrMorph(element0, 'height');
-        var attrMorph2 = dom.createAttrMorph(element1, 'transform');
-        attribute(env, attrMorph0, element0, "width", get(env, context, "outerWidth"));
-        attribute(env, attrMorph1, element0, "height", get(env, context, "outerHeight"));
-        attribute(env, attrMorph2, element1, "transform", get(env, context, "transformViewport"));
+        element(env, element0, context, "bind-attr", [], { "width": get(env, context, "outerWidth"), "height": get(env, context, "outerHeight") });
+        element(env, element1, context, "bind-attr", [], { "transform": get(env, context, "transformViewport") });
         return fragment;
       }
     };
