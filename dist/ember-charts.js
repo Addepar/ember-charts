@@ -4279,14 +4279,15 @@ define('ember-charts/mixins/axis-titles', ['exports', 'module', 'ember'], functi
      * TODO: Add ember deprecated helper function for this property.
      * @deprecated
      */
-    hasAxisTitles: _Ember['default'].computed('hasXAxisTitle', 'hasYAxisTitle', function (key, value) {
-      if (arguments.length > 1) {
-        // Setter case.
+    hasAxisTitles: _Ember['default'].computed('hasXAxisTitle', 'hasYAxisTitle', {
+      get: function get() {
+        return this.get('hasXAxisTitle') || this.get('hasYAxisTitle');
+      },
+      set: function set(key, value) {
         this.set('hasXAxisTitle', value);
         this.set('hasYAxisTitle', value);
+        return value;
       }
-
-      return this.get('hasXAxisTitle') || this.get('hasYAxisTitle');
     }),
 
     /**
@@ -6034,12 +6035,27 @@ define("ember-charts/templates/components/chart-component", ["exports", "module"
 
   module.exports = Ember.HTMLBars.template((function () {
     return {
-      isHTMLBars: true,
-      revision: "Ember@1.12.1",
-      blockParams: 0,
+      meta: {
+        "fragmentReason": false,
+        "revision": "Ember@2.4.1",
+        "loc": {
+          "source": null,
+          "start": {
+            "line": 1,
+            "column": 0
+          },
+          "end": {
+            "line": 3,
+            "column": 6
+          }
+        },
+        "moduleName": "components/chart-component.hbs"
+      },
+      isEmpty: false,
+      arity: 0,
       cachedFragment: null,
       hasRendered: false,
-      build: function build(dom) {
+      buildFragment: function buildFragment(dom) {
         var el0 = dom.createDocumentFragment();
         dom.setNamespace("http://www.w3.org/2000/svg");
         var el1 = dom.createElement("svg");
@@ -6053,38 +6069,18 @@ define("ember-charts/templates/components/chart-component", ["exports", "module"
         dom.appendChild(el0, el1);
         return el0;
       },
-      render: function render(context, env, contextualElement) {
-        var dom = env.dom;
-        var hooks = env.hooks,
-            get = hooks.get,
-            attribute = hooks.attribute;
-        dom.detectNamespace(contextualElement);
-        var fragment;
-        if (env.useFragmentCache && dom.canClone) {
-          if (this.cachedFragment === null) {
-            fragment = this.build(dom);
-            if (this.hasRendered) {
-              this.cachedFragment = fragment;
-            } else {
-              this.hasRendered = true;
-            }
-          }
-          if (this.cachedFragment) {
-            fragment = dom.cloneNode(this.cachedFragment, true);
-          }
-        } else {
-          fragment = this.build(dom);
-        }
+      buildRenderNodes: function buildRenderNodes(dom, fragment, contextualElement) {
         var element0 = dom.childAt(fragment, [0]);
         var element1 = dom.childAt(element0, [1]);
-        var attrMorph0 = dom.createAttrMorph(element0, 'width');
-        var attrMorph1 = dom.createAttrMorph(element0, 'height');
-        var attrMorph2 = dom.createAttrMorph(element1, 'transform');
-        attribute(env, attrMorph0, element0, "width", get(env, context, "outerWidth"));
-        attribute(env, attrMorph1, element0, "height", get(env, context, "outerHeight"));
-        attribute(env, attrMorph2, element1, "transform", get(env, context, "transformViewport"));
-        return fragment;
-      }
+        var morphs = new Array(3);
+        morphs[0] = dom.createAttrMorph(element0, 'width');
+        morphs[1] = dom.createAttrMorph(element0, 'height');
+        morphs[2] = dom.createAttrMorph(element1, 'transform');
+        return morphs;
+      },
+      statements: [["attribute", "width", ["get", "outerWidth", ["loc", [null, [1, 13], [1, 23]]]]], ["attribute", "height", ["get", "outerHeight", ["loc", [null, [1, 35], [1, 46]]]]], ["attribute", "transform", ["get", "transformViewport", ["loc", [null, [2, 40], [2, 57]]]]]],
+      locals: [],
+      templates: []
     };
   })());
 });
