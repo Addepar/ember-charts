@@ -27,15 +27,15 @@ const AxisTitlesMixin = Ember.Mixin.create({
    * TODO: Add ember deprecated helper function for this property.
    * @deprecated
    */
-  hasAxisTitles: Ember.computed('hasXAxisTitle', 'hasYAxisTitle',
-      function(key, value) {
-    if (arguments.length > 1) {
-      // Setter case.
+  hasAxisTitles: Ember.computed('hasXAxisTitle', 'hasYAxisTitle', {
+    get() {
+      return this.get('hasXAxisTitle') || this.get('hasYAxisTitle');
+    },
+    set(key, value) {
       this.set('hasXAxisTitle', value);
       this.set('hasYAxisTitle', value);
+      return value;
     }
-
-    return this.get('hasXAxisTitle') || this.get('hasYAxisTitle');
   }),
 
   /**
