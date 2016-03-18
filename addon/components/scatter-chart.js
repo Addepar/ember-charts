@@ -226,6 +226,11 @@ const ScatterChartComponent = ChartComponent.extend(LegendMixin, FloatingTooltip
 
   getGroupColor: Ember.computed(function() {
     return (d, i) => {
+      // If there is an overriding color assigned to the group, we use that
+      // color.
+      if (!Ember.isNone(d.color)) {
+        return d.color;
+      }
       var colorIndex = 0;
       if (this.get('displayGroups')) {
         i = this.get('groupNames').indexOf(d.group);
@@ -258,11 +263,15 @@ const ScatterChartComponent = ChartComponent.extend(LegendMixin, FloatingTooltip
     var legendData = this.get('groupedData').map(function(d, i) {
       var name = d[0].group;
       var value = d.length === 1 ? d[0] : null;
+      // Get the color of the group. Because they are in the same group, they
+      // should share the same color, so we only need to get the color of the
+      // first object and pass to the function
+      var color = getGroupColor(d[0], i);
       return {
         label: name,
         group: name,
-        stroke: getGroupColor,
-        fill: displayGroups ? getGroupColor : 'transparent',
+        stroke: color,
+        fill: displayGroups ? color : 'transparent',
         icon: getGroupShape,
         selector: ".group-" + i,
         xValue: value != null ? value.xValue : void 0,
