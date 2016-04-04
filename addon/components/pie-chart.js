@@ -34,7 +34,7 @@ const PieChartComponent = ChartComponent.extend(FloatingTooltipMixin,
   // the top / bottom when your labels are large or the chart is very small
   minimumTopBottomMargin: 0,
 
-  // Allows the user to configure the maximum number of decimal places in data labels
+  // Allows the user to configure maximum number of decimal places in data labels
   maxDecimalPlace: 0,
 
   // ----------------------------------------------------------------------------
