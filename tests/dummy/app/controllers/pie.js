@@ -14,6 +14,11 @@ import zero from '../models/single_group/zero';
 import zeroes from '../models/single_group/zeroes';
 import sum_to_zero from '../models/single_group/sum_to_zero';
 import bad_range from '../models/single_group/bad_range';
+import has_zero_and_decimal_value from '../models/single_group/has_zero_and_decimal_value';
+import high_density_small_value_labels from '../models/single_group/high_density_small_value_labels';
+import many_small_one_large from '../models/single_group/many_small_one_large';
+import long_grouping_labels_non_negative from '../models/single_group/long_grouping_labels_non_negative';
+
 
 export default SlideController.extend({
 
@@ -25,6 +30,7 @@ export default SlideController.extend({
   minSlicePercent: 2,
   maxRadius: 250,
   labelWidthMultiplier: 0.25,
+  maxDecimalPlace: 0,
 
   // ---------
   // Data Selection
@@ -51,7 +57,11 @@ export default SlideController.extend({
 	    zero: zero,
 	    zeroes: zeroes,
 	    sum_to_zero: sum_to_zero,
-	    bad_range: bad_range
+	    bad_range: bad_range,
+      has_zero_and_decimal_value: has_zero_and_decimal_value,
+      high_density_small_value_labels: high_density_small_value_labels,
+      many_small_one_large: many_small_one_large,
+      long_grouping_labels_non_negative: long_grouping_labels_non_negative
     };
   }),
 

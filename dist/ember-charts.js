@@ -1387,6 +1387,9 @@ define('ember-charts/components/pie-chart', ['exports', 'module', 'ember', './ch
     // the top / bottom when your labels are large or the chart is very small
     minimumTopBottomMargin: 0,
 
+    // Allows the user to configure the maximum number of decimal places in data labels
+    maxDecimalPlace: 0,
+
     // ----------------------------------------------------------------------------
     // Data
     // ----------------------------------------------------------------------------
@@ -1416,7 +1419,9 @@ define('ember-charts/components/pie-chart', ['exports', 'module', 'ember', './ch
     }),
 
     // Valid data points that have been sorted by selectedSortType
-    sortedData: _Ember['default'].computed('filteredData', 'sortKey', function () {
+    sortedData: _Ember['default'].computed('filteredData', 'sortKey', 'maxDecimalPlace', function () {
+      var _this = this;
+
       var data = this.get('filteredData');
       var total = data.reduce(function (p, child) {
         return child.value + p;
@@ -1430,7 +1435,7 @@ define('ember-charts/components/pie-chart', ['exports', 'module', 'ember', './ch
           color: d.color,
           label: d.label,
           value: d.value,
-          percent: d3.round(100.0 * d.value / total)
+          percent: d3.round(100.0 * d.value / total, _this.get('maxDecimalPlace'))
         };
       });
 
@@ -1439,7 +1444,7 @@ define('ember-charts/components/pie-chart', ['exports', 'module', 'ember', './ch
 
     // This takes the sorted slices that have percents calculated and returns
     // sorted slices that obey the "other" slice aggregation rules
-    sortedDataWithOther: _Ember['default'].computed('sortedData', 'maxNumberOfSlices', 'minSlicePercent', function () {
+    sortedDataWithOther: _Ember['default'].computed('sortedData', 'maxNumberOfSlices', 'minSlicePercent', 'maxDecimalPlace', function () {
       var lastItem, overflowSlices, slicesLeft;
 
       var data = _.cloneDeep(this.get('sortedData')).reverse();
@@ -1499,12 +1504,14 @@ define('ember-charts/components/pie-chart', ['exports', 'module', 'ember', './ch
         slicesLeft = _.take(slicesLeft, maxNumberOfSlices);
       }
 
-      // only push other slice if there is more than one other item
+      // Only push other slice if there is more than one other item
       if (otherItems.length === 1) {
         slicesLeft.push(otherItems[0]);
       } else if (otherSlice.percent > 0) {
         slicesLeft.push(otherSlice);
       }
+
+      otherSlice.percent = d3.round(otherSlice.percent, this.get('maxDecimalPlace'));
 
       // make slices appear in descending order
       return slicesLeft.reverse();
@@ -1577,12 +1584,19 @@ define('ember-charts/components/pie-chart', ['exports', 'module', 'ember', './ch
     numSlices: _Ember['default'].computed.alias('finishedData.length'),
 
     // Offset slices so that the largest slice finishes at 12 o'clock
+    // If there is an excessively largest slice, have all of the smaller slices
+    // concentrate on the left hand side.
     startOffset: _Ember['default'].computed('finishedData', function () {
       var data = this.get('finishedData');
       var sum = data.reduce(function (p, d) {
         return d.percent + p;
       }, 0);
-      return _.last(data).percent / sum * 2 * Math.PI;
+
+      if (_.last(data).percent / sum > 0.65) {
+        return 4 / 3 * Math.PI;
+      } else {
+        return _.last(data).percent / sum * 2 * Math.PI;
+      }
     }),
 
     // Radius of the pie graphic, resized to fit the viewport.
@@ -1600,19 +1614,19 @@ define('ember-charts/components/pie-chart', ['exports', 'module', 'ember', './ch
     // ----------------------------------------------------------------------------
 
     getSliceColor: _Ember['default'].computed('numSlices', 'colorScale', function () {
-      var _this = this;
+      var _this2 = this;
 
       return function (d, i) {
         var index, numSlices;
         if (d.data && d.data.color) {
           return d.data.color;
         }
-        numSlices = _this.get('numSlices');
+        numSlices = _this2.get('numSlices');
         index = numSlices - i - 1;
         if (numSlices !== 1) {
           index = index / (numSlices - 1);
         }
-        return _this.get('colorScale')(index);
+        return _this2.get('colorScale')(index);
       };
     }),
 
@@ -1633,7 +1647,7 @@ define('ember-charts/components/pie-chart', ['exports', 'module', 'ember', './ch
     // ----------------------------------------------------------------------------
 
     showDetails: _Ember['default'].computed('isInteractive', function () {
-      var _this2 = this;
+      var _this3 = this;
 
       if (!this.get('isInteractive')) {
         return _Ember['default'].K;
@@ -1643,20 +1657,20 @@ define('ember-charts/components/pie-chart', ['exports', 'module', 'ember', './ch
         d3.select(element).classed('hovered', true);
         data = d.data;
         if (data._otherItems) {
-          value = _this2.get('otherDataValue');
+          value = _this3.get('otherDataValue');
         } else {
           value = data.value;
         }
-        formatLabelFunction = _this2.get('formatLabelFunction');
+        formatLabelFunction = _this3.get('formatLabelFunction');
         content = "<span class=\"tip-label\">" + data.label + "</span>";
-        content += "<span class=\"name\">" + _this2.get('tooltipValueDisplayName') + ": </span>";
+        content += "<span class=\"name\">" + _this3.get('tooltipValueDisplayName') + ": </span>";
         content += "<span class=\"value\">" + formatLabelFunction(value) + "</span>";
-        return _this2.showTooltip(content, d3.event);
+        return _this3.showTooltip(content, d3.event);
       };
     }),
 
     hideDetails: _Ember['default'].computed('isInteractive', function () {
-      var _this3 = this;
+      var _this4 = this;
 
       if (!this.get('isInteractive')) {
         return _Ember['default'].K;
@@ -1666,9 +1680,9 @@ define('ember-charts/components/pie-chart', ['exports', 'module', 'ember', './ch
         d3.select(element).classed('hovered', false);
         var data = d.data;
         if (data._otherItems) {
-          return _this3.get('viewport').select('.legend').classed('hovered', false);
+          return _this4.get('viewport').select('.legend').classed('hovered', false);
         } else {
-          return _this3.hideTooltip();
+          return _this4.hideTooltip();
         }
       };
     }),
@@ -1726,12 +1740,9 @@ define('ember-charts/components/pie-chart', ['exports', 'module', 'ember', './ch
       // assumes height of all the labels are the same
       var labelOverlap = function labelOverlap(side, ypos, height) {
         var positions = usedLabelPositions[side];
-        _.each(positions, function (pos) {
-          if (Math.abs(ypos - pos) < height) {
-            return true;
-          }
+        return _.some(positions, function (pos) {
+          return Math.abs(ypos - pos) < height;
         });
-        return false;
       };
       if (this.get('numSlices') > 1) {
         return {
@@ -1765,11 +1776,18 @@ define('ember-charts/components/pie-chart', ['exports', 'module', 'ember', './ch
             var labelYPos = f(y);
             var labelHeight = this.getBBox().height;
             var side = labelXPos > 0 ? 'right' : 'left';
+
+            // Adjusts labelXPos after labelYPos is moved if labels overlap
+            var updateXPos = function updateXPos(labelYPos) {
+              return Math.sqrt(Math.max(Math.pow(labelRadius, 2) - Math.pow(labelYPos, 2), 0));
+            };
             if (labelOverlap(side, labelYPos, labelHeight)) {
               if (side === 'right') {
                 labelYPos = _.max(usedLabelPositions[side]) + labelHeight;
+                labelXPos = updateXPos(labelYPos);
               } else {
                 labelYPos = _.min(usedLabelPositions[side]) - labelHeight;
+                labelXPos = -1 * updateXPos(labelYPos);
               }
             }
             usedLabelPositions[side].push(labelYPos);
@@ -1805,7 +1823,7 @@ define('ember-charts/components/pie-chart', ['exports', 'module', 'ember', './ch
     // Drawing Functions
     // ----------------------------------------------------------------------------
 
-    renderVars: ['pieRadius', 'labelWidth', 'finishedData'],
+    renderVars: ['pieRadius', 'labelWidth', 'finishedData', 'startOffset'],
 
     drawChart: function drawChart() {
       this.updateData();
