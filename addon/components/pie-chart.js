@@ -34,6 +34,9 @@ const PieChartComponent = ChartComponent.extend(FloatingTooltipMixin,
   // the top / bottom when your labels are large or the chart is very small
   minimumTopBottomMargin: 0,
 
+  // Allows the user to configure maximum number of decimal places in data labels
+  maxDecimalPlace: 0,
+
   // ----------------------------------------------------------------------------
   // Data
   // ----------------------------------------------------------------------------
@@ -61,7 +64,7 @@ const PieChartComponent = ChartComponent.extend(FloatingTooltipMixin,
   }),
 
   // Valid data points that have been sorted by selectedSortType
-  sortedData: Ember.computed('filteredData', 'sortKey', function() {
+  sortedData: Ember.computed('filteredData', 'sortKey', 'maxDecimalPlace', function() {
     var data = this.get('filteredData');
     var total = data.reduce(function(p, child) {
       return child.value + p;
@@ -75,7 +78,7 @@ const PieChartComponent = ChartComponent.extend(FloatingTooltipMixin,
         color: d.color,
         label: d.label,
         value: d.value,
-        percent: d3.round(100.0 * d.value / total)
+        percent: d3.round(100.0 * d.value / total, this.get('maxDecimalPlace'))
       };
     });
 
@@ -84,7 +87,7 @@ const PieChartComponent = ChartComponent.extend(FloatingTooltipMixin,
 
   // This takes the sorted slices that have percents calculated and returns
   // sorted slices that obey the "other" slice aggregation rules
-  sortedDataWithOther: Ember.computed('sortedData', 'maxNumberOfSlices', 'minSlicePercent', function() {
+  sortedDataWithOther: Ember.computed('sortedData', 'maxNumberOfSlices', 'minSlicePercent','maxDecimalPlace', function() {
     var lastItem, overflowSlices, slicesLeft;
 
     var data = _.cloneDeep(this.get('sortedData')).reverse();
@@ -144,12 +147,14 @@ const PieChartComponent = ChartComponent.extend(FloatingTooltipMixin,
       slicesLeft = _.take(slicesLeft, maxNumberOfSlices);
     }
 
-    // only push other slice if there is more than one other item
+    // Only push other slice if there is more than one other item
     if (otherItems.length === 1) {
       slicesLeft.push(otherItems[0]);
     } else if (otherSlice.percent > 0) {
       slicesLeft.push(otherSlice);
     }
+
+    otherSlice.percent = d3.round(otherSlice.percent, this.get('maxDecimalPlace'));
 
     // make slices appear in descending order
     return slicesLeft.reverse();

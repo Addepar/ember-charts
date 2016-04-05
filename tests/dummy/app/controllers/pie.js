@@ -25,6 +25,7 @@ export default SlideController.extend({
   minSlicePercent: 2,
   maxRadius: 250,
   labelWidthMultiplier: 0.25,
+  maxDecimalPlace: 0,
 
   // ---------
   // Data Selection
