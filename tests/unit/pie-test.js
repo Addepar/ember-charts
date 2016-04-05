@@ -154,3 +154,34 @@ test('Slice percents by default', function(assert) {
   assert.equal(this.subject().get('finishedData')[0].label, 'Other', 'First slice is Other');
   assert.equal(this.subject().get('finishedData')[0].percent, 34, 'Other percent equals 34');
 });
+
+test('Percentage labels can have decimal points', function(assert) {
+  //-------------------- Begin Setup ------------------------//
+  var countDecimals = function(value) {
+    if (Math.floor(value) === value) {
+      return 0;
+    }
+    return value.toString().split(".")[1].length || 0;
+  };
+
+  // Verify that there is an expected number of decimal places in each label
+  //
+  // NOTE: There could be fewer decimal places than maxDecimalPlace if the percentage
+  // happens to be a whole number
+  var verifyDecimalPlaces = function(items) {
+    for (var i = 0; i < items.length; i++) {
+      assert.ok(countDecimals(items[i].percent) <= pieContent.maxDecimalPlace);
+    }
+  };
+  //-------------------- End Setup ------------------------//
+
+  pieContent.maxDecimalPlace = 2;
+  var component = this.subject(pieContent);
+
+  var finishedData = this.subject().get('finishedData');
+  var otherItems = finishedData[0]._otherItems;
+  var pieItems = finishedData.slice(1, finishedData.length);
+
+  verifyDecimalPlaces(pieItems);
+  verifyDecimalPlaces(otherItems);
+});
