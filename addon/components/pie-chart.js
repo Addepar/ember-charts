@@ -37,6 +37,11 @@ const PieChartComponent = ChartComponent.extend(FloatingTooltipMixin,
   // Allows the user to configure maximum number of decimal places in data labels
   maxDecimalPlace: 0,
 
+  // When the Pie Chart has a high probability of having label intersections in
+  // its default form, rotate the Pie by this amount so that the smallest slices
+  // will start from the 2 o'clock to 4 o'clock positions.
+  rotationOffset: 1/4 * Math.PI,
+
   // ----------------------------------------------------------------------------
   // Data
   // ----------------------------------------------------------------------------
@@ -87,6 +92,9 @@ const PieChartComponent = ChartComponent.extend(FloatingTooltipMixin,
 
   // This takes the sorted slices that have percents calculated and returns
   // sorted slices that obey the "other" slice aggregation rules
+  //
+  // When Other is the largest slice, Other is last and the data is sorted in order
+  // When Other is not the largest slice, Other is the first and the data after it is sorted in order
   sortedDataWithOther: Ember.computed('sortedData', 'maxNumberOfSlices', 'minSlicePercent','maxDecimalPlace', function() {
     var lastItem, overflowSlices, slicesLeft;
 
@@ -151,13 +159,21 @@ const PieChartComponent = ChartComponent.extend(FloatingTooltipMixin,
     if (otherItems.length === 1) {
       slicesLeft.push(otherItems[0]);
     } else if (otherSlice.percent > 0) {
-      slicesLeft.push(otherSlice);
+      // When Other is the largest slice, add to the front of the list. Otherwise to the back
+      //
+      // Ensures that excessively large "Other" slices will be accounted during pie chart rotation.
+      // This will prevent labels from intersecting when "Other" is extremely large
+      if (otherSlice.percent > slicesLeft[0].percent) {
+        slicesLeft.unshift(otherSlice);
+      } else {
+        slicesLeft.push(otherSlice);
+      }
     }
 
     otherSlice.percent = d3.round(otherSlice.percent, this.get('maxDecimalPlace'));
 
-    // make slices appear in descending order
     return slicesLeft.reverse();
+
   }),
 
   otherData: Ember.computed('sortedDataWithOther.[]', 'sortFunction', function() {
@@ -226,13 +242,65 @@ const PieChartComponent = ChartComponent.extend(FloatingTooltipMixin,
 
   numSlices: Ember.computed.alias('finishedData.length'),
 
-  // Offset slices so that the largest slice finishes at 12 o'clock
-  startOffset: Ember.computed('finishedData', function() {
-    var data = this.get('finishedData');
-    var sum = data.reduce(function(p, d) {
+  // Normally, the pie chart should offset slices so that the largest slice
+  // finishes at 12 o'clock
+  //
+  // However, always setting the largest slice at 12 o'clock can cause significant
+  // difficulty while dealing with label intersections. This problem is exacerbated
+  // when certain configurations of pie charts lead to a high density of
+  // small slice labels at the 6 o'clock or 11:30 positions.
+  //
+  // Therefore, rotate the pie and concentrate all small slices at 8 to 10 o'clock
+  // if there is a high density of small slices inside the pie. This will ensure
+  // that there is plenty of space for labels
+  startOffset: Ember.computed('finishedData', 'sortKey', 'rotationOffset', function() {
+    var detectDenseSmallSlices = function (finishedData) {
+      // This constant determines how many slices to use to calculate the
+      // average small slice percentage. The smaller the constant, the more it
+      // focuses on the smallest slices within the pie.
+      //
+      // Empirically, using a sample size of 2 works very well.
+      var smallSliceSampleSize = 2;
+
+      var sortedData = _.sortBy(finishedData, "percent");
+      var startIndex = 0;
+      var endIndex = Math.min(smallSliceSampleSize, sortedData.length);
+      var largestSlicePercent = _.last(sortedData).percent;
+
+      var averageSmallSlicesPercent = sortedData.slice(startIndex, endIndex).reduce(function(p,d) {
+        return d.percent / (endIndex - startIndex) + p;
+      }, 0);
+
+      // When slices smaller than 2.75 percent are concentrated in any location,
+      // there is a high probability of label intersections.
+      //
+      // However, empirical label intersect evidence has demonstrated that this
+      // threshold must be increased to 5% when there are multiple small slices
+      // from the 5 o'clock to 7 o'clock positions
+      if (averageSmallSlicesPercent <= 2.75) {
+        return true;
+      } else if ((averageSmallSlicesPercent <= 5) && (45 <= largestSlicePercent) && (largestSlicePercent <= 55)) {
+        return true;
+      }
+      return false;
+    };
+
+    var finishedData = this.get('finishedData');
+
+    // The sum is not necessarily 100% all of the time because of rounding
+    //
+    // For example, consider finishedData percentages (1.3%, 1.3%, 1.4%, 96%).
+    // They will round to (1%, 1%, 1%, and 96%) when maxDecimalPlace = 0 by
+    // default, which then sums to 99%.
+    var sum = finishedData.reduce(function(p, d) {
       return d.percent + p;
     }, 0);
-    return _.last(data).percent / sum * 2 * Math.PI;
+
+    if (detectDenseSmallSlices(finishedData)) {
+      return this.get('rotationOffset');
+    } else {
+      return _.last(finishedData).percent / sum * 2 * Math.PI;
+    }
   }),
 
   // Radius of the pie graphic, resized to fit the viewport.
@@ -371,12 +439,9 @@ const PieChartComponent = ChartComponent.extend(FloatingTooltipMixin,
     // assumes height of all the labels are the same
     var labelOverlap = function(side, ypos, height) {
       var positions = usedLabelPositions[side];
-      _.each(positions, function(pos) {
-        if (Math.abs(ypos - pos) < height) {
-          return true;
-        }
+      return _.some(positions, function(pos) {
+        return Math.abs(ypos - pos) < height;
       });
-      return false;
     };
     if (this.get('numSlices') > 1) {
       return {
@@ -390,7 +455,7 @@ const PieChartComponent = ChartComponent.extend(FloatingTooltipMixin,
           // for the first pie slice we need to pay attention to the angle being
           // greater than 2*Math.PI
         'text-anchor': function(d) {
-          var angle = (d.endAngle - d.startAngle) * 0.5 + d.startAngle;
+          var angle = ((d.endAngle - d.startAngle) * 0.5 + d.startAngle) % (2*Math.PI);
           return (Math.PI < angle && angle < 2 * Math.PI) ? 'end' : 'start';
         },
 
@@ -410,11 +475,31 @@ const PieChartComponent = ChartComponent.extend(FloatingTooltipMixin,
           var labelYPos = f(y);
           var labelHeight = this.getBBox().height;
           var side = labelXPos > 0 ? 'right' : 'left';
+
+          // When labelYPos is adjusted to prevent label overlapping, this function
+          // interpolates the updated labelXPos using the Pythagorean Theorem
+          // so that the new label position will be realigned with the pie surface.
+          //
+          // This is extremely important. Only updating the labelYPos without
+          // updating the corresponding labelXPos could accidentally place the label
+          // in such a way that intersects with the pie itself!
+          //
+          // Note - There is an edge case for 12 o'clock and 6 o'clock
+          // label overlaps when the updated labelYPos becomes larger than the
+          // labelRadius. In this case, we set the labelXPos to 0 instead of
+          // letting it be negative (which would incorrectly place the label
+          // on the opposite side of the pie).
+          var calculateXPos = function(labelYPos) {
+            return Math.sqrt(Math.max(Math.pow(labelRadius,2) - Math.pow(labelYPos,2), 0));
+          };
+
           if (labelOverlap(side, labelYPos, labelHeight)) {
             if (side === 'right') {
               labelYPos = _.max(usedLabelPositions[side]) + labelHeight;
+              labelXPos = calculateXPos(labelYPos);
             } else {
               labelYPos = _.min(usedLabelPositions[side]) - labelHeight;
+              labelXPos = -1 * calculateXPos(labelYPos);
             }
           }
           usedLabelPositions[side].push(labelYPos);
@@ -453,7 +538,8 @@ const PieChartComponent = ChartComponent.extend(FloatingTooltipMixin,
   renderVars: [
     'pieRadius',
     'labelWidth',
-    'finishedData'
+    'finishedData',
+    'startOffset'
   ],
 
   drawChart: function() {
