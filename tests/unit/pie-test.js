@@ -197,7 +197,7 @@ test('Pie with small other slice', function(assert) {
   var finishedData = this.subject().get('finishedData');
 
   assert.equal(_.first(finishedData).label, 'Other', 'First slice is Other when the Other Slice is not the largest');
-  assert.equal(_.first(finishedData).percent, 25.37, 'Other percent equals 34');
+  assert.equal(_.first(finishedData).percent, 25.37, 'Other percent equals 25.37');
 });
 
 test('Percentage labels can have decimal points', function(assert) {
