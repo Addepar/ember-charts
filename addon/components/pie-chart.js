@@ -286,6 +286,9 @@ const PieChartComponent = ChartComponent.extend(FloatingTooltipMixin,
     };
 
     var finishedData = this.get('finishedData');
+    if (finishedData.length === 0) {
+      return 0;
+    }
 
     // The sum is not necessarily 100% all of the time because of rounding
     //
@@ -295,10 +298,6 @@ const PieChartComponent = ChartComponent.extend(FloatingTooltipMixin,
     var sum = finishedData.reduce(function(p, d) {
       return d.percent + p;
     }, 0);
-
-    if (finishedData.length === 0) {
-      return 0;
-    }
 
     if (detectDenseSmallSlices(finishedData)) {
       return this.get('rotationOffset');
