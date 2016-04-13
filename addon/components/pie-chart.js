@@ -296,7 +296,7 @@ const PieChartComponent = ChartComponent.extend(FloatingTooltipMixin,
       return d.percent + p;
     }, 0);
 
-    if (finishedData.length == 0) {
+    if (finishedData.length === 0) {
       return 0;
     }
 
