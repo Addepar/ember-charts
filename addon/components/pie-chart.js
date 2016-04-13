@@ -286,6 +286,9 @@ const PieChartComponent = ChartComponent.extend(FloatingTooltipMixin,
     };
 
     var finishedData = this.get('finishedData');
+    if (Ember.isEmpty(finishedData)) {
+      return 0;
+    }
 
     // The sum is not necessarily 100% all of the time because of rounding
     //

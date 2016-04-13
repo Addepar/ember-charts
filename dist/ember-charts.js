@@ -1642,6 +1642,9 @@ define('ember-charts/components/pie-chart', ['exports', 'module', 'ember', './ch
       };
 
       var finishedData = this.get('finishedData');
+      if (_Ember['default'].isEmpty(finishedData)) {
+        return 0;
+      }
 
       // The sum is not necessarily 100% all of the time because of rounding
       //
