@@ -1652,6 +1652,10 @@ define('ember-charts/components/pie-chart', ['exports', 'module', 'ember', './ch
         return d.percent + p;
       }, 0);
 
+      if (finishedData.length == 0) {
+        return 0;
+      }
+
       if (detectDenseSmallSlices(finishedData)) {
         return this.get('rotationOffset');
       } else {
