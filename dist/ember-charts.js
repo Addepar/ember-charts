@@ -1642,7 +1642,7 @@ define('ember-charts/components/pie-chart', ['exports', 'module', 'ember', './ch
       };
 
       var finishedData = this.get('finishedData');
-      if (finishedData.length === 0) {
+      if (_Ember['default'].isEmpty(finishedData)) {
         return 0;
       }
 
