@@ -296,7 +296,11 @@ const PieChartComponent = ChartComponent.extend(FloatingTooltipMixin,
       return d.percent + p;
     }, 0);
 
-    if ((finishedData.length > 0) && detectDenseSmallSlices(finishedData)) {
+    if (finishedData.length == 0) {
+      return 0;
+    }
+
+    if (detectDenseSmallSlices(finishedData)) {
       return this.get('rotationOffset');
     } else {
       return _.last(finishedData).percent / sum * 2 * Math.PI;
