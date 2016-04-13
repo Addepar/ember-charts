@@ -1652,7 +1652,7 @@ define('ember-charts/components/pie-chart', ['exports', 'module', 'ember', './ch
         return d.percent + p;
       }, 0);
 
-      if (detectDenseSmallSlices(finishedData)) {
+      if (finishedData.length > 0 && detectDenseSmallSlices(finishedData)) {
         return this.get('rotationOffset');
       } else {
         return _.last(finishedData).percent / sum * 2 * Math.PI;
