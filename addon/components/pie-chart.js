@@ -286,7 +286,7 @@ const PieChartComponent = ChartComponent.extend(FloatingTooltipMixin,
     };
 
     var finishedData = this.get('finishedData');
-    if (finishedData.length === 0) {
+    if (Ember.isEmpty(finishedData)) {
       return 0;
     }
 
