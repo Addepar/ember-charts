@@ -178,7 +178,8 @@ export default Ember.Mixin.create({
 
   //  This is the set of ticks on which labels appear.
   labelledTicks: Ember.computed('unfilteredLabelledTicks', 'tickFilter', function() {
-    return this.get('unfilteredLabelledTicks').filter(this.get('tickFilter'));
+    var ticks = this.get('unfilteredLabelledTicks');
+    return ticks.filter(this.get('tickFilter'));
   }),
 
   _advanceMiddle: function(time, interval, count) {
@@ -241,8 +242,9 @@ export default Ember.Mixin.create({
   // are limited to fall between the time units between these bounds.
   dynamicXLabelling: function(start, stop) {
     var d, domainType, domainTypes, i, ind1, ind2, interval, j, labellerTypes, labels, len, maxNumberOfLabels, timeBetween, times;
+    // Find the segments that we'll test for (inclusive)
     ind1 = this.get('DOMAIN_ORDERING').indexOf(this.get('minTimeSpecificity'));
-    ind2 = this.get('DOMAIN_ORDERING').indexOf(this.get('maxTimeSpecificity'));
+    ind2 = this.get('DOMAIN_ORDERING').indexOf(this.get('maxTimeSpecificity')) + 1;
 
     // Refers to the metrics used for the labelling
     domainTypes = ind2 < 0 ? this.get('DOMAIN_ORDERING').slice(ind1) : this.get('DOMAIN_ORDERING').slice(ind1, ind2);
