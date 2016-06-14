@@ -58,6 +58,12 @@ const TimeSeriesChartComponent = ChartComponent.extend(LegendMixin,
   // Bar left offset, as fraction of width of bar
   barLeftOffset: 0.0,
 
+  // Force X-Axis labels to print vertically
+  xAxisVertLabels: false,
+
+  // Enable smart turning if feasible - TRUMPED by xAxisVertLabels
+  xAxisSmartLabels: false,
+
   // ----------------------------------------------------------------------------
   // Time Series Chart Constants
   // ----------------------------------------------------------------------------
@@ -824,7 +830,7 @@ const TimeSeriesChartComponent = ChartComponent.extend(LegendMixin,
         transform: "translate(0," + graphicTop + graphicHeight + ")"
       }).call(xAxis);
 
-    //tickSize isn't doing anything here, it should take two arguments
+    //tickSize draws the Y-axis allignment line across the whole of the graph.
     var yAxis = d3.svg.axis()
       .scale(this.get('yScale'))
       .orient('right')
