@@ -194,7 +194,7 @@ export default Ember.Mixin.create({
       case 'seconds':
         return (stop - start) / 1000;
       case 'hours':
-        return (stop - start) / 1000;
+        return (stop - start) / 3600000;
       case 'days':
         return (stop - start) / 86400000;
       case 'weeks':
@@ -206,6 +206,26 @@ export default Ember.Mixin.create({
       case 'years':
         return d3.time.years(start, stop).length;
     }
+  },
+
+  // We're looking to cover our cases for determining the interval for some
+  // data.  This function helps normalize the meaning of the word "Quarter" and
+  // will help out the labelers if we ever have an automatic interval finder.
+  calculateDataInterval: function(domainType, timeBetween) {
+    var maxNumberOfLabels, interval;
+
+    maxNumberOfLabels = this.get('maxNumberOfLabels');
+
+    if (timeBetween <= maxNumberOfLabels) {
+      interval = domainType === 'Q' ? this.MONTHS_IN_QUARTER : 1;
+    } else if (domainType === this.get('maxTimeSpecificity')) {
+      if (domainType === 'Q') {
+        interval = Math.ceil(this.MONTHS_IN_QUARTER * timeBetween / maxNumberOfLabels);
+      } else {
+        interval = Math.ceil(timeBetween / maxNumberOfLabels);
+      }
+    }
+    return interval;
   },
 
   domainTypeToLongDomainTypeSingular: function(timeInterval) {
@@ -224,9 +244,8 @@ export default Ember.Mixin.create({
     ind1 = this.get('DOMAIN_ORDERING').indexOf(this.get('minTimeSpecificity'));
     ind2 = this.get('DOMAIN_ORDERING').indexOf(this.get('maxTimeSpecificity'));
 
-
     // Refers to the metrics used for the labelling
-    domainTypes = this.get('DOMAIN_ORDERING').slice(ind1, +ind2 + 1 || 9e9);
+    domainTypes = ind2 < 0 ? this.get('DOMAIN_ORDERING').slice(ind1) : this.get('DOMAIN_ORDERING').slice(ind1, ind2);
 
     // The labeller type to create the labels for each metric
     labellerTypes = (function() {
@@ -249,7 +268,6 @@ export default Ember.Mixin.create({
       }
       return results;
     }).call(this);
-    labels = null;
     maxNumberOfLabels = this.get('maxNumberOfLabels');
 
     for (i = j = 0, len = times.length; j < len; i = ++j) {
@@ -257,16 +275,16 @@ export default Ember.Mixin.create({
 
       // quarter labels are calculated by simply getting month labels with 3
       // month gaps
-      interval = null;
-      if (timeBetween < maxNumberOfLabels) {
-        interval = domainTypes[i] === 'Q' ? this.MONTHS_IN_QUARTER : 1;
-      } else if (domainTypes[i] === this.get('maxTimeSpecificity') || times[i + 1] < maxNumberOfLabels * (this.get('SPECIFICITY_RATIO'))) {
-        if (domainTypes[i] === 'Q') {
-          interval = Math.ceil(this.MONTHS_IN_QUARTER * timeBetween / maxNumberOfLabels);
-        } else {
-          interval = Math.ceil(timeBetween / maxNumberOfLabels);
-        }
-      }
+      interval = this.calculateDataInterval(domainTypes[i], timeBetween);
+      // if (timeBetween < maxNumberOfLabels) {
+      //   interval = domainTypes[i] === 'Q' ? this.MONTHS_IN_QUARTER : 1;
+      // } else if (domainTypes[i] === this.get('maxTimeSpecificity') || times[i + 1] < maxNumberOfLabels * (this.get('SPECIFICITY_RATIO'))) {
+      //   if (domainTypes[i] === 'Q') {
+      //     interval = Math.ceil(this.MONTHS_IN_QUARTER * timeBetween / maxNumberOfLabels);
+      //   } else {
+      //     interval = Math.ceil(timeBetween / maxNumberOfLabels);
+      //   }
+      // }
       if (interval != null) {
         this.set('xAxisTimeInterval', domainTypes[i]);
         labels = this.filterLabels(d3.time[labellerTypes[i]](start, stop), interval);
@@ -275,6 +293,7 @@ export default Ember.Mixin.create({
     }
     return labels;
   },
+
   filterLabels: function(array, interval){
     return array.filter(function filterLabels(d, i) {
       return i % interval === 0;
@@ -291,24 +310,14 @@ export default Ember.Mixin.create({
         }, this);
       } else {
         return _.bind(function(start, stop) {
-            var domain, interval, timeBetween;
-            domain = this.get('xAxisTimeInterval');
-            timeBetween = this.numTimeBetween(domainTypeToLongDomainType[domain], start, stop);
-            if (domain === 'Q') {
-              if (timeBetween > this.get('maxNumberOfLabels')) {
-                return d3.time.years(start, stop);
-              } else {
-                return d3.time.months(start, stop, this.MONTHS_IN_QUARTER);
-              }
-            } else {
-              if (timeBetween > this.get('maxNumberOfLabels')) {
-                interval = Math.ceil(timeBetween / this.get('maxNumberOfLabels'));
-              } else {
-                interval = 1;
-              }
+          var domain, interval, timeBetween;
+          domain = this.get('xAxisTimeInterval');
+          timeBetween = this.numTimeBetween(domainTypeToLongDomainType[domain], start, stop);
 
-              return this.filterLabels(d3.time[domainTypeToLabellerType[domain]](start, stop), interval);
-            }
+          // So we're going to use the interval we defined as a the maxTimeSpecificity
+          this.set('maxTimeSpecificity', domain);
+          interval = this.calculateDataInterval(domain, timeBetween);
+          return this.filterLabels(d3.time[domainTypeToLabellerType[domain]](start, stop), interval);
         }, this);
       }
     }
