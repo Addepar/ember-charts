@@ -216,6 +216,34 @@ const TimeSeriesChartComponent = ChartComponent.extend(LegendMixin,
     return new Date(time);
   },
 
+  // We'd like to have the option of turning our labels vertical when circumstances
+  // require.  This function gets ALL the labels of the xAxis and rotates them.
+  _rotateXAxisLabels: function() {
+    var gXAxis = this.get('xAxis');
+
+    gXAxis.selectAll('text')
+      .attr("y", 8)
+      .attr("x", -8)
+      .attr("dy", ".2em")
+      .attr("transform", "rotate(-60)")
+      .style("text-anchor", "end");
+  },
+
+  _shouldLabelsRotate: function () {
+    var labels, maxLabelWidth, rotateLabels;
+
+    if (this.get('xAxisSmartLabels') {
+      label = this.get('xAxis').selectAll('text');
+      maxLabelWidth = this.get('maxLabelWidth');
+      labels.each(function () {
+        if (this.getBBox().width > maxLabelWidth) {
+          return true;
+        }
+      });
+    }
+    return false;
+  },
+
   _barGroups: Ember.computed('barData.@each', 'ungroupedSeriesName', function() {
     var barData = this.get('barData');
     if (Ember.isEmpty(barData)) {
@@ -826,9 +854,15 @@ const TimeSeriesChartComponent = ChartComponent.extend(LegendMixin,
     var graphicHeight = this.get('graphicHeight');
     var gXAxis = this.get('xAxis');
 
+    // Put our x-axis in the right place
     gXAxis.attr({
-        transform: "translate(0," + graphicTop + graphicHeight + ")"
-      }).call(xAxis);
+      transform: "translate(0," + graphicTop + graphicHeight + ")"
+    }).call(xAxis);
+
+    // Do we need to turn our axis labels?
+    if (this.get('xAxisVertLabels') || this._shouldLabelsRotate()) {
+      this._rotateXAxisLabels();
+    }
 
     //tickSize draws the Y-axis allignment line across the whole of the graph.
     var yAxis = d3.svg.axis()
