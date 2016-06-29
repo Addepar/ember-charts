@@ -192,7 +192,6 @@ const TimeSeriesChartComponent = ChartComponent.extend(LegendMixin,
     }
   },
 
-
   // Given a time, returns the time plus half an interval
   _padTimeForward: function(time, delta) {
     return this._padTimeWithIntervalMultiplier(time, delta, 0.5);
@@ -227,14 +226,17 @@ const TimeSeriesChartComponent = ChartComponent.extend(LegendMixin,
       .attr("dy", ".2em")
       .attr("transform", "rotate(-60)")
       .style("text-anchor", "end");
+
+    // we also need to mod the legend top padding
+    this.set('legendTopPadding', 30);
   },
 
   _shouldLabelsRotate: function () {
-    var labels, maxLabelWidth, rotateLabels;
+    var labels, maxLabelWidth;
 
-    if (this.get('xAxisSmartLabels') {
-      label = this.get('xAxis').selectAll('text');
-      maxLabelWidth = this.get('maxLabelWidth');
+    if (this.get('xAxisSmartLabels')) {
+      labels = this.get('xAxis').selectAll('text');
+      maxLabelWidth = this.get('maxLabelWidth') || this.get('_innerTickSpacingX');
       labels.each(function () {
         if (this.getBBox().width > maxLabelWidth) {
           return true;
@@ -395,16 +397,27 @@ const TimeSeriesChartComponent = ChartComponent.extend(LegendMixin,
 
   // If there is a dynamic x axis, then assume the value that it is given,
   // and if it is not a dynamic x axis, set it to the number of x axis ticks.
+  //
   // For a dynamic x axis, let the max number of labels be the minimum of
   // the number of x ticks and the assigned value. This is to prevent
   // the assigned value from being so large that labels flood the x axis.
-  maxNumberOfLabels: Ember.computed('numXTicks', 'dynamicXAxis', function(key, value){
+  maxNumberOfLabels: Ember.computed('numXTicks', 'dynamicXAxis', 'maxNumberOfRotatedLabels', function(key, value){
+    var allowableTicks = this.get('xAxisVertLabels') ? this.get('maxNumberOfRotatedLabels') : this.get('numXTicks');
     if (this.get('dynamicXAxis')) {
       value = _.isNaN(value) ? this.get('DEFAULT_MAX_NUMBER_OF_LABELS') : value;
-      return Math.min(value, this.get('numXTicks'));
+      return Math.min(value, allowableTicks);
     } else {
-      return this.get('numXTicks');
+      return allowableTicks;
     }
+  }),
+
+  // The footprint of a label rotated at -60 transform
+  maxNumberOfRotatedLabels: Ember.computed('_innerTickSpacingX', 'graphicWidth', 'numXTicks', function() {
+    const radianVal = 30 * (Math.PI / 180);
+    const tickSpacing = Math.sin(radianVal) * this.get('_innerTickSpacingX');
+    const numOfTicks = Math.floor(this.get('graphicWidth') / tickSpacing);
+
+    return Math.max(numOfTicks, this.get('numXTicks'));
   }),
 
   // Create a domain that spans the larger range of bar or line data
@@ -846,7 +859,6 @@ const TimeSeriesChartComponent = ChartComponent.extend(LegendMixin,
       .scale(this.get('xTimeScale'))
       .orient('bottom')
       .tickValues(this.get('labelledTicks'))
-      .tickSubdivide(this.get('numberOfMinorTicks'))
       .tickFormat(this.get('formattedTime'))
       .tickSize(6, 3);
 
@@ -858,6 +870,10 @@ const TimeSeriesChartComponent = ChartComponent.extend(LegendMixin,
     gXAxis.attr({
       transform: "translate(0," + graphicTop + graphicHeight + ")"
     }).call(xAxis);
+
+    // If we have minor ticks, this will select the applicable labels and alter
+    // them
+    this.filterMinorTicks();
 
     // Do we need to turn our axis labels?
     if (this.get('xAxisVertLabels') || this._shouldLabelsRotate()) {
