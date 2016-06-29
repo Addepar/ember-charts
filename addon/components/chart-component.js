@@ -188,6 +188,7 @@ const ChartComponent = Ember.Component.extend(ColorableMixin, ResizeHandlerMixin
   graphicHeight: Ember.computed.alias('height'),
 
   graphicBottom: Ember.computed('graphicTop', 'graphicHeight', function() {
+    console.log('graphic positioning', this.get('graphicTop') + this.get('graphicHeight'));
     return this.get('graphicTop') + this.get('graphicHeight');
   }),
 
