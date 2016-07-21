@@ -596,7 +596,6 @@ define('ember-charts/components/chart-component', ['exports', 'module', 'ember',
     graphicHeight: _Ember['default'].computed.alias('height'),
 
     graphicBottom: _Ember['default'].computed('graphicTop', 'graphicHeight', function () {
-      console.log('graphic positioning', this.get('graphicTop') + this.get('graphicHeight'));
       return this.get('graphicTop') + this.get('graphicHeight');
     }),
 
@@ -2911,7 +2910,7 @@ define('ember-charts/components/time-series-chart', ['exports', 'module', 'ember
 
       if (this.get('dynamicXAxis')) {
         value = isNaN(value) ? this.get('DEFAULT_MAX_NUMBER_OF_LABELS') : value;
-        return Math.max(value, allowableTicks);
+        return Math.min(value, allowableTicks);
       } else {
         return allowableTicks;
       }
@@ -6067,12 +6066,10 @@ define('ember-charts/mixins/time-series-labeler', ['exports', 'module', 'ember']
     // start and stop for the selected interval.
     tickLabelerFn: _Ember['default'].computed('dynamicXAxis', 'maxNumberOfLabels', 'maxNumberOfMinorTicks', 'xAxisVertLabels', 'xAxisTimeInterval', 'SPECIFICITY_RATIO', 'minTimeSpecificity', 'maxTimeSpecificity', function () {
       if (this.get('dynamicXAxis')) {
-        console.log("DYNAMIC");
         return _.bind(function (start, stop) {
           return this.dynamicXLabelling(start, stop);
         }, this);
       } else {
-        console.log("STATIC:", this.get('xAxisTimeInterval'));
         return _.bind(function (start, stop) {
           var domain, candidateLabels;
           domain = this.get('xAxisTimeInterval');
@@ -6107,6 +6104,8 @@ define('ember-charts/mixins/time-series-labeler', ['exports', 'module', 'ember']
 
     // See https://github.com/mbostock/d3/wiki/Time-Formatting
     formattedTime: _Ember['default'].computed('xAxisTimeInterval', function () {
+      // var l10n = d3.locale(ja_JP);
+
       switch (this.get('xAxisTimeInterval')) {
         case 'years':
         case 'Y':

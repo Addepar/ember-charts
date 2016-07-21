@@ -30,9 +30,6 @@ import zeroes_ungrouped from '../models/time_series/zeroes_ungrouped';
 import same_value_grouped from '../models/time_series/same_value_grouped';
 import same_value_ungrouped from '../models/time_series/same_value_ungrouped';
 
-import adda_dummy_bar from '../models/time_series/adda_dummy_bar';
-import adda_dummy_line from '../models/time_series/adda_dummy_line';
-
 
 export default SlideController.extend({
 
@@ -79,10 +76,6 @@ export default SlideController.extend({
 
   lineDataHash: Ember.computed(function() {
     return {
-      adda_dummy_line: adda_dummy_line,
-      adda_dummy_bar: adda_dummy_bar,
-      '-----': data.null,
-
       monthly_return_single_series: monthly_return_single_series,
       monthly_return_double_series: monthly_return_double_series,
       monthly_return_triple_series: monthly_return_triple_series,
