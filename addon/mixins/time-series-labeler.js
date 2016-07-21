@@ -320,12 +320,10 @@ export default Ember.Mixin.create({
     'xAxisTimeInterval', 'SPECIFICITY_RATIO', 'minTimeSpecificity', 'maxTimeSpecificity',
     function() {
       if (this.get('dynamicXAxis')) {
-        console.log("DYNAMIC");
         return _.bind(function(start, stop) {
           return this.dynamicXLabelling(start, stop);
         }, this);
       } else {
-        console.log("STATIC:", this.get('xAxisTimeInterval'));
         return _.bind(function(start, stop) {
           var domain, candidateLabels;
           domain = this.get('xAxisTimeInterval');
@@ -361,6 +359,8 @@ export default Ember.Mixin.create({
 
   // See https://github.com/mbostock/d3/wiki/Time-Formatting
   formattedTime: Ember.computed('xAxisTimeInterval', function() {
+    // var l10n = d3.locale(ja_JP);
+
     switch (this.get('xAxisTimeInterval')) {
       case 'years':
       case 'Y':

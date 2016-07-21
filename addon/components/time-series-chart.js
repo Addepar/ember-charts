@@ -412,7 +412,7 @@ const TimeSeriesChartComponent = ChartComponent.extend(LegendMixin,
 
     if (this.get('dynamicXAxis')) {
       value = isNaN(value) ? this.get('DEFAULT_MAX_NUMBER_OF_LABELS') : value;
-      return Math.max(value, allowableTicks);
+      return Math.min(value, allowableTicks);
     } else {
       return allowableTicks;
     }
