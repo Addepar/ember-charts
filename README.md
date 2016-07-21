@@ -46,7 +46,7 @@ After cloning this repo, install dependencies and run the demo app:
 
 ```bash
 $ npm install
-$ ember serve
+$ ember server
 ```
 
 You can view the examples at http://localhost:4200.
