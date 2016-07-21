@@ -143,42 +143,47 @@ export default Ember.Mixin.create({
 
     var markerData = [];
     this.get('viewport').selectAll('path.line').each(function(d) {
-      // # Count up the number of bisections, stopping after bisecting
-      // # maxIterations number of times. In case the bisection does not
-      // # converge, stop after 25 iterations, which should be enough for any
-      // # reasonable time range
-      var iterations = 0;
-      var maxIterations = 25;
+      // # Before working on the line we need to check that we have the SVG Line
+      // # and not any arbitrary node.  Note: you would think that 'path' would
+      // # select for SVG
+      if (this instanceof SVGPathElement) {
+        // # Count up the number of bisections, stopping after bisecting
+        // # maxIterations number of times. In case the bisection does not
+        // # converge, stop after 25 iterations, which should be enough for any
+        // # reasonable time range
+        var iterations = 0;
+        var maxIterations = 25;
 
-      // # Perform a binary search along the length of each SVG path, calling
-      // # getPointAtLength and testing where it falls relative to the position
-      // # corresponding to the location of the rule
-      var searchStart = 0;
-      var searchEnd = this.getTotalLength();
-      var searchLen = searchEnd / 2;
+        // # Perform a binary search along the length of each SVG path, calling
+        // # getPointAtLength and testing where it falls relative to the position
+        // # corresponding to the location of the rule
+        var searchStart = 0;
+        var searchEnd = this.getTotalLength();
+        var searchLen = searchEnd / 2;
 
-      var point = this.getPointAtLength(searchLen);
-      while (Math.abs(timeX - invXScale(point.x)) > lineMarkerTolerance && maxIterations > ++iterations) {
-        if (timeX < invXScale(point.x)) {
-          searchEnd = searchLen;
-        } else {
-          searchStart = searchLen;
+        var point = this.getPointAtLength(searchLen);
+        while (Math.abs(timeX - invXScale(point.x)) > lineMarkerTolerance && maxIterations > ++iterations) {
+          if (timeX < invXScale(point.x)) {
+            searchEnd = searchLen;
+          } else {
+            searchStart = searchLen;
+          }
+          searchLen = (searchStart + searchEnd) / 2;
+          point = this.getPointAtLength(searchLen);
         }
-        searchLen = (searchStart + searchEnd) / 2;
-        point = this.getPointAtLength(searchLen);
-      }
 
-      // # Push location of the point, information that will be displayed on hover,
-      // # and a reference to the line graphic that the point marks, on to a list
-      // # which will be used to construct a d3 selection of each line marker
-      return markerData.push({
-        x: point.x,
-        y: point.y,
-        group: d.group,
-        value: invYScale(point.y),
-        time: invXScale(point.x),
-        path: this
-      });
+        // # Push location of the point, information that will be displayed on hover,
+        // # and a reference to the line graphic that the point marks, on to a list
+        // # which will be used to construct a d3 selection of each line marker
+        return markerData.push({
+          x: point.x,
+          y: point.y,
+          group: d.group,
+          value: invYScale(point.y),
+          time: invXScale(point.x),
+          path: this
+        });
+      }
     });
     return markerData;
   }
