@@ -596,7 +596,6 @@ define('ember-charts/components/chart-component', ['exports', 'module', 'ember',
     graphicHeight: _Ember['default'].computed.alias('height'),
 
     graphicBottom: _Ember['default'].computed('graphicTop', 'graphicHeight', function () {
-      console.log('graphic positioning', this.get('graphicTop') + this.get('graphicHeight'));
       return this.get('graphicTop') + this.get('graphicHeight');
     }),
 
@@ -4966,42 +4965,47 @@ define('ember-charts/mixins/has-time-series-rule', ['exports', 'module', 'ember'
 
       var markerData = [];
       this.get('viewport').selectAll('path.line').each(function (d) {
-        // # Count up the number of bisections, stopping after bisecting
-        // # maxIterations number of times. In case the bisection does not
-        // # converge, stop after 25 iterations, which should be enough for any
-        // # reasonable time range
-        var iterations = 0;
-        var maxIterations = 25;
+        // # Before working on the line we need to check that we have the SVG Line
+        // # and not any arbitrary node.  Note: you would think that 'path' would
+        // # select for SVG
+        if (this instanceof SVGPathElement) {
+          // # Count up the number of bisections, stopping after bisecting
+          // # maxIterations number of times. In case the bisection does not
+          // # converge, stop after 25 iterations, which should be enough for any
+          // # reasonable time range
+          var iterations = 0;
+          var maxIterations = 25;
 
-        // # Perform a binary search along the length of each SVG path, calling
-        // # getPointAtLength and testing where it falls relative to the position
-        // # corresponding to the location of the rule
-        var searchStart = 0;
-        var searchEnd = this.getTotalLength();
-        var searchLen = searchEnd / 2;
+          // # Perform a binary search along the length of each SVG path, calling
+          // # getPointAtLength and testing where it falls relative to the position
+          // # corresponding to the location of the rule
+          var searchStart = 0;
+          var searchEnd = this.getTotalLength();
+          var searchLen = searchEnd / 2;
 
-        var point = this.getPointAtLength(searchLen);
-        while (Math.abs(timeX - invXScale(point.x)) > lineMarkerTolerance && maxIterations > ++iterations) {
-          if (timeX < invXScale(point.x)) {
-            searchEnd = searchLen;
-          } else {
-            searchStart = searchLen;
+          var point = this.getPointAtLength(searchLen);
+          while (Math.abs(timeX - invXScale(point.x)) > lineMarkerTolerance && maxIterations > ++iterations) {
+            if (timeX < invXScale(point.x)) {
+              searchEnd = searchLen;
+            } else {
+              searchStart = searchLen;
+            }
+            searchLen = (searchStart + searchEnd) / 2;
+            point = this.getPointAtLength(searchLen);
           }
-          searchLen = (searchStart + searchEnd) / 2;
-          point = this.getPointAtLength(searchLen);
-        }
 
-        // # Push location of the point, information that will be displayed on hover,
-        // # and a reference to the line graphic that the point marks, on to a list
-        // # which will be used to construct a d3 selection of each line marker
-        return markerData.push({
-          x: point.x,
-          y: point.y,
-          group: d.group,
-          value: invYScale(point.y),
-          time: invXScale(point.x),
-          path: this
-        });
+          // # Push location of the point, information that will be displayed on hover,
+          // # and a reference to the line graphic that the point marks, on to a list
+          // # which will be used to construct a d3 selection of each line marker
+          return markerData.push({
+            x: point.x,
+            y: point.y,
+            group: d.group,
+            value: invYScale(point.y),
+            time: invXScale(point.x),
+            path: this
+          });
+        }
       });
       return markerData;
     }
@@ -6130,7 +6134,6 @@ define('ember-charts/mixins/time-series-labeler', ['exports', 'module', 'ember']
     })
   });
 });
-<<<<<<< HEAD
 define('ember-charts/templates/components/chart-component', ['exports', 'module', 'ember'], function (exports, module, _ember) {
   'use strict';
 
@@ -6138,8 +6141,7 @@ define('ember-charts/templates/components/chart-component', ['exports', 'module'
 
   var _Ember = _interopRequireDefault(_ember);
 
-  module.exports = _Ember['default'].Handlebars.template(function anonymous(Handlebars, depth0, helpers, partials, data
-  /**/) {
+  module.exports = _Ember['default'].Handlebars.template(function anonymous(Handlebars, depth0, helpers, partials, data) {
     this.compilerInfo = [4, '>= 1.0.0'];
     helpers = this.merge(helpers, _Ember['default'].Handlebars.helpers);data = data || {};
     var buffer = '',
@@ -6158,33 +6160,6 @@ define('ember-charts/templates/components/chart-component', ['exports', 'module'
         'transform': "transformViewport"
       }, hashTypes: { 'transform': "ID" }, hashContexts: { 'transform': depth0 }, contexts: [], types: [], data: data })));
     data.buffer.push("></g>\n</svg>\n");
-=======
-define('ember-charts/templates/components/chart-component', ['exports', 'module'], function (exports, module) {
-  'use strict';
-
-  module.exports = Ember.HTMLBars.template(function anonymous(Handlebars, depth0, helpers, partials, data) {
-    this.compilerInfo = [4, '>= 1.0.0'];
-    helpers = this.merge(helpers, Ember.Handlebars.helpers);data = data || {};
-    var buffer = '',
-        stack1;
-
-    data.buffer.push("<svg width=");
-    stack1 = helpers._triageMustache.call(depth0, "outerWidth", { hash: {}, hashTypes: {}, hashContexts: {}, contexts: [depth0], types: ["ID"], data: data });
-    if (stack1 || stack1 === 0) {
-      data.buffer.push(stack1);
-    }
-    data.buffer.push(" height=");
-    stack1 = helpers._triageMustache.call(depth0, "outerHeight", { hash: {}, hashTypes: {}, hashContexts: {}, contexts: [depth0], types: ["ID"], data: data });
-    if (stack1 || stack1 === 0) {
-      data.buffer.push(stack1);
-    }
-    data.buffer.push(">\n  <g class=\"chart-viewport\" transform=");
-    stack1 = helpers._triageMustache.call(depth0, "transformViewport", { hash: {}, hashTypes: {}, hashContexts: {}, contexts: [depth0], types: ["ID"], data: data });
-    if (stack1 || stack1 === 0) {
-      data.buffer.push(stack1);
-    }
-    data.buffer.push("></g>\n</svg>");
->>>>>>> 0f61656... Incremental Work.
     return buffer;
   });
 });
