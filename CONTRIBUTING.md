@@ -55,17 +55,23 @@ provide as much detail and context as possible.
 
 ## Writing Code in Ember Charts
 
-Ember-charts is written in [CoffeeScript](http://coffeescript.org/) and compiled
-into JavaScript using [Grunt](http://gruntjs.com/). Contributing to ember-charts
+Ember Charts uses newer/non-portable JavaScript features, such as
+ECMAScript 6 modules. It is compiled into older/portable JavaScript
+using [Grunt](http://gruntjs.com/). Contributing to ember-charts
 requires that you have grunt and NPM (for pulling in dependencies) locally
 installed.
 
-The `src` folder contains all the source code for the ember-charts project
-itself. The `app` folder contains the sample app and documentation, and should
-be updated whenever changes will add functionality, modify or remove existing
-functionality, or change public APIs. The `dist` folder contains the compiled
-ember-charts code and should not be directly modified but instead generated
-using `grunt dist`.
+The folder structure of ember-charts is as follows:
+
+- The `ember-charts/addon` folder contains almost all the source code for the
+  ES6 modules making up the ember-charts project itself.
+- The `ember-charts/app` folder contains very thin wrappers around the modules
+  in the `addon` folder, used as part of the unit test executor.
+- The `ember-charts/tests` folder contains the tests, and the
+  example application (within `ember-charts/tests/dummy`).
+- The `ember-charts/dist` folder contains the compiled globals-based version
+  of the code in `ember-charts/addon`. It should not be directly modified
+  but instead generated using `grunt dist`.
 
 ## Pull requests
 
