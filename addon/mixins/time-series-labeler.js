@@ -230,6 +230,7 @@ export default Ember.Mixin.create({
     for (i = 0, len = domainTypes.length; i < len; i++) {
       timeBetween = this.get('times')[domainTypes[i]];
       if (timeBetween <= maxNumberOfLabels) {
+        console.log(timeBetween, maxNumberOfLabels, domainTypes[i], "ICK");
         return domainTypes[i];
       }
     }
@@ -317,6 +318,8 @@ export default Ember.Mixin.create({
     this.set('xAxisTimeInterval', timeUnit);
     labels = this.filterLabels(d3.time[domainTypeToLabellerType[timeUnit]](start, stop), interval);
 
+    console.log("POOP", timeUnit, interval, labels, d3.time[domainTypeToLabellerType[timeUnit]](start, stop));
+
     return labels;
   },
 
@@ -325,34 +328,37 @@ export default Ember.Mixin.create({
   // control to know if we're filtering or simply relegating the labels to a
   // mere tick.
   filterLabels: function(array, interval){
-    var maxNumberOfLabels, maxNumberOfMinorTicks, modulo, minorTick, len, moduloFilter;
+    var maxNumberOfLabels, maxNumberOfMinorTicks, modulo, len, moduloFilter;
 
     maxNumberOfLabels = this.get('maxNumberOfLabels');
     maxNumberOfMinorTicks = this.get('maxNumberOfMinorTicks');
-    minorTick = this.get('minorTickInterval');
+    modulo = this.get('minorTickInterval');
     len = array.length;
+    moduloFilter = function(d, i) {
+      return i % 2 === 0;
+    }
 
-    if (len > maxNumberOfLabels) {
-      modulo = Math.ceil(Math.log2(len/(maxNumberOfLabels * (maxNumberOfMinorTicks + 1)))) + 1;
-      array = array.filter(function(d, i) {
-        return i % modulo === 0;
-      });
-      len = array.length;
-      // This is a two step process:
-      // First we need to filter down so number of labels / 2^max ticks <= the
-      // number of max allowable labels.
-      // Second we then need to loop and apply the ticks to our heart's content
-      if (maxNumberOfMinorTicks > 0) {
-        this.set('minorTickInterval', Math.ceil(len / maxNumberOfLabels));
+    if (maxNumberOfMinorTicks === 0) {
+      while (len > maxNumberOfLabels) {
+        array = array.filter(moduloFilter);
+        len = array.length;
       }
+    } else if (len > maxNumberOfLabels) {
+      while (modulo < (maxNumberOfMinorTicks + 1) && (len / modulo <= maxNumberOfLabels)) {
+        modulo += 1;
+        if (len / modulo <= maxNumberOfLabels) {
+          break;
+        }
+      }
+      this.set('minorTickInterval', modulo);
     }
     return array;
   },
 
   // Returns the function which returns the labelled intervals between
   // start and stop for the selected interval.
-  tickLabelerFn: Ember.computed('dynamicXAxis', 'maxNumberOfLabels', 'maxNumberOfMinorTicks', 'xAxisVertLabels',
-    'xAxisTimeInterval', 'SPECIFICITY_RATIO', 'minTimeSpecificity', 'maxTimeSpecificity',
+  tickLabelerFn: Ember.computed('dynamicXAxis', 'maxNumberOfLabels', 'xAxisTimeInterval',
+    'SPECIFICITY_RATIO', 'minTimeSpecificity', 'maxTimeSpecificity',
     function() {
       if (this.get('dynamicXAxis')) {
         return _.bind(function(start, stop) {

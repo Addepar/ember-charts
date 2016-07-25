@@ -48,9 +48,6 @@ export default SlideController.extend({
   xValueDisplayName: 'X Axis',
   yValueDisplayName: 'Y Axis',
 
-  maxNumberOfMinorTicks: 0,
-  xAxisVertLabels: false,
-
   // ---------
   // Data Selection
   // ---------
