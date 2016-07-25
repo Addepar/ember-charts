@@ -13,7 +13,7 @@ var calcMaxLabelWidth = function(labelWidthsArray, totalAvailableWidthForLabels)
   for (var i = 0; i < labelWidthsArray.length; i++) {
     var curLabelWidth = labelWidthsArray[i];
     if (curLabelWidth < maxLabelWidth) {
-      // If the label is shorter than the max labelWidth, then it shouldn't be truncated
+      // If the label is shorter than the max labelWidth, then it shouldn't be truncated 
       // and hence subtract short labels from remaining totalAvailableWidthForLabels.
       totalAvailableWidthForLabels -= curLabelWidth;
       // Distribute the remaining width equally in remaining labels and set that as max.
@@ -86,16 +86,6 @@ export default Ember.Mixin.create({
 
   legendHeight: Ember.computed('numLegendRows', 'legendItemHeight', function() {
     return this.get('numLegendRows') * this.get('legendItemHeight');
-  }),
-
-  // Bottom margin is equal to the total amount of space the legend needs,
-  _marginBottom: Ember.computed('legendHeight', 'hasLegend', 'marginTop', function() {
-    // If the legend is enabled then we need some extra breathing room
-    return this.get('hasLegend') ? this.get('legendHeight') : this.get('marginBottom');
-  }),
-
-  marginBottom: Ember.computed('_marginBottom', 'minimumTopBottomMargin', function() {
-    return Math.max(this.get('_marginBottom'), this.get('minimumTopBottomMargin'));
   }),
 
   // Dynamically calculate the size of each legend item
@@ -310,9 +300,9 @@ export default Ember.Mixin.create({
 
   // Create a list of all the legend Items, icon for each legend item and corresponding labels
   // Calculate the number of legend item rows and items in each. Each time width should be bounded by min and max legend item width.
-  // Calculate the label width for each legend row that minimizes truncation.
+  // Calculate the label width for each legend row that minimizes truncation. 
   // And then apply legendItemAttrs to apply posisioning transforms.
-  // Legend layout => A legend item consists of an Icon and a label. Icon is always positioned centered at 0px within item.
+  // Legend layout => A legend item consists of an Icon and a label. Icon is always positioned centered at 0px within item. 
   // Line icon width is 2*legendIconRadius, where other shapes are usually legendIconRadius px in width.
   // Icon is followed by label that is positioned at (legendIconRadius/2 + legendLabelPadding) px. This adds some padding between icon and label.
   // Finally we add a padding of (2*legendLabelPadding) px before next label
@@ -351,7 +341,7 @@ export default Ember.Mixin.create({
                 .attr(legendIconAttrs);
       }
     });
-
+    
     var legendLabelWidths = [];
     var labels = legendItems.append('text')
           .style('text-anchor', 'start')
@@ -391,7 +381,7 @@ export default Ember.Mixin.create({
       availableLegendWidth -= Math.min(availableLegendWidth, itemWidth);
     });
     this.set('numLegendItemsByRows', numLegendItemsByRows);
-
+    
     var startIdxCurrentRow = 0;
     var legendRowWidths = []; // Capture the width of each legend row
     var iconRadius = this.get('legendIconRadius');
@@ -409,10 +399,10 @@ export default Ember.Mixin.create({
       var labelWidthsForCurRow = legendLabelWidths.splice(0, curRowItemCount);
       var maxLabelWidth = calcMaxLabelWidth(labelWidthsForCurRow, totalAvailableWidthForLabels);
       truncateLabels(labels, startIdxCurrentRow, startIdxCurrentRow + curRowItemCount, maxLabelWidth);
-
-      // After label trimming, calculate the final width of the current legend row.
+      
+      // After label trimming, calculate the final width of the current legend row. 
       // This will be used by legenItemAttrs transform method to position the row in the center.
-      legendRowWidths[rowNum] = calcLegendRowWidth(legendItems, startIdxCurrentRow,
+      legendRowWidths[rowNum] = calcLegendRowWidth(legendItems, startIdxCurrentRow, 
                                 startIdxCurrentRow + curRowItemCount,
                                 legendLabelPadding);
       startIdxCurrentRow += numLegendItemsByRows[rowNum];

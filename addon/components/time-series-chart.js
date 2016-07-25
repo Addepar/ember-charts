@@ -220,12 +220,6 @@ const TimeSeriesChartComponent = ChartComponent.extend(LegendMixin,
   _rotateXAxisLabels: function() {
     var gXAxis = this.get('xAxis');
 
-    // If we have a legend it'll take care of the margin bottom adjustments,
-    // else we need to give ourselves some more room for the labels.
-    if (!this.get('hasLegend')) {
-      this.set('marginBottom', 20);
-    }
-
     gXAxis.selectAll('text')
       .attr("y", 8)
       .attr("x", -8)
@@ -282,7 +276,7 @@ const TimeSeriesChartComponent = ChartComponent.extend(LegendMixin,
   }),
 
   graphicHeight: Ember.computed('height', 'legendHeight', 'legendChartPadding', function() {
-    return this.get('height') - this.get('legendHeight') - this.get('legendChartPadding') - (this.get('MarginBottom') || 0 );
+    return this.get('height') - this.get('legendHeight') - this.get('legendChartPadding');
   }),
 
   // ----------------------------------------------------------------------------
@@ -409,10 +403,10 @@ const TimeSeriesChartComponent = ChartComponent.extend(LegendMixin,
   // the assigned value from being so large that labels flood the x axis.
   maxNumberOfLabels: Ember.computed('numXTicks', 'dynamicXAxis', 'maxNumberOfRotatedLabels', function(key, value){
     var allowableTicks = this.get('xAxisVertLabels') ? this.get('maxNumberOfRotatedLabels') : this.get('numXTicks');
-
+    
     if (this.get('dynamicXAxis')) {
-      value = isNaN(value) ? this.get('DEFAULT_MAX_NUMBER_OF_LABELS') : value;
-      return Math.max(value, allowableTicks);
+      value = _.isNaN(value) ? this.get('DEFAULT_MAX_NUMBER_OF_LABELS') : value;
+      return Math.min(value, allowableTicks);
     } else {
       return allowableTicks;
     }
@@ -843,10 +837,7 @@ const TimeSeriesChartComponent = ChartComponent.extend(LegendMixin,
     'hasXAxisTitle',
     'hasYAxisTitle',
     'xTitleHorizontalOffset',
-    'yTitleVerticalOffset',
-    'xAxisVertLabels',
-    'maxNumberOfMinorTicks',
-    'graphicWidth'
+    'yTitleVerticalOffset'
   ],
 
   drawChart: function() {
