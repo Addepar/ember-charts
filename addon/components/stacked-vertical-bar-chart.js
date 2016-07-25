@@ -53,42 +53,44 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
   // ----------------------------------------------------------------------------
 
   sortedData: Ember.computed('data.[]', 'sortKey', 'sortAscending', function() {
-    var data, group, groupData, groupObj, groupedData, key, newData, sortAscending, sortedGroups, summedGroupValues, _i, _len;
+    var data, barLabel, barData, barSum, dataGroupedByBar, key, newData, sortedSummedBarValues, summedBarValues, _i, _len;
+
     data = this.get('data');
-    groupedData = _.groupBy(data, function(d) {
-      return d.group;
+    dataGroupedByBar = _.groupBy(data, function(d) {
+      return d.barLabel;
     });
-    summedGroupValues = Ember.A();
+    summedBarValues = Ember.A();
 
     const reduceByValue = (previousValue, dataObject) =>
       previousValue + dataObject.value;
 
-    for (group in groupedData) {
-      groupData = groupedData[group];
-      if (group !== null) {
-        summedGroupValues.pushObject({
-          group: group,
-          value: groupData.reduce(reduceByValue, 0)
+    for (barLabel in dataGroupedByBar) {
+      barData = dataGroupedByBar[barLabel];
+      if (barLabel !== null) {
+        summedBarValues.pushObject({
+          barLabel: barLabel,
+          value: barData.reduce(reduceByValue, 0)
         });
       }
     }
+
     key = this.get('sortKey');
-    sortAscending = this.get('sortAscending');
-    if (Ember.isEmpty(summedGroupValues)) {
+    if (Ember.isEmpty(summedBarValues)) {
       return Ember.A();
-    } else if (key != null) {
-      sortedGroups = summedGroupValues.sortBy(key);
-      if (!sortAscending) {
-        sortedGroups = sortedGroups.reverse();
+    } else if (key === null) {
+      return data;
+    } else {
+      sortedSummedBarValues = summedBarValues.sortBy(key);
+      if (!this.get('sortAscending')) {
+        sortedSummedBarValues = sortedSummedBarValues.reverse();
       }
+
       newData = Ember.A();
-      for (_i = 0, _len = sortedGroups.length; _i < _len; _i++) {
-        groupObj = sortedGroups[_i];
-        newData.pushObjects(groupedData[groupObj.group]);
+      for (_i = 0, _len = sortedSummedBarValues.length; _i < _len; _i++) {
+        barSum = sortedSummedBarValues[_i];
+        newData.pushObjects(dataGroupedByBar[barSum.barLabel]);
       }
       return newData;
-    } else {
-      return data;
     }
   }),
 
@@ -104,7 +106,7 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
    	}
 
     data = groupBy(data, (d) => {
-      return d.group || this.get('ungroupedSeriesName');
+      return d.barLabel || this.get('ungroupedSeriesName');
     });
 
     // After grouping, the data points may be out of order, and therefore not properly
@@ -113,7 +115,7 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
     // grouping across the board.
     // TODO(ember-charts-lodash): Use _.mapValues instead of the each loop.
     _.each(_.keys(data), function(groupName) {
-      data[groupName] = _.sortBy(data[groupName], 'label');
+      data[groupName] = _.sortBy(data[groupName], 'sliceLabel');
     });
 
     return data;
@@ -136,7 +138,6 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
   finishedData: Ember.computed('groupedData', 'isGrouped', function() {
     var y0, stackedValues;
     if (this.get('isGrouped')) {
-      debugger;
       if (Ember.isEmpty(this.get('groupedData'))) {
         return Ember.A();
       }
@@ -148,14 +149,14 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
             y0: y0,
             y1: y0 += Math.max(d.value, 0),
             value: d.value,
-            group: d.group,
-            label: d.label,
+            barLabel: d.barLabel,
+            sliceLabel: d.sliceLabel,
             color: d.color
           };
         });
 
         return {
-          group: groupName,
+          barLabel: groupName,
           values: values,
           stackedValues: stackedValues,
           totalValue: y0
@@ -163,7 +164,6 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
       });
 
     } else {
-      debugger;
       if (Ember.isEmpty(this.get('data'))) {
         return Ember.A();
       }
@@ -178,7 +178,7 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
       });
 
       return Ember.A([{
-        group: this.get('data.firstObject.group'),
+        barLabel: this.get('data.firstObject.barLabel'),
         values: this.get('data'),
         stackedValues: stackedValues,
         totalValue: y0
@@ -250,7 +250,7 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
 
   individualBarLabels: Ember.computed('groupedData.[]', function() {
     var groups = _.map(_.values(this.get('groupedData')), function(g) {
-      return _.pluck(g, 'label');
+      return _.pluck(g, 'sliceLabel');
     });
     return _.uniq(_.flatten(groups));
   }),
@@ -359,11 +359,11 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
       d3.select(element).classed('hovered', true);
 
       // Show tooltip
-      var content =  (data.group) ? "<span class=\"tip-label\">" + data.group + "</span>" : '';
+      var content =  (data.barLabel) ? "<span class=\"tip-label\">" + data.barLabel + "</span>" : '';
 
       var formatLabel = this.get('formatLabelFunction');
       var addValueLine = function(d) {
-        content += "<span class=\"name\">" + d.label + ": </span>";
+        content += "<span class=\"name\">" + d.sliceLabel + ": </span>";
         return content += "<span class=\"value\">" + formatLabel(d.value) + "</span><br/>";
       };
 
@@ -406,7 +406,7 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
 
     return {
       transform: (d) => {
-        var dx = xBetweenGroupScale(d.group) ? this.get('graphicLeft') + xBetweenGroupScale(d.group) : this.get('graphicLeft');
+        var dx = xBetweenGroupScale(d.barLabel) ? this.get('graphicLeft') + xBetweenGroupScale(d.barLabel) : this.get('graphicLeft');
         var dy = this.get('graphicTop');
 
         return "translate(" + dx + ", " + dy + ")";
@@ -421,7 +421,7 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
     return {
       "class": (barSection) => {
         var id;
-        id = this.get('labelIDMapping')[barSection.label];
+        id = this.get('labelIDMapping')[barSection.sliceLabel];
         return "grouping-" + id;
       },
       'stroke-width': 0,
@@ -563,7 +563,7 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
     var groups = this.get('groups');
     var labels = groups.select('.groupLabel text')
       .attr('transform', null) // remove any previous rotation attrs
-      .text(function(d) { return d.group; });
+      .text(function(d) { return d.barLabel; });
 
     // If there is enough space horizontally, center labels underneath each
     // group. Otherwise, rotate each label and anchor it at the top of its
@@ -575,7 +575,7 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
       var rotateLabelDegrees = this.get('rotateLabelDegrees');
       labelTrimmer = LabelTrimmer.create({
         getLabelSize: () => this.get('rotatedLabelLength'),
-        getLabelText: (d) => d.group
+        getLabelText: (d) => d.barLabel
       });
 
       return labels.call(labelTrimmer.get('trim')).attr({
@@ -588,7 +588,7 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
       var maxLabelWidth = this.get('maxLabelWidth');
       labelTrimmer = LabelTrimmer.create({
         getLabelSize: () => maxLabelWidth,
-        getLabelText: (d) => d.group != null ? d.group : ''
+        getLabelText: (d) => d.barLabel != null ? d.barLabel : ''
       });
 
       return labels.call(labelTrimmer.get('trim')).attr({
