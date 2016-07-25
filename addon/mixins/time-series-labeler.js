@@ -146,7 +146,7 @@ export default Ember.Mixin.create({
   // interval.  minorTickInterval is the modulo for the items to be removed.  So
   // a maxNumberOfMinorTicks=0 and minorTickInterval=1 essentailly disables the
   // minor tick feature.
-  maxNumberOfMinorTicks: 0,
+  maxNumberOfMinorTicks: 1,
   minorTickInterval: 1,
 
   filterMinorTicks: function () {
