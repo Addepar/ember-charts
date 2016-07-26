@@ -136,18 +136,30 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
   }),
 
   finishedData: Ember.computed('groupedData', 'isGrouped', function() {
-    var y0, stackedValues;
+    var posTop, negBottom, stackedValues;
     if (this.get('isGrouped')) {
       if (Ember.isEmpty(this.get('groupedData'))) {
         return Ember.A();
       }
 
       return _.map(this.get('groupedData'), function(values, groupName) {
-        y0 = 0;
+        posTop = 0;
+        negBottom = 0;
         stackedValues = _.map(values, function(d) {
+          var yMin, yMax;
+          if (d.value < 0) {
+            yMax = negBottom;
+            negBottom += d.value;
+            yMin = negBottom;
+          } else {
+            yMin = posTop;
+            posTop += d.value;
+            yMax = posTop;
+          }
+
           return {
-            y0: y0,
-            y1: y0 += Math.max(d.value, 0),
+            yMin: yMin,
+            yMax: yMax,
             value: d.value,
             barLabel: d.barLabel,
             sliceLabel: d.sliceLabel,
@@ -159,7 +171,8 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
           barLabel: groupName,
           values: values,
           stackedValues: stackedValues,
-          totalValue: y0
+          max: posTop,
+          min: negBottom
         };
       });
 
@@ -169,11 +182,23 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
       }
       // If we do not have grouped data and are drawing stacked bars, keep the
       // data in one group so it gets stacked
-      y0 = 0;
+      posTop = 0;
+      negBottom = 0;
       stackedValues = _.map(this.get('data'), function(d) {
+        var yMin, yMax;
+        if (d.value < 0) {
+          yMax = negBottom;
+          negBottom += d.value;
+          yMin = negBottom;
+        } else {
+          yMin = posTop;
+          posTop += d.value;
+          yMax = posTop;
+        }
+
         return {
-          y0: y0,
-          y1: y0 += Math.max(d.value, 0)
+          yMin: yMin,
+          yMax: yMax
         };
       });
 
@@ -181,7 +206,8 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
         barLabel: this.get('data.firstObject.barLabel'),
         values: this.get('data'),
         stackedValues: stackedValues,
-        totalValue: y0
+        max: posTop,
+        min: negBottom
       }]);
 
     }
@@ -220,12 +246,12 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
     var finishedData = this.get('finishedData');
 
     var max = d3.max(finishedData, function(d) {
-      return d.totalValue;
+      return d.max;
     });
 
-    // minOfStacks is always zero since we do not compute negative stacks
-    // TODO(nick): make stacked bars deal gracefully with negative data
-    var min = d3.min(finishedData, function() { return 0; });
+    var min = d3.min(finishedData, function(d) {
+      return d.min;
+    });
 
     // force one end of the range to include zero
     if (min > 0) {
@@ -428,10 +454,10 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
       width: () => this.get('groupWidth'),
       x: null,
       y: function(barSection) {
-        return yScale(barSection.y1) + zeroDisplacement;
+        return yScale(barSection.yMax) + zeroDisplacement;
       },
       height: function(barSection) {
-        return yScale(barSection.y0) - yScale(barSection.y1);
+        return yScale(barSection.yMin) - yScale(barSection.yMax);
       }
     };
   }),
