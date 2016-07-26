@@ -11,6 +11,14 @@ import AxisTitlesMixin from '../mixins/axis-titles';
 import { groupBy } from '../utils/group-by';
 import LabelTrimmer from '../utils/label-trimmer';
 
+/**
+ * Base class for stacked vertical bar chart components.
+ *
+ * Supersedes the deprecated functionality of VerticalBarChartComponent
+ * with stackBars: true.
+ *
+ * FIXME (SBC): s/betweenGroupPadding/withinGroupPadding/g here and in documentation.hbs
+ */
 const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
   FloatingTooltipMixin, AxesMixin, FormattableMixin, SortableChartMixin,
   NoMarginChartMixin, AxisTitlesMixin, {
