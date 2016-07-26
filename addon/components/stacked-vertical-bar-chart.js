@@ -206,7 +206,11 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
 
         return {
           yMin: yMin,
-          yMax: yMax
+          yMax: yMax,
+          value: d.value,
+          barLabel: d.barLabel,
+          sliceLabel: d.sliceLabel,
+          color: d.color
         };
       });
 
