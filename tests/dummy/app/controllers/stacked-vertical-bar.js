@@ -14,6 +14,8 @@ const StackedVerticalBarController = VerticalBarController.extend({
         var datum = dataset[iDatum];
         datum.barLabel = datum.group;
         datum.sliceLabel = datum.label;
+        delete datum.group;
+        delete datum.label;
       }
     }
     return dataHash;

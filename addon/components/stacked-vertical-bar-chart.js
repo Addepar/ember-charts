@@ -60,10 +60,16 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
   // Data
   // ----------------------------------------------------------------------------
 
-  sortedData: Ember.computed('data.[]', 'sortKey', 'sortAscending', function() {
+  filteredData: Ember.computed('data.[]', function() {
+    return _.filter(this.get('data'), function(slice) {
+      return (slice.value !== 0.0);
+    });
+  }),
+
+  sortedData: Ember.computed('filteredData.[]', 'sortKey', 'sortAscending', function() {
     var data, barLabel, barData, barSum, dataGroupedByBar, key, newData, sortedSummedBarValues, summedBarValues, _i, _len;
 
-    data = this.get('data');
+    data = this.get('filteredData');
     dataGroupedByBar = _.groupBy(data, function(d) {
       return d.barLabel;
     });
@@ -109,7 +115,7 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
       // TODO(embooglement): this can't be `Ember.A()` because it needs to be an
       // actual empty array for tests to pass, and `Ember.NativeArray` adds
       // a bunch of stuff to the prototype that gets enumerated by `_.values`
-      // in `individualBarLabels`
+      // in `allSliceLabels`
     	return [];
    	}
 
@@ -185,14 +191,14 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
       });
 
     } else {
-      if (Ember.isEmpty(this.get('data'))) {
+      if (Ember.isEmpty(this.get('filteredData'))) {
         return Ember.A();
       }
       // If we do not have grouped data and are drawing stacked bars, keep the
       // data in one group so it gets stacked
       posTop = 0;
       negBottom = 0;
-      stackedValues = _.map(this.get('data'), function(d) {
+      stackedValues = _.map(this.get('filteredData'), function(d) {
         var yMin, yMax;
         if (d.value < 0) {
           yMax = negBottom;
@@ -216,7 +222,7 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
 
       return Ember.A([{
         barLabel: this.get('data.firstObject.barLabel'),
-        values: this.get('data'),
+        values: this.get('filteredData'),
         stackedValues: stackedValues,
         max: posTop,
         min: negBottom
@@ -286,15 +292,12 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
       .nice(this.get('numYTicks'));
   }),
 
-  individualBarLabels: Ember.computed('groupedData.[]', function() {
-    var groups = _.map(_.values(this.get('groupedData')), function(g) {
-      return _.pluck(g, 'sliceLabel');
-    });
-    return _.uniq(_.flatten(groups));
+  allSliceLabels: Ember.computed('sortedData.[]', function() {
+    return _.uniq(_.pluck(this.get('sortedData'), 'sliceLabel'));
   }),
 
-  labelIDMapping: Ember.computed('individualBarLabels.[]', function() {
-    return this.get('individualBarLabels').reduce(function(previousValue, label, index) {
+  labelIDMapping: Ember.computed('allSliceLabels.[]', function() {
+    return this.get('allSliceLabels').reduce(function(previousValue, label, index) {
       previousValue[label] = index;
       return previousValue;
     }, {});
@@ -305,7 +308,7 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
   // xBetweenGroupDomain: [],
 
   // The range of labels assigned within each group
-  xWithinGroupDomain: Ember.computed.alias('individualBarLabels'),
+  xWithinGroupDomain: Ember.computed.alias('allSliceLabels'),
 
   // The space in pixels allocated to each group
   groupWidth: Ember.computed('xBetweenGroupScale', function() {
@@ -357,7 +360,7 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
   // Color Configuration
   // ----------------------------------------------------------------------------
 
-  numColorSeries: Ember.computed.alias('individualBarLabels.length'),
+  numColorSeries: Ember.computed.alias('allSliceLabels.length'),
 
   // ----------------------------------------------------------------------------
   // Legend Configuration
@@ -365,9 +368,9 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
 
   hasLegend: true,
 
-  legendItems: Ember.computed('individualBarLabels.[]', 'getSeriesColor', 'labelIDMapping.[]', function() {
+  legendItems: Ember.computed('allSliceLabels.[]', 'getSeriesColor', 'labelIDMapping.[]', function() {
     var getSeriesColor = this.get('getSeriesColor');
-    return this.get('individualBarLabels').map((label, i) => {
+    return this.get('allSliceLabels').map((label, i) => {
       var color = getSeriesColor(label, i);
       return {
         label: label,
