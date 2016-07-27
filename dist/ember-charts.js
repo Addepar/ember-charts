@@ -2489,6 +2489,699 @@ define('ember-charts/components/scatter-chart', ['exports', 'module', 'ember', '
 
   module.exports = ScatterChartComponent;
 });
+define('ember-charts/components/stacked-vertical-bar-chart', ['exports', 'module', 'ember', './chart-component', '../mixins/legend', '../mixins/floating-tooltip', '../mixins/axes', '../mixins/formattable', '../mixins/sortable-chart', '../mixins/no-margin-chart', '../mixins/axis-titles', '../utils/group-by', '../utils/label-trimmer'], function (exports, module, _ember, _chartComponent, _mixinsLegend, _mixinsFloatingTooltip, _mixinsAxes, _mixinsFormattable, _mixinsSortableChart, _mixinsNoMarginChart, _mixinsAxisTitles, _utilsGroupBy, _utilsLabelTrimmer) {
+  'use strict';
+
+  function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+
+  var _Ember = _interopRequireDefault(_ember);
+
+  var _ChartComponent = _interopRequireDefault(_chartComponent);
+
+  var _LegendMixin = _interopRequireDefault(_mixinsLegend);
+
+  var _FloatingTooltipMixin = _interopRequireDefault(_mixinsFloatingTooltip);
+
+  var _AxesMixin = _interopRequireDefault(_mixinsAxes);
+
+  var _FormattableMixin = _interopRequireDefault(_mixinsFormattable);
+
+  var _SortableChartMixin = _interopRequireDefault(_mixinsSortableChart);
+
+  var _NoMarginChartMixin = _interopRequireDefault(_mixinsNoMarginChart);
+
+  var _AxisTitlesMixin = _interopRequireDefault(_mixinsAxisTitles);
+
+  var _LabelTrimmer = _interopRequireDefault(_utilsLabelTrimmer);
+
+  /**
+   * Base class for stacked vertical bar chart components.
+   *
+   * Supersedes the deprecated functionality of VerticalBarChartComponent
+   * with stackBars: true.
+   *
+   * FIXME (SBC): s/betweenGroupPadding/withinGroupPadding/g here and in documentation.hbs
+   */
+  var StackedVerticalBarChartComponent = _ChartComponent['default'].extend(_LegendMixin['default'], _FloatingTooltipMixin['default'], _AxesMixin['default'], _FormattableMixin['default'], _SortableChartMixin['default'], _NoMarginChartMixin['default'], _AxisTitlesMixin['default'], {
+
+    classNames: ['chart-vertical-bar', 'chart-stacked-vertical-bar'],
+
+    // ----------------------------------------------------------------------------
+    // Vertical Bar Chart Options
+    // ----------------------------------------------------------------------------
+
+    // Data without group will be merged into a group with this name
+    ungroupedSeriesName: 'Other',
+
+    // Space between bars, as fraction of bar size
+    withinGroupPadding: 0,
+
+    // Space between bar groups, as fraction of group size
+    betweenGroupPadding: _Ember['default'].computed('numBars', function () {
+      // Use padding to make sure bars have a maximum thickness.
+      //
+      // TODO(tony): Use exact padding + bar width calculation
+      // We have some set amount of bewtween group padding we use depending
+      // on the number of bars there are in the chart. Really, what we would want
+      // to do is have the equation for bar width based on padding and use that
+      // to set the padding exactly.
+      var scale = d3.scale.linear().domain([1, 8]).range([1.25, 0.25]).clamp(true);
+      return scale(this.get('numBars'));
+    }),
+
+    numBars: _Ember['default'].computed('xBetweenGroupDomain', 'xWithinGroupDomain', function () {
+      return this.get('xBetweenGroupDomain.length') * this.get('xWithinGroupDomain.length') || 0;
+    }),
+
+    // Space allocated for rotated labels on the bottom of the chart. If labels
+    // are rotated, they will be extended beyond labelHeight up to maxLabelHeight
+    maxLabelHeight: 50,
+
+    // ----------------------------------------------------------------------------
+    // Data
+    // ----------------------------------------------------------------------------
+
+    filteredData: _Ember['default'].computed('data.[]', function () {
+      return _.filter(this.get('data'), function (slice) {
+        return slice.value !== 0.0;
+      });
+    }),
+
+    sortedData: _Ember['default'].computed('filteredData.[]', 'sortKey', 'sortAscending', function () {
+      var data, barLabel, barData, barSum, dataGroupedByBar, key, newData, sortedSummedBarValues, summedBarValues, _i, _len;
+
+      data = this.get('filteredData');
+      dataGroupedByBar = _.groupBy(data, function (d) {
+        return d.barLabel;
+      });
+      summedBarValues = _Ember['default'].A();
+
+      var reduceByValue = function reduceByValue(previousValue, dataObject) {
+        return previousValue + dataObject.value;
+      };
+
+      for (barLabel in dataGroupedByBar) {
+        barData = dataGroupedByBar[barLabel];
+        if (barLabel !== null) {
+          summedBarValues.pushObject({
+            barLabel: barLabel,
+            value: barData.reduce(reduceByValue, 0)
+          });
+        }
+      }
+
+      key = this.get('sortKey');
+      if (_Ember['default'].isEmpty(summedBarValues)) {
+        return _Ember['default'].A();
+      } else if (key === null) {
+        return data;
+      } else {
+        sortedSummedBarValues = summedBarValues.sortBy(key);
+        if (!this.get('sortAscending')) {
+          sortedSummedBarValues = sortedSummedBarValues.reverse();
+        }
+
+        newData = _Ember['default'].A();
+        for (_i = 0, _len = sortedSummedBarValues.length; _i < _len; _i++) {
+          barSum = sortedSummedBarValues[_i];
+          newData.pushObjects(dataGroupedByBar[barSum.barLabel]);
+        }
+        return newData;
+      }
+    }),
+
+    // Aggregates objects provided in `data` in a dictionary, keyed by group names
+    groupedData: _Ember['default'].computed('sortedData', 'ungroupedSeriesName', function () {
+      var _this = this;
+
+      var data = this.get('sortedData');
+      if (_Ember['default'].isEmpty(data)) {
+        // TODO(embooglement): this can't be `Ember.A()` because it needs to be an
+        // actual empty array for tests to pass, and `Ember.NativeArray` adds
+        // a bunch of stuff to the prototype that gets enumerated by `_.values`
+        // in `allSliceLabels`
+        return [];
+      }
+
+      data = (0, _utilsGroupBy.groupBy)(data, function (d) {
+        return d.barLabel || _this.get('ungroupedSeriesName');
+      });
+
+      // After grouping, the data points may be out of order, and therefore not properly
+      // matched with their value and color. Here, we resort to ensure proper order.
+      // This could potentially be addressed with a refactor where sorting happens after
+      // grouping across the board.
+      // TODO(ember-charts-lodash): Use _.mapValues instead of the each loop.
+      _.each(_.keys(data), function (groupName) {
+        data[groupName] = _.sortBy(data[groupName], 'sliceLabel');
+      });
+
+      return data;
+    }),
+
+    groupNames: _Ember['default'].computed('groupedData', function () {
+      return _.keys(this.get('groupedData'));
+    }),
+
+    // We know the data is grouped because it has more than one label. If there
+    // are no labels on the data then every data object will have
+    // 'ungroupedSeriesName' as its group name and the number of group
+    // labels will be 1. If we are passed ungrouped data we will display
+    // each data object in its own group.
+    isGrouped: _Ember['default'].computed('groupNames.length', function () {
+      var result = this.get('groupNames.length') > 1;
+      return result;
+    }),
+
+    finishedData: _Ember['default'].computed('groupedData', 'isGrouped', function () {
+      var posTop, negBottom, stackedValues;
+      if (this.get('isGrouped')) {
+        if (_Ember['default'].isEmpty(this.get('groupedData'))) {
+          return _Ember['default'].A();
+        }
+
+        return _.map(this.get('groupedData'), function (values, groupName) {
+          posTop = 0;
+          negBottom = 0;
+          stackedValues = _.map(values, function (d) {
+            var yMin, yMax;
+            if (d.value < 0) {
+              yMax = negBottom;
+              negBottom += d.value;
+              yMin = negBottom;
+            } else {
+              yMin = posTop;
+              posTop += d.value;
+              yMax = posTop;
+            }
+
+            return {
+              yMin: yMin,
+              yMax: yMax,
+              value: d.value,
+              barLabel: d.barLabel,
+              sliceLabel: d.sliceLabel,
+              color: d.color
+            };
+          });
+
+          return {
+            barLabel: groupName,
+            values: values,
+            stackedValues: stackedValues,
+            max: posTop,
+            min: negBottom
+          };
+        });
+      } else {
+        if (_Ember['default'].isEmpty(this.get('filteredData'))) {
+          return _Ember['default'].A();
+        }
+        // If we do not have grouped data and are drawing stacked bars, keep the
+        // data in one group so it gets stacked
+        posTop = 0;
+        negBottom = 0;
+        stackedValues = _.map(this.get('filteredData'), function (d) {
+          var yMin, yMax;
+          if (d.value < 0) {
+            yMax = negBottom;
+            negBottom += d.value;
+            yMin = negBottom;
+          } else {
+            yMin = posTop;
+            posTop += d.value;
+            yMax = posTop;
+          }
+
+          return {
+            yMin: yMin,
+            yMax: yMax,
+            value: d.value,
+            barLabel: d.barLabel,
+            sliceLabel: d.sliceLabel,
+            color: d.color
+          };
+        });
+
+        return _Ember['default'].A([{
+          barLabel: this.get('data.firstObject.barLabel'),
+          values: this.get('filteredData'),
+          stackedValues: stackedValues,
+          max: posTop,
+          min: negBottom
+        }]);
+      }
+      // TODO(tony): Need to have stacked bars as a dependency here and the
+      // calculation be outside of this
+    }),
+
+    // ----------------------------------------------------------------------------
+    // Layout
+    // ----------------------------------------------------------------------------
+
+    labelHeightOffset: _Ember['default'].computed('_shouldRotateLabels', 'maxLabelHeight', 'labelHeight', 'labelPadding', function () {
+
+      var labelSize = this.get('_shouldRotateLabels') ? this.get('maxLabelHeight') : this.get('labelHeight');
+      return labelSize + this.get('labelPadding');
+    }),
+
+    // Chart Graphic Dimensions
+    graphicLeft: _Ember['default'].computed.alias('labelWidthOffset'),
+
+    graphicWidth: _Ember['default'].computed('width', 'labelWidthOffset', function () {
+      return this.get('width') - this.get('labelWidthOffset');
+    }),
+
+    graphicHeight: _Ember['default'].computed('height', 'legendHeight', 'legendChartPadding', function () {
+      return this.get('height') - this.get('legendHeight') - this.get('legendChartPadding');
+    }),
+
+    // ----------------------------------------------------------------------------
+    // Ticks and Scales
+    // ----------------------------------------------------------------------------
+
+    // Vertical position/length of each bar and its value
+    yDomain: _Ember['default'].computed('finishedData', function () {
+      var finishedData = this.get('finishedData');
+
+      var max = d3.max(finishedData, function (d) {
+        return d.max;
+      });
+
+      var min = d3.min(finishedData, function (d) {
+        return d.min;
+      });
+
+      // force one end of the range to include zero
+      if (min > 0) {
+        return [0, max];
+      }
+      if (max < 0) {
+        return [min, 0];
+      }
+      if (min === 0 && max === 0) {
+        return [0, 1];
+      } else {
+        return [min, max];
+      }
+    }),
+
+    yScale: _Ember['default'].computed('graphicTop', 'graphicHeight', 'yDomain', 'numYTicks', function () {
+      return d3.scale.linear().domain(this.get('yDomain')).range([this.get('graphicTop') + this.get('graphicHeight'), this.get('graphicTop')]).nice(this.get('numYTicks'));
+    }),
+
+    allSliceLabels: _Ember['default'].computed('sortedData.[]', function () {
+      return _.uniq(_.pluck(this.get('sortedData'), 'sliceLabel'));
+    }),
+
+    labelIDMapping: _Ember['default'].computed('allSliceLabels.[]', function () {
+      return this.get('allSliceLabels').reduce(function (previousValue, label, index) {
+        previousValue[label] = index;
+        return previousValue;
+      }, {});
+    }),
+
+    // The range of labels assigned to each group
+    xBetweenGroupDomain: _Ember['default'].computed.alias('groupNames'),
+    // xBetweenGroupDomain: [],
+
+    // The range of labels assigned within each group
+    xWithinGroupDomain: _Ember['default'].computed.alias('allSliceLabels'),
+
+    // The space in pixels allocated to each group
+    groupWidth: _Ember['default'].computed('xBetweenGroupScale', function () {
+      return this.get('xBetweenGroupScale').rangeBand();
+    }),
+
+    // The space in pixels allocated to each bar
+    barWidth: _Ember['default'].computed('xWithinGroupScale', function () {
+      return this.get('xWithinGroupScale').rangeBand();
+    }),
+
+    // The scale used to position bars within each group
+    // If we do not have grouped data, use the withinGroupPadding around group
+    // data since we will have constructed groups for each bar.
+    xWithinGroupScale: _Ember['default'].computed('xWithinGroupDomain', 'groupWidth', 'withinGroupPadding', function () {
+
+      return d3.scale.ordinal().domain(this.get('xWithinGroupDomain')).rangeRoundBands([0, this.get('groupWidth')], this.get('withinGroupPadding') / 2, 0);
+    }),
+
+    // The scale used to position each group and label across the horizontal axis
+    // If we do not have grouped data, do not add additional padding around groups
+    // since this will only add whitespace to the left/right of the graph.
+    xBetweenGroupScale: _Ember['default'].computed('graphicWidth', //'labelWidth',
+    'xBetweenGroupDomain', 'betweenGroupPadding', function () {
+
+      // var labelWidth = this.get('labelWidth');
+      var betweenGroupPadding = this.get('betweenGroupPadding');
+
+      return d3.scale.ordinal().domain(this.get('xBetweenGroupDomain')).rangeRoundBands([0, this.get('graphicWidth')], betweenGroupPadding / 2, betweenGroupPadding / 2);
+    }),
+
+    // Override axis mix-in min and max values to listen to the scale's domain
+    minAxisValue: _Ember['default'].computed('yScale', function () {
+      var yScale = this.get('yScale');
+      return yScale.domain()[0];
+    }),
+
+    maxAxisValue: _Ember['default'].computed('yScale', function () {
+      var yScale = this.get('yScale');
+      return yScale.domain()[1];
+    }),
+
+    // ----------------------------------------------------------------------------
+    // Color Configuration
+    // ----------------------------------------------------------------------------
+
+    numColorSeries: _Ember['default'].computed.alias('allSliceLabels.length'),
+
+    // ----------------------------------------------------------------------------
+    // Legend Configuration
+    // ----------------------------------------------------------------------------
+
+    hasLegend: true,
+
+    legendItems: _Ember['default'].computed('allSliceLabels.[]', 'getSeriesColor', 'labelIDMapping.[]', function () {
+      var _this2 = this;
+
+      var getSeriesColor = this.get('getSeriesColor');
+      return this.get('allSliceLabels').map(function (label, i) {
+        var color = getSeriesColor(label, i);
+        return {
+          label: label,
+          fill: color,
+          stroke: color,
+          icon: function icon() {
+            return 'square';
+          },
+          selector: ".grouping-" + _this2.get('labelIDMapping')[label]
+        };
+      });
+    }),
+
+    // ----------------------------------------------------------------------------
+    // Tooltip Configuration
+    // ----------------------------------------------------------------------------
+
+    showDetails: _Ember['default'].computed('isInteractive', function () {
+      var _this3 = this;
+
+      if (!this.get('isInteractive')) {
+        return _Ember['default'].K;
+      }
+
+      return function (data, i, element) {
+        // Specify whether we are on an individual bar or group
+        var isGroup = _Ember['default'].isArray(data.values);
+
+        // Do hover detail style stuff here
+        element = isGroup ? element.parentNode.parentNode : element;
+        d3.select(element).classed('hovered', true);
+
+        // Show tooltip
+        var content = data.barLabel ? "<span class=\"tip-label\">" + data.barLabel + "</span>" : '';
+
+        var formatLabel = _this3.get('formatLabelFunction');
+        var addValueLine = function addValueLine(d) {
+          content += "<span class=\"name\">" + d.sliceLabel + ": </span>";
+          return content += "<span class=\"value\">" + formatLabel(d.value) + "</span><br/>";
+        };
+
+        if (isGroup) {
+          // Display all bar details if hovering over axis group label
+          data.values.forEach(addValueLine);
+        } else {
+          // Just hovering over single bar
+          addValueLine(data);
+        }
+        return _this3.showTooltip(content, d3.event);
+      };
+    }),
+
+    hideDetails: _Ember['default'].computed('isInteractive', function () {
+      var _this4 = this;
+
+      if (!this.get('isInteractive')) {
+        return _Ember['default'].K;
+      }
+
+      return function (data, i, element) {
+        // if we exited the group label undo for the group
+        if (_Ember['default'].isArray(data.values)) {
+          element = element.parentNode.parentNode;
+        }
+        // Undo hover style stuff
+        d3.select(element).classed('hovered', false);
+
+        // Hide Tooltip
+        return _this4.hideTooltip();
+      };
+    }),
+
+    // ----------------------------------------------------------------------------
+    // Styles
+    // ----------------------------------------------------------------------------
+
+    groupAttrs: _Ember['default'].computed('graphicLeft', 'graphicTop', 'xBetweenGroupScale', function () {
+      var _this5 = this;
+
+      var xBetweenGroupScale = this.get('xBetweenGroupScale');
+
+      return {
+        transform: function transform(d) {
+          var dx = xBetweenGroupScale(d.barLabel) ? _this5.get('graphicLeft') + xBetweenGroupScale(d.barLabel) : _this5.get('graphicLeft');
+          var dy = _this5.get('graphicTop');
+
+          return "translate(" + dx + ", " + dy + ")";
+        }
+      };
+    }),
+
+    stackedBarAttrs: _Ember['default'].computed('yScale', 'groupWidth', 'labelIDMapping.[]', function () {
+      var _this6 = this;
+
+      var yScale, zeroDisplacement;
+      zeroDisplacement = 1;
+      yScale = this.get('yScale');
+      return {
+        "class": function _class(barSection) {
+          var id;
+          id = _this6.get('labelIDMapping')[barSection.sliceLabel];
+          return "grouping-" + id;
+        },
+        'stroke-width': 0,
+        width: function width() {
+          return _this6.get('groupWidth');
+        },
+        x: null,
+        y: function y(barSection) {
+          return yScale(barSection.yMax) + zeroDisplacement;
+        },
+        height: function height(barSection) {
+          return yScale(barSection.yMin) - yScale(barSection.yMax);
+        }
+      };
+    }),
+
+    labelAttrs: _Ember['default'].computed('groupWidth', 'graphicTop', 'graphicHeight', 'labelPadding', function () {
+      var _this7 = this;
+
+      return {
+        'stroke-width': 0,
+        transform: function transform() {
+          var dx = _this7.get('groupWidth') / 2;
+          var dy = _this7.get('graphicTop') + _this7.get('graphicHeight') + _this7.get('labelPadding');
+          return "translate(" + dx + ", " + dy + ")";
+        }
+      };
+    }),
+
+    // ----------------------------------------------------------------------------
+    // Selections
+    // ----------------------------------------------------------------------------
+
+    groups: _Ember['default'].computed(function () {
+      return this.get('viewport').selectAll('.bars').data(this.get('finishedData'));
+    })["volatile"](),
+
+    yAxis: _Ember['default'].computed(function () {
+      var yAxis = this.get('viewport').select('.y.axis');
+      if (yAxis.empty()) {
+        return this.get('viewport').insert('g', ':first-child').attr('class', 'y axis');
+      } else {
+        return yAxis;
+      }
+    })["volatile"](),
+
+    // ----------------------------------------------------------------------------
+    // Label Layout
+    // ----------------------------------------------------------------------------
+
+    // Space available for labels that are horizontally displayed. This is either
+    // the unpadded group width or bar width depending on whether data is grouped
+    maxLabelWidth: _Ember['default'].computed.readOnly('groupWidth'),
+
+    _shouldRotateLabels: false,
+
+    setRotateLabels: function setRotateLabels() {
+      var labels, maxLabelWidth, rotateLabels;
+      labels = this.get('groups').select('.groupLabel text');
+      maxLabelWidth = this.get('maxLabelWidth');
+      rotateLabels = false;
+      if (this.get('rotatedLabelLength') > maxLabelWidth) {
+        labels.each(function () {
+          if (this.getBBox().width > maxLabelWidth) {
+            return rotateLabels = true;
+          }
+        });
+      }
+      return this.set('_shouldRotateLabels', rotateLabels);
+    },
+
+    // Calculate the number of degrees to rotate labels based on how widely labels
+    // will be spaced, but never rotate the labels less than 20 degrees
+    rotateLabelDegrees: _Ember['default'].computed('labelHeight', 'maxLabelWidth', function () {
+      var radians = Math.atan(this.get('labelHeight') / this.get('maxLabelWidth'));
+      var degrees = radians * 180 / Math.PI;
+      return Math.max(degrees, 20);
+    }),
+
+    rotatedLabelLength: _Ember['default'].computed('maxLabelHeight', 'rotateLabelDegrees', function () {
+      var rotateLabelRadians = Math.PI / 180 * this.get('rotateLabelDegrees');
+      return Math.abs(this.get('maxLabelHeight') / Math.sin(rotateLabelRadians));
+    }),
+
+    // ----------------------------------------------------------------------------
+    // Drawing Functions
+    // ----------------------------------------------------------------------------
+
+    renderVars: ['xWithinGroupScale', 'xBetweenGroupScale', 'yScale', 'finishedData', 'getSeriesColor', 'xValueDisplayName', 'yValueDisplayName', 'hasAxisTitles', // backward compatibility support.
+    'hasXAxisTitle', 'hasYAxisTitle', 'xTitleHorizontalOffset', 'yTitleVerticalOffset'],
+
+    drawChart: function drawChart() {
+      this.updateData();
+      this.updateLayout();
+      this.updateAxes();
+      this.updateGraphic();
+      this.updateAxisTitles();
+      if (this.get('hasLegend')) {
+        return this.drawLegend();
+      } else {
+        return this.clearLegend();
+      }
+    },
+
+    updateData: function updateData() {
+      var groups = this.get('groups');
+      var showDetails = this.get('showDetails');
+      var hideDetails = this.get('hideDetails');
+
+      var entering = groups.enter().append('g').attr('class', 'bars');
+      entering.append('g').attr('class', 'groupLabel').append('text').on("mouseover", function (d, i) {
+        return showDetails(d, i, this);
+      }).on("mouseout", function (d, i) {
+        return hideDetails(d, i, this);
+      });
+      groups.exit().remove();
+
+      var subdata = function subdata(d) {
+        return d.stackedValues;
+      };
+
+      var bars = groups.selectAll('rect').data(subdata);
+      bars.enter().append('rect').on("mouseover", function (d, i) {
+        return showDetails(d, i, this);
+      }).on("mouseout", function (d, i) {
+        return hideDetails(d, i, this);
+      });
+      return bars.exit().remove();
+    },
+
+    updateLayout: function updateLayout() {
+      var _this8 = this;
+
+      var groups = this.get('groups');
+      var labels = groups.select('.groupLabel text').attr('transform', null) // remove any previous rotation attrs
+      .text(function (d) {
+        return d.barLabel;
+      });
+
+      // If there is enough space horizontally, center labels underneath each
+      // group. Otherwise, rotate each label and anchor it at the top of its
+      // first character.
+      this.setRotateLabels();
+      var labelTrimmer;
+
+      if (this.get('_shouldRotateLabels')) {
+        var rotateLabelDegrees = this.get('rotateLabelDegrees');
+        labelTrimmer = _LabelTrimmer['default'].create({
+          getLabelSize: function getLabelSize() {
+            return _this8.get('rotatedLabelLength');
+          },
+          getLabelText: function getLabelText(d) {
+            return d.barLabel;
+          }
+        });
+
+        return labels.call(labelTrimmer.get('trim')).attr({
+          'text-anchor': 'end',
+          transform: "rotate(" + -rotateLabelDegrees + ")",
+          dy: function dy() {
+            return this.getBBox().height;
+          }
+        });
+      } else {
+        var maxLabelWidth = this.get('maxLabelWidth');
+        labelTrimmer = _LabelTrimmer['default'].create({
+          getLabelSize: function getLabelSize() {
+            return maxLabelWidth;
+          },
+          getLabelText: function getLabelText(d) {
+            return d.barLabel != null ? d.barLabel : '';
+          }
+        });
+
+        return labels.call(labelTrimmer.get('trim')).attr({
+          'text-anchor': 'middle',
+          dy: this.get('labelPadding')
+        });
+      }
+    },
+
+    updateAxes: function updateAxes() {
+      //tickSize isn't doing anything here, it should take two arguments
+      var yAxis = d3.svg.axis().scale(this.get('yScale')).orient('right').ticks(this.get('numYTicks')).tickSize(this.get('graphicWidth')).tickFormat(this.get('formatValueAxis'));
+
+      var gYAxis = this.get('yAxis');
+
+      // find the correct size of graphicLeft in order to fit the Labels perfectly
+      this.set('graphicLeft', this.maxLabelLength(gYAxis.selectAll('text')) + this.get('labelPadding'));
+
+      var graphicTop = this.get('graphicTop');
+      var graphicLeft = this.get('graphicLeft');
+      gYAxis.attr({ transform: "translate(" + graphicLeft + ", " + graphicTop + ")" }).call(yAxis);
+
+      gYAxis.selectAll('g').filter(function (d) {
+        return d !== 0;
+      }).classed('major', false).classed('minor', true);
+
+      gYAxis.selectAll('text').style('text-anchor', 'end').attr({
+        x: -this.get('labelPadding')
+      });
+    },
+
+    updateGraphic: function updateGraphic() {
+      var groups = this.get('groups');
+      var barAttrs = this.get('stackedBarAttrs');
+
+      groups.attr(this.get('groupAttrs'));
+      groups.selectAll('rect').attr(barAttrs).style('fill', this.get('getSeriesColor'));
+      return groups.select('g.groupLabel').attr(this.get('labelAttrs'));
+    }
+  });
+
+  module.exports = StackedVerticalBarChartComponent;
+});
 define('ember-charts/components/time-series-chart', ['exports', 'module', 'ember', './chart-component', '../mixins/legend', '../mixins/time-series-labeler', '../mixins/floating-tooltip', '../mixins/has-time-series-rule', '../mixins/axes', '../mixins/formattable', '../mixins/no-margin-chart', '../mixins/axis-titles', '../utils/group-by'], function (exports, module, _ember, _chartComponent, _mixinsLegend, _mixinsTimeSeriesLabeler, _mixinsFloatingTooltip, _mixinsHasTimeSeriesRule, _mixinsAxes, _mixinsFormattable, _mixinsNoMarginChart, _mixinsAxisTitles, _utilsGroupBy) {
   'use strict';
 
@@ -6041,7 +6734,8 @@ define('ember-charts/templates/components/chart-component', ['exports', 'module'
 
   var _Ember = _interopRequireDefault(_ember);
 
-  module.exports = _Ember['default'].Handlebars.template(function anonymous(Handlebars, depth0, helpers, partials, data) {
+  module.exports = _Ember['default'].Handlebars.template(function anonymous(Handlebars, depth0, helpers, partials, data
+  /**/) {
     this.compilerInfo = [4, '>= 1.0.0'];
     helpers = this.merge(helpers, _Ember['default'].Handlebars.helpers);data = data || {};
     var buffer = '',
@@ -6147,6 +6841,7 @@ window.Ember.Charts.PieComponent = require('ember-charts/components/pie-chart')[
 window.Ember.Charts.ScatterComponent = require('ember-charts/components/scatter-chart')['default'];
 window.Ember.Charts.TimeSeriesComponent = require('ember-charts/components/time-series-chart')['default'];
 window.Ember.Charts.VerticalBarComponent = require('ember-charts/components/vertical-bar-chart')['default'];
+window.Ember.Charts.StackedVerticalBarComponent = require('ember-charts/components/stacked-vertical-bar-chart')['default'];
 window.Ember.Charts.AxesMixin = require('ember-charts/mixins/axes')['default'];
 window.Ember.Charts.Colorable = require('ember-charts/mixins/colorable')['default'];
 window.Ember.Charts.FloatingTooltipMixin = require('ember-charts/mixins/floating-tooltip')['default'];
@@ -6169,6 +6864,7 @@ container.register('component:pie-chart', require('ember-charts/components/pie-c
 container.register('component:scatter-chart', require('ember-charts/components/scatter-chart')['default']);
 container.register('component:time-series-chart', require('ember-charts/components/time-series-chart')['default']);
 container.register('component:vertical-bar-chart', require('ember-charts/components/vertical-bar-chart')['default']);
+container.register('component:stacked-vertical-bar-chart', require('ember-charts/components/stacked-vertical-bar-chart')['default']);
 }
 });
 });
