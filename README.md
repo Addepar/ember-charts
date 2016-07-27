@@ -54,8 +54,8 @@ ember serve
 ```
 
 Now you can:
-- View the examples at: http://localhost:4200
-- Run tests at: http://localhost:4200/tests
+- View the demos and read the documentation: http://localhost:4200
+- Run tests: http://localhost:4200/tests
 
 Before submitting a pull request, please compile the globals-based version of
 Ember Charts (the `dist` folder):
