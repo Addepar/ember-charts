@@ -3,10 +3,17 @@
   <h1>Ember Charts API</h1>
   <p>
     Each chart type in Ember Charts is implemented by a separate <em>Ember.Component</em>
-    child class, located in its own ES6 module.
-    For example, vertical bar charts are in this module:
-    <em>'ember-charts/components/vertical-bar-chart'</em>
+    child class, which is the default export of its own ES6 module.
+    For example, to use vertical bar charts, you'd use the
+    <em>'ember-charts/components/vertical-bar-chart'</em>     module:
   </p>
+
+<pre>&lbrace;&lbrace;!-- to use the component view in your template --&rbrace;&rbrace;
+&lbrace;&lbrace;vertical-bar-chart data=bindingVar ... &rbrace;&rbrace;
+
+// to extend the component class in your own script
+import VerticalBarChartComponent from 'ember-charts/components/vertical-bar-chart';
+var MyVbcComponent = VerticalBarChartComponent.extend({ ... });</pre>
 
   <p>
     To set the options below, create an object of the correct component class
