@@ -23,7 +23,7 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
   FloatingTooltipMixin, AxesMixin, FormattableMixin, SortableChartMixin,
   NoMarginChartMixin, AxisTitlesMixin, {
 
-  classNames: ['chart-vertical-bar'],
+  classNames: ['chart-vertical-bar', 'chart-stacked-vertical-bar'],
 
   // ----------------------------------------------------------------------------
   // Vertical Bar Chart Options
