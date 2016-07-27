@@ -25,6 +25,7 @@ var Globals = function (inputTree) {
     'ember-charts/components/scatter-chart': 'Ember.Charts.ScatterComponent',
     'ember-charts/components/time-series-chart': 'Ember.Charts.TimeSeriesComponent',
     'ember-charts/components/vertical-bar-chart': 'Ember.Charts.VerticalBarComponent',
+    'ember-charts/components/stacked-vertical-bar-chart': 'Ember.Charts.StackedVerticalBarComponent',
 
     'ember-charts/mixins/axes': 'Ember.Charts.AxesMixin',
     'ember-charts/mixins/colorable': 'Ember.Charts.Colorable',
