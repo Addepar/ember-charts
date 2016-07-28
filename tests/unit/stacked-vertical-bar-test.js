@@ -1,5 +1,10 @@
 import Ember from "ember";
 import { test, moduleForComponent } from 'ember-qunit';
+
+// Names of properties are the ones used by the new API;
+// we copy into the properties used by the old API
+// so we can use the same test file with both
+// the old and new product code.
 var three_ranges = [{
    sliceLabel: "Label 1",
    barLabel: "Group One",
@@ -37,6 +42,12 @@ var three_ranges = [{
    barLabel: "Group Three",
    value: -19
 }];
+(function() {
+  for (var iDatum = 0; iDatum < three_ranges.length; iDatum++) {
+    three_ranges[iDatum].group = three_ranges[iDatum].barLabel;
+    three_ranges[iDatum].label = three_ranges[iDatum].sliceLabel;
+  }
+})();
 
 moduleForComponent('stacked-vertical-bar-chart', '[Unit] Stacked bar component', {
   needs: [ 'template:components/chart-component'],
@@ -44,6 +55,7 @@ moduleForComponent('stacked-vertical-bar-chart', '[Unit] Stacked bar component',
   afterEach: function () {}
 });
 
+/*
 var label1, label2, label3, stackedBarContent;
 
 label1 = "Label 1";
@@ -77,6 +89,7 @@ stackedBarContent = {
    }
  ]
 };
+*/
 
 test("it exists", function(assert) {
   assert.ok(this.subject());
@@ -150,6 +163,7 @@ test('Stacked bar chart data is sorted correctly', function(assert) {
 // Either way it only works by coincidence on the test dataset
 // `stackedBarContent`.
 //
+/*
 test('Stacked bars are grouped correctly', function(assert) {
   var labelIDMapping;
   this.subject(stackedBarContent);
@@ -160,17 +174,21 @@ test('Stacked bars are grouped correctly', function(assert) {
   assert.equal(this.$().find(".grouping-" + labelIDMapping[label2]).length, 2, 'label2 has two sections');
   assert.equal(this.$().find(".grouping-" + labelIDMapping[label3]).length, 2, 'label3 has two sections');
 });
+*/
 
 test('In total, the correct number of stacking slices is displayed', function(assert) {
   assert.expect(1);
 
-  this.subject(stackedBarContent);
+  this.subject({data: three_ranges});
   this.render();
 
-  assert.equal(this.$('svg rect').length, stackedBarContent.data.length,
-    "For " + stackedBarContent.data.length + " data points, that many stacking slices are shown");
+  assert.equal(this.$('svg rect').length, three_ranges.length,
+    "For " + three_ranges.length + " data points, that many stacking slices are shown");
 });
 
+// FIXME (SBC): Remove this test? It is not as good as it looks;
+// even with the old code that failed to draw negative slices, the test would pass
+// because the slices _are_ drawn, just with zero height.
 test('Each bar has the correct number of stacking slices', function(assert) {
   var dataByBarLabel = _.groupBy(three_ranges, function(datum) { return datum.barLabel; });
   assert.expect(2 * _.keys(dataByBarLabel).length);
@@ -198,12 +216,12 @@ test('Each bar has the correct number of stacking slices', function(assert) {
 
 const diff = function(x, y) {
   return (x - y);
-}
+};
 
 const equalsWithTolerance = function(actual, expected, percentTolerance) {
   var tolerance = expected * percentTolerance;
   return (Math.abs(actual - expected) < tolerance);
-}
+};
 
 const PERCENT_TOLERANCE = 0.01;
 
@@ -280,7 +298,9 @@ test('Within each bar, the stacking slices have the correct heights', function(a
           PERCENT_TOLERANCE),
         "The bar for '" + barLabel +
           "' has a slice with height " + expectedSliceHeights[iSlice] +
-          " px out of " + barHeight);
+          " px out of " + barHeight +
+          " px (actual height: " + sliceHeights[iSlice] +
+          " px)");
     }
   }
 });
