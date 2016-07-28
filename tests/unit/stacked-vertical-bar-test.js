@@ -61,7 +61,7 @@ stackedBarContent = {
    }, {
      sliceLabel: label2,
      barLabel: "Group 2",
-     value: 32
+     value: -32
    }, {
      sliceLabel: label3,
      barLabel: "Group 3",
@@ -91,6 +91,7 @@ test('Margins are the right size', function(assert) {
   assert.equal(component.get('marginBottom'), 30, 'has top margin (because it has a legend)');
 });
 
+// FIXME(SBC): Should we really be testing the internal properties of the SBC component class?
 test('Stacked bar chart data is sorted correctly', function(assert) {
   var component = this.subject();
   assert.expect(8);
@@ -136,6 +137,19 @@ test('Stacked bar chart data is sorted correctly', function(assert) {
   });
 });
 
+// FIXME(SBC): This test is broken and perhaps should be removed.
+//
+// It seems to be trying to check that each _slice label_ has
+// the correct number of slices displayed, but it actually
+// counts and compares against the number of SVG slices per _bar_.
+//
+// Or it is trying to check that each _bar_ has the correct number
+// of slices displayed, but it wrongly uses as the expected value
+// the number of slices per _slice label_.
+//
+// Either way it only works by coincidence on the test dataset
+// `stackedBarContent`.
+//
 test('Stacked bars are grouped correctly', function(assert) {
   var labelIDMapping;
   this.subject(stackedBarContent);
@@ -146,3 +160,137 @@ test('Stacked bars are grouped correctly', function(assert) {
   assert.equal(this.$().find(".grouping-" + labelIDMapping[label2]).length, 2, 'label2 has two sections');
   assert.equal(this.$().find(".grouping-" + labelIDMapping[label3]).length, 2, 'label3 has two sections');
 });
+
+test('In total, the correct number of stacking slices is displayed', function(assert) {
+  assert.expect(1);
+
+  this.subject(stackedBarContent);
+  this.render();
+
+  assert.equal(this.$('svg rect').length, stackedBarContent.data.length,
+    "For " + stackedBarContent.data.length + " data points, that many stacking slices are shown");
+});
+
+test('Each bar has the correct number of stacking slices', function(assert) {
+  var dataByBarLabel = _.groupBy(three_ranges, function(datum) { return datum.barLabel; });
+  assert.expect(2 * _.keys(dataByBarLabel).length);
+
+  this.subject({data: three_ranges});
+  this.render();
+
+  // Find all the SVG bars.
+  var barElementsByBarLabel = {};
+  this.$('svg g.bars').each(function() {
+    barElementsByBarLabel[$(this).text()] = this;
+  });
+
+  // For each SVG bar: verify that a bar with that label is expected,
+  // and that the expected bar has the same number of slices.
+  for (var barLabel in dataByBarLabel) {
+    var expectedBarData = dataByBarLabel[barLabel];
+    var actualBar = barElementsByBarLabel[barLabel];
+    assert.notEqual(actualBar, void 0,
+      "A bar for '" + barLabel + "' appears in the stacked bar chart");
+    assert.equal($('rect', actualBar).length, expectedBarData.length,
+      "The bar for '" + barLabel + "' has " + expectedBarData.length + " slices");
+  }
+});
+
+const diff = function(x, y) {
+  return (x - y);
+}
+
+const equalsWithTolerance = function(actual, expected, percentTolerance) {
+  var tolerance = expected * percentTolerance;
+  return (Math.abs(actual - expected) < tolerance);
+}
+
+const PERCENT_TOLERANCE = 0.01;
+
+test('Within each bar, the stacking slices have the correct heights', function(assert) {
+  var dataByBarLabel, barLabel, barData, grossBarSum, iDatum, barElementsByBarLabel, bar, slices,
+    barHeight, sliceHeights, iSlice, sliceHeight, expectedSliceHeights, barDatum;
+
+  assert.expect(three_ranges.length);
+
+  dataByBarLabel = _.groupBy(
+    _.cloneDeep(three_ranges),
+    function(datum) { return datum.barLabel; });
+
+  // Compute the expected heights of each slice as a percentage
+  // of the height of the whole bar.
+  for (barLabel in dataByBarLabel) {
+    barData = dataByBarLabel[barLabel];
+
+    grossBarSum = 0.0;
+    for (iDatum = 0; iDatum < barData.length; iDatum++) {
+      grossBarSum += Math.abs(barData[iDatum].value);
+    }
+    for (iDatum = 0; iDatum < barData.length; iDatum++) {
+      barData[iDatum].percentOfBar = Math.abs(barData[iDatum].value) / grossBarSum;
+    }
+  }
+
+  this.subject({data: three_ranges});
+  this.render();
+
+  // Find all the SVG bars.
+  barElementsByBarLabel = {};
+  this.$('svg g.bars').each(function() {
+    barElementsByBarLabel[$(this).text()] = this;
+  });
+
+  // For each SVG bar:
+  for (barLabel in barElementsByBarLabel) {
+    bar = barElementsByBarLabel[barLabel];
+    slices = $('rect', bar);
+
+    // Find the actual heights of each slice in the bar,
+    // and the overall height of the bar.
+    barHeight = 0.0;
+    sliceHeights = [];
+    for (iSlice = 0; iSlice < slices.length; iSlice++) {
+      sliceHeight = parseFloat(slices[iSlice].attributes.height.value);
+      sliceHeights.push(sliceHeight);
+      barHeight += sliceHeight;
+    }
+    sliceHeights.sort(diff);
+
+    // Find the absolute expected heights of each slice
+    // using the actual overall height of the bar.
+    expectedSliceHeights = [];
+    for (iSlice = 0; iSlice < slices.length; iSlice++) {
+      barDatum = dataByBarLabel[barLabel][iSlice];
+      expectedSliceHeights.push(barHeight * barDatum.percentOfBar);
+    }
+    expectedSliceHeights.sort(diff);
+
+    // Check that each slice has the correct height.
+    // Note: we can't check that the slice also maps to the correct slice label,
+    // because the SVG doesn't carry this information.
+    //
+    // FIXME(SBC): is there a workaround for the noted limitation?
+    // E.g. by looking at the hover tooltip or color palette?
+    //
+    for (iSlice = 0; iSlice < slices.length; iSlice++) {
+      assert.ok(
+        equalsWithTolerance(
+          sliceHeights[iSlice],
+          expectedSliceHeights[iSlice],
+          PERCENT_TOLERANCE),
+        "The bar for '" + barLabel +
+          "' has a slice with height " + expectedSliceHeights[iSlice] +
+          " px out of " + barHeight);
+    }
+  }
+});
+
+/*
+test('Stacking slices within a single bar do not cover up each other', function(assert) {
+
+  this.subject(stackedBarContent);
+  this.render();
+  debugger;
+
+});
+*/
