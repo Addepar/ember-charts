@@ -30,7 +30,10 @@ Once it's installed, you can customize the look of ember-charts with CSS.
 
 #### Installation with Bower (Globals-Based Version)
 
-`bower install ember-charts --save`
+```bash
+npm install -g bower      # install Bower
+bower install ember-charts --save
+```
 
 Or, just include `dist/ember-charts.js` and `dist/ember-charts.css` in your app.
 
@@ -45,20 +48,21 @@ instructions under "Running Old Versions" to display the old guides.
 After cloning this repo, install dependencies and run the demo app:
 
 ```bash
-$ npm install
-$ ember serve
+npm install
+bower install
+ember serve
 ```
 
-You can view the examples at http://localhost:4200.
-
-You can run the tests at http://localhost:4200/tests.
+Now you can:
+- View the demos and read the documentation: http://localhost:4200
+- Run tests: http://localhost:4200/tests
 
 Before submitting a pull request, please compile the globals-based version of
 Ember Charts (the `dist` folder):
 
 ```bash
-$ npm install -g grunt-cli      # install grunt
-$ grunt dist
+npm install -g grunt-cli      # install grunt
+grunt dist
 ```
 
 ## Dependencies
