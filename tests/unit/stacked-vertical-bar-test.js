@@ -190,23 +190,23 @@ test('In total, the correct number of stacking slices is displayed', function(as
 // even with the old code that failed to draw negative slices, the test would pass
 // because the slices _are_ drawn, just with zero height.
 test('Each bar has the correct number of stacking slices', function(assert) {
-  var dataByBarLabel = _.groupBy(three_ranges, function(datum) { return datum.barLabel; });
+  var dataByBarLabel = _.groupBy(three_ranges, 'barLabel');
   assert.expect(2 * _.keys(dataByBarLabel).length);
 
   this.subject({data: three_ranges});
   this.render();
 
   // Find all the SVG bars.
-  var barElementsByBarLabel = {};
+  var svgBarsByBarLabel = {};
   this.$('svg g.bars').each(function() {
-    barElementsByBarLabel[$(this).text()] = this;
+    svgBarsByBarLabel[$(this).text()] = this;
   });
 
   // For each SVG bar: verify that a bar with that label is expected,
   // and that the expected bar has the same number of slices.
   for (var barLabel in dataByBarLabel) {
     var expectedBarData = dataByBarLabel[barLabel];
-    var actualBar = barElementsByBarLabel[barLabel];
+    var actualBar = svgBarsByBarLabel[barLabel];
     assert.notEqual(actualBar, void 0,
       "A bar for '" + barLabel + "' appears in the stacked bar chart");
     assert.equal($('rect', actualBar).length, expectedBarData.length,
@@ -214,64 +214,63 @@ test('Each bar has the correct number of stacking slices', function(assert) {
   }
 });
 
+// Passed in to Array.prototype.sort(), which has the bogus default behavior of
+// coercing every value in the array to a string and sorting alphabetically
 const diff = function(x, y) {
   return (x - y);
 };
 
-const equalsWithTolerance = function(actual, expected, percentTolerance) {
-  var tolerance = expected * percentTolerance;
-  return (Math.abs(actual - expected) < tolerance);
+const getHeightOfSvgSlice = function(slice) {
+  return parseFloat(slice.attributes.height.value);
 };
 
 const PERCENT_TOLERANCE = 0.01;
 
-test('Within each bar, the stacking slices have the correct heights', function(assert) {
-  var dataByBarLabel, barLabel, barData, grossBarSum, iDatum, barElementsByBarLabel, bar, slices,
-    barHeight, sliceHeights, iSlice, sliceHeight, expectedSliceHeights, barDatum;
+const equalsWithTolerance = function(actual, expected) {
+  var tolerance = expected * PERCENT_TOLERANCE;
+  return (Math.abs(actual - expected) < tolerance);
+};
+
+test('Within each bar, the stacking slices have the correct heights relative to each other',
+function(assert) {
+  var dataByBarLabel, barData, svgBarsByBarLabel, barLabel, svgBar, slices,
+    barHeight, sliceHeights, iSlice, expectedSliceHeights, barDatum;
 
   assert.expect(three_ranges.length);
 
-  dataByBarLabel = _.groupBy(
-    _.cloneDeep(three_ranges),
-    function(datum) { return datum.barLabel; });
+  dataByBarLabel = _.groupBy(_.cloneDeep(three_ranges), 'barLabel');
 
   // Compute the expected heights of each slice as a percentage
   // of the height of the whole bar.
-  for (barLabel in dataByBarLabel) {
-    barData = dataByBarLabel[barLabel];
-
-    grossBarSum = 0.0;
+  _.forEach(dataByBarLabel, function(barData) {
+    var iDatum;
+    var grossBarSum = 0.0;
     for (iDatum = 0; iDatum < barData.length; iDatum++) {
       grossBarSum += Math.abs(barData[iDatum].value);
     }
     for (iDatum = 0; iDatum < barData.length; iDatum++) {
       barData[iDatum].percentOfBar = Math.abs(barData[iDatum].value) / grossBarSum;
     }
-  }
+  });
 
   this.subject({data: three_ranges});
   this.render();
 
   // Find all the SVG bars.
-  barElementsByBarLabel = {};
+  svgBarsByBarLabel = {};
   this.$('svg g.bars').each(function() {
-    barElementsByBarLabel[$(this).text()] = this;
+    svgBarsByBarLabel[$(this).text()] = this;
   });
 
   // For each SVG bar:
-  for (barLabel in barElementsByBarLabel) {
-    bar = barElementsByBarLabel[barLabel];
-    slices = $('rect', bar);
+  for (barLabel in svgBarsByBarLabel) {
+    svgBar = svgBarsByBarLabel[barLabel];
+    slices = $('rect', svgBar);
 
     // Find the actual heights of each slice in the bar,
     // and the overall height of the bar.
-    barHeight = 0.0;
-    sliceHeights = [];
-    for (iSlice = 0; iSlice < slices.length; iSlice++) {
-      sliceHeight = parseFloat(slices[iSlice].attributes.height.value);
-      sliceHeights.push(sliceHeight);
-      barHeight += sliceHeight;
-    }
+    sliceHeights = _.map(slices, getHeightOfSvgSlice);
+    barHeight = _.sum(sliceHeights);
     sliceHeights.sort(diff);
 
     // Find the absolute expected heights of each slice
@@ -294,14 +293,66 @@ test('Within each bar, the stacking slices have the correct heights', function(a
       assert.ok(
         equalsWithTolerance(
           sliceHeights[iSlice],
-          expectedSliceHeights[iSlice],
-          PERCENT_TOLERANCE),
+          expectedSliceHeights[iSlice]),
         "The bar for '" + barLabel +
           "' has a slice with height " + expectedSliceHeights[iSlice] +
           " px out of " + barHeight +
           " px (actual height: " + sliceHeights[iSlice] +
           " px)");
     }
+  }
+});
+
+test('The bars have the correct heights relative to each other', function(assert) {
+  var dataByBarLabel, grossBarSums, minGrossBarSum, expectedBarHeightRatios, svgBarsByBarLabel,
+    actualBarHeights, minActualBarHeight, barLabel, expectedBarHeight;
+
+  dataByBarLabel = _.groupBy(three_ranges, 'barLabel');
+  assert.expect(_.keys(dataByBarLabel).length);
+
+  // Compute the expected heights of each bar as a percentage
+  // of the expected height of the shortest bar.
+  grossBarSums = _.mapValues(dataByBarLabel, function(barData) {
+    var sum = 0.0;
+    for (var iDatum = 0; iDatum < barData.length; iDatum++) {
+      sum += Math.abs(barData[iDatum].value);
+    }
+    return sum;
+  });
+  minGrossBarSum = _.min(_.values(grossBarSums));
+  expectedBarHeightRatios = _.mapValues(grossBarSums, function(sum) {
+    return (sum / minGrossBarSum);
+  });
+
+  this.subject({data: three_ranges});
+  this.render();
+
+  // Find all the SVG bars.
+  svgBarsByBarLabel = {};
+  this.$('svg g.bars').each(function() {
+    svgBarsByBarLabel[$(this).text()] = this;
+  });
+
+  // Find the height of each SVG bar by summing the heights of its slices,
+  // as well as the shortest height.
+  actualBarHeights = _.mapValues(svgBarsByBarLabel, function(svgBar) {
+    var slices = $('rect', svgBar);
+    return _.sum(_.map(slices, getHeightOfSvgSlice));
+  });
+  minActualBarHeight = _.min(_.values(actualBarHeights));
+
+  // Compare the expected and actual heights
+  // and assert that they are approximately equal.
+  for (barLabel in expectedBarHeightRatios) {
+    expectedBarHeight = minActualBarHeight * expectedBarHeightRatios[barLabel];
+      assert.ok(
+        equalsWithTolerance(
+          actualBarHeights[barLabel],
+          expectedBarHeight),
+        "The bar for '" + barLabel +
+          "' has a height of " + expectedBarHeight +
+          " px (actual height: " + actualBarHeights[barLabel] +
+          " px)");
   }
 });
 
