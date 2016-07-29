@@ -220,8 +220,12 @@ const diff = function(x, y) {
   return (x - y);
 };
 
+const getFloatAttrValueOfSvgSlice = function(slice, attributeName) {
+  return parseFloat(slice.attributes[attributeName].value);
+};
+
 const getHeightOfSvgSlice = function(slice) {
-  return parseFloat(slice.attributes.height.value);
+  return getFloatAttrValueOfSvgSlice(slice, 'height');
 };
 
 const PERCENT_TOLERANCE = 0.01;
@@ -356,12 +360,51 @@ test('The bars have the correct heights relative to each other', function(assert
   }
 });
 
-/*
+const getYCoordOfSvgSlice = function(slice) {
+  return getFloatAttrValueOfSvgSlice(slice, 'y');
+};
+
+const compareSlicesByYCoord = function(a, b) {
+  return (getYCoordOfSvgSlice(a) - getYCoordOfSvgSlice(b));
+};
+
 test('Stacking slices within a single bar do not cover up each other', function(assert) {
+  var dataByBarLabel, cExpectedAssertions;
 
-  this.subject(stackedBarContent);
+  cExpectedAssertions = 0;
+  dataByBarLabel = _.groupBy(three_ranges, 'barLabel');
+  _.values(dataByBarLabel).forEach(function(barData) {
+    cExpectedAssertions += Math.max(0, barData.length - 1);
+  });
+  assert.expect(cExpectedAssertions);
+
+  this.subject({data: three_ranges});
   this.render();
-  debugger;
 
+  this.$('svg g.bars').each(function() {
+    var barLabel = $(this).text();
+
+    // The slice elements are not sorted from top to bottom;
+    // re-sort them in that order (least y-coord to greatest y-coord,
+    // since the y-axis starts at top and grows down),
+    // so the slices "next" to each other appear next to each other
+    // in the slice array.
+    var slices = $('rect', this);
+    slices.sort(compareSlicesByYCoord);
+
+    for (var iSlice = 1; iSlice < slices.length; iSlice++) {
+      var aboveSliceY = getYCoordOfSvgSlice(slices[iSlice-1]);
+      var aboveSliceHeight = getFloatAttrValueOfSvgSlice(slices[iSlice-1], 'height');
+      var thisSliceY = getYCoordOfSvgSlice(slices[iSlice]);
+      assert.ok(
+        equalsWithTolerance(
+          thisSliceY,
+          aboveSliceY + aboveSliceHeight),
+        "The bar for '" + barLabel +
+          "' has a slice whose top is at position " + thisSliceY +
+          " px; the previous slice's top is at position " + aboveSliceY +
+          " px and has a height of " + aboveSliceHeight +
+          " px");
+    }
+  });
 });
-*/
