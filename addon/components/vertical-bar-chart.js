@@ -180,7 +180,11 @@ const VerticalBarChartComponent = ChartComponent.extend(LegendMixin,
       stackedValues = _.map(this.get('data'), function(d) {
         return {
           y0: y0,
-          y1: y0 += Math.max(d.value, 0)
+          y1: y0 += Math.max(d.value, 0),
+          value: d.value,
+          group: d.group,
+          label: d.label,
+          color: d.color
         };
       });
 
