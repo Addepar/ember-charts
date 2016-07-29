@@ -7,8 +7,6 @@ import FormattableMixin from '../mixins/formattable';
 import SortableChartMixin from '../mixins/sortable-chart';
 import NoMarginChartMixin from '../mixins/no-margin-chart';
 import AxisTitlesMixin from '../mixins/axis-titles';
-
-import { groupBy } from '../utils/group-by';
 import LabelTrimmer from '../utils/label-trimmer';
 
 /**
@@ -17,7 +15,9 @@ import LabelTrimmer from '../utils/label-trimmer';
  * Supersedes the deprecated functionality of VerticalBarChartComponent
  * with stackBars: true.
  *
- * FIXME (SBC): s/betweenGroupPadding/withinGroupPadding/g here and in documentation.hbs
+ * FIXME (SBC): here and in documentation.hbs:
+ *  1. Remove withinGroupPadding
+ *  2. s/betweenGroupPadding/withinGroupPadding/g
  */
 const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
   FloatingTooltipMixin, AxesMixin, FormattableMixin, SortableChartMixin,
@@ -70,9 +70,7 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
     var data, barLabel, barData, barSum, dataGroupedByBar, key, newData, sortedSummedBarValues, summedBarValues, _i, _len;
 
     data = this.get('filteredData');
-    dataGroupedByBar = _.groupBy(data, function(d) {
-      return d.barLabel;
-    });
+    dataGroupedByBar = _.groupBy(data, 'barLabel');
     summedBarValues = Ember.A();
 
     const reduceByValue = (previousValue, dataObject) =>
@@ -119,7 +117,7 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
     	return [];
    	}
 
-    data = groupBy(data, (d) => {
+    data = _.groupBy(data, (d) => {
       return d.barLabel || this.get('ungroupedSeriesName');
     });
 
@@ -127,9 +125,8 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
     // matched with their value and color. Here, we resort to ensure proper order.
     // This could potentially be addressed with a refactor where sorting happens after
     // grouping across the board.
-    // TODO(ember-charts-lodash): Use _.mapValues instead of the each loop.
-    _.each(_.keys(data), function(groupName) {
-      data[groupName] = _.sortBy(data[groupName], 'sliceLabel');
+    data = _.mapValues(data, function(sliceGroup) {
+      return _.sortBy(sliceGroup, 'sliceLabel');
     });
 
     return data;
@@ -293,7 +290,7 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
   }),
 
   allSliceLabels: Ember.computed('sortedData.[]', function() {
-    return _.uniq(_.pluck(this.get('sortedData'), 'sliceLabel'));
+    return _.uniq(_.map(this.get('sortedData'), 'sliceLabel'));
   }),
 
   labelIDMapping: Ember.computed('allSliceLabels.[]', function() {
