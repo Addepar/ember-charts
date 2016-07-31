@@ -231,7 +231,7 @@ const getHeightOfSvgSlice = function(slice) {
 const PERCENT_TOLERANCE = 0.01;
 
 const equalsWithTolerance = function(actual, expected) {
-  var tolerance = expected * PERCENT_TOLERANCE;
+  var tolerance = Math.abs(expected * PERCENT_TOLERANCE);
   return (Math.abs(actual - expected) < tolerance);
 };
 
