@@ -35,6 +35,9 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
   // Space between bars, as fraction of bar size
   withinGroupPadding: 0,
 
+  // Width of slice outline, in pixels
+  strokeWidth: 1,
+
   // Space between bar groups, as fraction of group size
   betweenGroupPadding: Ember.computed('numBars', function() {
     // Use padding to make sure bars have a maximum thickness.
@@ -452,7 +455,8 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
     };
   }),
 
-  stackedBarAttrs: Ember.computed('yScale', 'groupWidth', 'labelIDMapping.[]', function() {
+  stackedBarAttrs: Ember.computed('yScale', 'groupWidth', 'labelIDMapping.[]',
+    'strokeWidth', function() {
     var yScale, zeroDisplacement;
     zeroDisplacement = 1;
     yScale = this.get('yScale');
@@ -462,7 +466,7 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
         id = this.get('labelIDMapping')[barSection.sliceLabel];
         return "grouping-" + id;
       },
-      'stroke-width': 0,
+      'stroke-width': this.get('strokeWidth').toString()+'px',
       width: () => this.get('groupWidth'),
       x: null,
       y: function(barSection) {
@@ -559,7 +563,8 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
     'hasXAxisTitle',
     'hasYAxisTitle',
     'xTitleHorizontalOffset',
-    'yTitleVerticalOffset'
+    'yTitleVerticalOffset',
+    'strokeWidth'
   ],
 
   drawChart: function() {

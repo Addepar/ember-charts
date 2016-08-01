@@ -408,3 +408,59 @@ test('Stacking slices within a single bar do not cover up each other', function(
     }
   });
 });
+
+test('Configurable, white lines exist between slices in a stacked bar', function(assert) {
+  var component, allSliceElements, allSlicesAreOutlined, allSlicesAre5px,
+      whiteRGB = 'rgb(255, 255, 255)';
+  assert.expect(2);
+
+  component = this.subject({data: three_ranges});
+  this.render();
+  allSliceElements = this.$('rect');
+  allSlicesAreOutlined = allSliceElements.toArray().every(function(slice) {
+    var $slice = $(slice);
+    var isOutlineVisible = ($slice.css('stroke-width') === '1px');
+    var isOutlineWhite = ($slice.css('stroke') === whiteRGB);
+    return isOutlineVisible && isOutlineWhite;
+  });
+  assert.ok(allSlicesAreOutlined,
+    'All slices have a 1px white outline by default');
+
+  Ember.run(function() {
+    component.set('strokeWidth', '5');
+  });
+  allSliceElements = this.$('rect');
+  allSlicesAre5px = allSliceElements.toArray().every(function(slice) {
+    var $slice = $(slice);
+    return $slice.css('stroke-width') === '5px';
+  });
+  assert.ok(allSlicesAre5px,
+    'The width of the slice outline is configurable and updates with the' +
+    '`strokeWidth` property in the controller');
+});
+
+test('Negative value slices are displayed below the y=0 axis', function(assert) {
+  var component, xAxisElement, xAxisTransformY, negativeSlices;
+  negativeSlices = three_ranges.filter((slice) => slice.value < 0);
+  assert.expect(negativeSlices.length * 2);
+
+  component = this.subject({data: three_ranges});
+  this.render();
+
+  xAxisElement = this.$('.tick:not(.minor)');
+  xAxisTransformY = parseInt(xAxisElement.attr('transform').match(/\d+/g)[1]);
+
+  negativeSlices.forEach(function(slice) {
+    var $containerBar, sliceSelector, $negativeSlice, sliceSpecificMessage;
+    $containerBar = $('.bars:contains(' + slice.barLabel + ')'),
+    sliceSelector = '.grouping-' + component.get('labelIDMapping')[slice.sliceLabel],
+    $negativeSlice = $containerBar.find(sliceSelector);
+    sliceSpecificMessage = 'Negative slice (bar label: ' + slice.barLabel +
+     '; slice label: ' + slice.sliceLabel + ') ';
+
+    assert.ok(parseInt($negativeSlice.attr('y')) >= xAxisTransformY,
+      sliceSpecificMessage + 'is visually negative (below the x-axis)');
+    assert.ok(parseInt($negativeSlice.attr('height')) > 0,
+      sliceSpecificMessage + 'has a positive, non-zero height')
+  });
+});
