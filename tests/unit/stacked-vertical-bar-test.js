@@ -382,6 +382,7 @@ test('Stacking slices within a single bar do not cover up each other', function(
   this.subject({data: three_ranges});
   this.render();
 
+  // For each SVG bar:
   this.$('svg g.bars').each(function() {
     var barLabel = $(this).text();
 
@@ -393,6 +394,8 @@ test('Stacking slices within a single bar do not cover up each other', function(
     var slices = $('rect', this);
     slices.sort(compareSlicesByYCoord);
 
+    // For each pair of slices "next" to each other,
+    // check that the two slices in that pair do not overlap.
     for (var iSlice = 1; iSlice < slices.length; iSlice++) {
       var aboveSliceY = getYCoordOfSvgSlice(slices[iSlice-1]);
       var aboveSliceHeight = getFloatAttrValueOfSvgSlice(slices[iSlice-1], 'height');
@@ -453,8 +456,8 @@ test('Negative value slices are displayed below the y=0 axis', function(assert) 
 
   negativeSlices.forEach(function(slice) {
     var $containerBar, sliceSelector, $negativeSlice, sliceSpecificMessage;
-    $containerBar = $('.bars:contains(' + slice.barLabel + ')'),
-    sliceSelector = '.grouping-' + component.get('labelIDMapping')[slice.sliceLabel],
+    $containerBar = $('.bars:contains(' + slice.barLabel + ')');
+    sliceSelector = '.grouping-' + component.get('labelIDMapping')[slice.sliceLabel];
     $negativeSlice = $containerBar.find(sliceSelector);
     sliceSpecificMessage = 'Negative slice (bar label: ' + slice.barLabel +
      '; slice label: ' + slice.sliceLabel + ') ';
@@ -462,6 +465,6 @@ test('Negative value slices are displayed below the y=0 axis', function(assert) 
     assert.ok(parseInt($negativeSlice.attr('y')) >= xAxisTransformY,
       sliceSpecificMessage + 'is visually negative (below the x-axis)');
     assert.ok(parseInt($negativeSlice.attr('height')) > 0,
-      sliceSpecificMessage + 'has a positive, non-zero height')
+      sliceSpecificMessage + 'has a positive, non-zero height');
   });
 });
