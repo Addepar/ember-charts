@@ -232,7 +232,8 @@ const PERCENT_TOLERANCE = 0.01;
 
 const equalsWithTolerance = function(actual, expected) {
   var tolerance = Math.abs(expected * PERCENT_TOLERANCE);
-  return (Math.abs(actual - expected) < tolerance);
+  return ((actual < 0.0) === (expected < 0.0)) &&
+    (Math.abs(actual - expected) < tolerance);
 };
 
 test('Within each bar, the stacking slices have the correct heights relative to each other',
