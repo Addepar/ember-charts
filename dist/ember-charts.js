@@ -2489,7 +2489,7 @@ define('ember-charts/components/scatter-chart', ['exports', 'module', 'ember', '
 
   module.exports = ScatterChartComponent;
 });
-define('ember-charts/components/stacked-vertical-bar-chart', ['exports', 'module', 'ember', './chart-component', '../mixins/legend', '../mixins/floating-tooltip', '../mixins/axes', '../mixins/formattable', '../mixins/sortable-chart', '../mixins/no-margin-chart', '../mixins/axis-titles', '../utils/group-by', '../utils/label-trimmer'], function (exports, module, _ember, _chartComponent, _mixinsLegend, _mixinsFloatingTooltip, _mixinsAxes, _mixinsFormattable, _mixinsSortableChart, _mixinsNoMarginChart, _mixinsAxisTitles, _utilsGroupBy, _utilsLabelTrimmer) {
+define('ember-charts/components/stacked-vertical-bar-chart', ['exports', 'module', 'ember', './chart-component', '../mixins/legend', '../mixins/floating-tooltip', '../mixins/axes', '../mixins/formattable', '../mixins/sortable-chart', '../mixins/no-margin-chart', '../mixins/axis-titles', '../utils/label-trimmer'], function (exports, module, _ember, _chartComponent, _mixinsLegend, _mixinsFloatingTooltip, _mixinsAxes, _mixinsFormattable, _mixinsSortableChart, _mixinsNoMarginChart, _mixinsAxisTitles, _utilsLabelTrimmer) {
   'use strict';
 
   function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
@@ -2520,7 +2520,9 @@ define('ember-charts/components/stacked-vertical-bar-chart', ['exports', 'module
    * Supersedes the deprecated functionality of VerticalBarChartComponent
    * with stackBars: true.
    *
-   * FIXME (SBC): s/betweenGroupPadding/withinGroupPadding/g here and in documentation.hbs
+   * FIXME (SBC): here and in documentation.hbs:
+   *  1. Remove withinGroupPadding
+   *  2. s/betweenGroupPadding/withinGroupPadding/g
    */
   var StackedVerticalBarChartComponent = _ChartComponent['default'].extend(_LegendMixin['default'], _FloatingTooltipMixin['default'], _AxesMixin['default'], _FormattableMixin['default'], _SortableChartMixin['default'], _NoMarginChartMixin['default'], _AxisTitlesMixin['default'], {
 
@@ -2533,11 +2535,11 @@ define('ember-charts/components/stacked-vertical-bar-chart', ['exports', 'module
     // Data without group will be merged into a group with this name
     ungroupedSeriesName: 'Other',
 
-    // Space between bars, as fraction of bar size
-    withinGroupPadding: 0,
+    // Width of slice outline, in pixels
+    strokeWidth: 1,
 
     // Space between bar groups, as fraction of group size
-    betweenGroupPadding: _Ember['default'].computed('numBars', function () {
+    betweenBarPadding: _Ember['default'].computed('numSlices', function () {
       // Use padding to make sure bars have a maximum thickness.
       //
       // TODO(tony): Use exact padding + bar width calculation
@@ -2546,11 +2548,11 @@ define('ember-charts/components/stacked-vertical-bar-chart', ['exports', 'module
       // to do is have the equation for bar width based on padding and use that
       // to set the padding exactly.
       var scale = d3.scale.linear().domain([1, 8]).range([1.25, 0.25]).clamp(true);
-      return scale(this.get('numBars'));
+      return scale(this.get('numSlices'));
     }),
 
-    numBars: _Ember['default'].computed('xBetweenGroupDomain', 'xWithinGroupDomain', function () {
-      return this.get('xBetweenGroupDomain.length') * this.get('xWithinGroupDomain.length') || 0;
+    numSlices: _Ember['default'].computed('barNames.length', 'allSliceLabels.length', function () {
+      return this.get('barNames.length') * this.get('allSliceLabels.length') || 0;
     }),
 
     // Space allocated for rotated labels on the bottom of the chart. If labels
@@ -2561,6 +2563,8 @@ define('ember-charts/components/stacked-vertical-bar-chart', ['exports', 'module
     // Data
     // ----------------------------------------------------------------------------
 
+    // Remove any slices with that have zero-value. This allows the colors to be
+    // calculated correctly for the remaining visible slices.
     filteredData: _Ember['default'].computed('data.[]', function () {
       return _.filter(this.get('data'), function (slice) {
         return slice.value !== 0.0;
@@ -2568,14 +2572,16 @@ define('ember-charts/components/stacked-vertical-bar-chart', ['exports', 'module
     }),
 
     sortedData: _Ember['default'].computed('filteredData.[]', 'sortKey', 'sortAscending', function () {
-      var data, barLabel, barData, barSum, dataGroupedByBar, key, newData, sortedSummedBarValues, summedBarValues, _i, _len;
+      var data, barLabel, barData, barSum, dataGroupedByBar, key, newData, sortedSummedBarValues, summedBarValues, i;
 
       data = this.get('filteredData');
-      dataGroupedByBar = _.groupBy(data, function (d) {
-        return d.barLabel;
-      });
-      summedBarValues = _Ember['default'].A();
+      key = this.get('sortKey');
+      if (key === null) {
+        return data;
+      }
 
+      dataGroupedByBar = _.groupBy(data, 'barLabel');
+      summedBarValues = _Ember['default'].A();
       var reduceByValue = function reduceByValue(previousValue, dataObject) {
         return previousValue + dataObject.value;
       };
@@ -2590,40 +2596,32 @@ define('ember-charts/components/stacked-vertical-bar-chart', ['exports', 'module
         }
       }
 
-      key = this.get('sortKey');
       if (_Ember['default'].isEmpty(summedBarValues)) {
         return _Ember['default'].A();
-      } else if (key === null) {
-        return data;
       } else {
         sortedSummedBarValues = summedBarValues.sortBy(key);
         if (!this.get('sortAscending')) {
           sortedSummedBarValues = sortedSummedBarValues.reverse();
         }
-
         newData = _Ember['default'].A();
-        for (_i = 0, _len = sortedSummedBarValues.length; _i < _len; _i++) {
-          barSum = sortedSummedBarValues[_i];
+        for (i = 0; i < sortedSummedBarValues.length; i++) {
+          barSum = sortedSummedBarValues[i];
           newData.pushObjects(dataGroupedByBar[barSum.barLabel]);
         }
         return newData;
       }
     }),
 
-    // Aggregates objects provided in `data` in a dictionary, keyed by group names
+    // Aggregates objects provided in `data` in a dictionary, keyed by bar label
     groupedData: _Ember['default'].computed('sortedData', 'ungroupedSeriesName', function () {
       var _this = this;
 
       var data = this.get('sortedData');
       if (_Ember['default'].isEmpty(data)) {
-        // TODO(embooglement): this can't be `Ember.A()` because it needs to be an
-        // actual empty array for tests to pass, and `Ember.NativeArray` adds
-        // a bunch of stuff to the prototype that gets enumerated by `_.values`
-        // in `allSliceLabels`
-        return [];
+        return {};
       }
 
-      data = (0, _utilsGroupBy.groupBy)(data, function (d) {
+      data = _.groupBy(data, function (d) {
         return d.barLabel || _this.get('ungroupedSeriesName');
       });
 
@@ -2631,15 +2629,14 @@ define('ember-charts/components/stacked-vertical-bar-chart', ['exports', 'module
       // matched with their value and color. Here, we resort to ensure proper order.
       // This could potentially be addressed with a refactor where sorting happens after
       // grouping across the board.
-      // TODO(ember-charts-lodash): Use _.mapValues instead of the each loop.
-      _.each(_.keys(data), function (groupName) {
-        data[groupName] = _.sortBy(data[groupName], 'sliceLabel');
+      data = _.mapValues(data, function (sliceGroup) {
+        return _.sortBy(sliceGroup, 'sliceLabel');
       });
 
       return data;
     }),
 
-    groupNames: _Ember['default'].computed('groupedData', function () {
+    barNames: _Ember['default'].computed('groupedData', function () {
       return _.keys(this.get('groupedData'));
     }),
 
@@ -2648,19 +2645,14 @@ define('ember-charts/components/stacked-vertical-bar-chart', ['exports', 'module
     // 'ungroupedSeriesName' as its group name and the number of group
     // labels will be 1. If we are passed ungrouped data we will display
     // each data object in its own group.
-    isGrouped: _Ember['default'].computed('groupNames.length', function () {
-      var result = this.get('groupNames.length') > 1;
-      return result;
+    hasMultipleBars: _Ember['default'].computed('barNames.length', function () {
+      return this.get('barNames.length') > 1;
     }),
 
-    finishedData: _Ember['default'].computed('groupedData', 'isGrouped', function () {
+    finishedData: _Ember['default'].computed('groupedData', 'hasMultipleBars', function () {
       var posTop, negBottom, stackedValues;
-      if (this.get('isGrouped')) {
-        if (_Ember['default'].isEmpty(this.get('groupedData'))) {
-          return _Ember['default'].A();
-        }
-
-        return _.map(this.get('groupedData'), function (values, groupName) {
+      if (this.get('hasMultipleBars')) {
+        return _.map(this.get('groupedData'), function (values, barName) {
           posTop = 0;
           negBottom = 0;
           stackedValues = _.map(values, function (d) {
@@ -2686,7 +2678,7 @@ define('ember-charts/components/stacked-vertical-bar-chart', ['exports', 'module
           });
 
           return {
-            barLabel: groupName,
+            barLabel: barName,
             values: values,
             stackedValues: stackedValues,
             max: posTop,
@@ -2697,8 +2689,7 @@ define('ember-charts/components/stacked-vertical-bar-chart', ['exports', 'module
         if (_Ember['default'].isEmpty(this.get('filteredData'))) {
           return _Ember['default'].A();
         }
-        // If we do not have grouped data and are drawing stacked bars, keep the
-        // data in one group so it gets stacked
+
         posTop = 0;
         negBottom = 0;
         stackedValues = _.map(this.get('filteredData'), function (d) {
@@ -2731,8 +2722,6 @@ define('ember-charts/components/stacked-vertical-bar-chart', ['exports', 'module
           min: negBottom
         }]);
       }
-      // TODO(tony): Need to have stacked bars as a dependency here and the
-      // calculation be outside of this
     }),
 
     // ----------------------------------------------------------------------------
@@ -2740,8 +2729,13 @@ define('ember-charts/components/stacked-vertical-bar-chart', ['exports', 'module
     // ----------------------------------------------------------------------------
 
     labelHeightOffset: _Ember['default'].computed('_shouldRotateLabels', 'maxLabelHeight', 'labelHeight', 'labelPadding', function () {
+      var labelSize;
 
-      var labelSize = this.get('_shouldRotateLabels') ? this.get('maxLabelHeight') : this.get('labelHeight');
+      if (this.get('_shouldRotateLabels')) {
+        labelSize = this.get('maxLabelHeight');
+      } else {
+        labelSize = this.get('labelHeight');
+      }
       return labelSize + this.get('labelPadding');
     }),
 
@@ -2756,9 +2750,9 @@ define('ember-charts/components/stacked-vertical-bar-chart', ['exports', 'module
       return this.get('height') - this.get('legendHeight') - this.get('legendChartPadding');
     }),
 
-    // ----------------------------------------------------------------------------
+    // ---------------------------------------------------------------------------
     // Ticks and Scales
-    // ----------------------------------------------------------------------------
+    // ---------------------------------------------------------------------------
 
     // Vertical position/length of each bar and its value
     yDomain: _Ember['default'].computed('finishedData', function () {
@@ -2791,51 +2785,26 @@ define('ember-charts/components/stacked-vertical-bar-chart', ['exports', 'module
     }),
 
     allSliceLabels: _Ember['default'].computed('sortedData.[]', function () {
-      return _.uniq(_.pluck(this.get('sortedData'), 'sliceLabel'));
+      return _.uniq(_.map(this.get('sortedData'), 'sliceLabel'));
     }),
 
     labelIDMapping: _Ember['default'].computed('allSliceLabels.[]', function () {
-      return this.get('allSliceLabels').reduce(function (previousValue, label, index) {
-        previousValue[label] = index;
-        return previousValue;
-      }, {});
-    }),
-
-    // The range of labels assigned to each group
-    xBetweenGroupDomain: _Ember['default'].computed.alias('groupNames'),
-    // xBetweenGroupDomain: [],
-
-    // The range of labels assigned within each group
-    xWithinGroupDomain: _Ember['default'].computed.alias('allSliceLabels'),
-
-    // The space in pixels allocated to each group
-    groupWidth: _Ember['default'].computed('xBetweenGroupScale', function () {
-      return this.get('xBetweenGroupScale').rangeBand();
+      var allSliceLabels = this.get('allSliceLabels');
+      return _.zipObject(allSliceLabels, _.range(allSliceLabels.length));
     }),
 
     // The space in pixels allocated to each bar
-    barWidth: _Ember['default'].computed('xWithinGroupScale', function () {
-      return this.get('xWithinGroupScale').rangeBand();
-    }),
-
-    // The scale used to position bars within each group
-    // If we do not have grouped data, use the withinGroupPadding around group
-    // data since we will have constructed groups for each bar.
-    xWithinGroupScale: _Ember['default'].computed('xWithinGroupDomain', 'groupWidth', 'withinGroupPadding', function () {
-
-      return d3.scale.ordinal().domain(this.get('xWithinGroupDomain')).rangeRoundBands([0, this.get('groupWidth')], this.get('withinGroupPadding') / 2, 0);
+    barWidth: _Ember['default'].computed('xBetweenBarScale', function () {
+      return this.get('xBetweenBarScale').rangeBand();
     }),
 
     // The scale used to position each group and label across the horizontal axis
     // If we do not have grouped data, do not add additional padding around groups
     // since this will only add whitespace to the left/right of the graph.
-    xBetweenGroupScale: _Ember['default'].computed('graphicWidth', //'labelWidth',
-    'xBetweenGroupDomain', 'betweenGroupPadding', function () {
+    xBetweenBarScale: _Ember['default'].computed('graphicWidth', 'barNames', 'betweenBarPadding', function () {
+      var betweenBarPadding = this.get('betweenBarPadding');
 
-      // var labelWidth = this.get('labelWidth');
-      var betweenGroupPadding = this.get('betweenGroupPadding');
-
-      return d3.scale.ordinal().domain(this.get('xBetweenGroupDomain')).rangeRoundBands([0, this.get('graphicWidth')], betweenGroupPadding / 2, betweenGroupPadding / 2);
+      return d3.scale.ordinal().domain(this.get('barNames')).rangeRoundBands([0, this.get('graphicWidth')], betweenBarPadding / 2, betweenBarPadding / 2);
     }),
 
     // Override axis mix-in min and max values to listen to the scale's domain
@@ -2899,12 +2868,14 @@ define('ember-charts/components/stacked-vertical-bar-chart', ['exports', 'module
         d3.select(element).classed('hovered', true);
 
         // Show tooltip
-        var content = data.barLabel ? "<span class=\"tip-label\">" + data.barLabel + "</span>" : '';
+        var content = '';
+        if (data.barLabel) {
+          content = "<span class=\"tip-label\">" + data.barLabel + "</span>";
+        }
 
         var formatLabel = _this3.get('formatLabelFunction');
         var addValueLine = function addValueLine(d) {
-          content += "<span class=\"name\">" + d.sliceLabel + ": </span>";
-          return content += "<span class=\"value\">" + formatLabel(d.value) + "</span><br/>";
+          content += "<span class=\"name\">" + d.sliceLabel + ": </span>" + "<span class=\"value\">" + formatLabel(d.value) + "</span><br/>";
         };
 
         if (isGroup) {
@@ -2942,14 +2913,17 @@ define('ember-charts/components/stacked-vertical-bar-chart', ['exports', 'module
     // Styles
     // ----------------------------------------------------------------------------
 
-    groupAttrs: _Ember['default'].computed('graphicLeft', 'graphicTop', 'xBetweenGroupScale', function () {
+    groupAttrs: _Ember['default'].computed('graphicLeft', 'graphicTop', 'xBetweenBarScale', function () {
       var _this5 = this;
 
-      var xBetweenGroupScale = this.get('xBetweenGroupScale');
+      var xBetweenBarScale = this.get('xBetweenBarScale');
 
       return {
         transform: function transform(d) {
-          var dx = xBetweenGroupScale(d.barLabel) ? _this5.get('graphicLeft') + xBetweenGroupScale(d.barLabel) : _this5.get('graphicLeft');
+          var dx = _this5.get('graphicLeft');
+          if (xBetweenBarScale(d.barLabel)) {
+            dx += xBetweenBarScale(d.barLabel);
+          }
           var dy = _this5.get('graphicTop');
 
           return "translate(" + dx + ", " + dy + ")";
@@ -2957,7 +2931,7 @@ define('ember-charts/components/stacked-vertical-bar-chart', ['exports', 'module
       };
     }),
 
-    stackedBarAttrs: _Ember['default'].computed('yScale', 'groupWidth', 'labelIDMapping.[]', function () {
+    stackedBarAttrs: _Ember['default'].computed('yScale', 'barWidth', 'labelIDMapping.[]', 'strokeWidth', function () {
       var _this6 = this;
 
       var yScale, zeroDisplacement;
@@ -2969,9 +2943,9 @@ define('ember-charts/components/stacked-vertical-bar-chart', ['exports', 'module
           id = _this6.get('labelIDMapping')[barSection.sliceLabel];
           return "grouping-" + id;
         },
-        'stroke-width': 0,
+        'stroke-width': this.get('strokeWidth').toString() + 'px',
         width: function width() {
-          return _this6.get('groupWidth');
+          return _this6.get('barWidth');
         },
         x: null,
         y: function y(barSection) {
@@ -2983,22 +2957,22 @@ define('ember-charts/components/stacked-vertical-bar-chart', ['exports', 'module
       };
     }),
 
-    labelAttrs: _Ember['default'].computed('groupWidth', 'graphicTop', 'graphicHeight', 'labelPadding', function () {
+    labelAttrs: _Ember['default'].computed('barWidth', 'graphicTop', 'graphicHeight', 'labelPadding', function () {
       var _this7 = this;
 
       return {
         'stroke-width': 0,
         transform: function transform() {
-          var dx = _this7.get('groupWidth') / 2;
+          var dx = _this7.get('barWidth') / 2;
           var dy = _this7.get('graphicTop') + _this7.get('graphicHeight') + _this7.get('labelPadding');
           return "translate(" + dx + ", " + dy + ")";
         }
       };
     }),
 
-    // ----------------------------------------------------------------------------
+    // ---------------------------------------------------------------------------
     // Selections
-    // ----------------------------------------------------------------------------
+    // ---------------------------------------------------------------------------
 
     groups: _Ember['default'].computed(function () {
       return this.get('viewport').selectAll('.bars').data(this.get('finishedData'));
@@ -3013,13 +2987,13 @@ define('ember-charts/components/stacked-vertical-bar-chart', ['exports', 'module
       }
     })["volatile"](),
 
-    // ----------------------------------------------------------------------------
+    // ---------------------------------------------------------------------------
     // Label Layout
-    // ----------------------------------------------------------------------------
+    // ---------------------------------------------------------------------------
 
     // Space available for labels that are horizontally displayed. This is either
     // the unpadded group width or bar width depending on whether data is grouped
-    maxLabelWidth: _Ember['default'].computed.readOnly('groupWidth'),
+    maxLabelWidth: _Ember['default'].computed.readOnly('barWidth'),
 
     _shouldRotateLabels: false,
 
@@ -3031,7 +3005,8 @@ define('ember-charts/components/stacked-vertical-bar-chart', ['exports', 'module
       if (this.get('rotatedLabelLength') > maxLabelWidth) {
         labels.each(function () {
           if (this.getBBox().width > maxLabelWidth) {
-            return rotateLabels = true;
+            rotateLabels = true;
+            return;
           }
         });
       }
@@ -3055,8 +3030,8 @@ define('ember-charts/components/stacked-vertical-bar-chart', ['exports', 'module
     // Drawing Functions
     // ----------------------------------------------------------------------------
 
-    renderVars: ['xWithinGroupScale', 'xBetweenGroupScale', 'yScale', 'finishedData', 'getSeriesColor', 'xValueDisplayName', 'yValueDisplayName', 'hasAxisTitles', // backward compatibility support.
-    'hasXAxisTitle', 'hasYAxisTitle', 'xTitleHorizontalOffset', 'yTitleVerticalOffset'],
+    renderVars: ['xBetweenBarScale', 'yScale', 'finishedData', 'getSeriesColor', 'xValueDisplayName', 'yValueDisplayName', 'hasAxisTitles', // backward compatibility support.
+    'hasXAxisTitle', 'hasYAxisTitle', 'xTitleHorizontalOffset', 'yTitleVerticalOffset', 'strokeWidth'],
 
     drawChart: function drawChart() {
       this.updateData();
@@ -3159,7 +3134,9 @@ define('ember-charts/components/stacked-vertical-bar-chart', ['exports', 'module
 
       var graphicTop = this.get('graphicTop');
       var graphicLeft = this.get('graphicLeft');
-      gYAxis.attr({ transform: "translate(" + graphicLeft + ", " + graphicTop + ")" }).call(yAxis);
+      gYAxis.attr({
+        transform: "translate(" + graphicLeft + ", " + graphicTop + ")"
+      }).call(yAxis);
 
       gYAxis.selectAll('g').filter(function (d) {
         return d !== 0;
@@ -4264,7 +4241,11 @@ define('ember-charts/components/vertical-bar-chart', ['exports', 'module', 'embe
         stackedValues = _.map(this.get('data'), function (d) {
           return {
             y0: y0,
-            y1: y0 += Math.max(d.value, 0)
+            y1: y0 += Math.max(d.value, 0),
+            value: d.value,
+            group: d.group,
+            label: d.label,
+            color: d.color
           };
         });
 

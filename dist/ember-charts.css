@@ -80,7 +80,6 @@ svg text {
 }
 .chart-stacked-vertical-bar rect {
   stroke: white;
-  stroke-width: 1px;
 }
 .chart-stacked-vertical-bar rect.hovered {
   stroke: white !important;
