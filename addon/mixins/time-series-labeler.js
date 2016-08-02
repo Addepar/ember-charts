@@ -104,12 +104,16 @@ export default Ember.Mixin.create({
 
   // D3 No longer handles "minor ticks" for the user, but has instead reverted
   // to a strategy of allowing the user to handle rendered ticks as they see
-  // fit.  The new functionality has 2 parts:
-  // 1) Register all of the ticks "filtered" out by filterLabels
-  // 2) Apply a treatment to the labels
+  // fit.
   // maxNumberOfMinorTicks sets a treshold that is useful when determining our
-  // interval.  minorTickInterval is the modulo for the items to be removed.  So
-  // a maxNumberOfMinorTicks=0 and minorTickInterval=1 essentailly disables the
+  // interval. This represents the number of ticks that could be drawn between
+  // major ticks. For instance, we may 'allow' 2 minor ticks, but only need
+  // to render a single minor tick between labels.
+  //
+  // minorTickInterval is the modulo for the items to be removed.  This number
+  // will be between 1 and the maxNumberOfMinorTicks
+  //
+  // A maxNumberOfMinorTicks=0 and minorTickInterval=1 essentailly disables the
   // minor tick feature.
   maxNumberOfMinorTicks: 0,
   minorTickInterval: 1,
@@ -171,8 +175,7 @@ export default Ember.Mixin.create({
 
   //  This is the set of ticks on which labels appear.
   labelledTicks: Ember.computed('unfilteredLabelledTicks', 'tickFilter', function() {
-    var ticks = this.get('unfilteredLabelledTicks');
-    return ticks.filter(this.get('tickFilter'));
+    return this.get('unfilteredLabelledTicks').filter(this.get('tickFilter'));
   }),
 
   // We need a method to figure out the interval specifity
@@ -190,7 +193,11 @@ export default Ember.Mixin.create({
     ind1 = this.get('DOMAIN_ORDERING').indexOf(this.get('minTimeSpecificity'));
     ind2 = this.get('DOMAIN_ORDERING').indexOf(this.get('maxTimeSpecificity')) + 1;
     // Refers to the metrics used for the labelling
-    domainTypes = ind2 < 0 ? this.get('DOMAIN_ORDERING').slice(ind1) : this.get('DOMAIN_ORDERING').slice(ind1, ind2);
+    if (ind2 < 0) {
+      domainTypes = this.get('DOMAIN_ORDERING').slice(ind1);
+    } else {
+      domainTypes = this.get('DOMAIN_ORDERING').slice(ind1, ind2);
+    }
 
     for (i = 0, len = domainTypes.length; i < len; i++) {
       timeBetween = this.get('times')[domainTypes[i]];
@@ -310,7 +317,7 @@ export default Ember.Mixin.create({
   },
 
   // We have an option of suppling custom filters based on the date type.  This
-  // way we can append any special behavior or pruning algorythim to Months that
+  // way we can append any special behavior or pruning algorithm to Months that
   // wouldn't be applicable to Weeks
   customFilterLibrary: {},
 
@@ -359,8 +366,6 @@ export default Ember.Mixin.create({
 
   // See https://github.com/mbostock/d3/wiki/Time-Formatting
   formattedTime: Ember.computed('xAxisTimeInterval', function() {
-    // var l10n = d3.locale(ja_JP);
-
     switch (this.get('xAxisTimeInterval')) {
       case 'years':
       case 'Y':

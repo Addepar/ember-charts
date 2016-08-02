@@ -61,9 +61,6 @@ const TimeSeriesChartComponent = ChartComponent.extend(LegendMixin,
   // Force X-Axis labels to print vertically
   xAxisVertLabels: false,
 
-  // Enable smart turning if feasible - TRUMPED by xAxisVertLabels
-  xAxisSmartLabels: false,
-
   // ----------------------------------------------------------------------------
   // Time Series Chart Constants
   // ----------------------------------------------------------------------------
@@ -237,19 +234,18 @@ const TimeSeriesChartComponent = ChartComponent.extend(LegendMixin,
     this.set('legendTopPadding', 30);
   },
 
-  _shouldLabelsRotate: function () {
-    var labels, maxLabelWidth;
-
-    if (this.get('xAxisSmartLabels')) {
-      labels = this.get('xAxis').selectAll('text');
-      maxLabelWidth = this.get('maxLabelWidth') || this.get('_innerTickSpacingX');
-      labels.each(function () {
-        if (this.getBBox().width > maxLabelWidth) {
-          return true;
-        }
-      });
-    }
-    return false;
+  // Now that we can get our labels all turny, I actually need to straighten them
+  // out if the feature is toggled
+  _straightenXAxisLabels: function() {
+    var gXAxis = this.get('xAxis');
+    // most of these values are static and come from varrious places, including
+    // the bowels of D3
+    gXAxis.selectAll('text')
+      .attr("y", 9)
+      .attr("x", 0)
+      .attr("dy", "0.71em")
+      .attr("transform", null)
+      .style("text-anchor", "middle");
   },
 
   _barGroups: Ember.computed('barData.@each', 'ungroupedSeriesName', function() {
@@ -281,8 +277,9 @@ const TimeSeriesChartComponent = ChartComponent.extend(LegendMixin,
     return this.get('width') - this.get('graphicLeft');
   }),
 
-  graphicHeight: Ember.computed('height', 'legendHeight', 'legendChartPadding', function() {
-    return this.get('height') - this.get('legendHeight') - this.get('legendChartPadding') - (this.get('MarginBottom') || 0 );
+  graphicHeight: Ember.computed('height', 'legendHeight', 'legendChartPadding', 'marginBottom', function() {
+    var legendSize = this.get('legendHeight') + this.get('legendChartPadding') + (this.get('marginBottom') || 0);
+    return this.get('height') - legendSize;
   }),
 
   // ----------------------------------------------------------------------------
@@ -407,7 +404,7 @@ const TimeSeriesChartComponent = ChartComponent.extend(LegendMixin,
   // For a dynamic x axis, let the max number of labels be the minimum of
   // the number of x ticks and the assigned value. This is to prevent
   // the assigned value from being so large that labels flood the x axis.
-  maxNumberOfLabels: Ember.computed('numXTicks', 'dynamicXAxis', 'maxNumberOfRotatedLabels', function(key, value){
+  maxNumberOfLabels: Ember.computed('numXTicks', 'dynamicXAxis', 'maxNumberOfRotatedLabels', 'xAxisVertLabels', function(key, value){
     var allowableTicks = this.get('xAxisVertLabels') ? this.get('maxNumberOfRotatedLabels') : this.get('numXTicks');
 
     if (this.get('dynamicXAxis')) {
@@ -886,9 +883,7 @@ const TimeSeriesChartComponent = ChartComponent.extend(LegendMixin,
     this.filterMinorTicks();
 
     // Do we need to turn our axis labels?
-    if (this.get('xAxisVertLabels') || this._shouldLabelsRotate()) {
-      this._rotateXAxisLabels();
-    }
+    this.get('xAxisVertLabels') ? this._rotateXAxisLabels() : this._straightenXAxisLabels();
 
     //tickSize draws the Y-axis allignment line across the whole of the graph.
     var yAxis = d3.svg.axis()
