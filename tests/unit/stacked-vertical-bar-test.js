@@ -1,10 +1,6 @@
 import Ember from "ember";
 import { test, moduleForComponent } from 'ember-qunit';
 
-// Names of properties are the ones used by the new API;
-// we copy into the properties used by the old API
-// so we can use the same test file with both
-// the old and new product code.
 var three_ranges = [{
    sliceLabel: "Label 1",
    barLabel: "Group One",
@@ -42,54 +38,12 @@ var three_ranges = [{
    barLabel: "Group Three",
    value: -19
 }];
-(function() {
-  for (var iDatum = 0; iDatum < three_ranges.length; iDatum++) {
-    three_ranges[iDatum].group = three_ranges[iDatum].barLabel;
-    three_ranges[iDatum].label = three_ranges[iDatum].sliceLabel;
-  }
-})();
 
 moduleForComponent('stacked-vertical-bar-chart', '[Unit] Stacked bar component', {
   needs: [ 'template:components/chart-component'],
   beforeEach: function () {},
   afterEach: function () {}
 });
-
-/*
-var label1, label2, label3, stackedBarContent;
-
-label1 = "Label 1";
-
-label2 = "Label 2";
-
-label3 = "Label 3";
-
-stackedBarContent = {
- data: [
-   {
-     sliceLabel: label1,
-     barLabel: "Group 1",
-     value: 20
-   }, {
-     sliceLabel: label2,
-     barLabel: "Group 2",
-     value: -32
-   }, {
-     sliceLabel: label3,
-     barLabel: "Group 3",
-     value: 4
-   }, {
-     sliceLabel: label3,
-     barLabel: "Group 3",
-     value: 16
-   }, {
-     sliceLabel: label2,
-     barLabel: "Group 2",
-     value: 17
-   }
- ]
-};
-*/
 
 test("it exists", function(assert) {
   assert.ok(this.subject());
@@ -104,7 +58,6 @@ test('Margins are the right size', function(assert) {
   assert.equal(component.get('marginBottom'), 30, 'has top margin (because it has a legend)');
 });
 
-// FIXME(SBC): Should we really be testing the internal properties of the SBC component class?
 test('Stacked bar chart data is sorted correctly', function(assert) {
   var component = this.subject();
   assert.expect(8);
@@ -150,32 +103,6 @@ test('Stacked bar chart data is sorted correctly', function(assert) {
   });
 });
 
-// FIXME(SBC): This test is broken and perhaps should be removed.
-//
-// It seems to be trying to check that each _slice label_ has
-// the correct number of slices displayed, but it actually
-// counts and compares against the number of SVG slices per _bar_.
-//
-// Or it is trying to check that each _bar_ has the correct number
-// of slices displayed, but it wrongly uses as the expected value
-// the number of slices per _slice label_.
-//
-// Either way it only works by coincidence on the test dataset
-// `stackedBarContent`.
-//
-/*
-test('Stacked bars are grouped correctly', function(assert) {
-  var labelIDMapping;
-  this.subject(stackedBarContent);
-  this.append();
-  labelIDMapping = this.subject().get('labelIDMapping');
-
-  assert.equal(this.$().find(".grouping-" + labelIDMapping[label1]).length, 1, 'label1 has one section');
-  assert.equal(this.$().find(".grouping-" + labelIDMapping[label2]).length, 2, 'label2 has two sections');
-  assert.equal(this.$().find(".grouping-" + labelIDMapping[label3]).length, 2, 'label3 has two sections');
-});
-*/
-
 test('In total, the correct number of stacking slices is displayed', function(assert) {
   assert.expect(1);
 
@@ -184,34 +111,6 @@ test('In total, the correct number of stacking slices is displayed', function(as
 
   assert.equal(this.$('svg rect').length, three_ranges.length,
     "For " + three_ranges.length + " data points, that many stacking slices are shown");
-});
-
-// FIXME (SBC): Remove this test? It is not as good as it looks;
-// even with the old code that failed to draw negative slices, the test would pass
-// because the slices _are_ drawn, just with zero height.
-test('Each bar has the correct number of stacking slices', function(assert) {
-  var dataByBarLabel = _.groupBy(three_ranges, 'barLabel');
-  assert.expect(2 * _.keys(dataByBarLabel).length);
-
-  this.subject({data: three_ranges});
-  this.render();
-
-  // Find all the SVG bars.
-  var svgBarsByBarLabel = {};
-  this.$('svg g.bars').each(function() {
-    svgBarsByBarLabel[$(this).text()] = this;
-  });
-
-  // For each SVG bar: verify that a bar with that label is expected,
-  // and that the expected bar has the same number of slices.
-  for (var barLabel in dataByBarLabel) {
-    var expectedBarData = dataByBarLabel[barLabel];
-    var actualBar = svgBarsByBarLabel[barLabel];
-    assert.notEqual(actualBar, void 0,
-      "A bar for '" + barLabel + "' appears in the stacked bar chart");
-    assert.equal($('rect', actualBar).length, expectedBarData.length,
-      "The bar for '" + barLabel + "' has " + expectedBarData.length + " slices");
-  }
 });
 
 // Passed in to Array.prototype.sort(), which has the bogus default behavior of
@@ -437,14 +336,14 @@ const compareSlicesByYCoord = function(a, b) {
 };
 
 test('Stacking slices within a single bar do not cover up each other', function(assert) {
-  var dataByBarLabel, cExpectedAssertions;
+  var dataByBarLabel, numExpectedAssertions;
 
-  cExpectedAssertions = 0;
+  numExpectedAssertions = 0;
   dataByBarLabel = _.groupBy(three_ranges, 'barLabel');
   _.values(dataByBarLabel).forEach(function(barData) {
-    cExpectedAssertions += Math.max(0, barData.length - 1);
+    numExpectedAssertions += Math.max(0, barData.length - 1);
   });
-  assert.expect(cExpectedAssertions);
+  assert.expect(numExpectedAssertions);
 
   this.subject({data: three_ranges});
   this.render();
@@ -500,9 +399,10 @@ test('Configurable, white lines exist between slices in a stacked bar', function
   this.render();
   allSliceElements = this.$('rect');
   allSlicesAreOutlined = allSliceElements.toArray().every(function(slice) {
-    var $slice = $(slice);
-    var isOutlineVisible = ($slice.attr('stroke-width') === '1px');
-    var isOutlineWhite = isColorWhite($slice.css('stroke'));
+    var $slice, isOutlineVisible, isOutlineWhite;
+    $slice = $(slice);
+    isOutlineVisible = ($slice.attr('stroke-width') === '1px');
+    isOutlineWhite = isColorWhite($slice.css('stroke'));
     return isOutlineVisible && isOutlineWhite;
   });
   assert.ok(allSlicesAreOutlined,
@@ -513,8 +413,7 @@ test('Configurable, white lines exist between slices in a stacked bar', function
   });
   allSliceElements = this.$('rect');
   allSlicesAre5px = allSliceElements.toArray().every(function(slice) {
-    var $slice = $(slice);
-    return $slice.attr('stroke-width') === '5px';
+    return $(slice).attr('stroke-width') === '5px';
   });
   assert.ok(allSlicesAre5px,
     'The width of the slice outline is configurable and updates with the ' +
