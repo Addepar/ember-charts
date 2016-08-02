@@ -309,7 +309,7 @@ function(assert) {
 });
 
 test('The bars have the correct heights relative to each other', function(assert) {
-  var dataByBarLabel, grossBarSums, minGrossBarSum, expectedBarHeightRatios, svgBarsByBarLabel,
+  var dataByBarLabel, grossBarSums, minGrossBarSum, expectedBarHeightRatios,
     actualBarHeights, minActualBarHeight, barLabel, expectedBarHeight;
 
   dataByBarLabel = _.groupBy(three_ranges, 'barLabel');
@@ -332,17 +332,12 @@ test('The bars have the correct heights relative to each other', function(assert
   this.subject({data: three_ranges});
   this.render();
 
-  // Find all the SVG bars.
-  svgBarsByBarLabel = {};
-  this.$('svg g.bars').each(function() {
-    svgBarsByBarLabel[$(this).text()] = this;
-  });
-
   // Find the height of each SVG bar by summing the heights of its slices,
   // as well as the shortest height.
-  actualBarHeights = _.mapValues(svgBarsByBarLabel, function(svgBar) {
-    var slices = $('rect', svgBar);
-    return _.sum(_.map(slices, getHeightOfSvgSlice));
+  actualBarHeights = {};
+  this.$('svg g.bars').each(function() {
+    var slices = $('rect', this);
+    actualBarHeights[$(this).text()] = _.sum(_.map(slices, getHeightOfSvgSlice));
   });
   minActualBarHeight = _.min(_.values(actualBarHeights));
 
@@ -350,14 +345,86 @@ test('The bars have the correct heights relative to each other', function(assert
   // and assert that they are approximately equal.
   for (barLabel in expectedBarHeightRatios) {
     expectedBarHeight = minActualBarHeight * expectedBarHeightRatios[barLabel];
-      assert.ok(
-        equalsWithTolerance(
-          actualBarHeights[barLabel],
-          expectedBarHeight),
-        "The bar for '" + barLabel +
-          "' has a height of " + expectedBarHeight +
-          " px (actual height: " + actualBarHeights[barLabel] +
-          " px)");
+    assert.ok(
+      equalsWithTolerance(
+        actualBarHeights[barLabel],
+        expectedBarHeight),
+      "The bar for '" + barLabel +
+        "' has a height of " + expectedBarHeight +
+        " px (actual height: " + actualBarHeights[barLabel] +
+        " px)");
+  }
+});
+
+test('The bars have the correct heights relative to the values on the y-axis ticks',
+function(assert) {
+  var dataByBarLabel, grossBarSums, pixelsPerDataUnit,
+    expectedBarHeights, actualBarHeights, barLabel;
+
+  dataByBarLabel = _.groupBy(three_ranges, 'barLabel');
+  assert.expect(1 + _.keys(dataByBarLabel).length);
+
+  // Compute the expected heights of each bar as a percentage
+  // of the expected height of the shortest bar.
+  grossBarSums = _.mapValues(dataByBarLabel, function(barData) {
+    var sum = 0.0;
+    for (var iDatum = 0; iDatum < barData.length; iDatum++) {
+      sum += Math.abs(barData[iDatum].value);
+    }
+    return sum;
+  });
+
+  this.subject({data: three_ranges});
+  this.render();
+
+  // Find the number of pixels between consecutive y-axis ticks,
+  // and the data value difference that number of pixels represents.
+  pixelsPerDataUnit = (() => {
+    assert.ok(this.$('svg g.y.axis g.tick').length >= 2,
+      "There are at least 2 Y-axis ticks in the graph");
+
+    var firstTickSvg = this.$('svg g.y.axis g.tick')[0];
+    var secondTickSvg = this.$('svg g.y.axis g.tick')[1];
+
+    var firstTickTransformY =
+      parseFloat($(firstTickSvg).attr('transform').match(/\d+(\.\d+)?/g)[1]);
+    var secondTickTransformY =
+      parseFloat($(secondTickSvg).attr('transform').match(/\d+(\.\d+)?/g)[1]);
+
+    var firstTickLabel = parseFloat($(firstTickSvg).text());
+    var secondTickLabel = parseFloat($(secondTickSvg).text());
+
+    var transformYDiff = (firstTickTransformY  - secondTickTransformY);
+    var labelDiff = (secondTickLabel - firstTickLabel);
+
+    return (transformYDiff / labelDiff);
+  })();
+
+  // Find the expected height in pixels of each SVG bar.
+  expectedBarHeights = _.mapValues(grossBarSums, function(sum) {
+    return (sum * pixelsPerDataUnit);
+  });
+
+  // Find the height of each SVG bar by summing the heights of its slices.
+  actualBarHeights = {};
+  this.$('svg g.bars').each(function() {
+    var slices = $('rect', this);
+    actualBarHeights[$(this).text()] = _.sum(_.map(slices, getHeightOfSvgSlice));
+  });
+
+  // Compare the expected and actual heights
+  // and assert that they are approximately equal.
+  for (barLabel in expectedBarHeights) {
+    assert.ok(
+      equalsWithTolerance(
+        actualBarHeights[barLabel],
+        expectedBarHeights[barLabel]),
+      "The bar for '" + barLabel +
+        "' has a height of " + actualBarHeights[barLabel] +
+        " px (actual height: " + actualBarHeights[barLabel] +
+        " px, pixels per data unit: " + pixelsPerDataUnit +
+        ", gross sum of slice data values: " + grossBarSums[barLabel] +
+        ")");
   }
 });
 
