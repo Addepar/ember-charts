@@ -122,11 +122,15 @@ export default Ember.Mixin.create({
     var gXAxis = this.get('xAxis'),
       minorTickInterval = this.get('minorTickInterval'),
       labels, ticks;
-
+    // for the labels we need to reset all of the styles in case the graph updates
+    // by being resized.
+    gXAxis.selectAll('line').attr("y2", "6");
+    gXAxis.selectAll('text').style("display", "block");
     // Select and remove any previous signs of minor ticking
     labels = gXAxis.selectAll('text').filter(function(value, index) {
       return index % minorTickInterval !== 0;
     });
+
     ticks = gXAxis.selectAll('line').filter(function(value, index) {
       return index % minorTickInterval !== 0;
     });
