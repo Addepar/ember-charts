@@ -379,12 +379,20 @@ var MyVbcComponent = VerticalBarChartComponent.extend({ ... });</pre>
       </td>
     </tr>
     <tr>
-      <td>betweenGroupPadding</td>
+      <td>betweenBarPadding</td>
       <td>0</td>
       <td>
         <p>Space between bars, as a fraction of the bar width.</p>
         <p>COMPATIBILITY NOTE: If and when support for groups of stacked bars is added,
-        this will change to be the space between bar groups instead.</p>
+        this will be replaced by two properties to track the space between bar groups
+        and the space between bars within a group.</p>
+      </td>
+    </tr>
+    <tr>
+      <td>strokeWidth</td>
+      <td>1</td>
+      <td>
+        <p>Width in pixels of the white border surrounding every slice.</p>
       </td>
     </tr>
     <tr>

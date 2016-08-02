@@ -2,6 +2,7 @@ import Ember from 'ember';
 import VerticalBarController from './vertical-bar';
 
 const StackedVerticalBarController = VerticalBarController.extend({
+  betweenBarPadding: 0,
   strokeWidth: 1,
   rawDataHash: Ember.computed(function() {
     var dataHash = _.cloneDeep(this._super());
