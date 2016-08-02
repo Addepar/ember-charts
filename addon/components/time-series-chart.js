@@ -109,19 +109,13 @@ const TimeSeriesChartComponent = ChartComponent.extend(LegendMixin,
     var groups = groupBy(lineData, (datum) => {
       return this._getLabelOrDefault(datum);
     });
-    // _results = [];
-    // for (groupName in groups) {
-    //   values = groups[groupName];
-    //   _results.push();
-    // }
+
     return _.map(groups, function(values, groupName) {
       return {
         group: groupName,
         values: values
       };
     });
-
-    // return _results;
   }),
 
   // puts barData in a new format.
@@ -883,7 +877,11 @@ const TimeSeriesChartComponent = ChartComponent.extend(LegendMixin,
     this.filterMinorTicks();
 
     // Do we need to turn our axis labels?
-    this.get('xAxisVertLabels') ? this._rotateXAxisLabels() : this._straightenXAxisLabels();
+    if (this.get('xAxisVertLabels')) {
+      this._rotateXAxisLabels();
+    } else {
+      this._straightenXAxisLabels();
+    }
 
     //tickSize draws the Y-axis allignment line across the whole of the graph.
     var yAxis = d3.svg.axis()
