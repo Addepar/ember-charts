@@ -413,9 +413,20 @@ test('Stacking slices within a single bar do not cover up each other', function(
   });
 });
 
+const isColorWhite = function(colorString) {
+  return (-1 !== [
+    'rgb(255, 255, 255)',
+    'rgb(255,255,255)',
+    'rgba(255, 255, 255, 255)',
+    'rgba(255,255,255,255)',
+    '#ffffff',
+    '#fff',
+    'white',
+  ].indexOf(colorString));
+};
+
 test('Configurable, white lines exist between slices in a stacked bar', function(assert) {
-  var component, allSliceElements, allSlicesAreOutlined, allSlicesAre5px,
-      whiteRGB = 'rgb(255, 255, 255)';
+  var component, allSliceElements, allSlicesAreOutlined, allSlicesAre5px;
   assert.expect(2);
 
   component = this.subject({data: three_ranges});
@@ -423,8 +434,8 @@ test('Configurable, white lines exist between slices in a stacked bar', function
   allSliceElements = this.$('rect');
   allSlicesAreOutlined = allSliceElements.toArray().every(function(slice) {
     var $slice = $(slice);
-    var isOutlineVisible = ($slice.css('stroke-width') === '1px');
-    var isOutlineWhite = ($slice.css('stroke') === whiteRGB);
+    var isOutlineVisible = ($slice.attr('stroke-width') === '1px');
+    var isOutlineWhite = isColorWhite($slice.css('stroke'));
     return isOutlineVisible && isOutlineWhite;
   });
   assert.ok(allSlicesAreOutlined,
@@ -436,10 +447,10 @@ test('Configurable, white lines exist between slices in a stacked bar', function
   allSliceElements = this.$('rect');
   allSlicesAre5px = allSliceElements.toArray().every(function(slice) {
     var $slice = $(slice);
-    return $slice.css('stroke-width') === '5px';
+    return $slice.attr('stroke-width') === '5px';
   });
   assert.ok(allSlicesAre5px,
-    'The width of the slice outline is configurable and updates with the' +
+    'The width of the slice outline is configurable and updates with the ' +
     '`strokeWidth` property in the controller');
 });
 
