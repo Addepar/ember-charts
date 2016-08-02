@@ -327,6 +327,66 @@ function(assert) {
   }
 });
 
+test('All stacking slices with the same label have the same color as shown in the legend',
+function(assert) {
+  var component, sliceLabels, legendColorsBySliceLabel;
+
+  sliceLabels = _.keys(_.groupBy(three_ranges, 'sliceLabel'));
+  assert.expect(1 + (3 * sliceLabels.length));
+
+  component = this.subject({data: three_ranges});
+  this.render();
+
+  legendColorsBySliceLabel = {};
+  component.$('svg g.legend-item').each(function() {
+    var label = $(this).text();
+    assert.notEqual(-1, sliceLabels.indexOf(label),
+      "The slice label '" + label + "', which is in the chart legend, " +
+      "also appears in the data for the chart");
+    // FIXME (SBC): The below line is actually a test bug.
+    // In product code, we set the color of the legend box using
+    // the <path fill> element attribute, as in <path fill="#c0ffee" ... />.
+    // We don't use CSS on the element, either in a separate file, or with script,
+    // or with the <path style> attribute (<path style="fill: #c0ffee" ... />).
+    //
+    // jQuery helps elide this distinction for WebKit, Blink, and Gecko,
+    // but we need to check whether it also does so for Edge and Trident.
+    //
+    // Either that, or we need to fix the test bug by pulling out the attribute
+    // directly. Unfortunately, this causes its own problems,
+    // because there are multiple different strings for the same color,
+    // and one browser may use both simultaneously.
+    //
+    // Example: Chrome uses <path fill="#c0ffee" ... /> here in the legend,
+    // but in the slices it uses <rect style="fill: rgb(192, 255, 238)" ... />.
+    // For some reason, jQuery+Chrome does not coerce all the color strings
+    // to the same format if you read the <path fill> attribute,
+    // but it does if you do the wrong thing and read the <path> CSS.
+    //
+    legendColorsBySliceLabel[label] = $('path', this).css('fill');
+  });
+  assert.equal(_.keys(legendColorsBySliceLabel).length, sliceLabels.length,
+    "Every slice label in the data for the chart also appears in the chart legend");
+
+  const getSliceColor = function() {
+    return $(this).css('fill');
+  };
+
+  sliceLabels.forEach(function(label) {
+    var sliceSelector = 'svg rect.grouping-' + component.get('labelIDMapping')[label];
+    var slices = component.$(sliceSelector);
+
+    var allSliceColors = slices.map(getSliceColor);
+    var uniqueSliceColors = _.uniq(allSliceColors);
+
+    assert.equal(uniqueSliceColors.length, 1,
+      "All slices for '" + label + "' have this color: " + uniqueSliceColors[0]);
+    assert.equal(uniqueSliceColors[0], legendColorsBySliceLabel[label],
+      "The slice color '" + uniqueSliceColors[0] +
+      "' is the same as the legend color '" + legendColorsBySliceLabel[label] + "'");
+  });
+});
+
 const getYCoordOfSvgSlice = function(slice) {
   return getFloatAttrValueOfSvgSlice(slice, 'y');
 };
