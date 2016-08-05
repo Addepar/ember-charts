@@ -29,8 +29,20 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
   // Vertical Bar Chart Options
   // ----------------------------------------------------------------------------
 
+  // The smallest slices will be combined into an "Other" slice until no slice
+  // is smaller than minSlicePercent.
+  minSlicePercent: 2,
+
   // Data without group will be merged into a group with this name
   ungroupedSeriesName: 'Other',
+
+  // The maximum number of slices. If the number of slices is greater
+  // than this then the smallest slices will be combined into an "other"
+  // slice until there are at most maxNumberOfSlices.
+  maxNumberOfSlices: 10,
+
+  // If there are more slice labels than maxNumberOfSlices,
+  otherSliceName: 'Other',
 
   // Width of slice outline, in pixels
   strokeWidth: 1,
@@ -67,6 +79,44 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
     return _.filter(this.get('data'), function(slice) {
       return (slice.value !== 0.0);
     });
+  }),
+
+  // Returns an array with one item for every sliceLabel. Each item contains
+  // the sliceLabel string, the value of the largest slice with this sliceLabel,
+  // and the value of the bar that the largest slice is in.
+  largestSliceData: Ember.computed('groupedData.[]', 'filteredData.[]',
+  'allSliceLabels.[]', function() {
+    var filteredData, groupedData, filteredSlices, largestSlice,
+      largestSliceBarValue;
+    filteredData = this.get('filteredData');
+    groupedData = this.get('groupedData');
+    return this.get('allSliceLabels').map(function(sliceLabel) {
+      filteredSlices = _.filter(filteredData, 'sliceLabel', sliceLabel);
+      largestSlice = _.max(filteredSlices, function(slice) {
+          return Math.abs(slice.value);
+      });
+      largestSliceBarValue = groupedData[largestSlice.barLabel].reduce(
+        function(p, slice) {
+          return p + Math.abs(slice.value);
+        }, 0);
+      return { sliceLabel: sliceLabel,
+               largestSliceValue: largestSlice.value,
+               percentOfBar: (largestSlice.value / largestSliceBarValue) * 100 }
+    });
+  }),
+
+  // The sliceLabels that will be explicitly shown in the chart and not
+  // aggregated into the 'Other' slice.
+  nonOtherSliceLabels: Ember.computed('minSlicePercent', 'maxNumberOfSlices',
+  'largestSliceData.[]', function() {
+    var minSlicePercent, nonOtherSliceData;
+    minSlicePercent = this.get('minSlicePercent');
+    nonOtherSliceData = _.take(this.get('largestSliceData'),
+                               this.get('maxNumberOfSlices') - 1)
+                         .filter(function(sliceData) {
+        return sliceData.percentOfBar > minSlicePercent;
+      });
+    return _.map(nonOtherSliceData, 'sliceLabel');
   }),
 
   sortedData: Ember.computed('filteredData.[]', 'sortKey', 'sortAscending',
