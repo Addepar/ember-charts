@@ -519,16 +519,20 @@ const VerticalBarChartComponent = ChartComponent.extend(LegendMixin,
     };
   }),
 
-  stackedBarAttrs: Ember.computed('yScale', 'groupWidth', 'labelIDMapping.[]', function() {
-    var yScale, zeroDisplacement;
-    zeroDisplacement = 1;
-    yScale = this.get('yScale');
+  commonBarAttrs: Ember.computed('labelIDMapping.[]', function() {
     return {
-      "class": (barSection) => {
-        var id;
-        id = this.get('labelIDMapping')[barSection.label];
+      class: (d) => {
+        var id = this.get('labelIDMapping')[d.label];
         return "grouping-" + id;
-      },
+      }
+    };
+  }),
+
+  stackedBarAttrs: Ember.computed('commonBarAttrs', 'yScale', 'groupWidth', function() {
+    var zeroDisplacement = 1;
+    var yScale = this.get('yScale');
+
+    return _.assign({
       'stroke-width': 0,
       width: () => this.get('groupWidth'),
       x: null,
@@ -538,15 +542,14 @@ const VerticalBarChartComponent = ChartComponent.extend(LegendMixin,
       height: function(barSection) {
         return yScale(barSection.y0) - yScale(barSection.y1);
       }
-    };
+    }, this.get('commonBarAttrs'));
   }),
 
-  groupedBarAttrs: Ember.computed('yScale', 'getSeriesColor', 'barWidth', 'xWithinGroupScale', function() {
+  groupedBarAttrs: Ember.computed('commonBarAttrs', 'yScale', 'barWidth', 'xWithinGroupScale', function() {
     var zeroDisplacement = 1;
     var yScale = this.get('yScale');
 
-    return {
-      class: (d, i) => "grouping-" + i,
+    return _.assign({
       'stroke-width': 0,
       width: () => this.get('barWidth'),
       x: (d) => this.get('xWithinGroupScale')(d.label),
@@ -560,7 +563,7 @@ const VerticalBarChartComponent = ChartComponent.extend(LegendMixin,
           return yScale(0) + zeroDisplacement;
         }
       }
-    };
+    }, this.get('commonBarAttrs'));
   }),
 
   labelAttrs: Ember.computed('barWidth', 'isGrouped', 'stackBars', 'groupWidth',
