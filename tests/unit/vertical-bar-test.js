@@ -51,7 +51,7 @@ moduleForComponent('vertical-bar-chart', '[Unit] Vertical bar component', {
   afterEach: function () {}
 });
 
-var label1, label2, label3, stackedBarContent;
+var label1, label2, label3, labelClassMappingTestData;
 
 label1 = "Label 1";
 
@@ -59,32 +59,29 @@ label2 = "Label 2";
 
 label3 = "Label 3";
 
-stackedBarContent = {
- stackBars: true,
- data: [
-   {
-     label: label1,
-     group: "Group 1",
-     value: 20
-   }, {
-     label: label2,
-     group: "Group 2",
-     value: 32
-   }, {
-     label: label3,
-     group: "Group 3",
-     value: 4
-   }, {
-     label: label3,
-     group: "Group 3",
-     value: 16
-   }, {
-     label: label2,
-     group: "Group 2",
-     value: 17
-   }
- ]
-};
+labelClassMappingTestData = [
+  {
+    label: label1,
+    group: "Group 1",
+    value: 20
+  }, {
+    label: label2,
+    group: "Group 2",
+    value: 32
+  }, {
+    label: label3,
+    group: "Group 3",
+    value: 4
+  }, {
+    label: label3,
+    group: "Group 3",
+    value: 16
+  }, {
+    label: label2,
+    group: "Group 2",
+    value: 17
+  }
+];
 
 test("it exists", function(assert) {
   assert.ok(this.subject());
@@ -145,11 +142,30 @@ test('Stacked bar chart data is sorted correctly', function(assert) {
   });
 });
 
-test('Stacked bars are grouped correctly', function(assert) {
-  var labelIDMapping;
-  this.subject(stackedBarContent);
+// https://github.com/Addepar/ember-charts/issues/172
+//
+// The root cause of problem 2 was that when some data groups have fewer data than others,
+// the bars for the smaller groups got assigned the wrong style classes.
+// The classes determine which bars get highlighted when you mouse over the bar label
+// in the legend.
+//
+test('Bug 172 Problem 2: Bars get style classes corresponding to their bar label, ' +
+     'regardless of what bar group they belong to',
+function(assert) {
+  this.subject({data: labelClassMappingTestData});
+  this.render();
+  var labelIDMapping = this.subject().get('labelIDMapping');
+
+  assert.equal(this.$().find(".grouping-" + labelIDMapping[label1]).length, 1, 'label1 has one section');
+  assert.equal(this.$().find(".grouping-" + labelIDMapping[label2]).length, 2, 'label2 has two sections');
+  assert.equal(this.$().find(".grouping-" + labelIDMapping[label3]).length, 2, 'label3 has two sections');
+});
+
+test('Slices in stacked bars get style classes corresponding to their slice label',
+function(assert) {
+  this.subject({stackBars: true, data: labelClassMappingTestData});
   this.append();
-  labelIDMapping = this.subject().get('labelIDMapping');
+  var labelIDMapping = this.subject().get('labelIDMapping');
 
   assert.equal(this.$().find(".grouping-" + labelIDMapping[label1]).length, 1, 'label1 has one section');
   assert.equal(this.$().find(".grouping-" + labelIDMapping[label2]).length, 2, 'label2 has two sections');
@@ -157,7 +173,7 @@ test('Stacked bars are grouped correctly', function(assert) {
 });
 
 // https://github.com/Addepar/ember-charts/issues/172
-test('Bug 172: When some data groups have fewer data then others, ' +
+test('Bug 172 Problem 1: When some data groups have fewer data then others, ' +
      'the smaller groups still give their bars the correct colors',
 function(assert) {
   var testData, dataPointCountsByBarLabel, component, legendColorsByBarLabel;
