@@ -4,7 +4,6 @@ import LegendMixin from '../mixins/legend';
 import FloatingTooltipMixin from '../mixins/floating-tooltip';
 import AxesMixin from '../mixins/axes';
 import FormattableMixin from '../mixins/formattable';
-import SortableChartMixin from '../mixins/sortable-chart';
 import NoMarginChartMixin from '../mixins/no-margin-chart';
 import AxisTitlesMixin from '../mixins/axis-titles';
 import LabelTrimmer from '../utils/label-trimmer';
@@ -20,8 +19,8 @@ import LabelTrimmer from '../utils/label-trimmer';
  *  2. s/betweenGroupPadding/withinGroupPadding/g
  */
 const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
-  FloatingTooltipMixin, AxesMixin, FormattableMixin, SortableChartMixin,
-  NoMarginChartMixin, AxisTitlesMixin, {
+  FloatingTooltipMixin, AxesMixin, FormattableMixin, NoMarginChartMixin,
+  AxisTitlesMixin, {
 
   classNames: ['chart-vertical-bar', 'chart-stacked-vertical-bar'],
 
@@ -103,18 +102,18 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
   }),
 
   largestSliceData: Ember.computed('dataGroupedByBar', 'barvalues', function() {
-    var dataGroupedBySlice, barValues, largestSliceOfType, largestSliceBarValue;
+    var dataGroupedBySlice, barValues, largestSlice, largestSliceBarValue;
     dataGroupedBySlice = this.get('dataGroupedBySlice');
     barValues = this.get('barValues');
     return _.map(dataGroupedBySlice, (sliceTypeData, sliceLabel) => {
-      largestSliceOfType = _.max(sliceTypeData, (slice) => {
+      largestSlice = _.max(sliceTypeData, (slice) => {
         return Math.abs(slice.value);
       });
-      largestSliceBarValue = barValues[largestSliceOfType.barLabel];
+      largestSliceBarValue = barValues[largestSlice.barLabel];
       return {
         sliceLabel: sliceLabel,
-        largestSliceValue: largestSliceOfType.value,
-        percentOfBar: (largestSliceOfType.value / largestSliceBarValue) * 100
+        largestSliceValue: largestSlice.value,
+        percentOfBar: Math.abs((largestSlice.value / largestSliceBarValue) * 100)
       };
     });
   }),
