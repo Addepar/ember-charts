@@ -1,6 +1,13 @@
 import Ember from "ember";
 import { test, moduleForComponent } from 'ember-qunit';
-var three_ranges = [{
+
+// tinycolor only defines itself as an AMD module if it thinks an AMD dll loader
+// is present (typeof define === 'function' && define.amd);
+// unfortunately loader.js doesn't set define.amd and thus is incompatible.
+// So we must use the global tinycolor instead.
+var tinycolor = window.tinycolor;
+
+var threeRanges = [{
    label: "Label 1",
    group: "Group One",
    value: 20
@@ -99,7 +106,7 @@ test('Stacked bar chart data is sorted correctly', function(assert) {
     var data, sortedData, original = [], sorted = [], groups = [],
       totals = [], originalGroups = [];
 
-    component.set('data', three_ranges);
+    component.set('data', threeRanges);
     component.set('stackBars', true);
 
     data = component.get('data');
@@ -147,4 +154,46 @@ test('Stacked bars are grouped correctly', function(assert) {
   assert.equal(this.$().find(".grouping-" + labelIDMapping[label1]).length, 1, 'label1 has one section');
   assert.equal(this.$().find(".grouping-" + labelIDMapping[label2]).length, 2, 'label2 has two sections');
   assert.equal(this.$().find(".grouping-" + labelIDMapping[label3]).length, 2, 'label3 has two sections');
+});
+
+// https://github.com/Addepar/ember-charts/issues/172
+test('Bug 172: When some data groups have fewer data then others, ' +
+     'the smaller groups still give their bars the correct colors',
+function(assert) {
+  var testData, dataPointCountsByBarLabel, component, legendColorsByBarLabel;
+
+  testData = _.filter(threeRanges, function(datum) {
+    return (datum.group !== "Group Two" || datum.label !== "Label 1");
+  });
+  dataPointCountsByBarLabel = _.countBy(testData, 'label');
+  assert.expect(1 + _.keys(dataPointCountsByBarLabel).length);
+
+  component = this.subject({data : testData});
+  this.render();
+
+  // Get the colors assigned to each bar label in the chart legend
+  legendColorsByBarLabel = {};
+  component.$('svg g.legend-item').each(function() {
+    var label = $(this).text();
+    legendColorsByBarLabel[label] = tinycolor($('path', this).attr('fill')).toRgbString();
+  });
+
+  assert.deepEqual(
+    _.keys(legendColorsByBarLabel).sort(),
+    _.keys(dataPointCountsByBarLabel).sort(),
+    "The set of bar labels shown in the legend is the same as the one from the test data");
+
+  // For each bar label in the chart legend, check that the actual number of
+  // bars with that label's color equals the expected number of data points
+  // with that label per the data set
+  _.forOwn(legendColorsByBarLabel, function(colorString, label) {
+    var actualBarsWithColor = component.$('svg rect').filter(function() {
+      return (colorString === tinycolor($(this).css('fill')).toRgbString());
+    });
+    assert.equal(
+      actualBarsWithColor.length,
+      dataPointCountsByBarLabel[label],
+      dataPointCountsByBarLabel[label] + " bars were found with color " + colorString +
+        ", which is the color in the legend for bar label " + label);
+  });
 });
