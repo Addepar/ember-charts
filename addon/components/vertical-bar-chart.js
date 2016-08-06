@@ -372,9 +372,54 @@ const VerticalBarChartComponent = ChartComponent.extend(LegendMixin,
 
   // ----------------------------------------------------------------------------
   // Color Configuration
+  //
+  // We cannot pass the mixed-in method this.getSeriesColor() directly to d3
+  // as the callback to use to color the bars.
+  // This is because for bar groups that do not have a meaningful
+  // non-zero value for an individual bar, the client is free to not pass
+  // a data point for that pair of (group, label) at all.
+  //
+  // In that case, when we use d3 to render bar groups with omitted bars,
+  // using this.getSeriesColor() would tell d3 to use a color palette
+  // with _more_ colors than bars in the bar group (since the number of colors
+  // in the palette is this.numColorSeries).
+  // Hence some bars would likely get a color that doesn't match the color
+  // used for bars with the same label in other bar groups.
+  //
+  // So instead, we provide our own callback this.fnGetBarColor()
+  // that looks at the bar label first and tries to look up the color
+  // based on that. If that fails, then fnGetBarColor() defers to getSeriesColor().
+  //
+  // Note that we still use getSeriesColors() to initialize the mapping
+  // from bar label to bar color, so it would be confusing if we tried to
+  // override the property altogether.
+  //
+  // See bug #172 : https://github.com/Addepar/ember-charts/issues/172
   // ----------------------------------------------------------------------------
 
   numColorSeries: Ember.computed.alias('individualBarLabels.length'),
+
+  barColors: Ember.computed('individualBarLabels.[]', 'getSeriesColor', function() {
+    var fnGetSeriesColor = this.get('getSeriesColor');
+    var result = {};
+    this.get('individualBarLabels').forEach(function(label, iLabel) {
+      result[label] = fnGetSeriesColor(label, iLabel);
+    });
+    return result;
+  }),
+
+  fnGetBarColor: Ember.computed('barColors', 'getSeriesColor', function() {
+    var barColors = this.get('barColors');
+    var fnGetSeriesColor = this.get('getSeriesColor');
+
+    return function(d, i) {
+      if (d.label && barColors[d.label]) {
+        return barColors[d.label];
+      } else {
+        return fnGetSeriesColor(d, i);
+      }
+    };
+  }),
 
   // ----------------------------------------------------------------------------
   // Legend Configuration
@@ -384,12 +429,10 @@ const VerticalBarChartComponent = ChartComponent.extend(LegendMixin,
     return this.get('stackBars') || this.get('isGrouped') && this.get('legendItems.length') > 1 && this.get('showLegend');
   }),
 
-  legendItems: Ember.computed('individualBarLabels.[]', 'getSeriesColor', 'stackBars', 'labelIDMapping.[]', function() {
-    var getSeriesColor;
-    getSeriesColor = this.get('getSeriesColor');
+  legendItems: Ember.computed('individualBarLabels.[]', 'barColors', 'stackBars', 'labelIDMapping.[]', function() {
+    var barColors = this.get('barColors');
     return this.get('individualBarLabels').map((label, i) => {
-      var color;
-      color = getSeriesColor(label, i);
+      var color = barColors[label];
       if (this.get('stackBars')) {
         i = this.get('labelIDMapping')[label];
       }
@@ -738,7 +781,7 @@ const VerticalBarChartComponent = ChartComponent.extend(LegendMixin,
     groups.attr(this.get('groupAttrs') );
     groups.selectAll('rect')
       .attr(barAttrs)
-      .style('fill', this.get('getSeriesColor'));
+      .style('fill', this.get('fnGetBarColor'));
     return groups.select('g.groupLabel')
       .attr(this.get('labelAttrs') );
   }
