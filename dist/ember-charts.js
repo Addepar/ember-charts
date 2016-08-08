@@ -2892,10 +2892,15 @@ define('ember-charts/components/time-series-chart', ['exports', 'module', 'ember
     // the number of x ticks and the assigned value. This is to prevent
     // the assigned value from being so large that labels flood the x axis.
     maxNumberOfLabels: _Ember['default'].computed('numXTicks', 'dynamicXAxis', 'maxNumberOfRotatedLabels', 'xAxisVertLabels', function (key, value) {
-      var allowableTicks = this.get('xAxisVertLabels') ? this.get('maxNumberOfRotatedLabels') : this.get('numXTicks');
+      var allowableTicks = this.get('numXTicks');
+      if (this.get('xAxisVertLabels')) {
+        allowableTicks = this.get('maxNumberOfRotatedLabels');
+      }
 
       if (this.get('dynamicXAxis')) {
-        value = isNaN(value) ? this.get('DEFAULT_MAX_NUMBER_OF_LABELS') : value;
+        if (isNaN(value)) {
+          value = this.get('DEFAULT_MAX_NUMBER_OF_LABELS');
+        }
         return Math.min(value, allowableTicks);
       } else {
         return allowableTicks;
