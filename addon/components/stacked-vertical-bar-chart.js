@@ -46,15 +46,9 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
   // Width of slice outline, in pixels
   strokeWidth: 1,
 
-  // Space between bar groups, as fraction of group size
+  // Space between bars, as fraction of bar size
   betweenBarPadding: Ember.computed('numSlices', function() {
     // Use padding to make sure bars have a maximum thickness.
-    //
-    // TODO(tony): Use exact padding + bar width calculation
-    // We have some set amount of bewtween group padding we use depending
-    // on the number of bars there are in the chart. Really, what we would want
-    // to do is have the equation for bar width based on padding and use that
-    // to set the padding exactly.
     var scale = d3.scale.linear().domain([1, 8]).range([1.25, 0.25]).clamp(true);
     return scale(this.get('numSlices'));
   }),
@@ -74,9 +68,10 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
   // Remove any slices with that have zero-value. This allows the colors to be
   // calculated correctly for the remaining visible slices.
   filteredData: Ember.computed('data.[]', function() {
-    return _.filter(this.get('data'), function(slice) {
-      return (slice.value !== 0.0);
-    });
+    return this.get('data');
+    // return _.filter(this.get('data'), function(slice) {
+    //   return (slice.value !== 0.0);
+    // });
   }),
 
   dataGroupedByBar: Ember.computed('ungroupedSeriesName', 'filteredData.[]', function() {
@@ -148,7 +143,7 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
       otherSlice = { barLabel: barLabel,
                      sliceLabel: otherSliceLabel,
                      value: 0,
-                     _otherSliceTypes: [] }
+                     _otherSliceTypes: [] };
       barData.forEach((slice) => {
         if ((nonOtherSliceTypes.indexOf(slice.sliceLabel) != -1) ||
             (numOtherSliceTypes <= 1)) {
@@ -158,7 +153,7 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
           otherSlice._otherSliceTypes.push(slice.sliceLabel);
         }
       });
-      if (otherSlice.value != 0) {
+      if (otherSlice.value !== 0) {
         newBarData.push(otherSlice);
       }
       result[barLabel] = newBarData;
@@ -173,7 +168,7 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
   finishedData: Ember.computed('dataGroupedByBarWithOther', 'otherSliceLabel', function() {
     var posTop, negBottom, stackedValues, otherSliceLabel;
     otherSliceLabel = this.get('otherSliceLabel');
-    return _.map(this.get('dataGroupedByBarWithOther'), (values, barName) => {
+    return _.map(this.get('dataGroupedByBarWithOther'), (values, barLabel) => {
       posTop = 0;
       negBottom = 0;
       stackedValues = _.map(values, function(d) {
@@ -198,13 +193,26 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
       });
 
       return {
-        barLabel: barName,
+        barLabel: barLabel,
         values: values,
         stackedValues: stackedValues,
         max: posTop,
         min: negBottom
       };
     });
+  }),
+
+  largestBar: Ember.computed('dataGroupedByBarWithOther', function() {
+    return _.max(this.get('dataGroupedByBarWithOther'), (barData) => {
+      return _.reduce(barData, (p, slice) => {
+        return p + slice.value;
+      }, 0);
+    });
+  }),
+
+  sliceSortOrder: Ember.computed('largestBar', 'nonOtherSliceTypes.[]', function() {
+    var sortedSlices = _.sortByAll(this.get('largestBar'), 'value', 'desc');
+    return _.map(sortedSlices, 'sliceLabel');
   }),
 
   // ----------------------------------------------------------------------------
@@ -295,9 +303,7 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
     return this.get('xBetweenBarScale').rangeBand();
   }),
 
-  // The scale used to position each group and label across the horizontal axis
-  // If we do not have grouped data, do not add additional padding around groups
-  // since this will only add whitespace to the left/right of the graph.
+  // The scale used to position each bar and label across the horizontal axis
   xBetweenBarScale: Ember.computed('graphicWidth', 'barNames', 'betweenBarPadding', function() {
     var betweenBarPadding = this.get('betweenBarPadding');
 
@@ -325,16 +331,38 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
 
   numColorSeries: Ember.computed.alias('allSliceLabels.length'),
 
+  sliceColors: Ember.computed('allSliceLabels.[]', 'getSeriesColor', function() {
+    var fnGetSeriesColor = this.get('getSeriesColor');
+    var result = {};
+    this.get('allSliceLabels').forEach(function(label, iLabel) {
+      result[label] = fnGetSeriesColor(label, iLabel);
+    });
+    return result;
+  }),
+
+  fnGetSliceColor: Ember.computed('sliceColors.[]', 'getSeriesColor', function() {
+    var sliceColors = this.get('sliceColors');
+    var fnGetSeriesColor = this.get('getSeriesColor');
+
+    return function(d, i) {
+      if (d.sliceLabel && sliceColors[d.sliceLabel]) {
+        return sliceColors[d.sliceLabel]
+      } else {
+        return fnGetSeriesColor(d, i);
+      }
+    };
+  }),
+
   // ----------------------------------------------------------------------------
   // Legend Configuration
   // ----------------------------------------------------------------------------
 
   hasLegend: true,
 
-  legendItems: Ember.computed('allSliceLabels.[]', 'getSeriesColor', 'labelIDMapping.[]', function() {
-    var getSeriesColor = this.get('getSeriesColor');
+  legendItems: Ember.computed('allSliceLabels.[]', 'sliceColors', 'labelIDMapping.[]', function() {
+    var sliceColors = this.get('sliceColors')
     return this.get('allSliceLabels').map((label, i) => {
-      var color = getSeriesColor(label, i);
+      var color = sliceColors[label];
       return {
         label: label,
         fill: color,
@@ -408,7 +436,7 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
   // Styles
   // ----------------------------------------------------------------------------
 
-  groupAttrs: Ember.computed('graphicLeft', 'graphicTop', 'xBetweenBarScale', function() {
+  barAttrs: Ember.computed('graphicLeft', 'graphicTop', 'xBetweenBarScale', function() {
     var xBetweenBarScale = this.get('xBetweenBarScale');
 
     return {
@@ -424,24 +452,23 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
     };
   }),
 
-  stackedBarAttrs: Ember.computed('yScale', 'barWidth', 'labelIDMapping.[]', 'strokeWidth', function() {
+  sliceAttrs: Ember.computed('yScale', 'barWidth', 'labelIDMapping.[]', 'strokeWidth', function() {
     var yScale, zeroDisplacement;
     zeroDisplacement = 1;
     yScale = this.get('yScale');
     return {
-      "class": (barSection) => {
-        var id;
-        id = this.get('labelIDMapping')[barSection.sliceLabel];
+      "class": (slice) => {
+        var id = this.get('labelIDMapping')[slice.sliceLabel];
         return "grouping-" + id;
       },
       'stroke-width': this.get('strokeWidth').toString()+'px',
       width: () => this.get('barWidth'),
       x: null,
-      y: function(barSection) {
-        return yScale(barSection.yMax) + zeroDisplacement;
+      y: function(slice) {
+        return yScale(slice.yMax) + zeroDisplacement;
       },
-      height: function(barSection) {
-        return yScale(barSection.yMin) - yScale(barSection.yMax);
+      height: function(slice) {
+        return yScale(slice.yMin) - yScale(slice.yMax);
       }
     };
   }),
@@ -462,7 +489,7 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
   // Selections
   // ---------------------------------------------------------------------------
 
-  groups: Ember.computed(function() {
+  bars: Ember.computed(function() {
     return this.get('viewport')
                .selectAll('.bars')
                .data(this.get('finishedData'));
@@ -483,15 +510,14 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
   // Label Layout
   // ---------------------------------------------------------------------------
 
-  // Space available for labels that are horizontally displayed. This is either
-  // the unpadded group width or bar width depending on whether data is grouped
+  // Space available for labels that are horizontally displayed.
   maxLabelWidth: Ember.computed.readOnly('barWidth'),
 
   _shouldRotateLabels: false,
 
   setRotateLabels: function() {
     var labels, maxLabelWidth, rotateLabels;
-    labels = this.get('groups').select('.groupLabel text');
+    labels = this.get('bars').select('.groupLabel text');
     maxLabelWidth = this.get('maxLabelWidth');
     rotateLabels = false;
     if (this.get('rotatedLabelLength') > maxLabelWidth) {
@@ -551,30 +577,30 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
   },
 
   updateData: function() {
-    var groups = this.get('groups');
+    var bars = this.get('bars');
     var showDetails = this.get('showDetails');
     var hideDetails = this.get('hideDetails');
 
-    var entering = groups.enter()
+    var entering = bars.enter()
       .append('g').attr('class', 'bars');
     entering.append('g').attr('class', 'groupLabel')
       .append('text')
       .on("mouseover", function(d, i) { return showDetails(d, i, this); })
       .on("mouseout", function(d, i) { return hideDetails(d, i, this); });
-    groups.exit().remove();
+    bars.exit().remove();
 
     var subdata = function(d) { return d.stackedValues; };
 
-    var bars = groups.selectAll('rect').data(subdata);
-    bars.enter().append('rect')
+    var slices = bars.selectAll('rect').data(subdata);
+    slices.enter().append('rect')
       .on("mouseover", function(d, i) { return showDetails(d, i, this); })
       .on("mouseout", function(d, i) { return hideDetails(d, i, this); });
-    return bars.exit().remove();
+    return slices.exit().remove();
   },
 
   updateLayout: function() {
-    var groups = this.get('groups');
-    var labels = groups.select('.groupLabel text')
+    var bars = this.get('bars');
+    var labels = bars.select('.groupLabel text')
       .attr('transform', null) // remove any previous rotation attrs
       .text(function(d) { return d.barLabel; });
 
@@ -646,14 +672,14 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
   },
 
   updateGraphic: function() {
-    var groups = this.get('groups');
-    var barAttrs = this.get('stackedBarAttrs');
+    var bars = this.get('bars');
+    var sliceAttrs = this.get('sliceAttrs');
 
-    groups.attr(this.get('groupAttrs') );
-    groups.selectAll('rect')
-      .attr(barAttrs)
-      .style('fill', this.get('getSeriesColor'));
-    return groups.select('g.groupLabel')
+    bars.attr(this.get('barAttrs'));
+    bars.selectAll('rect')
+      .attr(sliceAttrs)
+      .style('fill', this.get('fnGetSliceColor'));
+    return bars.select('g.groupLabel')
       .attr(this.get('labelAttrs') );
   }
 });
