@@ -142,6 +142,16 @@ test('Stacked bar chart data is sorted correctly', function(assert) {
   });
 });
 
+const checkBarLabelMappingToClass = function(testContext, assert, stackBars) {
+  testContext.subject({data: labelClassMappingTestData});
+  testContext.render();
+  var labelIDMapping = testContext.subject().get('labelIDMapping');
+
+  assert.equal(testContext.$().find(".grouping-" + labelIDMapping[label1]).length, 1, 'label1 has one section');
+  assert.equal(testContext.$().find(".grouping-" + labelIDMapping[label2]).length, 2, 'label2 has two sections');
+  assert.equal(testContext.$().find(".grouping-" + labelIDMapping[label3]).length, 2, 'label3 has two sections');
+};
+
 // https://github.com/Addepar/ember-charts/issues/172
 //
 // The root cause of problem 2 was that when some data groups have fewer data than others,
@@ -152,24 +162,12 @@ test('Stacked bar chart data is sorted correctly', function(assert) {
 test('Bug 172 Problem 2: Bars get style classes corresponding to their bar label, ' +
      'regardless of what bar group they belong to',
 function(assert) {
-  this.subject({data: labelClassMappingTestData});
-  this.render();
-  var labelIDMapping = this.subject().get('labelIDMapping');
-
-  assert.equal(this.$().find(".grouping-" + labelIDMapping[label1]).length, 1, 'label1 has one section');
-  assert.equal(this.$().find(".grouping-" + labelIDMapping[label2]).length, 2, 'label2 has two sections');
-  assert.equal(this.$().find(".grouping-" + labelIDMapping[label3]).length, 2, 'label3 has two sections');
+  checkBarLabelMappingToClass(this, assert, false);
 });
 
 test('Slices in stacked bars get style classes corresponding to their slice label',
 function(assert) {
-  this.subject({stackBars: true, data: labelClassMappingTestData});
-  this.append();
-  var labelIDMapping = this.subject().get('labelIDMapping');
-
-  assert.equal(this.$().find(".grouping-" + labelIDMapping[label1]).length, 1, 'label1 has one section');
-  assert.equal(this.$().find(".grouping-" + labelIDMapping[label2]).length, 2, 'label2 has two sections');
-  assert.equal(this.$().find(".grouping-" + labelIDMapping[label3]).length, 2, 'label3 has two sections');
+  checkBarLabelMappingToClass(this, assert, true);
 });
 
 // https://github.com/Addepar/ember-charts/issues/172

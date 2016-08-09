@@ -408,15 +408,13 @@ const VerticalBarChartComponent = ChartComponent.extend(LegendMixin,
     return result;
   }),
 
-  fnGetBarColor: Ember.computed('barColors', 'getSeriesColor', function() {
+  fnGetBarColor: Ember.computed('barColors', function() {
     var barColors = this.get('barColors');
-    var fnGetSeriesColor = this.get('getSeriesColor');
-
-    return function(d, i) {
-      if (d.label && barColors[d.label]) {
+    return function(d) {
+      if (!Ember.isNone(d.label)) {
         return barColors[d.label];
       } else {
-        return fnGetSeriesColor(d, i);
+        return barColors[d];
       }
     };
   }),
