@@ -1,5 +1,29 @@
 # Ember Charts Changelog
 
+### Ember Charts 0.6.0 _(August 09, 2016)_
+  A major update with a ton of goodies!
+  * Minor ticks for Time Series charts have been fixed!
+  * Label rotation is now available for greater label density
+  * Custom interval specific filters can be added to your time series labeling
+    implementation
+  * Label filtering has been improved:
+    * Now removes based on modulus to maintain consistent and coherent
+      label spacing
+    * Dynamic Labels option has been optimized with many of the iterators and
+      loops replaced with MATH and computed properties
+    * Dynamic labeling used to pick an interval that was more specific than the
+      one that fits the graph
+  * Bugfixes
+    * Incorrect wording in the documentation was fixed
+    * Fixed color on scatter chart legend
+    * Pie Chart Decimal Point Formatting
+    * Fixes to detectLabelOverlap
+    * Pie Chart Label Intersect Improvement
+    * Mismatched Node type would throw exceptions
+    * Vertical Bar Charts incorrect bar color
+    * Wrong bars were being highlighted on legend mouse hover
+
+
 ### Ember Charts 0.5.1 _(November 03, 2015)_
   Minor update
   * Allow setting tick spacing for X and Y axes separately instead of one common

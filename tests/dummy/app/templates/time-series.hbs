@@ -22,6 +22,8 @@
         yValueDisplayName=yValueDisplayName
         xTitleHorizontalOffset=xTitleHorizontalOffset
         yTitleVerticalOffset=yTitleVerticalOffset
+        maxNumberOfMinorTicks=maxNumberOfMinorTicks
+        xAxisVertLabels=xAxisVertLabels
       }}
     </div>
   </div>
@@ -114,6 +116,20 @@
             <div class="col-lg-8">
               {{scrubber-component min="2" max="30" step="1" value=maxNumberOfLabels}}
               <span class="help-block">Maximum Number of Labels: {{maxNumberOfLabels}}</span>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="col-lg-4 control-label">Number of Allowable Minor Ticks</label>
+            <div class="col-lg-8">
+              {{scrubber-component min="0" max="5" step="1" value=maxNumberOfMinorTicks}}
+              <span class="help-block">Maximum Number of Minor Ticks: {{maxNumberOfMinorTicks}}</span>
+            </div>
+          </div>
+          <div class="form-group">
+            <div class="col-lg-offset-4 col-lg-8">
+              <div class="checkbox">
+                <label>{{input type="checkbox" checked=xAxisVertLabels}} Rotate Axis Labels</label>
+              </div>
             </div>
           </div>
         {{/if}}

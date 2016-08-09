@@ -319,3 +319,43 @@ test('Tick Spacing', function(assert) {
   assert.equal(component.get('_innerTickSpacingX'), 0,
     'tickSpacingX should stay the same when tickSpacingY is changed');
 });
+
+test('Date Difference', function(assert) {
+  // We are going to make sure the Delta between two dates matches what we expect
+  assert.expect(7);
+  var startDate = new Date('2014-01-01'),
+    endDate = new Date('2016-01-01'),
+    component = this.subject(),
+    testingParams = [
+      {interval: 'seconds', expected: 63072000},
+      {interval: 'hours', expected: 17520},
+      {interval: 'days', expected: 730},
+      {interval: 'weeks', expected: 104},
+      {interval: 'months', expected: 24},
+      {interval: 'quarters', expected: 8},
+      {interval: 'years', expected: 2}
+    ];
+
+  for (var i in testingParams) {
+    assert.equal(component.numTimeBetween(testingParams[i].interval, startDate.getTime(), endDate.getTime()),
+      testingParams[i].expected,
+      'Expected value found for the numTimeBetween function: ' + testingParams[i].interval);
+  }
+});
+
+test('Quarterly Filter', function(assert) {
+  // We want to make sure the Quarter filter is working as expected.
+  assert.expect(9);
+  var startDate = new Date('2014-01-01'),
+    endDate = new Date('2016-01-01'),
+    component = this.subject(),
+    candidateMonths = d3.time.months(startDate.getTime(), endDate.getTime()),
+    filteredMonths;
+
+  filteredMonths = component.filterLabelsForQuarters(candidateMonths);
+  assert.equal(filteredMonths.length, 8, 'The filtered results contains the correct number of labels');
+  for (var i in filteredMonths) {
+    assert.equal(filteredMonths[i].getMonth() % 3,
+      0, 'The filtered month is the start of a quarter');
+  }
+});
