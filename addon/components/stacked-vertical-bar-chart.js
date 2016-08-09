@@ -65,24 +65,15 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
   // Data
   // ----------------------------------------------------------------------------
 
-  // Remove any slices with that have zero-value. This allows the colors to be
-  // calculated correctly for the remaining visible slices.
-  filteredData: Ember.computed('data.[]', function() {
-    return this.get('data');
-    // return _.filter(this.get('data'), function(slice) {
-    //   return (slice.value !== 0.0);
-    // });
-  }),
-
-  dataGroupedByBar: Ember.computed('ungroupedSeriesName', 'filteredData.[]', function() {
+  dataGroupedByBar: Ember.computed('ungroupedSeriesName', 'data.[]', function() {
     var ungroupedSeriesName = this.get('ungroupedSeriesName');
-    return _.groupBy(this.get('filteredData'), (slice) => {
+    return _.groupBy(this.get('data'), (slice) => {
       return slice.barLabel || ungroupedSeriesName;
     });
   }),
 
-  dataGroupedBySlice: Ember.computed('filteredData.[]', function() {
-    return _.groupBy(this.get('filteredData'), 'sliceLabel');
+  dataGroupedBySlice: Ember.computed('data.[]', function() {
+    return _.groupBy(this.get('data'), 'sliceLabel');
   }),
 
   // Maps the label for each bar to the total value of each bar
@@ -280,15 +271,15 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
       .nice(this.get('numYTicks'));
   }),
 
-  allSliceLabels: Ember.computed('finishedData.[]', function() {
+  allSliceLabels: Ember.computed('otherSliceTypes.[]', 'nonOtherSliceTypes.[]', 'otherSliceLabel', function() {
     var result, otherSliceTypes, nonOtherSliceTypes;
     otherSliceTypes = this.get('otherSliceTypes');
     nonOtherSliceTypes = this.get('nonOtherSliceTypes');
     result = _.clone(nonOtherSliceTypes);
     if (otherSliceTypes.length < 2) {
-      result.concat(otherSliceTypes)
+      result.concat(otherSliceTypes);
     } else {
-      result.push(this.get('otherSliceLabel'))
+      result.push(this.get('otherSliceLabel'));
     }
     return result;
   }),
