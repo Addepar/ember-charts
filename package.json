@@ -1,6 +1,6 @@
 {
   "name": "ember-charts",
-  "version": "0.6.0",
+  "version": "1.1.0",
   "description": "A powerful and easy to use charting library for Ember.js.",
   "directories": {
     "doc": "doc",
