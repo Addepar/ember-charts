@@ -143,7 +143,7 @@ test('Stacked bar chart data is sorted correctly', function(assert) {
 });
 
 const checkBarLabelMappingToClass = function(testContext, assert, stackBars) {
-  testContext.subject({data: labelClassMappingTestData});
+  testContext.subject({stackBars: stackBars, data: labelClassMappingTestData});
   testContext.render();
   var labelIDMapping = testContext.subject().get('labelIDMapping');
 
