@@ -105,7 +105,7 @@ export default Ember.Mixin.create({
   // D3 No longer handles "minor ticks" for the user, but has instead reverted
   // to a strategy of allowing the user to handle rendered ticks as they see
   // fit.
-  // maxNumberOfMinorTicks sets a treshold that is useful when determining our
+  // maxNumberOfMinorTicks sets a threshold that is useful when determining our
   // interval. This represents the number of ticks that could be drawn between
   // major ticks. For instance, we may 'allow' 2 minor ticks, but only need
   // to render a single minor tick between labels.
