@@ -2731,7 +2731,7 @@ define('ember-charts/components/time-series-chart', ['exports', 'module', 'ember
     // out if the feature is toggled
     _straightenXAxisLabels: function _straightenXAxisLabels() {
       var gXAxis = this.get('xAxis');
-      // most of these values are static and come from varrious places, including
+      // most of these values are static and come from various places, including
       // the bowels of D3
       gXAxis.selectAll('text').attr("y", 9).attr("x", 0).attr("dy", "0.71em").attr("transform", null).style("text-anchor", "middle");
     },
@@ -5889,7 +5889,7 @@ define('ember-charts/mixins/time-series-labeler', ['exports', 'module', 'ember']
     // D3 No longer handles "minor ticks" for the user, but has instead reverted
     // to a strategy of allowing the user to handle rendered ticks as they see
     // fit.
-    // maxNumberOfMinorTicks sets a treshold that is useful when determining our
+    // maxNumberOfMinorTicks sets a threshold that is useful when determining our
     // interval. This represents the number of ticks that could be drawn between
     // major ticks. For instance, we may 'allow' 2 minor ticks, but only need
     // to render a single minor tick between labels.

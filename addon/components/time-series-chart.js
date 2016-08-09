@@ -232,7 +232,7 @@ const TimeSeriesChartComponent = ChartComponent.extend(LegendMixin,
   // out if the feature is toggled
   _straightenXAxisLabels: function() {
     var gXAxis = this.get('xAxis');
-    // most of these values are static and come from varrious places, including
+    // most of these values are static and come from various places, including
     // the bowels of D3
     gXAxis.selectAll('text')
       .attr("y", 9)
