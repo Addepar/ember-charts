@@ -310,11 +310,13 @@ const ScatterChartComponent = ChartComponent.extend(LegendMixin, FloatingTooltip
       d3.select(element).classed('hovered', true);
       var formatXValue = this.get('formatXValue');
       var formatYValue = this.get('formatYValue');
-      var content = "<span class=\"tip-label\">" + data.group + "</span>";
-      content += "<span class=\"name\">" + (this.get('xValueDisplayName')) + ": </span>";
-      content += "<span class=\"value\">" + (formatXValue(data.xValue)) + "</span><br/>";
-      content += "<span class=\"name\">" + (this.get('yValueDisplayName')) + ": </span>";
-      content += "<span class=\"value\">" + (formatYValue(data.yValue)) + "</span>";
+      var xValueDisplayName = $("<br /><span class=\"name\" />").text(this.get('xValueDisplayName') + ": ");
+      var yValueDisplayName = $("<span class=\"name\" />").text(this.get('yValueDisplayName') + ": ");
+      var content = $("<span class=\"tip-label\" />").text(data.group)
+      .append(xValueDisplayName)
+      .append("<span class=\"value\">" + (formatXValue(data.xValue)) + "</span><br/>")
+      .append(yValueDisplayName)
+      .append("<span class=\"value\">" + (formatYValue(data.yValue)) + "</span>");
 
       return this.showTooltip(content, d3.event);
     };
