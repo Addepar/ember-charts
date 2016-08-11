@@ -1,5 +1,5 @@
 /*!
-* ember-charts v1.0.0
+* ember-charts v1.1.1
 * Copyright 2012-2016 Addepar Inc.
 * See LICENSE.md
 */
@@ -3800,9 +3800,52 @@ define('ember-charts/components/vertical-bar-chart', ['exports', 'module', 'embe
 
     // ----------------------------------------------------------------------------
     // Color Configuration
+    //
+    // We cannot pass the mixed-in method this.getSeriesColor() directly to d3
+    // as the callback to use to color the bars.
+    // This is because for bar groups that do not have a meaningful
+    // non-zero value for an individual bar, the client is free to not pass
+    // a data point for that pair of (group, label) at all.
+    //
+    // In that case, when we use d3 to render bar groups with omitted bars,
+    // using this.getSeriesColor() would tell d3 to use a color palette
+    // with _more_ colors than bars in the bar group (since the number of colors
+    // in the palette is this.numColorSeries).
+    // Hence some bars would likely get a color that doesn't match the color
+    // used for bars with the same label in other bar groups.
+    //
+    // So instead, we provide our own callback this.fnGetBarColor()
+    // that looks at the bar label first and tries to look up the color
+    // based on that. If that fails, then fnGetBarColor() defers to getSeriesColor().
+    //
+    // Note that we still use getSeriesColors() to initialize the mapping
+    // from bar label to bar color, so it would be confusing if we tried to
+    // override the property altogether.
+    //
+    // See bug #172 : https://github.com/Addepar/ember-charts/issues/172
     // ----------------------------------------------------------------------------
 
     numColorSeries: _Ember['default'].computed.alias('individualBarLabels.length'),
+
+    barColors: _Ember['default'].computed('individualBarLabels.[]', 'getSeriesColor', function () {
+      var fnGetSeriesColor = this.get('getSeriesColor');
+      var result = {};
+      this.get('individualBarLabels').forEach(function (label, iLabel) {
+        result[label] = fnGetSeriesColor(label, iLabel);
+      });
+      return result;
+    }),
+
+    fnGetBarColor: _Ember['default'].computed('barColors', function () {
+      var barColors = this.get('barColors');
+      return function (d) {
+        if (!_Ember['default'].isNone(d.label)) {
+          return barColors[d.label];
+        } else {
+          return barColors[d];
+        }
+      };
+    }),
 
     // ----------------------------------------------------------------------------
     // Legend Configuration
@@ -3812,14 +3855,12 @@ define('ember-charts/components/vertical-bar-chart', ['exports', 'module', 'embe
       return this.get('stackBars') || this.get('isGrouped') && this.get('legendItems.length') > 1 && this.get('showLegend');
     }),
 
-    legendItems: _Ember['default'].computed('individualBarLabels.[]', 'getSeriesColor', 'stackBars', 'labelIDMapping.[]', function () {
+    legendItems: _Ember['default'].computed('individualBarLabels.[]', 'barColors', 'stackBars', 'labelIDMapping.[]', function () {
       var _this2 = this;
 
-      var getSeriesColor;
-      getSeriesColor = this.get('getSeriesColor');
+      var barColors = this.get('barColors');
       return this.get('individualBarLabels').map(function (label, i) {
-        var color;
-        color = getSeriesColor(label, i);
+        var color = barColors[label];
         if (_this2.get('stackBars')) {
           i = _this2.get('labelIDMapping')[label];
         }
@@ -3913,21 +3954,27 @@ define('ember-charts/components/vertical-bar-chart', ['exports', 'module', 'embe
       };
     }),
 
-    stackedBarAttrs: _Ember['default'].computed('yScale', 'groupWidth', 'labelIDMapping.[]', function () {
+    commonBarAttrs: _Ember['default'].computed('labelIDMapping.[]', function () {
       var _this6 = this;
 
-      var yScale, zeroDisplacement;
-      zeroDisplacement = 1;
-      yScale = this.get('yScale');
       return {
-        "class": function _class(barSection) {
-          var id;
-          id = _this6.get('labelIDMapping')[barSection.label];
+        'class': function _class(d) {
+          var id = _this6.get('labelIDMapping')[d.label];
           return "grouping-" + id;
-        },
+        }
+      };
+    }),
+
+    stackedBarAttrs: _Ember['default'].computed('commonBarAttrs', 'yScale', 'groupWidth', function () {
+      var _this7 = this;
+
+      var zeroDisplacement = 1;
+      var yScale = this.get('yScale');
+
+      return _.assign({
         'stroke-width': 0,
         width: function width() {
-          return _this6.get('groupWidth');
+          return _this7.get('groupWidth');
         },
         x: null,
         y: function y(barSection) {
@@ -3936,25 +3983,22 @@ define('ember-charts/components/vertical-bar-chart', ['exports', 'module', 'embe
         height: function height(barSection) {
           return yScale(barSection.y0) - yScale(barSection.y1);
         }
-      };
+      }, this.get('commonBarAttrs'));
     }),
 
-    groupedBarAttrs: _Ember['default'].computed('yScale', 'getSeriesColor', 'barWidth', 'xWithinGroupScale', function () {
-      var _this7 = this;
+    groupedBarAttrs: _Ember['default'].computed('commonBarAttrs', 'yScale', 'barWidth', 'xWithinGroupScale', function () {
+      var _this8 = this;
 
       var zeroDisplacement = 1;
       var yScale = this.get('yScale');
 
-      return {
-        'class': function _class(d, i) {
-          return "grouping-" + i;
-        },
+      return _.assign({
         'stroke-width': 0,
         width: function width() {
-          return _this7.get('barWidth');
+          return _this8.get('barWidth');
         },
         x: function x(d) {
-          return _this7.get('xWithinGroupScale')(d.label);
+          return _this8.get('xWithinGroupScale')(d.label);
         },
         height: function height(d) {
           return Math.max(0, Math.abs(yScale(d.value) - yScale(0)) - zeroDisplacement);
@@ -3966,22 +4010,22 @@ define('ember-charts/components/vertical-bar-chart', ['exports', 'module', 'embe
             return yScale(0) + zeroDisplacement;
           }
         }
-      };
+      }, this.get('commonBarAttrs'));
     }),
 
     labelAttrs: _Ember['default'].computed('barWidth', 'isGrouped', 'stackBars', 'groupWidth', 'xWithinGroupScale', 'graphicTop', 'graphicHeight', 'labelPadding', function () {
-      var _this8 = this;
+      var _this9 = this;
 
       return {
         'stroke-width': 0,
         transform: function transform(d) {
-          var dx = _this8.get('barWidth') / 2;
-          if (_this8.get('isGrouped') || _this8.get('stackBars')) {
-            dx += _this8.get('groupWidth') / 2 - _this8.get('barWidth') / 2;
+          var dx = _this9.get('barWidth') / 2;
+          if (_this9.get('isGrouped') || _this9.get('stackBars')) {
+            dx += _this9.get('groupWidth') / 2 - _this9.get('barWidth') / 2;
           } else {
-            dx += _this8.get('xWithinGroupScale')(d.group);
+            dx += _this9.get('xWithinGroupScale')(d.group);
           }
-          var dy = _this8.get('graphicTop') + _this8.get('graphicHeight') + _this8.get('labelPadding');
+          var dy = _this9.get('graphicTop') + _this9.get('graphicHeight') + _this9.get('labelPadding');
           return "translate(" + dx + ", " + dy + ")";
         }
       };
@@ -4102,7 +4146,7 @@ define('ember-charts/components/vertical-bar-chart', ['exports', 'module', 'embe
     },
 
     updateLayout: function updateLayout() {
-      var _this9 = this;
+      var _this10 = this;
 
       var groups = this.get('groups');
       var labels = groups.select('.groupLabel text').attr('transform', null) // remove any previous rotation attrs
@@ -4120,7 +4164,7 @@ define('ember-charts/components/vertical-bar-chart', ['exports', 'module', 'embe
         var rotateLabelDegrees = this.get('rotateLabelDegrees');
         labelTrimmer = _LabelTrimmer['default'].create({
           getLabelSize: function getLabelSize() {
-            return _this9.get('rotatedLabelLength');
+            return _this10.get('rotatedLabelLength');
           },
           getLabelText: function getLabelText(d) {
             return d.group;
@@ -4180,7 +4224,7 @@ define('ember-charts/components/vertical-bar-chart', ['exports', 'module', 'embe
       var barAttrs = this.get('stackBars') ? this.get('stackedBarAttrs') : this.get('groupedBarAttrs');
 
       groups.attr(this.get('groupAttrs'));
-      groups.selectAll('rect').attr(barAttrs).style('fill', this.get('getSeriesColor'));
+      groups.selectAll('rect').attr(barAttrs).style('fill', this.get('fnGetBarColor'));
       return groups.select('g.groupLabel').attr(this.get('labelAttrs'));
     }
   });
@@ -6141,7 +6185,8 @@ define('ember-charts/templates/components/chart-component', ['exports', 'module'
 
   var _Ember = _interopRequireDefault(_ember);
 
-  module.exports = _Ember['default'].Handlebars.template(function anonymous(Handlebars, depth0, helpers, partials, data) {
+  module.exports = _Ember['default'].Handlebars.template(function anonymous(Handlebars, depth0, helpers, partials, data
+  /**/) {
     this.compilerInfo = [4, '>= 1.0.0'];
     helpers = this.merge(helpers, _Ember['default'].Handlebars.helpers);data = data || {};
     var buffer = '',
