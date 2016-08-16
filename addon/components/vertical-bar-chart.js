@@ -462,12 +462,15 @@ const VerticalBarChartComponent = ChartComponent.extend(LegendMixin,
       d3.select(element).classed('hovered', true);
 
       // Show tooltip
-      var content =  (data.group) ? "<span class=\"tip-label\">" + data.group + "</span>" : '';
+      var tipLabel = (data.group) ? $("<span class=\"tip-label\" />").text(data.group): '';
+      var content =  $("<span />").append(tipLabel);
 
       var formatLabel = this.get('formatLabelFunction');
       var addValueLine = function(d) {
-        content += "<span class=\"name\">" + d.label + ": </span>";
-        return content += "<span class=\"value\">" + formatLabel(d.value) + "</span><br/>";
+        var label = $("<span class=\"name\" />").text(d.label + ": ");
+        content.append(label);
+        var value = $("<span class=\"value\">").text(formatLabel(d.value));
+        return content.append(value);
       };
 
       if (isGroup) {
@@ -477,7 +480,7 @@ const VerticalBarChartComponent = ChartComponent.extend(LegendMixin,
         // Just hovering over single bar
         addValueLine(data);
       }
-      return this.showTooltip(content, d3.event);
+      return this.showTooltip(content.html(), d3.event);
     };
   }),
 

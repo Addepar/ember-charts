@@ -1,5 +1,5 @@
 /*!
-* ember-charts v1.1.1
+* ember-charts v1.1.2
 * Copyright 2012-2016 Addepar Inc.
 * See LICENSE.md
 */
@@ -254,12 +254,11 @@ define('ember-charts/components/bubble-chart', ['exports', 'module', 'ember', '.
 
         // Show tooltip
         var formatLabel = this.get('formatLabel');
-        // Line 1
-        var content = "<span class=\"tip-label\">" + data.label + "</span>";
-        // Line 2
-        content += "<span class=\"name\">" + this.get('tooltipValueDisplayName') + ": </span>";
-        content += "<span class=\"value\">" + formatLabel(data.value) + "</span>";
-        return this.showTooltip(content, d3.event);
+        var content = $('<span>');
+        content.append($('<span class="tip-label">').text(data.label));
+        content.append($('<span class="name">').text(this.get('tooltipValueDisplayName') + ': '));
+        content.append($('<span class="value">').text(formatLabel(data.value)));
+        return this.showTooltip(content.html(), d3.event);
       };
     }),
 
@@ -884,12 +883,11 @@ define('ember-charts/components/horizontal-bar-chart', ['exports', 'module', 'em
 
         // Show tooltip
         var formatLabel = _this.get('formatLabelFunction');
-        // Line 1
-        var content = '<span class=\'tip-label\'>' + data.label + '</span>';
-        // Line 2
-        content += '<span class=\'name\'>' + _this.get('tooltipValueDisplayName') + ': </span>';
-        content += '<span class=\'value\'>' + formatLabel(data.value) + '</span>';
-        return _this.showTooltip(content, d3.event);
+        var content = $('<span>');
+        content.append($('<span class="tip-label">').text(data.label));
+        content.append($('<span class="name">').text(_this.get('tooltipValueDisplayName') + ': '));
+        content.append($('<span class="value">').text(formatLabel(data.value)));
+        return _this.showTooltip(content.html(), d3.event);
       };
     }),
 
@@ -1725,10 +1723,12 @@ define('ember-charts/components/pie-chart', ['exports', 'module', 'ember', './ch
           value = data.value;
         }
         formatLabelFunction = _this3.get('formatLabelFunction');
-        content = "<span class=\"tip-label\">" + data.label + "</span>";
-        content += "<span class=\"name\">" + _this3.get('tooltipValueDisplayName') + ": </span>";
-        content += "<span class=\"value\">" + formatLabelFunction(value) + "</span>";
-        return _this3.showTooltip(content, d3.event);
+
+        content = $('<span>');
+        content.append($('<span class="tip-label">').text(data.label));
+        content.append($('<span class="name">').text(_this3.get('tooltipValueDisplayName') + ': '));
+        content.append($('<span class="value">').text(formatLabelFunction(value)));
+        return _this3.showTooltip(content.html(), d3.event);
       };
     }),
 
@@ -3041,12 +3041,16 @@ define('ember-charts/components/time-series-chart', ['exports', 'module', 'ember
         d3.select(element).classed('hovered', true);
 
         var time = data.labelTime != null ? data.labelTime : data.time;
-        var content = "<span class=\"tip-label\">" + _this4.get('formatTime')(time) + "</span>";
+        var content = $('<span>');
+        content.append($("<span class=\"tip-label\">").text(_this4.get('formatTime')(time)));
+        _this4.showTooltip(content.html(), d3.event);
+
         var formatLabelFunction = _this4.get('formatLabelFunction');
 
         var addValueLine = function addValueLine(d) {
-          content += "<span class=\"name\">" + d.group + ": </span>";
-          return content += "<span class=\"value\">" + formatLabelFunction(d.value) + "</span><br/>";
+          var name = $("<span class=\"name\" />").text(d.group + ": ");
+          content.append(name);
+          return content.append("<span class=\"value\">" + formatLabelFunction(d.value) + "</span><br/>");
         };
 
         if (_Ember['default'].isArray(data.values)) {
@@ -3055,7 +3059,7 @@ define('ember-charts/components/time-series-chart', ['exports', 'module', 'ember
           addValueLine(data);
         }
 
-        return _this4.showTooltip(content, d3.event);
+        return _this4.showTooltip(content.html(), d3.event);
       };
     }),
 
@@ -3896,12 +3900,15 @@ define('ember-charts/components/vertical-bar-chart', ['exports', 'module', 'embe
         d3.select(element).classed('hovered', true);
 
         // Show tooltip
-        var content = data.group ? "<span class=\"tip-label\">" + data.group + "</span>" : '';
+        var tipLabel = data.group ? $("<span class=\"tip-label\" />").text(data.group) : '';
+        var content = $("<span />").append(tipLabel);
 
         var formatLabel = _this3.get('formatLabelFunction');
         var addValueLine = function addValueLine(d) {
-          content += "<span class=\"name\">" + d.label + ": </span>";
-          return content += "<span class=\"value\">" + formatLabel(d.value) + "</span><br/>";
+          var label = $("<span class=\"name\" />").text(d.label + ": ");
+          content.append(label);
+          var value = $("<span class=\"value\">").text(formatLabel(d.value));
+          return content.append(value);
         };
 
         if (isGroup) {
@@ -3911,7 +3918,7 @@ define('ember-charts/components/vertical-bar-chart', ['exports', 'module', 'embe
           // Just hovering over single bar
           addValueLine(data);
         }
-        return _this3.showTooltip(content, d3.event);
+        return _this3.showTooltip(content.html(), d3.event);
       };
     }),
 
@@ -5334,16 +5341,17 @@ define('ember-charts/mixins/legend', ['exports', 'module', 'ember', '../utils/la
         if (data.selector) {
           _this.get('viewport').selectAll(data.selector).classed('hovered', true);
         }
-        var content = "<span class=\"tip-label\">" + data.label + "</span>";
+        var content = $("<span />");
+        content.append("<span class=\"tip-label\">").text(data.label);
         if (data.xValue != null) {
           var formatXValue = _this.get('formatXValue');
           var formatYValue = _this.get('formatYValue');
-          content += "<span class=\"name\">" + _this.get('tooltipXValueDisplayName') + ": </span>";
-          content += "<span class=\"value\">" + formatXValue(data.xValue) + "</span><br/>";
-          content += "<span class=\"name\">" + _this.get('tooltipYValueDisplayName') + ": </span>";
-          content += "<span class=\"value\">" + formatYValue(data.yValue) + "</span>";
+          content.append("<span class=\"name\">").text(_this.get('tooltipXValueDisplayName'));
+          content.append("<span class=\"value\">" + formatXValue(data.xValue) + "</span><br/>");
+          content.append("<span class=\"name\">").text(_this.get('tooltipYValueDisplayName'));
+          content.append("<span class=\"value\">" + formatYValue(data.yValue) + "</span><br/>");
         }
-        return _this.showTooltip(content, d3.event);
+        return _this.showTooltip(content.html(), d3.event);
       };
     }),
 
