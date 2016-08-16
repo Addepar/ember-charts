@@ -15,7 +15,7 @@ const StackedVerticalBarController = VerticalBarController.extend({
     return Ember.A(_.keys(this.get('barSortingOptions')));
   }),
 
-  selectedBarSorting: 'ascending',
+  selectedBarSorting: 'descending',
 
   barSortingOrder: Ember.computed('selectedBarSorting', 'barSortingOptions', function() {
     return this.get('barSortingOptions')[this.get('selectedBarSorting')];

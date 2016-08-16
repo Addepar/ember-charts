@@ -111,7 +111,6 @@ const VerticalBarChartComponent = ChartComponent.extend(LegendMixin,
       // in `individualBarLabels`
     	return [];
    	}
-
     data = groupBy(data, (d) => {
       return d.group || this.get('ungroupedSeriesName');
     });

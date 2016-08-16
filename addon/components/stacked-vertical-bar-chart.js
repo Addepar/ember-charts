@@ -25,7 +25,7 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
   classNames: ['chart-vertical-bar', 'chart-stacked-vertical-bar'],
 
   // ----------------------------------------------------------------------------
-  // Vertical Bar Chart Options
+  // Stacked Vertical Bar Chart Options
   // ----------------------------------------------------------------------------
 
   // The smallest slices will be combined into an "Other" slice until no slice
@@ -114,7 +114,7 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
 
     // Filter out any slice labels that do not meet the minSlicePercent req.
     nonOtherSlices = _.filter(largestSliceData, (sliceData) => {
-      return sliceData.percentOfBar > minSlicePercent;
+      return sliceData.percentOfBar >= minSlicePercent;
     });
 
     // Sort by slice value and take the biggest (N - 1) slices, where N is the
@@ -146,14 +146,12 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
       newBarData = [];
       otherSlice = { barLabel: barLabel,
                      sliceLabel: otherSliceLabel,
-                     value: 0,
-                     _otherSliceTypes: [] };
+                     value: 0 };
       barData.forEach((slice) => {
         if (nonOtherSliceTypes.indexOf(slice.sliceLabel) !== -1) {
           newBarData.push(slice);
         } else {
           otherSlice.value += slice.value;
-          otherSlice._otherSliceTypes.push(slice.sliceLabel);
         }
       });
       if (otherSlice.value !== 0) {
@@ -214,7 +212,6 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
     });
   }),
 
-
   // ----------------------------------------------------------------------------
   // Slice and Bar Sorting
   // ----------------------------------------------------------------------------
@@ -273,7 +270,7 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
   },
 
   // Can either be 'asc', 'desc', or 'custom'
-  barSortingOrder: 'asc',
+  barSortingOrder: 'desc',
 
   barSortingFn: function(barData) { return barData.barLabel; },
 
