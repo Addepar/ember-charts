@@ -18,6 +18,7 @@
         xTitleHorizontalOffset=xTitleHorizontalOffset
         yTitleVerticalOffset=yTitleVerticalOffset
         strokeWidth=strokeWidth
+        barSortingOrder=barSortingOrder
       }}
     </div>
   </div>
@@ -43,6 +44,16 @@
             {{view "select"
               content=seedColorNames
               value=selectedSeedColorName
+              class="form-control"
+            }}
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="col-lg-4 control-label" data-test="bar-sorting">Bar Sorting</label>
+          <div class="col-lg-8">
+            {{view "select"
+              content=barSorting
+              value=selectedBarSorting
               class="form-control"
             }}
           </div>

@@ -76,30 +76,29 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
     return _.groupBy(this.get('data'), 'sliceLabel');
   }),
 
-  // Maps the label for each bar to the total value of each bar
+  // Maps the label for each bar to the total (gross) value of each bar
   barValues: Ember.computed('dataGroupedByBar', function() {
     var dataGroupedByBar = this.get('dataGroupedByBar');
-    return _.reduce(dataGroupedByBar, (result, barData, barLabel) => {
-      result[barLabel] = barData.reduce((sum, slice) => {
+    return _.map(dataGroupedByBar, (barData, barLabel) => {
+      var barValue = barData.reduce((sum, slice) => {
         return sum + Math.abs(slice.value);
       }, 0);
-      return result;
-    }, {});
+      return { barLabel: barLabel, value: barValue };
+    })
   }),
 
-  largestSliceData: Ember.computed('dataGroupedByBar', 'barvalues', function() {
-    var dataGroupedBySlice, barValues, largestSlice, largestSliceBarValue;
+  largestSliceData: Ember.computed('dataGroupedByBar', 'barValues', function() {
+    var dataGroupedBySlice, largestSlice, largestBarValue;
     dataGroupedBySlice = this.get('dataGroupedBySlice');
-    barValues = this.get('barValues');
+    largestBarValue = _.max(_.pluck(this.get('barValues'), 'value'));
     return _.map(dataGroupedBySlice, (sliceTypeData, sliceLabel) => {
       largestSlice = _.max(sliceTypeData, (slice) => {
         return Math.abs(slice.value);
       });
-      largestSliceBarValue = barValues[largestSlice.barLabel];
       return {
         sliceLabel: sliceLabel,
         largestSliceValue: largestSlice.value,
-        percentOfBar: Math.abs((largestSlice.value / largestSliceBarValue) * 100)
+        percentOfBar: Math.abs((largestSlice.value / largestBarValue) * 100)
       };
     });
   }),
@@ -107,14 +106,29 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
   // The sliceLabels that will be explicitly shown in the chart and not
   // aggregated into the 'Other' slice.
   nonOtherSliceTypes: Ember.computed('minSlicePercent', 'maxNumberOfSlices', 'largestSliceData.[]', function() {
-    var minSlicePercent, largestSliceData, maxNumberOfSlices, nonOtherSliceData;
+    var minSlicePercent, maxNumberOfSlices, largestSliceData, nonOtherSlices,
+      numOtherSlices;
     minSlicePercent = this.get('minSlicePercent');
-    largestSliceData = this.get('largestSliceData');
     maxNumberOfSlices = this.get('maxNumberOfSlices');
-    nonOtherSliceData = _.take(_.filter(largestSliceData, (sliceData) => {
+    largestSliceData = this.get('largestSliceData');
+
+    // Filter out any slice labels that do not meet the minSlicePercent req.
+    nonOtherSlices = _.filter(largestSliceData, (sliceData) => {
       return sliceData.percentOfBar > minSlicePercent;
-    }).reverse(), (maxNumberOfSlices - 1));
-    return _.map(nonOtherSliceData, 'sliceLabel');
+    });
+
+    // Sort by slice value and take the biggest (N - 1) slices, where N is the
+    // max number we can display. This saves one slice for Other.
+    nonOtherSlices = _.takeRight(_.sortBy(nonOtherSlices, 'largestSliceValue'), maxNumberOfSlices - 1);
+
+    // If only one slice will exist in 'Other', we can just display it instead
+    // of 'Other'. Otherwise, just return the filtered labels.
+    numOtherSlices = largestSliceData.length - nonOtherSlices.length;
+    if (numOtherSlices <= 1) {
+      return _.pluck(largestSliceData, 'sliceLabel');
+    } else {
+      return _.pluck(nonOtherSlices, 'sliceLabel');
+    }
   }),
 
   otherSliceTypes: Ember.computed('largestSliceData.[]', 'nonOtherSliceTypes.[]', function() {
@@ -122,11 +136,10 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
     return _.difference(allSliceTypes, this.get('nonOtherSliceTypes'));
   }),
 
-  dataGroupedByBarWithOther: Ember.computed('dataGroupedByBar', 'otherSliceLabel', 'nonOtherSliceTypes.[]', 'otherSliceTypes.length', function() {
-    var groupedData, nonOtherSliceTypes, otherSliceLabel, numOtherSliceTypes;
+  dataGroupedByBarWithOther: Ember.computed('dataGroupedByBar', 'otherSliceLabel', 'nonOtherSliceTypes.[]', function() {
+    var groupedData, nonOtherSliceTypes, otherSliceLabel;
     groupedData = this.get('dataGroupedByBar');
     nonOtherSliceTypes = this.get('nonOtherSliceTypes');
-    numOtherSliceTypes = this.get('otherSliceTypes.length');
     otherSliceLabel = this.get('otherSliceLabel');
     return _.reduce(groupedData, (result, barData, barLabel) => {
       var newBarData, otherSlice;
@@ -136,8 +149,7 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
                      value: 0,
                      _otherSliceTypes: [] };
       barData.forEach((slice) => {
-        if ((nonOtherSliceTypes.indexOf(slice.sliceLabel) != -1) ||
-            (numOtherSliceTypes <= 1)) {
+        if (nonOtherSliceTypes.indexOf(slice.sliceLabel) !== -1) {
           newBarData.push(slice);
         } else {
           otherSlice.value += slice.value;
@@ -152,18 +164,27 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
     }, {});
   }),
 
-  barNames: Ember.computed('dataGroupedByBar', function() {
-    return _.keys(this.get('dataGroupedByBar'));
+  barNames: Ember.computed('barValues', '_barSortingFn', function() {
+    return _.pluck(_.sortBy(this.get('barValues'), this.get('_barSortingFn')), 'barLabel');
   }),
 
-  finishedData: Ember.computed('dataGroupedByBarWithOther', 'otherSliceLabel', function() {
+  // Data grouped by bar with all slices sorted correctly in each bar
+  sortedData: Ember.computed('dataGroupedByBarWithOther', function() {
+    var groupedData = this.get('dataGroupedByBarWithOther');
+    return _.reduce(groupedData, (result, barData, barLabel) => {
+      result[barLabel] = this.sortSlices(barData);
+      return result;
+    }, {});
+  }),
+
+  finishedData: Ember.computed('sortedData', 'otherSliceLabel', function() {
     var posTop, negBottom, stackedValues, otherSliceLabel;
     otherSliceLabel = this.get('otherSliceLabel');
-    return _.map(this.get('dataGroupedByBarWithOther'), (values, barLabel) => {
+    return _.map(this.get('sortedData'), (values, barLabel) => {
       posTop = 0;
       negBottom = 0;
       stackedValues = _.map(values, function(d) {
-        var yMin, yMax, sliceLabel;
+        var yMin, yMax;
         if (d.value < 0) {
           yMax = negBottom;
           negBottom += d.value;
@@ -193,7 +214,12 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
     });
   }),
 
-  largestBar: Ember.computed('dataGroupedByBarWithOther', function() {
+
+  // ----------------------------------------------------------------------------
+  // Slice and Bar Sorting
+  // ----------------------------------------------------------------------------
+
+  largestNetValueBar: Ember.computed('dataGroupedByBarWithOther', function() {
     return _.max(this.get('dataGroupedByBarWithOther'), (barData) => {
       return _.reduce(barData, (p, slice) => {
         return p + slice.value;
@@ -201,10 +227,67 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
     });
   }),
 
-  sliceSortOrder: Ember.computed('largestBar', 'nonOtherSliceTypes.[]', function() {
-    var sortedSlices = _.sortByAll(this.get('largestBar'), 'value', 'desc');
-    return _.map(sortedSlices, 'sliceLabel');
+  // Slice sort order is determined in a 2-step process:
+  // * First, take the bar with the largest NET value. For all slices in this
+  //   bar, sort them by absolute value, descending.
+  // * For all remaining slices that are not in the largest net value bar, sort
+  //   according to the `sortRemainingSlices` function. By default, this sorts
+  //   alphabetically. It can be overridden to change this behavior.
+  sliceSortOrder: Ember.computed('largestNetValueBar', 'allSliceLabels.[]', function() {
+    var sortedSlices, remainingSlices, sliceSortingFn, otherSliceLabel, otherLabelIndex;
+    otherSliceLabel = this.get('otherSliceLabel');
+    sliceSortingFn = this.get('sliceSortingFn');
+    // Sort all slices in the largest bar by absolute value
+    sortedSlices = _.pluck(_.sortBy(this.get('largestNetValueBar'), (slice) => {
+      return -(Math.abs(slice.value));
+    }), 'sliceLabel');
+    // Find remaining slices that were not in largest bar, sort them using the
+    // defined slice sorting function, and append them to the largest bar slices
+    remainingSlices = _.difference(this.get('allSliceLabels'), sortedSlices);
+    sortedSlices = sortedSlices.concat(_.sortBy(remainingSlices, sliceSortingFn));
+    // Lastly, pluck the Other slice (if it exists) and push to end.
+    otherLabelIndex = sortedSlices.indexOf(otherSliceLabel);
+    if (otherLabelIndex !== -1) {
+      sortedSlices.push(sortedSlices.splice(otherLabelIndex, 1));
+    }
+    return sortedSlices;
   }),
+
+  // This is the default sorting function for slices that are not displayed
+  // in the largest bar. This can be overridden to change how slice sorting
+  // works for remaining slices in a given application.
+  sliceSortingFn: function(sliceLabel) { return sliceLabel; },
+
+  // Takes a set of slices and sorts them using the sliceSortOrder.
+  sortSlices: function(slices) {
+    var slicesByLabel = _.reduce(slices, (result, slice) => {
+      result[slice.sliceLabel] = slice;
+      return result;
+    }, {});
+    var sortOrder = this.get('sliceSortOrder');
+    return sortOrder.map((sliceLabel) => {
+      return slicesByLabel[sliceLabel];
+    }).filter((slice) => {
+      return slice;
+    });
+  },
+
+  // Can either be 'asc', 'desc', or 'custom'
+  barSortingOrder: 'asc',
+
+  barSortingFn: function(barData) { return barData.barLabel; },
+
+  _barSortingFn: Ember.computed('barSortingFn', 'barSortingOrder', function() {
+    switch (this.get('barSortingOrder')) {
+      case 'asc':
+        return (barData) => { return barData.value; };
+      case 'desc':
+        return (barData) => { return -barData.value; };
+      case 'custom':
+        return this.get('barSortingFn');
+    }
+  }),
+
 
   // ----------------------------------------------------------------------------
   // Layout
@@ -337,7 +420,7 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
 
     return function(d, i) {
       if (d.sliceLabel && sliceColors[d.sliceLabel]) {
-        return sliceColors[d.sliceLabel]
+        return sliceColors[d.sliceLabel];
       } else {
         return fnGetSeriesColor(d, i);
       }
@@ -351,8 +434,8 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
   hasLegend: true,
 
   legendItems: Ember.computed('allSliceLabels.[]', 'sliceColors', 'labelIDMapping.[]', function() {
-    var sliceColors = this.get('sliceColors')
-    return this.get('allSliceLabels').map((label, i) => {
+    var sliceColors = this.get('sliceColors');
+    return this.get('allSliceLabels').map((label) => {
       var color = sliceColors[label];
       return {
         label: label,
