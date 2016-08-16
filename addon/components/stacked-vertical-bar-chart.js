@@ -162,8 +162,14 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
     }, {});
   }),
 
-  barNames: Ember.computed('barValues', '_barSortingFn', function() {
-    return _.pluck(_.sortBy(this.get('barValues'), this.get('_barSortingFn')), 'barLabel');
+  barNames: Ember.computed('barValues', '_barSortingFn', 'sortAscending', function() {
+    var sortedBars, sortedBarNames;
+    sortedBars = _.sortBy(this.get('barValues'), this.get('_barSortingFn'));
+    sortedBarNames = _.pluck(sortedBars, 'barLabel');
+    if (!this.get('sortAscending')) {
+      sortedBarNames.reverse();
+    }
+    return sortedBarNames;
   }),
 
   // Data grouped by bar with all slices sorted correctly in each bar
@@ -269,22 +275,17 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
     });
   },
 
-  // Can either be 'asc', 'desc', or 'custom'
-  barSortingOrder: 'desc',
-
   barSortingFn: function(barData) { return barData.barLabel; },
 
-  _barSortingFn: Ember.computed('barSortingFn', 'barSortingOrder', function() {
-    switch (this.get('barSortingOrder')) {
-      case 'asc':
-        return (barData) => { return barData.value; };
-      case 'desc':
-        return (barData) => { return -barData.value; };
-      case 'custom':
-        return this.get('barSortingFn');
+  _barSortingFn: Ember.computed('sortKey', function() {
+    if (this.get('sortKey') === 'value') {
+      return (barData) => { return barData.value; }
+    } else if (this.get('sortKey') === 'custom'){
+      return this.get('barSortingFn');
+    } else {
+      throw new Error("Invalid sortKey");
     }
   }),
-
 
   // ----------------------------------------------------------------------------
   // Layout

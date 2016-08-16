@@ -5,21 +5,22 @@ const StackedVerticalBarController = VerticalBarController.extend({
   betweenBarPadding: 0,
   strokeWidth: 1,
 
-  barSortingOptions: {
-    'ascending': 'asc',
-    'descending': 'desc',
+  barSortingKeyOptions: {
+    'value': 'value',
     'custom (default: alphabetical)': 'custom'
   },
 
-  barSorting: Ember.computed(function() {
-    return Ember.A(_.keys(this.get('barSortingOptions')));
+  barSortingKeys: Ember.computed(function() {
+    return Ember.A(_.keys(this.get('barSortingKeyOptions')));
   }),
 
-  selectedBarSorting: 'descending',
+  selectedBarSortingKey: 'value',
 
-  barSortingOrder: Ember.computed('selectedBarSorting', 'barSortingOptions', function() {
-    return this.get('barSortingOptions')[this.get('selectedBarSorting')];
+  sortKey: Ember.computed('selectedBarSortingKey', function() {
+    return this.get('barSortingKeyOptions')[this.get('selectedBarSortingKey')];
   }),
+
+  sortAscending: false,
 
   rawDataHash: Ember.computed(function() {
     var dataHash = _.cloneDeep(this._super());
