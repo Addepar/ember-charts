@@ -134,7 +134,7 @@ export default Ember.Mixin.create({
       return index % minorTickInterval !== 0;
     });
 
-    // We have an issue where the nodes come back out of order.  This this is a
+    // We have an issue where the nodes come back out of order.  This is a
     // side effect of redrawing the axis.  D3 don't give two [cares] about the
     // insertion order of nodes - they are simply translated into place.  This
     // occurs when the selection with the NEW data is made - the existing ones
