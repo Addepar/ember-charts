@@ -194,12 +194,12 @@ const HorizontalBarChartComponent = ChartComponent.extend(FloatingTooltipMixin,
 
       // Show tooltip
       var formatLabel = this.get('formatLabelFunction');
-      // Line 1
-      var content = '<span class=\'tip-label\'>' + data.label + '</span>';
-      // Line 2
-      content += '<span class=\'name\'>' + this.get('tooltipValueDisplayName') + ': </span>';
-      content += '<span class=\'value\'>' + formatLabel(data.value) + '</span>';
-      return this.showTooltip(content, d3.event);
+      var content = $('<span>');
+      content.append($('<span class="tip-label">').text(data.label));
+      content.append($('<span class="name">').text(this.get('tooltipValueDisplayName') + ': '));
+      content.append($('<span class="value">').text(formatLabel(data.value)));
+      return this.showTooltip(content.html(), d3.event);
+
     };
   }),
 

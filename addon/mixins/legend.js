@@ -261,16 +261,17 @@ export default Ember.Mixin.create({
       if (data.selector) {
         _this.get('viewport').selectAll(data.selector).classed('hovered', true);
       }
-      var content = "<span class=\"tip-label\">" + data.label + "</span>";
+      var content = $("<span />");
+      content.append("<span class=\"tip-label\">").text(data.label);
       if (data.xValue != null) {
         var formatXValue = _this.get('formatXValue');
         var formatYValue = _this.get('formatYValue');
-        content += "<span class=\"name\">" + (_this.get('tooltipXValueDisplayName')) + ": </span>";
-        content += "<span class=\"value\">" + (formatXValue(data.xValue)) + "</span><br/>";
-        content += "<span class=\"name\">" + (_this.get('tooltipYValueDisplayName')) + ": </span>";
-        content += "<span class=\"value\">" + (formatYValue(data.yValue)) + "</span>";
+        content.append("<span class=\"name\">").text(_this.get('tooltipXValueDisplayName'));
+        content.append("<span class=\"value\">" + (formatXValue(data.xValue)) + "</span><br/>");
+        content.append("<span class=\"name\">").text(_this.get('tooltipYValueDisplayName'));
+        content.append("<span class=\"value\">" + (formatYValue(data.yValue)) + "</span><br/>");
       }
-      return _this.showTooltip(content, d3.event);
+      return _this.showTooltip(content.html(), d3.event);
     };
   }),
 

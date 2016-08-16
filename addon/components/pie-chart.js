@@ -366,10 +366,12 @@ const PieChartComponent = ChartComponent.extend(FloatingTooltipMixin,
         value = data.value;
       }
       formatLabelFunction = this.get('formatLabelFunction');
-      content = "<span class=\"tip-label\">" + data.label + "</span>";
-      content += "<span class=\"name\">" + (this.get('tooltipValueDisplayName')) + ": </span>";
-      content += "<span class=\"value\">" + (formatLabelFunction(value)) + "</span>";
-      return this.showTooltip(content, d3.event);
+
+      content = $('<span>');
+      content.append($('<span class="tip-label">').text(data.label));
+      content.append($('<span class="name">').text(this.get('tooltipValueDisplayName') + ': '));
+      content.append($('<span class="value">').text(formatLabelFunction(value)));
+      return this.showTooltip(content.html(), d3.event);
     };
   }),
 
