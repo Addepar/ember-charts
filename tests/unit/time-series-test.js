@@ -369,7 +369,7 @@ test('Minor Tick Filter', function(assert) {
     candidateLabels = d3.time.months(startDate.getTime(), endDate.getTime()),
     expectedFiltered = [1391241600000, 1396335600000, 1401606000000, 1406876400000, 1412146800000, 1417420800000, 1422777600000, 1427871600000, 1433142000000, 1438412400000, 1443682800000, 1448956800000],
     filteredCount = 0,
-    filteredMonths;
+    filteredMonths, len, item, i;
 
   Ember.run(function() {
     component.set('xAxis', {
@@ -407,15 +407,15 @@ test('Minor Tick Filter', function(assert) {
     component.set('minorTickInterval', 2);
   });
 
-  //Ember.merge(a, b);  //alters A
   component.filterMinorTicks();
   // we expect to see 12 filtered items here.
   assert.equal(filteredMonths.length, 12,
     "The correct number of labels have been converted to minor ticks");
 
-  filteredMonths.forEach(function(item) {
-    assert.notEqual(expectedFiltered.indexOf(item.getTime()), '-1',
-      "A label was correctly filtered out");
-  });
-
+  len = filteredMonths.length;
+  for (i = 0; i < len; i++) {
+    item = filteredMonths[i];
+    assert.notEqual(expectedFiltered.indexOf(item.getTime()), -1,
+      "A label was correctly filtered out - #["+i+"] " + item.getTime() + " which wasn't in: " + expectedFiltered.toString());
+  }
 });
