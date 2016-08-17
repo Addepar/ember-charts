@@ -84,7 +84,7 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
         return sum + Math.abs(slice.value);
       }, 0);
       return { barLabel: barLabel, value: barValue };
-    })
+    });
   }),
 
   largestSliceData: Ember.computed('dataGroupedByBar', 'barValues', function() {
@@ -279,7 +279,7 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
 
   _barSortingFn: Ember.computed('sortKey', function() {
     if (this.get('sortKey') === 'value') {
-      return (barData) => { return barData.value; }
+      return (barData) => { return barData.value; };
     } else if (this.get('sortKey') === 'custom'){
       return this.get('barSortingFn');
     } else {
