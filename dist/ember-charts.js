@@ -5938,12 +5938,12 @@ define('ember-charts/mixins/time-series-labeler', ['exports', 'module', 'ember']
         return index % minorTickInterval !== 0;
       });
 
-      // We have an issue where the nodes come back out of order.  This this is a
+      // We have an issue where the nodes come back out of order.  This is a
       // side effect of redrawing the axis.  D3 don't give two [cares] about the
       // insertion order of nodes - they are simply translated into place.  This
       // occurs when the selection with the NEW data is made - the existing ones
       // updated - then the new ones appended on .enter(...)
-      labels = gXAxis.selectAll('text').filter(function (value, index) {
+      labels = gXAxis.selectAll('text').filter(function (value) {
         return minorDates.length > 0 && minorDates.indexOf(value.getTime()) === -1;
       });
       ticks = gXAxis.selectAll('line').filter(function (value, index) {
