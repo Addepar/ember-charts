@@ -5,6 +5,7 @@ import FloatingTooltipMixin from '../mixins/floating-tooltip';
 import AxesMixin from '../mixins/axes';
 import FormattableMixin from '../mixins/formattable';
 import NoMarginChartMixin from '../mixins/no-margin-chart';
+import SortableChartMixin from '../mixins/sortable-chart';
 import AxisTitlesMixin from '../mixins/axis-titles';
 import LabelTrimmer from '../utils/label-trimmer';
 
@@ -20,7 +21,7 @@ import LabelTrimmer from '../utils/label-trimmer';
  */
 const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
   FloatingTooltipMixin, AxesMixin, FormattableMixin, NoMarginChartMixin,
-  AxisTitlesMixin, {
+  AxisTitlesMixin, SortableChartMixin, {
 
   classNames: ['chart-vertical-bar', 'chart-stacked-vertical-bar'],
 

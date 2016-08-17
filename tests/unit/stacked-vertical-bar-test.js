@@ -58,51 +58,6 @@ test('Margins are the right size', function(assert) {
   assert.equal(component.get('marginBottom'), 30, 'has top margin (because it has a legend)');
 });
 
-test('Stacked bar chart data is sorted correctly', function(assert) {
-  var component = this.subject();
-  assert.expect(8);
-  Ember.run(function() {
-    var data, sortedData, original = [], sorted = [], groups = [],
-      totals = [], originalGroups = [];
-
-    component.set('data', three_ranges);
-
-    data = component.get('data');
-    sortedData = component.get('sortedData');
-
-    original.push(data.slice(0,3));
-    original.push(data.slice(3,6));
-    original.push(data.slice(6,9));
-
-    originalGroups.push(original[0].every((item) => item.barLabel === 'Group Three'));
-    originalGroups.push(original[1].every((item) => item.barLabel === 'Group One'));
-    originalGroups.push(original[2].every((item) => item.barLabel === 'Group Two'));
-
-    sorted.push(sortedData.slice(0,3));
-    sorted.push(sortedData.slice(3,6));
-    sorted.push(sortedData.slice(6,9));
-
-    totals.push(sorted[0].map((val) => val.value).reduce((left,right) => left+right));
-    totals.push(sorted[1].map((val) => val.value).reduce((left,right) => left+right));
-    totals.push(sorted[2].map((val) => val.value).reduce((left,right) => left+right));
-
-    groups.push(sorted[0].every((item) => item.barLabel === 'Group Three'));
-    groups.push(sorted[1].every((item) => item.barLabel === 'Group One'));
-    groups.push(sorted[2].every((item) => item.barLabel === 'Group Two'));
-
-    assert.ok(!originalGroups[0], 'Group three is not first');
-    assert.ok(!originalGroups[1], 'Group one is not second');
-    assert.ok(!originalGroups[2], 'Group two is not third');
-
-    assert.ok(groups[0], 'Group three is first');
-    assert.ok(groups[1], 'Group one is second');
-    assert.ok(groups[2], 'Group two is third');
-
-    assert.ok(totals[0] < totals[1], 'Group three is the smaller than group one');
-    assert.ok(totals[1] < totals[2], 'Group one is the smaller than group two');
-  });
-});
-
 test('In total, the correct number of stacking slices is displayed', function(assert) {
   assert.expect(1);
 
