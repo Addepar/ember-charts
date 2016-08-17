@@ -302,24 +302,3 @@ test('select bars: empty', function(assert) {
     assert.equal(countRects(), 0);
   });
 });
-
-test('minor ticks: correct ticks are filtered out', function(assert) {
-  assert.expect(2);
-  fillIn(emberSelectFor('line-data'), 'daily_curr_value');
-  fillIn(emberSelectFor('bar-data'), '----');
-  click('.dynamicXAxis');
-  andThen(function() {
-    $('.maxNumberOfLabels').val('8');
-    $('.maxNumberOfLabels').change();
-    $('.maxNumberOfMinorTicks').val('2');
-    $('.maxNumberOfMinorTicks').change();
-    assert.equal($('.x.axis .tick text:visible').length, 5, 'Expected Number of Minor Ticks Found');
-  });
-  andThen(function() {
-    $('.maxNumberOfLabels').val('17');
-    $('.maxNumberOfLabels').change();
-    $('.maxNumberOfMinorTicks').val('2');
-    $('.maxNumberOfMinorTicks').change();
-    assert.equal($('.x.axis .tick text:visible').length, 11, 'Expected Number of Minor Ticks Found');
-  });
-});

@@ -359,3 +359,63 @@ test('Quarterly Filter', function(assert) {
       0, 'The filtered month is the start of a quarter');
   }
 });
+
+
+test('Minor Tick Filter', function(assert) {
+  assert.expect(13);
+  var startDate = new Date('2014-01-01'),
+    endDate = new Date('2016-01-01'),
+    component = this.subject(),
+    candidateLabels = d3.time.months(startDate.getTime(), endDate.getTime()),
+    expectedFiltered = [1391241600000, 1396335600000, 1401606000000, 1406876400000, 1412146800000, 1417420800000, 1422777600000, 1427871600000, 1433142000000, 1438412400000, 1443682800000, 1448956800000],
+    filteredCount = 0,
+    filteredMonths;
+
+  Ember.run(function() {
+    component.set('xAxis', {
+      selectAll: function() {
+        // return a list of dates out of order
+        var renderedLabels = d3.time.months(startDate.getTime(), endDate.getTime()),
+          currentIndex = renderedLabels.length,
+          temporaryValue, randomIndex;
+
+        // While there remain elements to shuffle...
+        while (0 !== currentIndex) {
+          // Pick a remaining element...
+          randomIndex = Math.floor(Math.random() * currentIndex);
+          currentIndex -= 1;
+          // And swap it with the current element.
+          temporaryValue = renderedLabels[currentIndex];
+          // I also need to add some markers here
+          renderedLabels[currentIndex] = renderedLabels[randomIndex];
+          renderedLabels[randomIndex] = temporaryValue;
+        }
+        Ember.merge(Array.prototype, {
+          style: function(){
+            // using closure to set the result set
+            filteredMonths = this;
+            return this;
+          },
+          attr: function(){ return null; }
+        });
+        return renderedLabels;
+      }
+    });
+
+    component.set('labelledTicks', candidateLabels);
+    component.set('maxNumberOfMinorTicks', 2);
+    component.set('minorTickInterval', 2);
+  });
+
+  //Ember.merge(a, b);  //alters A
+  component.filterMinorTicks();
+  // we expect to see 12 filtered items here.
+  assert.equal(filteredMonths.length, 12,
+    "The correct number of labels have been converted to minor ticks");
+
+  filteredMonths.forEach(function(item) {
+    assert.notEqual(expectedFiltered.indexOf(item.getTime()), '-1',
+      "A label was correctly filtered out");
+  });
+
+});

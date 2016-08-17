@@ -5944,7 +5944,7 @@ define('ember-charts/mixins/time-series-labeler', ['exports', 'module', 'ember']
       // occurs when the selection with the NEW data is made - the existing ones
       // updated - then the new ones appended on .enter(...)
       labels = gXAxis.selectAll('text').filter(function (value) {
-        return minorDates.length > 0 && minorDates.indexOf(value.getTime()) === -1;
+        return minorDates.length > 0 && minorDates.indexOf(value.getTime()) !== -1;
       });
       ticks = gXAxis.selectAll('line').filter(function (value, index) {
         return index % minorTickInterval !== 0;
