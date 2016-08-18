@@ -573,9 +573,11 @@ const TimeSeriesChartComponent = ChartComponent.extend(LegendMixin,
       var formatLabelFunction = this.get('formatLabelFunction');
 
       var addValueLine = function(d) {
-        var name = $("<span class=\"name\" />").text(d.group + ": ");
+        var name = $('<span class="name" />').text(d.group + ': ');
+        var value = $('<span class="value" />').text(formatLabelFunction(d.value));
         content.append(name);
-        return content.append("<span class=\"value\">" + (formatLabelFunction(d.value)) + "</span><br/>");
+        content.append(value);
+        content.append('<br />');
       };
 
       if (Ember.isArray(data.values)) {
