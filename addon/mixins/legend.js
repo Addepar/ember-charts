@@ -261,17 +261,24 @@ export default Ember.Mixin.create({
       if (data.selector) {
         _this.get('viewport').selectAll(data.selector).classed('hovered', true);
       }
+
       var content = $("<span />");
-      content.append("<span class=\"tip-label\">").text(data.label);
-      if (data.xValue != null) {
+      content.append($("<span class=\"tip-label\">").text(data.label));
+      if (!Ember.isNone(data.xValue)) {
         var formatXValue = _this.get('formatXValue');
-        var formatYValue = _this.get('formatYValue');
-        content.append("<span class=\"name\">").text(_this.get('tooltipXValueDisplayName'));
-        content.append("<span class=\"value\">" + (formatXValue(data.xValue)) + "</span><br/>");
-        content.append("<span class=\"name\">").text(_this.get('tooltipYValueDisplayName'));
-        content.append("<span class=\"value\">" + (formatYValue(data.yValue)) + "</span><br/>");
+        content.append($('<span class="name" />').text(_this.get('tooltipXValueDisplayName') + ': '));
+        content.append($('<span class="value" />').text(formatXValue(data.xValue)));
+        if (!Ember.isNone(data.yValue)) {
+          content.append('<br />');
+        }
       }
-      return _this.showTooltip(content.html(), d3.event);
+      if (!Ember.isNone(data.yValue)) {
+        var formatYValue = _this.get('formatYValue');
+        content.append($('<span class="name" />').text(_this.get('tooltipYValueDisplayName') + ': '));
+        content.append($('<span class="value" />').text(formatYValue(data.yValue)));
+      }
+
+      _this.showTooltip(content.html(), d3.event);
     };
   }),
 

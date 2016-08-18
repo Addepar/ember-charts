@@ -310,15 +310,19 @@ const ScatterChartComponent = ChartComponent.extend(LegendMixin, FloatingTooltip
       d3.select(element).classed('hovered', true);
       var formatXValue = this.get('formatXValue');
       var formatYValue = this.get('formatYValue');
-      var xValueDisplayName = $("<br /><span class=\"name\" />").text(this.get('xValueDisplayName') + ": ");
-      var yValueDisplayName = $("<span class=\"name\" />").text(this.get('yValueDisplayName') + ": ");
-      var content = $("<span class=\"tip-label\" />").text(data.group)
-      .append(xValueDisplayName)
-      .append("<span class=\"value\">" + (formatXValue(data.xValue)) + "</span><br/>")
-      .append(yValueDisplayName)
-      .append("<span class=\"value\">" + (formatYValue(data.yValue)) + "</span>");
+      var xValueDisplayName = $('<span class="name" />').text(this.get('xValueDisplayName') + ': ');
+      var yValueDisplayName = $('<span class="name" />').text(this.get('yValueDisplayName') + ': ');
+      var xValue = $('<span class="value" />').text(formatXValue(data.xValue));
+      var yValue = $('<span class="value" />').text(formatYValue(data.yValue));
 
-      return this.showTooltip(content, d3.event);
+      var content = $('<span />');
+      content.append($('<span class="tip-label" />').text(data.group))
+      .append(xValueDisplayName)
+      .append(xValue)
+      .append('<br />')
+      .append(yValueDisplayName)
+      .append(yValue);
+      this.showTooltip(content.html(), d3.event);
     };
   }),
 
