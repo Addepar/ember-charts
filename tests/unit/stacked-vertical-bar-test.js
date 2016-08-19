@@ -475,7 +475,7 @@ function validateOtherSlice(assert, component, expectedSliceLabels, expectedSlic
   } else {
     assert.ok($otherSliceLegendItem.length === 1, 'The Other slice is shown');
   }
-};
+}
 
 test("'Other' slice correctly aggregates smallest slices when there are too many", function(assert) {
   var component, otherSliceLabel, expectedSliceLabels,
