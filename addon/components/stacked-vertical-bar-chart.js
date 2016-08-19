@@ -89,10 +89,10 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
   }),
 
   largestSliceData: Ember.computed('dataGroupedByBar', 'barValues', function() {
-    var dataGroupedBySlice, largestSlice, largestBarValue;
+    var dataGroupedBySlice, largestSlice, largestBarValue, largestSliceData;
     dataGroupedBySlice = this.get('dataGroupedBySlice');
     largestBarValue = _.max(_.pluck(this.get('barValues'), 'value'));
-    return _.map(dataGroupedBySlice, (sliceTypeData, sliceLabel) => {
+    largestSliceData = _.map(dataGroupedBySlice, (sliceTypeData, sliceLabel) => {
       largestSlice = _.max(sliceTypeData, (slice) => {
         return Math.abs(slice.value);
       });
@@ -101,6 +101,9 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
         largestSliceValue: largestSlice.value,
         percentOfBar: Math.abs((largestSlice.value / largestBarValue) * 100)
       };
+    });
+    return largestSliceData.filter((sliceData) => {
+      return sliceData.largestSliceValue !== 0;
     });
   }),
 
@@ -251,7 +254,8 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
     // Lastly, pluck the Other slice (if it exists) and push to end.
     otherLabelIndex = sortedSlices.indexOf(otherSliceLabel);
     if (otherLabelIndex !== -1) {
-      sortedSlices.push(sortedSlices.splice(otherLabelIndex, 1));
+      sortedSlices.splice(otherLabelIndex, 1);
+      sortedSlices.push(otherSliceLabel);
     }
     return sortedSlices;
   }),
@@ -741,6 +745,10 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
       .filter(function(d) { return d !== 0; })
       .classed('major', false)
       .classed('minor', true);
+
+    gYAxis.selectAll('g')
+      .filter(function(d) { return d === 0; })
+      .classed('major', true);
 
     gYAxis.selectAll('text')
       .style('text-anchor', 'end')
