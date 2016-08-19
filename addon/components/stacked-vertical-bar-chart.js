@@ -463,15 +463,21 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
       d3.select(element).classed('hovered', true);
 
       // Show tooltip
-      var content = '';
+      var content = $('<span />');
       if (data.barLabel) {
-        content = "<span class=\"tip-label\">" + data.barLabel + "</span>";
+        content.append($('<span class="tip-label" />').text(data.barLabel));
       }
 
       var formatLabel = this.get('formatLabelFunction');
       var addValueLine = function(d) {
-        content += "<span class=\"name\">" + d.sliceLabel + ": </span>" +
-          "<span class=\"value\">" + formatLabel(d.value) + "</span><br/>";
+        var label = $('<span class="name" />').text(d.sliceLabel + ": ");
+        content.append(label);
+        var value = $('<span class="value" />').text(formatLabel(d.value));
+        content.append(value);
+        // TODO (michaelr; SBC): the <br /> was dropped by accident
+        // from the regular vertical-bar-chart.js on the parent branch Addepar;
+        // it needs to be added back to that file after merging to/from Addepar
+        content.append('<br />');
       };
 
       if (isGroup) {
@@ -481,7 +487,7 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
         // Just hovering over single bar
         addValueLine(data);
       }
-      return this.showTooltip(content, d3.event);
+      return this.showTooltip(content.html(), d3.event);
     };
   }),
 
