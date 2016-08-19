@@ -39,7 +39,7 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
   // The maximum number of slices. If the number of slices is greater
   // than this then the smallest slices will be combined into an "other"
   // slice until there are at most maxNumberOfSlices.
-  maxNumberOfSlices: 4,
+  maxNumberOfSlices: 10,
 
   // If there are more slice labels than maxNumberOfSlices,
   otherSliceLabel: 'Other',
@@ -112,7 +112,6 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
     minSlicePercent = this.get('minSlicePercent');
     maxNumberOfSlices = this.get('maxNumberOfSlices');
     largestSliceData = this.get('largestSliceData');
-
     // Filter out any slice labels that do not meet the minSlicePercent req.
     nonOtherSlices = _.filter(largestSliceData, (sliceData) => {
       return sliceData.percentOfBar >= minSlicePercent;

@@ -1,6 +1,7 @@
 import Ember from "ember";
 import { test, moduleForComponent } from 'ember-qunit';
 
+
 var three_ranges = [{
    sliceLabel: "Label 1",
    barLabel: "Group One",
@@ -459,4 +460,85 @@ test('Negative value slices are displayed below the y=0 axis', function(assert) 
     assert.ok(parseInt($negativeSlice.attr('height')) > 0,
       sliceSpecificMessage + 'has a positive, non-zero height');
   });
+});
+
+function validateOtherSlice(assert, component, expectedSliceLabels, expectedSliceCount, scenarioIndex) {
+  var $slices, $otherSliceLegendItem, otherSliceLabel;
+  $slices = $('g.bars rect');
+  otherSliceLabel = component.get('otherSliceLabel');
+  $otherSliceLegendItem = $('g.legend-item:contains(' + otherSliceLabel + ')');
+  assert.ok(_.isEqual(component.get('allSliceLabels'), expectedSliceLabels),
+    'The slice labels match expectation for scenario ' + scenarioIndex);
+  assert.equal($slices.length, expectedSliceCount, 'The correct number of slices are shown');
+  if (expectedSliceLabels.indexOf(otherSliceLabel) === -1) {
+    assert.ok($otherSliceLegendItem.length === 0, 'No Other slice is shown');
+  } else {
+    assert.ok($otherSliceLegendItem.length === 1, 'The Other slice is shown');
+  }
+};
+
+test("'Other' slice correctly aggregates smallest slices when there are too many", function(assert) {
+  var component, otherSliceLabel, expectedSliceLabels,
+  oneSliceUnderThresholdData, twoSlicesUnderThresholdData;
+  assert.expect(12);
+
+  component = this.subject({ data: three_ranges });
+  this.render();
+  otherSliceLabel = component.get('otherSliceLabel');
+
+  // SCENARIO ONE:
+  // Number of unique slice labels in data = 3
+  // maxNumberOfSlices = 2
+  // All slice labels meet minSlicePercent threshold
+  // EXPECTATION:
+  // Because the number of slice label types exceeds the max, the smallest 2
+  // will need to be aggregated into an Other slice.
+  Ember.run(() => { component.set('maxNumberOfSlices', 2); });
+  expectedSliceLabels = ['Label 1', otherSliceLabel];
+  validateOtherSlice(assert, component, expectedSliceLabels, 6, 'One');
+
+  // SCENARIO TWO:
+  // Number of unique slice labels in data = 3
+  // maxNumberOfSlices = 3
+  // All slice labels meet minSlicePercent threshold
+  // EXPECTATION:
+  // The number of slice labels is equal to the max and they all meet the min
+  // slice threshold, so there should not be an 'Other' slice.
+  Ember.run(() => { component.set('maxNumberOfSlices', 3); });
+  expectedSliceLabels = ['Label 1', 'Label 2', 'Label 3'];
+  validateOtherSlice(assert, component, expectedSliceLabels, 9, 'Two');
+
+  // SCENARIO THREE:
+  // Number of unique slice labels in data = 3
+  // maxNumberOfSlices = 3
+  // One slice label does NOT meet minSlicePercent
+  // EXPECTATION: The slice label that fails to meet the minSlicePercent would
+  // normally fall into the 'Other' slice, but it is the ONLY slice in 'Other',
+  // so in this case it will actually get displayed despite being < min %
+  oneSliceUnderThresholdData = _.cloneDeep(three_ranges);
+  oneSliceUnderThresholdData.forEach((datum) => {
+    if (datum.sliceLabel === 'Label 2') {
+      datum.value = 0.05;
+    }
+  });
+  Ember.run(() => { component.set('data', oneSliceUnderThresholdData); });
+  expectedSliceLabels = ['Label 1', 'Label 2', 'Label 3'];
+  validateOtherSlice(assert, component, expectedSliceLabels, 9, 'Three');
+
+  // SCENARIO FOUR:
+  // Number of unique slice labels in data = 3
+  // maxNumberOfSlices = 3
+  // Two slice label do NOT meet minSlicePercent
+  // EXPECTATION: Because now two slices fail to meet the minSlicePercent
+  // instead of just one, we can display the Other slice. Only the one slice
+  // label that met the min slice % threshold should have its own legend item
+  twoSlicesUnderThresholdData = _.cloneDeep(oneSliceUnderThresholdData);
+  twoSlicesUnderThresholdData.forEach((datum) => {
+    if (datum.sliceLabel === 'Label 3') {
+      datum.value = 0.05;
+    }
+  });
+  Ember.run(() => { component.set('data', twoSlicesUnderThresholdData); });
+  expectedSliceLabels = ['Label 1', otherSliceLabel];
+  validateOtherSlice(assert, component, expectedSliceLabels, 6, 'Four');
 });
