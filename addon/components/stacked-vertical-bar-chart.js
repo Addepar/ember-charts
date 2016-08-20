@@ -266,24 +266,19 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
   sliceSortingFn: function(sliceLabel) { return sliceLabel; },
 
   // Takes a set of slices and sorts them using the sliceSortOrder.
+  // Not every bar has a slice for every slice label, so the filter at the end
+  // removes undefined slices.
   sortSlices: function(slices) {
-    var slicesByLabel = _.reduce(slices, (result, slice) => {
-      result[slice.sliceLabel] = slice;
-      return result;
-    }, {});
-    var sortOrder = this.get('sliceSortOrder');
-    return sortOrder.map((sliceLabel) => {
-      return slicesByLabel[sliceLabel];
-    }).filter((slice) => {
-      return slice;
-    });
+    return this.get('sliceSortOrder').map(sliceLabel => {
+      return slices.filter(slice => slice.sliceLabel === sliceLabel)[0]
+    }).filter(slice => slice);
   },
 
   barSortingFn: function(barData) { return barData.barLabel; },
 
   _barSortingFn: Ember.computed('sortKey', function() {
     if (this.get('sortKey') === 'value') {
-      return (barData) => { return barData.value; };
+      return barData => barData.value;
     } else if (this.get('sortKey') === 'custom'){
       return this.get('barSortingFn');
     } else {

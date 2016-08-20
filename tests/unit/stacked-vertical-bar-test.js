@@ -542,3 +542,82 @@ test("'Other' slice correctly aggregates smallest slices when there are too many
   expectedSliceLabels = ['Label 1', otherSliceLabel];
   validateOtherSlice(assert, component, expectedSliceLabels, 6, 'Four');
 });
+
+test("Slice sorting is performed correctly", function(assert) {
+  var component, modifiedData, sliceSortOrder, xAxisElement, xAxisTransformY;
+  assert.expect(6);
+  modifiedData = _.cloneDeep(three_ranges).concat([{
+    sliceLabel: "Label 4",
+    barLabel: "Group One",
+    value: -10
+  }, {
+    sliceLabel: "Label 4",
+    barLabel: "Group Two",
+    value: -10
+  }, {
+    sliceLabel: "Label 4",
+    barLabel: "Group Three",
+    value: 15
+  }, {
+    sliceLabel: "Label 5",
+    barLabel: "Group One",
+    value: 20
+  }, {
+    sliceLabel: "Label 5",
+    barLabel: "Group Three",
+    value: 20
+  }]);
+  component = this.subject({
+    data: modifiedData,
+    maxNumberOfSlices: 4
+  });
+  this.render();
+
+  // This maps to: ['Label 1', 'Label 4', 'Label 5', 'Other']
+  sliceSortOrder = ['grouping-2', 'grouping-0', 'grouping-1', 'grouping-3'];
+  xAxisElement = this.$('.tick:not(.minor)');
+  xAxisTransformY = parseInt(xAxisElement.attr('transform').match(/\d+/g)[1]);
+
+  this.$('g.bars').each((iBar, bar) => {
+    // Find the Other slice in each bar and verify that it is on the end of the
+    // bar (either top or bottom, depending on its sign)
+    var nonOtherSlices, otherSliceYPos, otherSliceOnEnd, positiveSlices,
+    negativeSlices, allSlices, currentSliceGrouping, nextSliceGrouping,
+    sliceOutOfOrder;
+
+    nonOtherSlices = $(bar).find('rect').not('.grouping-3').toArray();
+    otherSliceYPos = $(bar).find('rect.grouping-3').attr('y');
+    otherSliceOnEnd = nonOtherSlices.every((slice) => otherSliceYPos < $(slice).attr('y')) ||
+                      nonOtherSlices.every((slice) => otherSliceYPos > $(slice).attr('y'));
+    assert.ok(otherSliceOnEnd, 'The "Other" slice is at an end of bar ' + iBar);
+
+    // Check the slice ordering for each bar. This needs to be done separately
+    // for positive and negative slices.
+    allSlices = $(bar).find('rect').toArray();
+    // Sort slice elements by 'y' value so they are in order from top to bottom,
+    // then use this order to push negative slices and unshift positive slices
+    // so that each stack contains slices in order outward from x-axis.
+    positiveSlices = [], negativeSlices = [];
+    _.sortBy(allSlices, slice => parseInt($(slice).attr('y'))).forEach(slice => {
+      if ($(slice).attr('y') < xAxisTransformY) {
+        positiveSlices.unshift(slice);
+      } else {
+        negativeSlices.push(slice);
+      }
+    });
+
+    sliceOutOfOrder = false;
+    [positiveSlices, negativeSlices].forEach(stack => {
+      for (var i = 0; i < stack.length - 1; i++) {
+        currentSliceGrouping = $(stack[i]).attr('class');
+        nextSliceGrouping = $(stack[i + 1]).attr('class');
+        if (sliceSortOrder.indexOf(currentSliceGrouping) >
+            sliceSortOrder.indexOf(nextSliceGrouping)) {
+          debugger;
+          sliceOutOfOrder = true;
+        }
+      }
+    });
+    assert.ok(!sliceOutOfOrder, 'All slices are ordered correctly in bar ' + iBar);
+  })
+});
