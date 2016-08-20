@@ -40,6 +40,28 @@ var three_ranges = [{
    value: -19
 }];
 
+var sliceSortingData = _.cloneDeep(three_ranges).concat([{
+  sliceLabel: "Label 4",
+  barLabel: "Group One",
+  value: -10
+}, {
+  sliceLabel: "Label 4",
+  barLabel: "Group Two",
+  value: -10
+}, {
+  sliceLabel: "Label 4",
+  barLabel: "Group Three",
+  value: 15
+}, {
+  sliceLabel: "Label 5",
+  barLabel: "Group One",
+  value: 20
+}, {
+  sliceLabel: "Label 5",
+  barLabel: "Group Three",
+  value: 20
+}]);
+
 moduleForComponent('stacked-vertical-bar-chart', '[Unit] Stacked bar component', {
   needs: [ 'template:components/chart-component'],
   beforeEach: function () {},
@@ -478,10 +500,9 @@ function validateOtherSlice(assert, component, expectedSliceLabels, expectedSlic
 }
 
 test("'Other' slice correctly aggregates smallest slices when there are too many", function(assert) {
-  var component, otherSliceLabel, expectedSliceLabels,
-  oneSliceUnderThresholdData, twoSlicesUnderThresholdData;
+  var component, otherSliceLabel, expectedSliceLabels, scenarioThreeData,
+  scenarioFourData;
   assert.expect(12);
-
   component = this.subject({ data: three_ranges });
   this.render();
   otherSliceLabel = component.get('otherSliceLabel');
@@ -515,13 +536,13 @@ test("'Other' slice correctly aggregates smallest slices when there are too many
   // EXPECTATION: The slice label that fails to meet the minSlicePercent would
   // normally fall into the 'Other' slice, but it is the ONLY slice in 'Other',
   // so in this case it will actually get displayed despite being < min %
-  oneSliceUnderThresholdData = _.cloneDeep(three_ranges);
-  oneSliceUnderThresholdData.forEach((datum) => {
+  scenarioThreeData = _.cloneDeep(three_ranges);
+  scenarioThreeData.forEach(datum => {
     if (datum.sliceLabel === 'Label 2') {
       datum.value = 0.05;
     }
   });
-  Ember.run(() => { component.set('data', oneSliceUnderThresholdData); });
+  Ember.run(() => { component.set('data', scenarioThreeData); });
   expectedSliceLabels = ['Label 1', 'Label 2', 'Label 3'];
   validateOtherSlice(assert, component, expectedSliceLabels, 9, 'Three');
 
@@ -532,71 +553,59 @@ test("'Other' slice correctly aggregates smallest slices when there are too many
   // EXPECTATION: Because now two slices fail to meet the minSlicePercent
   // instead of just one, we can display the Other slice. Only the one slice
   // label that met the min slice % threshold should have its own legend item
-  twoSlicesUnderThresholdData = _.cloneDeep(oneSliceUnderThresholdData);
-  twoSlicesUnderThresholdData.forEach((datum) => {
+  scenarioFourData = _.cloneDeep(scenarioThreeData);
+  scenarioFourData.forEach((datum) => {
     if (datum.sliceLabel === 'Label 3') {
       datum.value = 0.05;
     }
   });
-  Ember.run(() => { component.set('data', twoSlicesUnderThresholdData); });
+  Ember.run(() => { component.set('data', scenarioFourData); });
   expectedSliceLabels = ['Label 1', otherSliceLabel];
   validateOtherSlice(assert, component, expectedSliceLabels, 6, 'Four');
 });
 
-test("Slice sorting is performed correctly", function(assert) {
-  var component, modifiedData, sliceSortOrder, xAxisElement, xAxisTransformY;
-  assert.expect(6);
-  modifiedData = _.cloneDeep(three_ranges).concat([{
-    sliceLabel: "Label 4",
-    barLabel: "Group One",
-    value: -10
-  }, {
-    sliceLabel: "Label 4",
-    barLabel: "Group Two",
-    value: -10
-  }, {
-    sliceLabel: "Label 4",
-    barLabel: "Group Three",
-    value: 15
-  }, {
-    sliceLabel: "Label 5",
-    barLabel: "Group One",
-    value: 20
-  }, {
-    sliceLabel: "Label 5",
-    barLabel: "Group Three",
-    value: 20
-  }]);
+test("'Other' slice is end-aligned (either positive or negative) for every bar", function(assert) {
+  var component, nonOtherSlices, otherSliceYPos, otherSliceOnEnd;
+  assert.expect(3);
   component = this.subject({
-    data: modifiedData,
+    data: sliceSortingData,
     maxNumberOfSlices: 4
   });
   this.render();
 
-  // This maps to: ['Label 1', 'Label 4', 'Label 5', 'Other']
-  sliceSortOrder = ['grouping-2', 'grouping-0', 'grouping-1', 'grouping-3'];
-  xAxisElement = this.$('.tick:not(.minor)');
-  xAxisTransformY = parseInt(xAxisElement.attr('transform').match(/\d+/g)[1]);
-
+  // Find the Other slice in each bar and verify that it is on the end of the
+  // bar (either top or bottom, depending on its sign)
   this.$('g.bars').each((iBar, bar) => {
-    // Find the Other slice in each bar and verify that it is on the end of the
-    // bar (either top or bottom, depending on its sign)
-    var nonOtherSlices, otherSliceYPos, otherSliceOnEnd, positiveSlices,
-    negativeSlices, allSlices, currentSliceGrouping, nextSliceGrouping,
-    sliceOutOfOrder;
-
     nonOtherSlices = $(bar).find('rect').not('.grouping-3').toArray();
     otherSliceYPos = $(bar).find('rect.grouping-3').attr('y');
     otherSliceOnEnd = nonOtherSlices.every((slice) => otherSliceYPos < $(slice).attr('y')) ||
                       nonOtherSlices.every((slice) => otherSliceYPos > $(slice).attr('y'));
     assert.ok(otherSliceOnEnd, 'The "Other" slice is at an end of bar ' + iBar);
+  });
+});
 
-    // Check the slice ordering for each bar. This needs to be done separately
-    // for positive and negative slices.
+test("All slices are sorted correctly within their respective bars", function(assert) {
+  var component, sliceSortOrder, xAxisElement, xAxisTransformY, positiveSlices,
+  negativeSlices, allSlices, currentSliceGrouping, nextSliceGrouping,
+  sliceOutOfOrder;
+  assert.expect(3);
+  component = this.subject({
+    data: sliceSortingData,
+    maxNumberOfSlices: 4
+  })
+  this.render();
+  // sliceSortOrder maps to: ['Label 1', 'Label 4', 'Label 5', 'Other']
+  sliceSortOrder = ['grouping-2', 'grouping-0', 'grouping-1', 'grouping-3'];
+  xAxisElement = this.$('.tick:not(.minor)');
+  xAxisTransformY = parseInt(xAxisElement.attr('transform').match(/\d+/g)[1]);
+
+  // Check the slice ordering for each bar. This needs to be done separately
+  // for positive and negative slices.
+  this.$('g.bars').each((iBar, bar) => {
     allSlices = $(bar).find('rect').toArray();
-    // Sort slice elements by 'y' value so they are in order from top to bottom,
-    // then use this order to push negative slices and unshift positive slices
-    // so that each stack contains slices in order outward from x-axis.
+    // Sort slice elements by 'y' value so they are in order from top to bottom.
+    // Use this order to create positive and negative stacks with slices
+    // sorted by distance from x-axis, ascending.
     positiveSlices = [], negativeSlices = [];
     _.sortBy(allSlices, slice => parseInt($(slice).attr('y'))).forEach(slice => {
       if ($(slice).attr('y') < xAxisTransformY) {
@@ -605,7 +614,8 @@ test("Slice sorting is performed correctly", function(assert) {
         negativeSlices.push(slice);
       }
     });
-
+    // Verify that every slice in each stack is higher in the sort order than
+    // the next slice. Trigger a flag if this is not true.
     sliceOutOfOrder = false;
     [positiveSlices, negativeSlices].forEach(stack => {
       for (var i = 0; i < stack.length - 1; i++) {
@@ -613,7 +623,6 @@ test("Slice sorting is performed correctly", function(assert) {
         nextSliceGrouping = $(stack[i + 1]).attr('class');
         if (sliceSortOrder.indexOf(currentSliceGrouping) >
             sliceSortOrder.indexOf(nextSliceGrouping)) {
-          debugger;
           sliceOutOfOrder = true;
         }
       }
