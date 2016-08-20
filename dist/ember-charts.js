@@ -2592,10 +2592,10 @@ define('ember-charts/components/stacked-vertical-bar-chart', ['exports', 'module
     }),
 
     largestSliceData: _Ember['default'].computed('dataGroupedByBar', 'barValues', function () {
-      var dataGroupedBySlice, largestSlice, largestBarValue;
+      var dataGroupedBySlice, largestSlice, largestBarValue, largestSliceData;
       dataGroupedBySlice = this.get('dataGroupedBySlice');
       largestBarValue = _.max(_.pluck(this.get('barValues'), 'value'));
-      return _.map(dataGroupedBySlice, function (sliceTypeData, sliceLabel) {
+      largestSliceData = _.map(dataGroupedBySlice, function (sliceTypeData, sliceLabel) {
         largestSlice = _.max(sliceTypeData, function (slice) {
           return Math.abs(slice.value);
         });
@@ -2604,6 +2604,9 @@ define('ember-charts/components/stacked-vertical-bar-chart', ['exports', 'module
           largestSliceValue: largestSlice.value,
           percentOfBar: Math.abs(largestSlice.value / largestBarValue * 100)
         };
+      });
+      return largestSliceData.filter(function (sliceData) {
+        return sliceData.largestSliceValue !== 0;
       });
     }),
 
@@ -2755,7 +2758,8 @@ define('ember-charts/components/stacked-vertical-bar-chart', ['exports', 'module
       // Lastly, pluck the Other slice (if it exists) and push to end.
       otherLabelIndex = sortedSlices.indexOf(otherSliceLabel);
       if (otherLabelIndex !== -1) {
-        sortedSlices.push(sortedSlices.splice(otherLabelIndex, 1));
+        sortedSlices.splice(otherLabelIndex, 1);
+        sortedSlices.push(otherSliceLabel);
       }
       return sortedSlices;
     }),
@@ -3248,6 +3252,10 @@ define('ember-charts/components/stacked-vertical-bar-chart', ['exports', 'module
       gYAxis.selectAll('g').filter(function (d) {
         return d !== 0;
       }).classed('major', false).classed('minor', true);
+
+      gYAxis.selectAll('g').filter(function (d) {
+        return d === 0;
+      }).classed('major', true);
 
       gYAxis.selectAll('text').style('text-anchor', 'end').attr({
         x: -this.get('labelPadding')

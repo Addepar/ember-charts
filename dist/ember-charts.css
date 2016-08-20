@@ -84,6 +84,9 @@ svg text {
 .chart-stacked-vertical-bar rect.hovered {
   stroke: white !important;
 }
+.chart-stacked-vertical-bar .axis .tick.major line {
+  stroke: #000;
+}
 .chart-scatter .axis .tick {
   fill: none;
   stroke: #aaaaaa;
