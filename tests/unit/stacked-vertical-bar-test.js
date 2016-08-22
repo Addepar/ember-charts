@@ -21,7 +21,7 @@ var three_ranges = [{
 }, {
    sliceLabel: "Label 2",
    barLabel: "Group Two",
-   value: 17
+   value: 18
 }, {
    sliceLabel: "Label 2",
    barLabel: "Group Three",
@@ -33,7 +33,7 @@ var three_ranges = [{
 }, {
    sliceLabel: "Label 3",
    barLabel: "Group Two",
-   value: 18
+   value: 17
 }, {
    sliceLabel: "Label 3",
    barLabel: "Group Three",
@@ -60,6 +60,14 @@ var sliceSortingData = _.cloneDeep(three_ranges).concat([{
   sliceLabel: "Label 5",
   barLabel: "Group Three",
   value: 20
+}, {
+  sliceLabel: "Label 6",
+  barLabel: "Group One",
+  value: 10,
+}, {
+  sliceLabel: "Label 6",
+  barLabel: "Group Three",
+  value: 10
 }]);
 
 moduleForComponent('stacked-vertical-bar-chart', '[Unit] Stacked bar component', {
@@ -577,7 +585,7 @@ test("'Other' slice is end-aligned (either positive or negative) for every bar",
   // bar (either top or bottom, depending on its sign)
   this.$('g.bars').each((iBar, bar) => {
     nonOtherSlices = $(bar).find('rect').not('.grouping-3').toArray();
-    otherSliceYPos = $(bar).find('rect.grouping-3').attr('y');
+    otherSliceYPos = parseInt($(bar).find('rect.grouping-3').attr('y'));
     otherSliceOnEnd = nonOtherSlices.every((slice) => otherSliceYPos < $(slice).attr('y')) ||
                       nonOtherSlices.every((slice) => otherSliceYPos > $(slice).attr('y'));
     assert.ok(otherSliceOnEnd, 'The "Other" slice is at an end of bar ' + iBar);
@@ -629,4 +637,75 @@ test("All slices are sorted correctly within their respective bars", function(as
     });
     assert.ok(!sliceOutOfOrder, 'All slices are ordered correctly in bar ' + iBar);
   })
+});
+
+test("Slices not in largest bar are sorted correctly", function(assert) {
+  var component, largestBarLabel, expectedSliceOrder, newSliceSortingFn,
+  newExpectedSortOrder;
+  assert.expect(3);
+  component = this.subject({
+    data: sliceSortingData,
+    maxNumberOfSlices: 6
+  });
+  this.render();
+
+  largestBarLabel = component.get('largestNetValueBar')[0].barLabel;
+  expectedSliceOrder = [1,2,3,4,5,6].map(number => "Label " + number);
+  assert.equal(largestBarLabel, 'Group Two', 'Group two is the largest bar');
+  assert.ok(_.isEqual(component.get('sliceSortOrder'), expectedSliceOrder),
+    'The slice sorting order is as expected by default');
+
+  // Override the existing slice sorting function (alphabetical) with one that
+  // sorts in reverse alphabetical
+  newSliceSortingFn = sliceLabel => -sliceLabel;
+  Ember.run(() => { component.set('sliceSortingFn', newSliceSortingFn); });
+
+  // The new slice sorting function should only be sorting slices that are not
+  // included in the largest net value bar. Those slices should still be sorted
+  // by absolute value, descending, which is not overrideable.
+  newExpectedSortOrder = [1,2,3,4,6,5].map(number => "Label " + number);
+  assert.ok(_.isEqual(component.get('sliceSortOrder'), newExpectedSortOrder),
+    'The slice sorting order is changed with a new sorting function');
+});
+
+test("If a slice has a label, it is shown in all bars regardless of minSlicePercent", function(assert) {
+  var modifiedData, component, expectedSliceOrder, $label4Slices;
+  assert.expect(2);
+  modifiedData = three_ranges.concat([{
+    sliceLabel: "Label 4",
+    barLabel: "Group One",
+    value: 0.05
+  }, {
+    sliceLabel: "Label 4",
+    barLabel: "Group Two",
+    value: 20
+  }, {
+    sliceLabel: "Label 4",
+    barLabel: "Group Three",
+    value: 0.05
+  }]);
+  component = this.subject({
+    data: modifiedData,
+    maxNumberOfSlices: 3
+  });
+  this.render();
+
+  expectedSliceOrder = ["Label 1", "Label 4", "Other"];
+  assert.ok(_.isEqual(component.get('sliceSortOrder'), expectedSliceOrder),
+    'Label 4 slices are not aggregated into the Other slice initially')
+  $label4Slices = this.$('.grouping-0');
+  assert.equal($label4Slices.length, 3, 'All three slices for Label 4 are ' +
+    'rendered on the DOM, despite some not meeting the min slice % threshold');
+});
+
+test("Zero-value slices are never shown in the legend", function(assert) {
+  var component, $legendItems;
+  assert.expect(1);
+  component = this.subject({
+    data: [{ sliceLabel: "Test", barLabel: "Test", value: 0 }]
+  });
+  this.render();
+
+  $legendItems = this.$(".legend-container").children();
+  assert.equal($legendItems.length, 0, "No legend items are displayed");
 });
