@@ -14,10 +14,6 @@ import LabelTrimmer from '../utils/label-trimmer';
  *
  * Supersedes the deprecated functionality of VerticalBarChartComponent
  * with stackBars: true.
- *
- * FIXME (SBC): here and in documentation.hbs:
- *  1. Remove withinGroupPadding
- *  2. s/betweenGroupPadding/withinGroupPadding/g
  */
 const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
   FloatingTooltipMixin, AxesMixin, FormattableMixin, NoMarginChartMixin,
