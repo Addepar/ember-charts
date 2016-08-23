@@ -75,7 +75,7 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
 
   // Maps the label for each bar to the total (gross) value of each bar
   largestGrossBarValue: Ember.computed('dataGroupedByBar', function() {
-    var grossBarValues = _.map(this.get('dataGroupedByBar'), (barData, barLabel) => {
+    var grossBarValues = _.map(this.get('dataGroupedByBar'), (barData) => {
       return barData.reduce((sum, slice) => {
         return sum + Math.abs(slice.value);
       }, 0);
@@ -286,7 +286,7 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
   // removes undefined slices.
   sortSlices: function(slices) {
     return this.get('sliceSortOrder').map(sliceLabel => {
-      return slices.filter(slice => slice.sliceLabel === sliceLabel)[0]
+      return slices.filter(slice => slice.sliceLabel === sliceLabel)[0];
     }).filter(slice => slice);
   },
 

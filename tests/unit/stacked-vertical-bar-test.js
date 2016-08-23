@@ -609,7 +609,7 @@ test('All slices are sorted correctly within their respective bars', function(as
   component = this.subject({
     data: sliceSortingData,
     maxNumberOfSlices: 4
-  })
+  });
   this.render();
 
   // sliceSortOrder maps to: ['Label 1', 'Label 4', 'Label 5', 'Other']
@@ -624,7 +624,8 @@ test('All slices are sorted correctly within their respective bars', function(as
     // Sort slice elements by 'y' value so they are in order from top to bottom.
     // Use this order to create positive and negative stacks with slices
     // sorted by distance from x-axis, ascending.
-    positiveSlices = [], negativeSlices = [];
+    positiveSlices = [];
+    negativeSlices = [];
     _.sortBy(allSlices, slice => parseInt($(slice).attr('y'))).forEach(slice => {
       if ($(slice).attr('y') < xAxisTransformY) {
         positiveSlices.unshift(slice);
@@ -646,7 +647,7 @@ test('All slices are sorted correctly within their respective bars', function(as
       }
     });
     assert.ok(!sliceOutOfOrder, 'All slices are ordered correctly in bar ' + iBar);
-  })
+  });
 });
 
 test('Slices not in largest bar are sorted correctly', function(assert) {
@@ -707,7 +708,7 @@ test('If a slice has a label, it is shown in all bars regardless of minSlicePerc
 
   expectedSliceOrder = ['Label 1', 'Label 4', 'Other'];
   assert.ok(_.isEqual(component.get('sliceSortOrder'), expectedSliceOrder),
-    'Label 4 slices are not aggregated into the Other slice initially')
+    'Label 4 slices are not aggregated into the Other slice initially');
   $label4Slices = this.$('.grouping-0');
   assert.equal($label4Slices.length, 3, 'All three slices for Label 4 are ' +
     'rendered on the DOM, despite some not meeting the min slice % threshold');
@@ -751,7 +752,7 @@ function assertBarSortingIsCorrect(assert, component, expectedBarOrder, message)
   sortedBarElementLabels = _.map(sortedBarElements, bar => $(bar).text());
   assert.ok(_.isEqual(sortedBarElementLabels, expectedBarOrder), 'Bars are ' +
     'visually sorted correctly (on the DOM) for ' + message);
-};
+}
 
 test('Bars are sorted correctly', function(assert) {
   var component, expectedBarOrder, ascByValueOrder, descByValueOrder,
