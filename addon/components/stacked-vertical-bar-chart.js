@@ -176,7 +176,8 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
   }),
 
   // Data grouped by bar with all slices sorted correctly in each bar
-  sortedData: Ember.computed('dataGroupedByBarWithOther', function() {
+  // (sliceSortOrder is an implicit dependency through the sortSlices() calls)
+  sortedData: Ember.computed('dataGroupedByBarWithOther', 'sliceSortOrder', function() {
     var groupedData = this.get('dataGroupedByBarWithOther');
     return _.reduce(groupedData, (result, barData, barLabel) => {
       result[barLabel] = this.sortSlices(barData);
@@ -237,9 +238,14 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
   // * First, take the bar with the largest NET value. For all slices in this
   //   bar, sort them by absolute value, descending.
   // * For all remaining slices that are not in the largest net value bar, sort
-  //   according to the `sortRemainingSlices` function. By default, this sorts
+  //   according to the `sliceSortingFn` function. By default, this sorts
   //   alphabetically. It can be overridden to change this behavior.
-  sliceSortOrder: Ember.computed('largestNetValueBar', 'allSliceLabels.[]', function() {
+  sliceSortOrder: Ember.computed(
+    'largestNetValueBar',
+    'allSliceLabels.[]',
+    'otherSliceLabel',
+    'sliceSortingFn',
+  function() {
     var sortedSlices, remainingSlices, sliceSortingFn, otherSliceLabel, otherLabelIndex;
     otherSliceLabel = this.get('otherSliceLabel');
     sliceSortingFn = this.get('sliceSortingFn');
@@ -260,10 +266,20 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
     return sortedSlices;
   }),
 
-  // This is the default sorting function for slices that are not displayed
-  // in the largest bar. This can be overridden to change how slice sorting
+  // This function is used to compare slice labels in order to sort slices
+  // that are not displayed in the largest bar.
+  //
+  // It takes a SINGLE string input and returns a sort key for the string,
+  // which can be of any type JavaScript can compare.
+  // (This matches the requirements for the function passed to Lodash.js's
+  // _.sortBy(), but NOT the ones for JavaScript's built-in Array.sort() method.)
+  //
+  // Its default value can be overridden to change how slice sorting
   // works for remaining slices in a given application.
-  sliceSortingFn: function(sliceLabel) { return sliceLabel; },
+  //
+  sliceSortingFn: Ember.computed(function() {
+    return _.identity;
+  }),
 
   // Takes a set of slices and sorts them using the sliceSortOrder.
   sortSlices: function(slices) {
@@ -279,9 +295,20 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
     });
   },
 
-  barSortingFn: function(barData) { return barData.barLabel; },
+  // This function is used to compare bar data (NOT bar labels)
+  // in order to sort the bars of the chart.
+  //
+  // Other than taking a bar datum and not a bar label,
+  // it works like sliceSortingFn.
+  //
+  // FIXME (michaelr; SBC): can we get rid of the inconsistency with
+  // sliceSortingFn?
+  //
+  barSortingFn: Ember.computed(function() {
+    return function(barData) { return barData.barLabel; };
+  }),
 
-  _barSortingFn: Ember.computed('sortKey', function() {
+  _barSortingFn: Ember.computed('sortKey', 'barSortingFn', function() {
     if (this.get('sortKey') === 'value') {
       return (barData) => { return barData.value; };
     } else if (this.get('sortKey') === 'custom'){
