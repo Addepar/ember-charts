@@ -2820,7 +2820,7 @@ define('ember-charts/components/stacked-vertical-bar-chart', ['exports', 'module
       // defined slice sorting function, and append them to the largest bar slices
       remainingSlices = _.difference(this.get('allSliceLabels'), sortedSlices);
       sliceSortingFn = this.get('sliceSortingFn');
-      sortedSlices = sortedSlices.concat(remainingSlices.sort(sliceSortingFn));
+      sortedSlices = sortedSlices.concat(remainingSlices);
       // Lastly, pluck the Other slice (if it exists) and push to end.
       otherSliceLabel = this.get('otherSliceLabel');
       otherLabelIndex = sortedSlices.indexOf(otherSliceLabel);
