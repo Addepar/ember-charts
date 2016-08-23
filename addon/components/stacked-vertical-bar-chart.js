@@ -14,6 +14,8 @@ import LabelTrimmer from '../utils/label-trimmer';
  *
  * Supersedes the deprecated functionality of VerticalBarChartComponent
  * with stackBars: true.
+ * @class
+ * @augments ChartComponent
  */
 const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
   FloatingTooltipMixin, AxesMixin, FormattableMixin, NoMarginChartMixin,
@@ -21,47 +23,82 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
 
   classNames: ['chart-vertical-bar', 'chart-stacked-vertical-bar'],
 
-  // ----------------------------------------------------------------------------
+  // ---------------------------------------------------------------------------
   // Stacked Vertical Bar Chart Options
-  // ----------------------------------------------------------------------------
+  // ---------------------------------------------------------------------------
 
-  // The smallest slices will be combined into an "Other" slice until no slice
-  // is smaller than minSlicePercent.
+  /**
+   * The smallest slices will be combined into an 'Other' slice until no slice
+   * is smaller than minSlicePercent.
+   * @type {number}
+   */
   minSlicePercent: 2,
 
-  // Data without group will be merged into a group with this name
+  /**
+   * Data without a barLabel will be merged into a bar with this name
+   * @type {string}
+   */
   ungroupedSeriesName: 'Other',
 
-  // The maximum number of slices. If the number of slices is greater
-  // than this then the smallest slices will be combined into an "other"
-  // slice until there are at most maxNumberOfSlices.
+  /**
+   * The maximum number of slices. If the number of slices is greater
+   * than this, the smallest slices will be combined into an 'Other' slice until
+   * there are at most maxNumberOfSlices (including the 'Other' slice).
+   * @type {number}
+   */
   maxNumberOfSlices: 10,
 
-  // If there are more slice labels than maxNumberOfSlices,
+  /**
+   * If there are more slice labels than maxNumberOfSlices and/or if there are
+   * slice types that do not meet the `minSlicePercent`, the smallest slices
+   * will be aggregated into an 'Other' slice. This property defines the label
+   * for this aggregate slice.
+   * @type {string}
+   */
   otherSliceLabel: 'Other',
 
-  // Width of slice outline, in pixels
+  /**
+   * Width of slice outline, in pixels
+   * @type {number}
+   */
   strokeWidth: 1,
 
-  // Space between bars, as fraction of bar size
+  /**
+   * Space between bars, as fraction of bar size
+   * @type {number}
+   */
   betweenBarPadding: Ember.computed('numSlices', function() {
     // Use padding to make sure bars have a maximum thickness.
     var scale = d3.scale.linear().domain([1, 8]).range([1.25, 0.25]).clamp(true);
     return scale(this.get('numSlices'));
   }),
 
+  /**
+   * Number of unique slice types in the chart (ie, number of legend items)
+   * @type {number}
+   */
   numSlices: Ember.computed('barNames.length', 'allSliceLabels.length', function() {
     return this.get('barNames.length') * this.get('allSliceLabels.length') || 0;
   }),
 
-  // Space allocated for rotated labels on the bottom of the chart. If labels
-  // are rotated, they will be extended beyond labelHeight up to maxLabelHeight
+  /**
+   * Space allocated for rotated labels on the bottom of the chart. If labels
+   * are rotated, they will be extended beyond labelHeight up to maxLabelHeight
+   * @type {number}
+   */
   maxLabelHeight: 50,
 
-  // ----------------------------------------------------------------------------
+  // ---------------------------------------------------------------------------
   // Data
-  // ----------------------------------------------------------------------------
+  // ---------------------------------------------------------------------------
 
+  /**
+   * Input data mapped by barLabel. Any data without a barLabel will be
+   * aggregated into the bar labelled by `ungroupedSeriesName`.
+   * Key: barLabel
+   * Value: Array of slice objects (sliceLabel, barLabel, value)
+   * @type {Object.<string, Array.<Object>>}
+   */
   dataGroupedByBar: Ember.computed('ungroupedSeriesName', 'data.[]', function() {
     var ungroupedSeriesName = this.get('ungroupedSeriesName');
     return _.groupBy(this.get('data'), (slice) => {
@@ -69,11 +106,23 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
     });
   }),
 
+  /**
+   * Input data mapped by sliceLabel.
+   * Key: sliceLabel
+   * Value: Array of slice objects (sliceLabel, barLabel, value)
+   * @type {Object.<string, Array.<Object>>}
+   */
   dataGroupedBySlice: Ember.computed('data.[]', function() {
     return _.groupBy(this.get('data'), 'sliceLabel');
   }),
 
-  // Maps the label for each bar to the total (gross) value of each bar
+  /**
+   * The gross value of the largest bar (ie, largest difference between top
+   * and bottom of any bar in the chart).
+   * Used to determine whether a given slice meets the minSlicePercent threshold
+   * as a percentage of this largest bar.
+   * @type {number}
+   */
   largestGrossBarValue: Ember.computed('dataGroupedByBar', function() {
     var grossBarValues = _.map(this.get('dataGroupedByBar'), (barData) => {
       return barData.reduce((sum, slice) => {
@@ -83,17 +132,15 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
     return _.max(grossBarValues);
   }),
 
-  // Stores the net value and label for each bar
-  netBarValues: Ember.computed('dataGroupedByBar', function() {
-    var dataGroupedByBar = this.get('dataGroupedByBar');
-    return _.map(dataGroupedByBar, (barData, barLabel) => {
-      var barValue = barData.reduce((sum, slice) => {
-        return sum + slice.value;
-      }, 0);
-      return { barLabel: barLabel, value: barValue };
-    });
-  }),
 
+  /**
+   * The label and largest slice data for each unique slice label.
+   * Finds the largest slice (by absolute value) for each slice label and then
+   * calculates the percentage of the largest gross value bar for these
+   * largest slices. Used to determine which slices get aggregated into the
+   * 'Other' slice in `nonOtherSliceTypes`.
+   * @type {Array.<Object>}
+   */
   largestSliceData: Ember.computed('dataGroupedBySlice', 'largestGrossBarValue', function() {
     var dataGroupedBySlice, largestSlice, largestBarValue, largestSliceData;
     dataGroupedBySlice = this.get('dataGroupedBySlice');
@@ -170,16 +217,6 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
     }, {});
   }),
 
-  barNames: Ember.computed('netBarValues', '_barSortingFn', 'sortAscending', function() {
-    var sortedBars, sortedBarNames;
-    sortedBars = _.sortBy(this.get('netBarValues'), this.get('_barSortingFn'));
-    sortedBarNames = _.pluck(sortedBars, 'barLabel');
-    if (!this.get('sortAscending')) {
-      sortedBarNames.reverse();
-    }
-    return sortedBarNames;
-  }),
-
   // Data grouped by bar with all slices sorted correctly in each bar
   // (sliceSortOrder is an implicit dependency through the sortSlices() calls)
   sortedData: Ember.computed('dataGroupedByBarWithOther', 'sliceSortOrder', function() {
@@ -230,6 +267,31 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
   // ----------------------------------------------------------------------------
   // Slice and Bar Sorting
   // ----------------------------------------------------------------------------
+
+  /**
+   * Array containing an object for each bar. These objects contain the barLabel
+   * and net value for each bar. Used for bar sorting in `barNames`.
+   * @type {Array.<Object>}
+   */
+  netBarValues: Ember.computed('dataGroupedByBar', function() {
+    var dataGroupedByBar = this.get('dataGroupedByBar');
+    return _.map(dataGroupedByBar, (barData, barLabel) => {
+      var barValue = barData.reduce((sum, slice) => {
+        return sum + slice.value;
+      }, 0);
+      return { barLabel: barLabel, value: barValue };
+    });
+  }),
+
+  barNames: Ember.computed('netBarValues', '_barSortingFn', 'sortAscending', function() {
+    var sortedBars, sortedBarNames;
+    sortedBars = _.sortBy(this.get('netBarValues'), this.get('_barSortingFn'));
+    sortedBarNames = _.pluck(sortedBars, 'barLabel');
+    if (!this.get('sortAscending')) {
+      sortedBarNames.reverse();
+    }
+    return sortedBarNames;
+  }),
 
   largestNetValueBar: Ember.computed('dataGroupedByBarWithOther', function() {
     return _.max(this.get('dataGroupedByBarWithOther'), (barData) => {
