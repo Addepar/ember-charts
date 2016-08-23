@@ -651,8 +651,8 @@ test('All slices are sorted correctly within their respective bars', function(as
 });
 
 test('Slices not in largest bar are sorted correctly', function(assert) {
-  var component, largestBarLabel, expectedSliceOrder, newSliceSortingFn,
-  newExpectedSortOrder;
+  var component, largestBarLabel, expectedSliceOrder, oldSliceSortingFn,
+  newSliceSortingFn, newExpectedSortOrder;
   assert.expect(3);
   component = this.subject({
     data: sliceSortingData,
@@ -668,7 +668,10 @@ test('Slices not in largest bar are sorted correctly', function(assert) {
 
   // Override the existing slice sorting function (alphabetical) with one that
   // sorts in reverse alphabetical
-  newSliceSortingFn = sliceLabel => -sliceLabel;
+  oldSliceSortingFn = component.get('sliceSortingFn');
+  newSliceSortingFn = function(label1, label2) {
+    return -1 * oldSliceSortingFn(label1, label2);
+  };
   Ember.run(() => { component.set('sliceSortingFn', newSliceSortingFn); });
 
   // The new slice sorting function should only be sorting slices that are not
@@ -781,11 +784,16 @@ test('Bars are sorted correctly', function(assert) {
 
   // Fourth, override the default custom sorting function so that it instead
   // will sum the integers of a bar's value. Still descending.
-  Ember.run(() => { component.set('barSortingFn', function(barData) {
-    return ('' + Math.abs(barData.value))
-           .split('')
-           .reduce((sum, num) => sum + parseInt(num), 0);
-  }); });
+  Ember.run(() => { component.set('customBarSortingFn',
+    function(barData1, barData2) {
+      function getDigitSum(barData) {
+        return ('' + Math.abs(barData.value))
+        .split('')
+        .reduce((sum, num) => sum + parseInt(num), 0);
+      }
+      return getDigitSum(barData1) - getDigitSum(barData2);
+    });
+  });
   descCustomSort = ['Group Two', 'Group One', 'Group Three'];
   assertBarSortingIsCorrect(assert, component, descCustomSort, 'descending ' +
     'custom sort (sum of integers in bar value)');

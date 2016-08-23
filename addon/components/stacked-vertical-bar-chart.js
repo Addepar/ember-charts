@@ -283,9 +283,9 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
     });
   }),
 
-  barNames: Ember.computed('netBarValues', '_barSortingFn', 'sortAscending', function() {
+  barNames: Ember.computed('netBarValues', 'barSortingFn', 'sortAscending', function() {
     var sortedBars, sortedBarNames;
-    sortedBars = _.sortBy(this.get('netBarValues'), this.get('_barSortingFn'));
+    sortedBars = this.get('netBarValues').sort(this.get('barSortingFn'));
     sortedBarNames = _.pluck(sortedBars, 'barLabel');
     if (!this.get('sortAscending')) {
       sortedBarNames.reverse();
@@ -309,7 +309,6 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
   //   alphabetically. It can be overridden to change this behavior.
   sliceSortOrder: Ember.computed('otherSliceLabel', 'sliceSortingFn', 'largestNetValueBar', 'allSliceLabels.[]', function() {
     var sortedSlices, remainingSlices, sliceSortingFn, otherSliceLabel, otherLabelIndex;
-    sliceSortingFn = this.get('sliceSortingFn');
     // Sort all slices in the largest bar by absolute value
     sortedSlices = _.pluck(_.sortBy(this.get('largestNetValueBar'), (slice) => {
       return -(Math.abs(slice.value));
@@ -317,7 +316,8 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
     // Find remaining slices that were not in largest bar, sort them using the
     // defined slice sorting function, and append them to the largest bar slices
     remainingSlices = _.difference(this.get('allSliceLabels'), sortedSlices);
-    sortedSlices = sortedSlices.concat(_.sortBy(remainingSlices, sliceSortingFn));
+    sliceSortingFn = this.get('sliceSortingFn');
+    sortedSlices = sortedSlices.concat(remainingSlices.sort(sliceSortingFn));
     // Lastly, pluck the Other slice (if it exists) and push to end.
     otherSliceLabel = this.get('otherSliceLabel');
     otherLabelIndex = sortedSlices.indexOf(otherSliceLabel);
@@ -328,19 +328,23 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
     return sortedSlices;
   }),
 
+  _naturallyCompareStringsFn: function(label1, label2) {
+    if (label1 < label2) {
+      return -1;
+    } else if (label1 > label2) {
+      return 1;
+    } else {
+      return 0;
+    }
+  },
+
   // This function is used to compare slice labels in order to sort slices
   // that are not displayed in the largest bar.
-  //
-  // It takes a SINGLE string input and returns a sort key for the string,
-  // which can be of any type JavaScript can compare.
-  // (This matches the requirements for the function passed to Lodash.js's
-  // _.sortBy(), but NOT the ones for JavaScript's built-in Array.sort() method.)
-  //
-  // Its default value can be overridden to change how slice sorting
-  // works for remaining slices in a given application.
-  //
+  // The default sort for remaining slices is alphabetical (ascending), but
+  // this can be overridden by whatever class is extending the
+  // StackedVerticalBarChartComponent.
   sliceSortingFn: Ember.computed(function() {
-    return _.identity;
+    return this._naturallyCompareStringsFn;
   }),
 
   // Takes a set of slices and sorts them using the sliceSortOrder.
@@ -355,22 +359,24 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
   // This function is used to compare bar data (NOT bar labels)
   // in order to sort the bars of the chart.
   //
-  // Other than taking a bar datum and not a bar label,
-  // it works like sliceSortingFn.
-  //
-  // FIXME (michaelr; SBC): can we get rid of the inconsistency with
-  // sliceSortingFn?
-  //
-  barSortingFn: Ember.computed(function() {
-    return function(barData) { return barData.barLabel; };
+  customBarSortingFn: Ember.computed(function() {
+    return (barData1, barData2) => {
+      return this._naturallyCompareStringsFn(barData1.barLabel, barData2.barLabel);
+    };
   }),
 
-  _barSortingFn: Ember.computed('barSortingFn', 'sortKey', function() {
+  valueBarSortingFn: Ember.computed(function() {
+    return (barData1, barData2) => {
+      return this._naturallyCompareStringsFn(barData1.value, barData2.value);
+    };
+  }),
+
+  barSortingFn: Ember.computed('valueBarSortingFn', 'customBarSortingFn', 'sortKey', function() {
     var sortKey = this.get('sortKey');
     if (sortKey === 'value') {
-      return barData => barData.value;
+      return this.get('valueBarSortingFn');
     } else if (sortKey === 'custom'){
-      return this.get('barSortingFn');
+      return this.get('customBarSortingFn');
     } else {
       throw new Error("Invalid sortKey");
     }
