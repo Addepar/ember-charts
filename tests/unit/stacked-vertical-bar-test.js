@@ -21,7 +21,7 @@ var three_ranges = [{
 }, {
    sliceLabel: "Label 2",
    barLabel: "Group Two",
-   value: 17
+   value: 18
 }, {
    sliceLabel: "Label 2",
    barLabel: "Group Three",
@@ -33,12 +33,44 @@ var three_ranges = [{
 }, {
    sliceLabel: "Label 3",
    barLabel: "Group Two",
-   value: 18
+   value: 17
 }, {
    sliceLabel: "Label 3",
    barLabel: "Group Three",
    value: -19
 }];
+
+// Adds additional slice types to the three_ranges data for higher granularity
+// and more thorough testing of slice sorting mechanics.
+var sliceSortingData = _.cloneDeep(three_ranges).concat([{
+  sliceLabel: "Label 4",
+  barLabel: "Group One",
+  value: -10
+}, {
+  sliceLabel: "Label 4",
+  barLabel: "Group Two",
+  value: -10
+}, {
+  sliceLabel: "Label 4",
+  barLabel: "Group Three",
+  value: 15
+}, {
+  sliceLabel: "Label 5",
+  barLabel: "Group One",
+  value: 20
+}, {
+  sliceLabel: "Label 5",
+  barLabel: "Group Three",
+  value: 20
+}, {
+  sliceLabel: "Label 6",
+  barLabel: "Group One",
+  value: 10,
+}, {
+  sliceLabel: "Label 6",
+  barLabel: "Group Three",
+  value: 10
+}]);
 
 moduleForComponent('stacked-vertical-bar-chart', '[Unit] Stacked bar component', {
   needs: [ 'template:components/chart-component'],
@@ -51,8 +83,8 @@ test("it exists", function(assert) {
 });
 
 test('Margins are the right size', function(assert) {
-  var component = this.subject();
   assert.expect(3);
+  var component = this.subject();
 
   assert.equal(component.get('marginLeft'), 0, 'no left margin');
   assert.equal(component.get('marginRight'), 0, 'no right margin');
@@ -61,7 +93,6 @@ test('Margins are the right size', function(assert) {
 
 test('In total, the correct number of stacking slices is displayed', function(assert) {
   assert.expect(1);
-
   this.subject({data: three_ranges});
   this.render();
 
@@ -91,11 +122,9 @@ const equalsWithTolerance = function(actual, expected) {
     (Math.abs(actual - expected) < tolerance);
 };
 
-test('Within each bar, the stacking slices have the correct heights relative to each other',
-function(assert) {
+test('Within each bar, the stacking slices have the correct heights relative to each other', function(assert) {
   var dataByBarLabel, barData, svgBarsByBarLabel, barLabel, svgBar, slices,
     barHeight, sliceHeights, iSlice, expectedSliceHeights, barDatum;
-
   assert.expect(three_ranges.length);
 
   dataByBarLabel = _.groupBy(_.cloneDeep(three_ranges), 'barLabel');
@@ -211,10 +240,9 @@ test('The bars have the correct heights relative to each other', function(assert
   }
 });
 
-test('The bars have the correct heights relative to the values on the y-axis ticks',
-function(assert) {
-  var dataByBarLabel, grossBarSums, pixelsPerDataUnit,
-    expectedBarHeights, actualBarHeights, barLabel;
+test('The bars have the correct heights relative to the values on the y-axis ticks', function(assert) {
+  var dataByBarLabel, grossBarSums, pixelsPerDataUnit, expectedBarHeights,
+    actualBarHeights, barLabel;
 
   dataByBarLabel = _.groupBy(three_ranges, 'barLabel');
   assert.expect(1 + _.keys(dataByBarLabel).length);
@@ -283,8 +311,7 @@ function(assert) {
   }
 });
 
-test('All stacking slices with the same label have the same color as shown in the legend',
-function(assert) {
+test('All stacking slices with the same label have the same color as shown in the legend', function(assert) {
   var component, sliceLabels, legendColorsBySliceLabel;
 
   sliceLabels = _.keys(_.groupBy(three_ranges, 'sliceLabel'));
@@ -322,7 +349,7 @@ function(assert) {
     legendColorsBySliceLabel[label] = $('path', this).css('fill');
   });
   assert.equal(_.keys(legendColorsBySliceLabel).length, sliceLabels.length,
-    "Every slice label in the data for the chart also appears in the chart legend");
+    'Every slice label in the data for the chart also appears in the chart legend');
 
   const getSliceColor = function() {
     return $(this).css('fill');
@@ -410,9 +437,9 @@ const isColorWhite = function(colorString) {
 test('Configurable, white lines exist between slices in a stacked bar', function(assert) {
   var component, allSliceElements, allSlicesAreOutlined, allSlicesAre5px;
   assert.expect(2);
-
   component = this.subject({data: three_ranges});
   this.render();
+
   allSliceElements = this.$('rect');
   allSlicesAreOutlined = allSliceElements.toArray().every(function(slice) {
     var $slice, isOutlineVisible, isOutlineWhite;
@@ -424,9 +451,7 @@ test('Configurable, white lines exist between slices in a stacked bar', function
   assert.ok(allSlicesAreOutlined,
     'All slices have a 1px white outline by default');
 
-  Ember.run(function() {
-    component.set('strokeWidth', '5');
-  });
+  Ember.run(() => { component.set('strokeWidth', '5'); });
   allSliceElements = this.$('rect');
   allSlicesAre5px = allSliceElements.toArray().every(function(slice) {
     return $(slice).attr('stroke-width') === '5px';
@@ -462,9 +487,23 @@ test('Negative value slices are displayed below the y=0 axis', function(assert) 
   });
 });
 
-function validateOtherSlice(assert, component, expectedSliceLabels, expectedSliceCount, scenarioIndex) {
+
+/**
+ * assertOtherSliceIsCorrect - Helper function that performs 3 assertions
+ *    pertaining to the 'Other' slice:
+ *    1) The slice labels shown in the legend are as expected
+ *    2) The total number of slices in the DOM is as expected
+ *    3) The existence of the 'Other' slice is as expected
+ * @function
+ * @param  {Object} assert - assert object from the test being run
+ * @param  {StackedVerticalBarChartComponent} component	- SBC component being tested
+ * @param  {number} expectedSliceLabels - number of legend items expected
+ * @param  {number} expectedSliceCount - number of total slices expected
+ * @param  {string} scenarioIndex - unique string for assertion being run
+ */
+function assertOtherSliceIsCorrect(assert, component, expectedSliceLabels, expectedSliceCount, scenarioIndex) {
   var $slices, $otherSliceLegendItem, otherSliceLabel;
-  $slices = $('g.bars rect');
+  $slices = $('g.bars rect'); // All slices that exist in the DOM
   otherSliceLabel = component.get('otherSliceLabel');
   $otherSliceLegendItem = $('g.legend-item:contains(' + otherSliceLabel + ')');
   assert.ok(_.isEqual(component.get('allSliceLabels'), expectedSliceLabels),
@@ -478,10 +517,9 @@ function validateOtherSlice(assert, component, expectedSliceLabels, expectedSlic
 }
 
 test("'Other' slice correctly aggregates smallest slices when there are too many", function(assert) {
-  var component, otherSliceLabel, expectedSliceLabels,
-  oneSliceUnderThresholdData, twoSlicesUnderThresholdData;
+  var component, otherSliceLabel, expectedSliceLabels, scenarioThreeData,
+  scenarioFourData;
   assert.expect(12);
-
   component = this.subject({ data: three_ranges });
   this.render();
   otherSliceLabel = component.get('otherSliceLabel');
@@ -495,7 +533,7 @@ test("'Other' slice correctly aggregates smallest slices when there are too many
   // will need to be aggregated into an Other slice.
   Ember.run(() => { component.set('maxNumberOfSlices', 2); });
   expectedSliceLabels = ['Label 1', otherSliceLabel];
-  validateOtherSlice(assert, component, expectedSliceLabels, 6, 'One');
+  assertOtherSliceIsCorrect(assert, component, expectedSliceLabels, 6, 'One');
 
   // SCENARIO TWO:
   // Number of unique slice labels in data = 3
@@ -506,7 +544,7 @@ test("'Other' slice correctly aggregates smallest slices when there are too many
   // slice threshold, so there should not be an 'Other' slice.
   Ember.run(() => { component.set('maxNumberOfSlices', 3); });
   expectedSliceLabels = ['Label 1', 'Label 2', 'Label 3'];
-  validateOtherSlice(assert, component, expectedSliceLabels, 9, 'Two');
+  assertOtherSliceIsCorrect(assert, component, expectedSliceLabels, 9, 'Two');
 
   // SCENARIO THREE:
   // Number of unique slice labels in data = 3
@@ -515,15 +553,15 @@ test("'Other' slice correctly aggregates smallest slices when there are too many
   // EXPECTATION: The slice label that fails to meet the minSlicePercent would
   // normally fall into the 'Other' slice, but it is the ONLY slice in 'Other',
   // so in this case it will actually get displayed despite being < min %
-  oneSliceUnderThresholdData = _.cloneDeep(three_ranges);
-  oneSliceUnderThresholdData.forEach((datum) => {
+  scenarioThreeData = _.cloneDeep(three_ranges);
+  scenarioThreeData.forEach(datum => {
     if (datum.sliceLabel === 'Label 2') {
       datum.value = 0.05;
     }
   });
-  Ember.run(() => { component.set('data', oneSliceUnderThresholdData); });
+  Ember.run(() => { component.set('data', scenarioThreeData); });
   expectedSliceLabels = ['Label 1', 'Label 2', 'Label 3'];
-  validateOtherSlice(assert, component, expectedSliceLabels, 9, 'Three');
+  assertOtherSliceIsCorrect(assert, component, expectedSliceLabels, 9, 'Three');
 
   // SCENARIO FOUR:
   // Number of unique slice labels in data = 3
@@ -532,13 +570,222 @@ test("'Other' slice correctly aggregates smallest slices when there are too many
   // EXPECTATION: Because now two slices fail to meet the minSlicePercent
   // instead of just one, we can display the Other slice. Only the one slice
   // label that met the min slice % threshold should have its own legend item
-  twoSlicesUnderThresholdData = _.cloneDeep(oneSliceUnderThresholdData);
-  twoSlicesUnderThresholdData.forEach((datum) => {
+  scenarioFourData = _.cloneDeep(scenarioThreeData);
+  scenarioFourData.forEach((datum) => {
     if (datum.sliceLabel === 'Label 3') {
       datum.value = 0.05;
     }
   });
-  Ember.run(() => { component.set('data', twoSlicesUnderThresholdData); });
+  Ember.run(() => { component.set('data', scenarioFourData); });
   expectedSliceLabels = ['Label 1', otherSliceLabel];
-  validateOtherSlice(assert, component, expectedSliceLabels, 6, 'Four');
+  assertOtherSliceIsCorrect(assert, component, expectedSliceLabels, 6, 'Four');
+});
+
+test("'Other' slice is end-aligned (either positive or negative) for every bar", function(assert) {
+  var component, nonOtherSlices, otherSliceYPos, otherSliceOnEnd;
+  assert.expect(3);
+  component = this.subject({
+    data: sliceSortingData,
+    maxNumberOfSlices: 4
+  });
+  this.render();
+
+  // Find the Other slice in each bar and verify that it is on the end of the
+  // bar (either top or bottom, depending on its sign)
+  this.$('g.bars').each((iBar, bar) => {
+    nonOtherSlices = $(bar).find('rect').not('.grouping-3').toArray();
+    otherSliceYPos = parseInt($(bar).find('rect.grouping-3').attr('y'));
+    otherSliceOnEnd = nonOtherSlices.every((slice) => otherSliceYPos < $(slice).attr('y')) ||
+                      nonOtherSlices.every((slice) => otherSliceYPos > $(slice).attr('y'));
+    assert.ok(otherSliceOnEnd, "The 'Other' slice is at an end of bar " + iBar);
+  });
+});
+
+test('All slices are sorted correctly within their respective bars', function(assert) {
+  var component, sliceSortOrder, xAxisElement, xAxisTransformY, positiveSlices,
+  negativeSlices, allSlices, currentSliceGrouping, nextSliceGrouping,
+  sliceOutOfOrder;
+  assert.expect(3);
+  component = this.subject({
+    data: sliceSortingData,
+    maxNumberOfSlices: 4
+  })
+  this.render();
+
+  // sliceSortOrder maps to: ['Label 1', 'Label 4', 'Label 5', 'Other']
+  sliceSortOrder = ['grouping-2', 'grouping-0', 'grouping-1', 'grouping-3'];
+  xAxisElement = this.$('.tick:not(.minor)');
+  xAxisTransformY = parseInt(xAxisElement.attr('transform').match(/\d+/g)[1]);
+
+  // Check the slice ordering for each bar. This needs to be done separately
+  // for positive and negative slices.
+  this.$('g.bars').each((iBar, bar) => {
+    allSlices = $(bar).find('rect').toArray();
+    // Sort slice elements by 'y' value so they are in order from top to bottom.
+    // Use this order to create positive and negative stacks with slices
+    // sorted by distance from x-axis, ascending.
+    positiveSlices = [], negativeSlices = [];
+    _.sortBy(allSlices, slice => parseInt($(slice).attr('y'))).forEach(slice => {
+      if ($(slice).attr('y') < xAxisTransformY) {
+        positiveSlices.unshift(slice);
+      } else {
+        negativeSlices.push(slice);
+      }
+    });
+    // Verify that every slice in each stack is higher in the sort order than
+    // the next slice. Trigger a flag if this is not true.
+    sliceOutOfOrder = false;
+    [positiveSlices, negativeSlices].forEach(stack => {
+      for (var i = 0; i < stack.length - 1; i++) {
+        currentSliceGrouping = $(stack[i]).attr('class');
+        nextSliceGrouping = $(stack[i + 1]).attr('class');
+        if (sliceSortOrder.indexOf(currentSliceGrouping) >
+            sliceSortOrder.indexOf(nextSliceGrouping)) {
+          sliceOutOfOrder = true;
+        }
+      }
+    });
+    assert.ok(!sliceOutOfOrder, 'All slices are ordered correctly in bar ' + iBar);
+  })
+});
+
+test('Slices not in largest bar are sorted correctly', function(assert) {
+  var component, largestBarLabel, expectedSliceOrder, newSliceSortingFn,
+  newExpectedSortOrder;
+  assert.expect(3);
+  component = this.subject({
+    data: sliceSortingData,
+    maxNumberOfSlices: 6
+  });
+  this.render();
+
+  largestBarLabel = component.get('largestNetValueBar')[0].barLabel;
+  expectedSliceOrder = [1,2,3,4,5,6].map(number => 'Label ' + number);
+  assert.equal(largestBarLabel, 'Group Two', 'Group two is the largest bar');
+  assert.ok(_.isEqual(component.get('sliceSortOrder'), expectedSliceOrder),
+    'The slice sorting order is as expected by default');
+
+  // Override the existing slice sorting function (alphabetical) with one that
+  // sorts in reverse alphabetical
+  newSliceSortingFn = sliceLabel => -sliceLabel;
+  Ember.run(() => { component.set('sliceSortingFn', newSliceSortingFn); });
+
+  // The new slice sorting function should only be sorting slices that are not
+  // included in the largest net value bar. Any slice type included in the
+  // largest bar should still be sorted by absolute value, descending, which is
+  // not currently overrideable.
+  newExpectedSortOrder = [1,2,3,4,6,5].map(number => "Label " + number);
+  assert.ok(_.isEqual(component.get('sliceSortOrder'), newExpectedSortOrder),
+    'The slice sorting order is changed with a new sorting function');
+});
+
+test('If a slice has a label, it is shown in all bars regardless of minSlicePercent', function(assert) {
+  var modifiedData, component, expectedSliceOrder, $label4Slices;
+  assert.expect(2);
+  // Modify input data so there is a slice in the largest net value bar (Group
+  // Two) that will definitely NOT be aggregated into the Other slice due to its
+  // high value. Put this same slice type in the other bars, but with values
+  // that will definitely fail to meet the minimum slice percent threshold.
+  modifiedData = three_ranges.concat([{
+    sliceLabel: 'Label 4',
+    barLabel: 'Group One',
+    value: 0.05
+  }, {
+    sliceLabel: 'Label 4',
+    barLabel: 'Group Two',
+    value: 20
+  }, {
+    sliceLabel: 'Label 4',
+    barLabel: 'Group Three',
+    value: 0.05
+  }]);
+  component = this.subject({
+    data: modifiedData,
+    maxNumberOfSlices: 3
+  });
+  this.render();
+
+  expectedSliceOrder = ['Label 1', 'Label 4', 'Other'];
+  assert.ok(_.isEqual(component.get('sliceSortOrder'), expectedSliceOrder),
+    'Label 4 slices are not aggregated into the Other slice initially')
+  $label4Slices = this.$('.grouping-0');
+  assert.equal($label4Slices.length, 3, 'All three slices for Label 4 are ' +
+    'rendered on the DOM, despite some not meeting the min slice % threshold');
+});
+
+test('Zero-value slices are never shown in the legend', function(assert) {
+  var component, $legendItems;
+  assert.expect(1);
+  component = this.subject({
+    data: [{ sliceLabel: 'Test', barLabel: 'Test', value: 0 }]
+  });
+  this.render();
+
+  $legendItems = this.$('.legend-container').children();
+  assert.equal($legendItems.length, 0, 'No legend items are displayed');
+});
+
+
+/**
+ * assertBarSortingIsCorrect - Helper function that performs 2 assertions
+ *    pertaining to bar sorting:
+ *    1) Bar sorting order is correct in the `barNames` property, which is
+ *       inevitably determines how D3 renders the bar order
+ *    2) Bar sorting is visually correct on the page (ie, whether the D3
+ *       domain to determine bar order is working correctly)
+ *
+ * @function
+ * @param  {Object} assert - Assert object from the test being run
+ * @param  {StackedVerticalBarChartComponent} component - SBC component being tested
+ * @param  {Array.<string>} expectedBarOrder - Order of bars by label, left to right
+ * @param  {string} message - Additional message to include to uniquely identify
+ *                          	each iteration of this helper function being run
+ */
+function assertBarSortingIsCorrect(assert, component, expectedBarOrder, message) {
+  var sortedBarElements, sortedBarElementLabels;
+  assert.ok(_.isEqual(component.get('barNames'), expectedBarOrder),
+    'Bars are logically sorted correctly (in data structure) for ' + message);
+  sortedBarElements = _.sortBy($('.bars'), bar => {
+    return parseInt($(bar).attr('transform').match(/\d+/g)[0]);
+  });
+  sortedBarElementLabels = _.map(sortedBarElements, bar => $(bar).text());
+  assert.ok(_.isEqual(sortedBarElementLabels, expectedBarOrder), 'Bars are ' +
+    'visually sorted correctly (on the DOM) for ' + message);
+};
+
+test('Bars are sorted correctly', function(assert) {
+  var component, expectedBarOrder, ascByValueOrder, descByValueOrder,
+  descAlphabetical, descCustomSort;
+  assert.expect(8);
+  component = this.subject({ data: three_ranges });
+  this.render();
+
+  // First, test the default sorting: ascending by value
+  ascByValueOrder = ['Group Three', 'Group One', 'Group Two'];
+  assertBarSortingIsCorrect(assert, component, ascByValueOrder,
+    'ascending by value');
+
+  // Second, turn off sortAscending so that sort is descending by value
+  Ember.run(() => { component.set('sortAscending', false); });
+  descByValueOrder = ['Group Two', 'Group One', 'Group Three'];
+  assertBarSortingIsCorrect(assert, component, descByValueOrder,
+    'descending by value');
+
+  // Third, change sortKey to the 'custom' (defaults to alphabetical). Still
+  // descending.
+  Ember.run(() => { component.set('sortKey', 'custom'); });
+  descAlphabetical = ['Group Two', 'Group Three', 'Group One'];
+  assertBarSortingIsCorrect(assert, component, descAlphabetical, 'descending ' +
+    'alphabetical, which is the default custom sort');
+
+  // Fourth, override the default custom sorting function so that it instead
+  // will sum the integers of a bar's value. Still descending.
+  Ember.run(() => { component.set('barSortingFn', function(barData) {
+    return ('' + Math.abs(barData.value))
+           .split('')
+           .reduce((sum, num) => sum + parseInt(num), 0);
+  }); });
+  descCustomSort = ['Group Two', 'Group One', 'Group Three'];
+  assertBarSortingIsCorrect(assert, component, descCustomSort, 'descending ' +
+    'custom sort (sum of integers in bar value)');
 });
