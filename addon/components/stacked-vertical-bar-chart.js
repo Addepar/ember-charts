@@ -78,20 +78,30 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
   }),
 
   // Maps the label for each bar to the total (gross) value of each bar
+  largestGrossBarValue: Ember.computed('dataGroupedByBar', function() {
+    var grossBarValues = _.map(this.get('dataGroupedByBar'), (barData, barLabel) => {
+      return barData.reduce((sum, slice) => {
+        return sum + Math.abs(slice.value);
+      }, 0);
+    });
+    return _.max(grossBarValues);
+  }),
+
+  // Stores the net value and label for each bar
   netBarValues: Ember.computed('dataGroupedByBar', function() {
     var dataGroupedByBar = this.get('dataGroupedByBar');
     return _.map(dataGroupedByBar, (barData, barLabel) => {
       var barValue = barData.reduce((sum, slice) => {
-        return sum + Math.abs(slice.value);
+        return sum + slice.value;
       }, 0);
       return { barLabel: barLabel, value: barValue };
     });
   }),
 
-  largestSliceData: Ember.computed('dataGroupedByBar', 'netBarValues', function() {
+  largestSliceData: Ember.computed('dataGroupedBySlice', 'largestGrossBarValue', function() {
     var dataGroupedBySlice, largestSlice, largestBarValue, largestSliceData;
     dataGroupedBySlice = this.get('dataGroupedBySlice');
-    largestBarValue = _.max(_.pluck(this.get('netBarValues'), 'value'));
+    largestBarValue = this.get('largestGrossBarValue');
     largestSliceData = _.map(dataGroupedBySlice, (sliceTypeData, sliceLabel) => {
       largestSlice = _.max(sliceTypeData, (slice) => {
         return Math.abs(slice.value);
@@ -275,10 +285,11 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
 
   barSortingFn: function(barData) { return barData.barLabel; },
 
-  _barSortingFn: Ember.computed('sortKey', function() {
-    if (this.get('sortKey') === 'value') {
+  _barSortingFn: Ember.computed('barSortingFn', 'sortKey', function() {
+    var sortKey = this.get('sortKey');
+    if (sortKey === 'value') {
       return barData => barData.value;
-    } else if (this.get('sortKey') === 'custom'){
+    } else if (sortKey === 'custom'){
       return this.get('barSortingFn');
     } else {
       throw new Error("Invalid sortKey");

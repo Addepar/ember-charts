@@ -352,7 +352,7 @@ function(assert) {
     legendColorsBySliceLabel[label] = $('path', this).css('fill');
   });
   assert.equal(_.keys(legendColorsBySliceLabel).length, sliceLabels.length,
-    "Every slice label in the data for the chart also appears in the chart legend");
+    'Every slice label in the data for the chart also appears in the chart legend');
 
   const getSliceColor = function() {
     return $(this).css('fill');
@@ -588,11 +588,11 @@ test("'Other' slice is end-aligned (either positive or negative) for every bar",
     otherSliceYPos = parseInt($(bar).find('rect.grouping-3').attr('y'));
     otherSliceOnEnd = nonOtherSlices.every((slice) => otherSliceYPos < $(slice).attr('y')) ||
                       nonOtherSlices.every((slice) => otherSliceYPos > $(slice).attr('y'));
-    assert.ok(otherSliceOnEnd, 'The "Other" slice is at an end of bar ' + iBar);
+    assert.ok(otherSliceOnEnd, "The 'Other' slice is at an end of bar " + iBar);
   });
 });
 
-test("All slices are sorted correctly within their respective bars", function(assert) {
+test('All slices are sorted correctly within their respective bars', function(assert) {
   var component, sliceSortOrder, xAxisElement, xAxisTransformY, positiveSlices,
   negativeSlices, allSlices, currentSliceGrouping, nextSliceGrouping,
   sliceOutOfOrder;
@@ -639,7 +639,7 @@ test("All slices are sorted correctly within their respective bars", function(as
   })
 });
 
-test("Slices not in largest bar are sorted correctly", function(assert) {
+test('Slices not in largest bar are sorted correctly', function(assert) {
   var component, largestBarLabel, expectedSliceOrder, newSliceSortingFn,
   newExpectedSortOrder;
   assert.expect(3);
@@ -650,7 +650,7 @@ test("Slices not in largest bar are sorted correctly", function(assert) {
   this.render();
 
   largestBarLabel = component.get('largestNetValueBar')[0].barLabel;
-  expectedSliceOrder = [1,2,3,4,5,6].map(number => "Label " + number);
+  expectedSliceOrder = [1,2,3,4,5,6].map(number => 'Label ' + number);
   assert.equal(largestBarLabel, 'Group Two', 'Group two is the largest bar');
   assert.ok(_.isEqual(component.get('sliceSortOrder'), expectedSliceOrder),
     'The slice sorting order is as expected by default');
@@ -668,20 +668,20 @@ test("Slices not in largest bar are sorted correctly", function(assert) {
     'The slice sorting order is changed with a new sorting function');
 });
 
-test("If a slice has a label, it is shown in all bars regardless of minSlicePercent", function(assert) {
+test('If a slice has a label, it is shown in all bars regardless of minSlicePercent', function(assert) {
   var modifiedData, component, expectedSliceOrder, $label4Slices;
   assert.expect(2);
   modifiedData = three_ranges.concat([{
-    sliceLabel: "Label 4",
-    barLabel: "Group One",
+    sliceLabel: 'Label 4',
+    barLabel: 'Group One',
     value: 0.05
   }, {
-    sliceLabel: "Label 4",
-    barLabel: "Group Two",
+    sliceLabel: 'Label 4',
+    barLabel: 'Group Two',
     value: 20
   }, {
-    sliceLabel: "Label 4",
-    barLabel: "Group Three",
+    sliceLabel: 'Label 4',
+    barLabel: 'Group Three',
     value: 0.05
   }]);
   component = this.subject({
@@ -690,7 +690,7 @@ test("If a slice has a label, it is shown in all bars regardless of minSlicePerc
   });
   this.render();
 
-  expectedSliceOrder = ["Label 1", "Label 4", "Other"];
+  expectedSliceOrder = ['Label 1', 'Label 4', 'Other'];
   assert.ok(_.isEqual(component.get('sliceSortOrder'), expectedSliceOrder),
     'Label 4 slices are not aggregated into the Other slice initially')
   $label4Slices = this.$('.grouping-0');
@@ -698,14 +698,61 @@ test("If a slice has a label, it is shown in all bars regardless of minSlicePerc
     'rendered on the DOM, despite some not meeting the min slice % threshold');
 });
 
-test("Zero-value slices are never shown in the legend", function(assert) {
+test('Zero-value slices are never shown in the legend', function(assert) {
   var component, $legendItems;
   assert.expect(1);
   component = this.subject({
-    data: [{ sliceLabel: "Test", barLabel: "Test", value: 0 }]
+    data: [{ sliceLabel: 'Test', barLabel: 'Test', value: 0 }]
   });
   this.render();
 
-  $legendItems = this.$(".legend-container").children();
-  assert.equal($legendItems.length, 0, "No legend items are displayed");
+  $legendItems = this.$('.legend-container').children();
+  assert.equal($legendItems.length, 0, 'No legend items are displayed');
+});
+
+function validateBarSorting(assert, component, expectedBarOrder, message) {
+  var sortedBarElements, sortedBarElementLabels;
+  assert.ok(_.isEqual(component.get('barNames'), expectedBarOrder),
+    'Bars are logically sorted correctly (in data structure) for ' + message);
+  sortedBarElements = _.sortBy($('.bars'), bar => {
+    return parseInt($(bar).attr('transform').match(/\d+/g)[0]);
+  });
+  sortedBarElementLabels = _.map(sortedBarElements, bar => $(bar).text());
+  assert.ok(_.isEqual(sortedBarElementLabels, expectedBarOrder), 'Bars are ' +
+    'visually sorted correctly (on the DOM) for ' + message);
+};
+
+test('Bars are sorted correctly', function(assert) {
+  var component, expectedBarOrder, ascByValueOrder, descByValueOrder,
+  descAlphabetical, descCustomSort;
+  assert.expect(8);
+  component = this.subject({ data: three_ranges });
+  this.render();
+
+  // First, test the default sorting: ascending by value
+  ascByValueOrder = ['Group Three', 'Group One', 'Group Two'];
+  validateBarSorting(assert, component, ascByValueOrder, 'ascending by value');
+
+  // Second, turn off sortAscending so that sort is descending by value
+  Ember.run(() => { component.set('sortAscending', false); });
+  descByValueOrder = ['Group Two', 'Group One', 'Group Three'];
+  validateBarSorting(assert, component, descByValueOrder, 'descending by value');
+
+  // Third, change sortKey to the 'custom' (defaults to alphabetical). Still
+  // descending.
+  Ember.run(() => { component.set('sortKey', 'custom'); });
+  descAlphabetical = ['Group Two', 'Group Three', 'Group One'];
+  validateBarSorting(assert, component, descAlphabetical, 'descending ' +
+    'alphabetical, which is the default custom sort');
+
+  // Fourth, override the default custom sorting function so that it instead
+  // will sum the integers of a bar's value. Still descending.
+  Ember.run(() => { component.set('barSortingFn', function(barData) {
+    return ('' + Math.abs(barData.value))
+           .split('')
+           .reduce((sum, num) => sum + parseInt(num), 0);
+  }); });
+  descCustomSort = ['Group Two', 'Group One', 'Group Three'];
+  validateBarSorting(assert, component, descCustomSort, 'descending custom ' +
+    'sort (sum of integers in bar value)');
 });
