@@ -2519,10 +2519,6 @@ define('ember-charts/components/stacked-vertical-bar-chart', ['exports', 'module
    *
    * Supersedes the deprecated functionality of VerticalBarChartComponent
    * with stackBars: true.
-   *
-   * FIXME (SBC): here and in documentation.hbs:
-   *  1. Remove withinGroupPadding
-   *  2. s/betweenGroupPadding/withinGroupPadding/g
    */
   var StackedVerticalBarChartComponent = _ChartComponent['default'].extend(_LegendMixin['default'], _FloatingTooltipMixin['default'], _AxesMixin['default'], _FormattableMixin['default'], _NoMarginChartMixin['default'], _AxisTitlesMixin['default'], _SortableChartMixin['default'], {
 
@@ -2581,32 +2577,41 @@ define('ember-charts/components/stacked-vertical-bar-chart', ['exports', 'module
     }),
 
     // Maps the label for each bar to the total (gross) value of each bar
-    barValues: _Ember['default'].computed('dataGroupedByBar', function () {
+    largestGrossBarValue: _Ember['default'].computed('dataGroupedByBar', function () {
+      var grossBarValues = _.map(this.get('dataGroupedByBar'), function (barData) {
+        return barData.reduce(function (sum, slice) {
+          return sum + Math.abs(slice.value);
+        }, 0);
+      });
+      return _.max(grossBarValues);
+    }),
+
+    // Stores the net value and label for each bar
+    netBarValues: _Ember['default'].computed('dataGroupedByBar', function () {
       var dataGroupedByBar = this.get('dataGroupedByBar');
       return _.map(dataGroupedByBar, function (barData, barLabel) {
         var barValue = barData.reduce(function (sum, slice) {
-          return sum + Math.abs(slice.value);
+          return sum + slice.value;
         }, 0);
         return { barLabel: barLabel, value: barValue };
       });
     }),
 
-    largestSliceData: _Ember['default'].computed('dataGroupedByBar', 'barValues', function () {
+    largestSliceData: _Ember['default'].computed('dataGroupedBySlice', 'largestGrossBarValue', function () {
       var dataGroupedBySlice, largestSlice, largestBarValue, largestSliceData;
       dataGroupedBySlice = this.get('dataGroupedBySlice');
-      largestBarValue = _.max(_.pluck(this.get('barValues'), 'value'));
+      largestBarValue = this.get('largestGrossBarValue');
       largestSliceData = _.map(dataGroupedBySlice, function (sliceTypeData, sliceLabel) {
         largestSlice = _.max(sliceTypeData, function (slice) {
           return Math.abs(slice.value);
         });
         return {
           sliceLabel: sliceLabel,
-          largestSliceValue: largestSlice.value,
           percentOfBar: Math.abs(largestSlice.value / largestBarValue * 100)
         };
       });
       return largestSliceData.filter(function (sliceData) {
-        return sliceData.largestSliceValue !== 0;
+        return !(isNaN(sliceData.percentOfBar) || sliceData.percentOfBar === 0);
       });
     }),
 
@@ -2624,7 +2629,7 @@ define('ember-charts/components/stacked-vertical-bar-chart', ['exports', 'module
 
       // Sort by slice value and take the biggest (N - 1) slices, where N is the
       // max number we can display. This saves one slice for Other.
-      nonOtherSlices = _.takeRight(_.sortBy(nonOtherSlices, 'largestSliceValue'), maxNumberOfSlices - 1);
+      nonOtherSlices = _.takeRight(_.sortBy(nonOtherSlices, 'percentOfBar'), maxNumberOfSlices - 1);
 
       // If only one slice will exist in 'Other', we can just display it instead
       // of 'Other'. Otherwise, just return the filtered labels.
@@ -2667,9 +2672,9 @@ define('ember-charts/components/stacked-vertical-bar-chart', ['exports', 'module
       }, {});
     }),
 
-    barNames: _Ember['default'].computed('barValues', '_barSortingFn', 'sortAscending', function () {
+    barNames: _Ember['default'].computed('netBarValues', '_barSortingFn', 'sortAscending', function () {
       var sortedBars, sortedBarNames;
-      sortedBars = _.sortBy(this.get('barValues'), this.get('_barSortingFn'));
+      sortedBars = _.sortBy(this.get('netBarValues'), this.get('_barSortingFn'));
       sortedBarNames = _.pluck(sortedBars, 'barLabel');
       if (!this.get('sortAscending')) {
         sortedBarNames.reverse();
@@ -2678,7 +2683,8 @@ define('ember-charts/components/stacked-vertical-bar-chart', ['exports', 'module
     }),
 
     // Data grouped by bar with all slices sorted correctly in each bar
-    sortedData: _Ember['default'].computed('dataGroupedByBarWithOther', function () {
+    // (sliceSortOrder is an implicit dependency through the sortSlices() calls)
+    sortedData: _Ember['default'].computed('dataGroupedByBarWithOther', 'sliceSortOrder', function () {
       var _this = this;
 
       var groupedData = this.get('dataGroupedByBarWithOther');
@@ -2741,11 +2747,10 @@ define('ember-charts/components/stacked-vertical-bar-chart', ['exports', 'module
     // * First, take the bar with the largest NET value. For all slices in this
     //   bar, sort them by absolute value, descending.
     // * For all remaining slices that are not in the largest net value bar, sort
-    //   according to the `sortRemainingSlices` function. By default, this sorts
+    //   according to the `sliceSortingFn` function. By default, this sorts
     //   alphabetically. It can be overridden to change this behavior.
-    sliceSortOrder: _Ember['default'].computed('largestNetValueBar', 'allSliceLabels.[]', function () {
+    sliceSortOrder: _Ember['default'].computed('otherSliceLabel', 'sliceSortingFn', 'largestNetValueBar', 'allSliceLabels.[]', function () {
       var sortedSlices, remainingSlices, sliceSortingFn, otherSliceLabel, otherLabelIndex;
-      otherSliceLabel = this.get('otherSliceLabel');
       sliceSortingFn = this.get('sliceSortingFn');
       // Sort all slices in the largest bar by absolute value
       sortedSlices = _.pluck(_.sortBy(this.get('largestNetValueBar'), function (slice) {
@@ -2756,6 +2761,7 @@ define('ember-charts/components/stacked-vertical-bar-chart', ['exports', 'module
       remainingSlices = _.difference(this.get('allSliceLabels'), sortedSlices);
       sortedSlices = sortedSlices.concat(_.sortBy(remainingSlices, sliceSortingFn));
       // Lastly, pluck the Other slice (if it exists) and push to end.
+      otherSliceLabel = this.get('otherSliceLabel');
       otherLabelIndex = sortedSlices.indexOf(otherSliceLabel);
       if (otherLabelIndex !== -1) {
         sortedSlices.splice(otherLabelIndex, 1);
@@ -2764,37 +2770,56 @@ define('ember-charts/components/stacked-vertical-bar-chart', ['exports', 'module
       return sortedSlices;
     }),
 
-    // This is the default sorting function for slices that are not displayed
-    // in the largest bar. This can be overridden to change how slice sorting
+    // This function is used to compare slice labels in order to sort slices
+    // that are not displayed in the largest bar.
+    //
+    // It takes a SINGLE string input and returns a sort key for the string,
+    // which can be of any type JavaScript can compare.
+    // (This matches the requirements for the function passed to Lodash.js's
+    // _.sortBy(), but NOT the ones for JavaScript's built-in Array.sort() method.)
+    //
+    // Its default value can be overridden to change how slice sorting
     // works for remaining slices in a given application.
-    sliceSortingFn: function sliceSortingFn(sliceLabel) {
-      return sliceLabel;
-    },
+    //
+    sliceSortingFn: _Ember['default'].computed(function () {
+      return _.identity;
+    }),
 
     // Takes a set of slices and sorts them using the sliceSortOrder.
+    // Not every bar has a slice for every slice label, so the filter at the end
+    // removes undefined slices.
     sortSlices: function sortSlices(slices) {
-      var slicesByLabel = _.reduce(slices, function (result, slice) {
-        result[slice.sliceLabel] = slice;
-        return result;
-      }, {});
-      var sortOrder = this.get('sliceSortOrder');
-      return sortOrder.map(function (sliceLabel) {
-        return slicesByLabel[sliceLabel];
+      return this.get('sliceSortOrder').map(function (sliceLabel) {
+        return slices.filter(function (slice) {
+          return slice.sliceLabel === sliceLabel;
+        })[0];
       }).filter(function (slice) {
         return slice;
       });
     },
 
-    barSortingFn: function barSortingFn(barData) {
-      return barData.barLabel;
-    },
+    // This function is used to compare bar data (NOT bar labels)
+    // in order to sort the bars of the chart.
+    //
+    // Other than taking a bar datum and not a bar label,
+    // it works like sliceSortingFn.
+    //
+    // FIXME (michaelr; SBC): can we get rid of the inconsistency with
+    // sliceSortingFn?
+    //
+    barSortingFn: _Ember['default'].computed(function () {
+      return function (barData) {
+        return barData.barLabel;
+      };
+    }),
 
-    _barSortingFn: _Ember['default'].computed('sortKey', function () {
-      if (this.get('sortKey') === 'value') {
+    _barSortingFn: _Ember['default'].computed('barSortingFn', 'sortKey', function () {
+      var sortKey = this.get('sortKey');
+      if (sortKey === 'value') {
         return function (barData) {
           return barData.value;
         };
-      } else if (this.get('sortKey') === 'custom') {
+      } else if (sortKey === 'custom') {
         return this.get('barSortingFn');
       } else {
         throw new Error("Invalid sortKey");
