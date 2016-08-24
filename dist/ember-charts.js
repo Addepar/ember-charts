@@ -2886,16 +2886,16 @@ define('ember-charts/components/stacked-vertical-bar-chart', ['exports', 'module
       };
     }),
 
-    originalOrderSortingFn: _Ember['default'].computed(function () {
+    originalOrderSortingFn: _Ember['default'].computed('originalBarOrder', function () {
       var _this4 = this;
 
       var originalOrder = this.get('originalBarOrder');
       return function (barData1, barData2) {
-        return _this4.defaultCompareFn(originalOrder.indexOf(barData1), originalOrder.indexOf(barData2));
+        return _this4.defaultCompareFn(originalOrder.indexOf(barData1.barLabel), originalOrder.indexOf(barData2.barLabel));
       };
     }),
 
-    barSortingFn: _Ember['default'].computed('valueBarSortingFn', 'customBarSortingFn', 'sortKey', function () {
+    barSortingFn: _Ember['default'].computed('valueBarSortingFn', 'customBarSortingFn', 'originalOrderSortingFn', 'sortKey', function () {
       var sortKey = this.get('sortKey');
       if (sortKey === 'value') {
         return this.get('valueBarSortingFn');
