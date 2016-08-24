@@ -359,3 +359,72 @@ test('Quarterly Filter', function(assert) {
       0, 'The filtered month is the start of a quarter');
   }
 });
+
+
+test('Minor Tick Filter', function(assert) {
+  assert.expect(13);
+  var component = this.subject(),
+    candidateLabels = null,
+    expectedFiltered = [1404198000000, 1406876400000, 1409554800000, 1412146800000, 1414825200000, 1417420800000, 1435734000000, 1438412400000, 1441090800000, 1443682800000, 1446361200000, 1448956800000],
+    filteredCount = 0,
+    filteredMonths, len, item, i;
+
+  candidateLabels = [
+    new Date('Wed Jan 01 2014 00:00:00 GMT-0800 (PST)'),
+    new Date('Tue Jul 01 2014 00:00:00 GMT-0700 (PDT)'),
+    new Date('Thu Jan 01 2015 00:00:00 GMT-0800 (PST)'),
+    new Date('Wed Jul 01 2015 00:00:00 GMT-0700 (PDT)'),
+    new Date('Sat Feb 01 2014 00:00:00 GMT-0800 (PST)'),
+    new Date('Fri Aug 01 2014 00:00:00 GMT-0700 (PDT)'),
+    new Date('Sun Feb 01 2015 00:00:00 GMT-0800 (PST)'),
+    new Date('Sat Aug 01 2015 00:00:00 GMT-0700 (PDT)'),
+    new Date('Sat Mar 01 2014 00:00:00 GMT-0800 (PST)'),
+    new Date('Mon Sep 01 2014 00:00:00 GMT-0700 (PDT)'),
+    new Date('Sun Mar 01 2015 00:00:00 GMT-0800 (PST)'),
+    new Date('Tue Sep 01 2015 00:00:00 GMT-0700 (PDT)'),
+    new Date('Tue Apr 01 2014 00:00:00 GMT-0700 (PDT)'),
+    new Date('Wed Oct 01 2014 00:00:00 GMT-0700 (PDT)'),
+    new Date('Wed Apr 01 2015 00:00:00 GMT-0700 (PDT)'),
+    new Date('Thu Oct 01 2015 00:00:00 GMT-0700 (PDT)'),
+    new Date('Thu May 01 2014 00:00:00 GMT-0700 (PDT)'),
+    new Date('Sat Nov 01 2014 00:00:00 GMT-0700 (PDT)'),
+    new Date('Fri May 01 2015 00:00:00 GMT-0700 (PDT)'),
+    new Date('Sun Nov 01 2015 00:00:00 GMT-0700 (PDT)'),
+    new Date('Sun Jun 01 2014 00:00:00 GMT-0700 (PDT)'),
+    new Date('Mon Dec 01 2014 00:00:00 GMT-0800 (PST)'),
+    new Date('Mon Jun 01 2015 00:00:00 GMT-0700 (PDT)'),
+    new Date('Tue Dec 01 2015 00:00:00 GMT-0800 (PST)')
+  ];
+
+  Ember.run(function() {
+    component.set('xAxis', {
+      selectAll: function() {
+        Ember.merge(Array.prototype, {
+          style: function(){
+            // using closure to set the result set
+            filteredMonths = this;
+            return this;
+          },
+          attr: function(){ return null; }
+        });
+        return candidateLabels;
+      }
+    });
+
+    component.set('labelledTicks', candidateLabels);
+    component.set('maxNumberOfMinorTicks', 2);
+    component.set('minorTickInterval', 2);
+  });
+
+  component.filterMinorTicks();
+  // we expect to see 12 filtered items here.
+  assert.equal(filteredMonths.length, 12,
+    "The correct number of labels have been converted to minor ticks");
+
+  len = filteredMonths.length;
+  for (i = 0; i < len; i++) {
+    item = filteredMonths[i];
+    assert.notEqual(expectedFiltered.indexOf(item.getTime()), -1,
+      "A label was correctly filtered out - #["+i+"] " + item.getTime() + " which wasn't in: " + expectedFiltered.join(', '));
+  }
+});
