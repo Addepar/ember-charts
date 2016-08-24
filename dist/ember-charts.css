@@ -1,5 +1,5 @@
 /*!
-* ember-charts v1.1.2
+* ember-charts v1.1.3
 * Copyright 2012-2016 Addepar Inc.
 * See LICENSE.md
 */
