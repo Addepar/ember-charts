@@ -363,33 +363,42 @@ test('Quarterly Filter', function(assert) {
 
 test('Minor Tick Filter', function(assert) {
   assert.expect(13);
-  var startDate = new Date('2014-01-01'),
-    endDate = new Date('2016-01-01'),
-    component = this.subject(),
-    candidateLabels = d3.time.months(startDate.getTime(), endDate.getTime()),
-    expectedFiltered = [1391241600000, 1396335600000, 1401606000000, 1406876400000, 1412146800000, 1417420800000, 1422777600000, 1427871600000, 1433142000000, 1438412400000, 1443682800000, 1448956800000],
+  var component = this.subject(),
+    candidateLabels = null,
+    expectedFiltered = [1404198000000, 1406876400000, 1409554800000, 1412146800000, 1414825200000, 1417420800000, 1435734000000, 1438412400000, 1441090800000, 1443682800000, 1446361200000, 1448956800000],
     filteredCount = 0,
     filteredMonths, len, item, i;
+
+  candidateLabels = [
+    new Date('Wed Jan 01 2014 00:00:00 GMT-0800 (PST)'),
+    new Date('Tue Jul 01 2014 00:00:00 GMT-0700 (PDT)'),
+    new Date('Thu Jan 01 2015 00:00:00 GMT-0800 (PST)'),
+    new Date('Wed Jul 01 2015 00:00:00 GMT-0700 (PDT)'),
+    new Date('Sat Feb 01 2014 00:00:00 GMT-0800 (PST)'),
+    new Date('Fri Aug 01 2014 00:00:00 GMT-0700 (PDT)'),
+    new Date('Sun Feb 01 2015 00:00:00 GMT-0800 (PST)'),
+    new Date('Sat Aug 01 2015 00:00:00 GMT-0700 (PDT)'),
+    new Date('Sat Mar 01 2014 00:00:00 GMT-0800 (PST)'),
+    new Date('Mon Sep 01 2014 00:00:00 GMT-0700 (PDT)'),
+    new Date('Sun Mar 01 2015 00:00:00 GMT-0800 (PST)'),
+    new Date('Tue Sep 01 2015 00:00:00 GMT-0700 (PDT)'),
+    new Date('Tue Apr 01 2014 00:00:00 GMT-0700 (PDT)'),
+    new Date('Wed Oct 01 2014 00:00:00 GMT-0700 (PDT)'),
+    new Date('Wed Apr 01 2015 00:00:00 GMT-0700 (PDT)'),
+    new Date('Thu Oct 01 2015 00:00:00 GMT-0700 (PDT)'),
+    new Date('Thu May 01 2014 00:00:00 GMT-0700 (PDT)'),
+    new Date('Sat Nov 01 2014 00:00:00 GMT-0700 (PDT)'),
+    new Date('Fri May 01 2015 00:00:00 GMT-0700 (PDT)'),
+    new Date('Sun Nov 01 2015 00:00:00 GMT-0700 (PDT)'),
+    new Date('Sun Jun 01 2014 00:00:00 GMT-0700 (PDT)'),
+    new Date('Mon Dec 01 2014 00:00:00 GMT-0800 (PST)'),
+    new Date('Mon Jun 01 2015 00:00:00 GMT-0700 (PDT)'),
+    new Date('Tue Dec 01 2015 00:00:00 GMT-0800 (PST)')
+  ];
 
   Ember.run(function() {
     component.set('xAxis', {
       selectAll: function() {
-        // return a list of dates out of order
-        var renderedLabels = d3.time.months(startDate.getTime(), endDate.getTime()),
-          currentIndex = renderedLabels.length,
-          temporaryValue, randomIndex;
-
-        // While there remain elements to shuffle...
-        while (0 !== currentIndex) {
-          // Pick a remaining element...
-          randomIndex = Math.floor(Math.random() * currentIndex);
-          currentIndex -= 1;
-          // And swap it with the current element.
-          temporaryValue = renderedLabels[currentIndex];
-          // I also need to add some markers here
-          renderedLabels[currentIndex] = renderedLabels[randomIndex];
-          renderedLabels[randomIndex] = temporaryValue;
-        }
         Ember.merge(Array.prototype, {
           style: function(){
             // using closure to set the result set
@@ -398,7 +407,7 @@ test('Minor Tick Filter', function(assert) {
           },
           attr: function(){ return null; }
         });
-        return renderedLabels;
+        return candidateLabels;
       }
     });
 
@@ -416,6 +425,6 @@ test('Minor Tick Filter', function(assert) {
   for (i = 0; i < len; i++) {
     item = filteredMonths[i];
     assert.notEqual(expectedFiltered.indexOf(item.getTime()), -1,
-      "A label was correctly filtered out - #["+i+"] " + item.getTime() + " which wasn't in: " + expectedFiltered.toString());
+      "A label was correctly filtered out - #["+i+"] " + item.getTime() + " which wasn't in: " + expectedFiltered.join(', '));
   }
 });
