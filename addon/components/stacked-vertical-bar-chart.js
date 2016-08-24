@@ -106,6 +106,16 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
     });
   }),
 
+  originalBarOrder: Ember.computed('data.[]', function() {
+    var barOrder = [];
+    this.get('data').forEach(datum => {
+      if (barOrder.indexOf(datum.barLabel) === -1) {
+        barOrder.push(datum.barLabel);
+      }
+    });
+    return barOrder;
+  }),
+
   /**
    * Input data mapped by sliceLabel.
    * Key: sliceLabel
@@ -301,12 +311,6 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
     });
   }),
 
-  // Slice sort order is determined in a 2-step process:
-  // * First, take the bar with the largest NET value. For all slices in this
-  //   bar, sort them by absolute value, descending.
-  // * For all remaining slices that are not in the largest net value bar, sort
-  //   according to the `sliceSortingFn` function. By default, this sorts
-  //   alphabetically. It can be overridden to change this behavior.
   sliceSortOrder: Ember.computed('otherSliceLabel', 'sliceSortingFn', 'largestNetValueBar', 'allSliceLabels.[]', function() {
     var sortedSlices, remainingSlices, sliceSortingFn, otherSliceLabel, otherLabelIndex;
     // Sort all slices in the largest bar by absolute value
@@ -317,7 +321,7 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
     // defined slice sorting function, and append them to the largest bar slices
     remainingSlices = _.difference(this.get('allSliceLabels'), sortedSlices);
     sliceSortingFn = this.get('sliceSortingFn');
-    sortedSlices = sortedSlices.concat(remainingSlices);
+    sortedSlices = sortedSlices.concat(remainingSlices.sort(sliceSortingFn));
     // Lastly, pluck the Other slice (if it exists) and push to end.
     otherSliceLabel = this.get('otherSliceLabel');
     otherLabelIndex = sortedSlices.indexOf(otherSliceLabel);
@@ -328,7 +332,7 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
     return sortedSlices;
   }),
 
-  _naturallyCompareStringsFn: function(label1, label2) {
+  defaultCompareFn: function(label1, label2) {
     if (label1 < label2) {
       return -1;
     } else if (label1 > label2) {
@@ -344,7 +348,7 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
   // this can be overridden by whatever class is extending the
   // StackedVerticalBarChartComponent.
   sliceSortingFn: Ember.computed(function() {
-    return this._naturallyCompareStringsFn;
+    return this.defaultCompareFn;
   }),
 
   // Takes a set of slices and sorts them using the sliceSortOrder.
@@ -361,13 +365,21 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
   //
   customBarSortingFn: Ember.computed(function() {
     return (barData1, barData2) => {
-      return this._naturallyCompareStringsFn(barData1.barLabel, barData2.barLabel);
+      return this.defaultCompareFn(barData1.barLabel, barData2.barLabel);
     };
   }),
 
   valueBarSortingFn: Ember.computed(function() {
     return (barData1, barData2) => {
-      return this._naturallyCompareStringsFn(barData1.value, barData2.value);
+      return this.defaultCompareFn(barData1.value, barData2.value);
+    };
+  }),
+
+  originalOrderSortingFn: Ember.computed(function() {
+    var originalOrder = this.get('originalBarOrder');
+    return (barData1, barData2) => {
+      return this.defaultCompareFn(originalOrder.indexOf(barData1),
+                                   originalOrder.indexOf(barData2));
     };
   }),
 
@@ -375,8 +387,10 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
     var sortKey = this.get('sortKey');
     if (sortKey === 'value') {
       return this.get('valueBarSortingFn');
-    } else if (sortKey === 'custom'){
+    } else if (sortKey === 'custom') {
       return this.get('customBarSortingFn');
+    } else if (sortKey === 'original') {
+      return this.get('originalOrderSortingFn');
     } else {
       throw new Error("Invalid sortKey");
     }
