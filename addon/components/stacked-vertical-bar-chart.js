@@ -375,15 +375,15 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
     };
   }),
 
-  originalOrderSortingFn: Ember.computed(function() {
+  originalOrderSortingFn: Ember.computed('originalBarOrder', function() {
     var originalOrder = this.get('originalBarOrder');
     return (barData1, barData2) => {
-      return this.defaultCompareFn(originalOrder.indexOf(barData1),
-                                   originalOrder.indexOf(barData2));
+      return this.defaultCompareFn(originalOrder.indexOf(barData1.barLabel),
+                                   originalOrder.indexOf(barData2.barLabel));
     };
   }),
 
-  barSortingFn: Ember.computed('valueBarSortingFn', 'customBarSortingFn', 'sortKey', function() {
+  barSortingFn: Ember.computed('valueBarSortingFn', 'customBarSortingFn', 'originalOrderSortingFn', 'sortKey', function() {
     var sortKey = this.get('sortKey');
     if (sortKey === 'value') {
       return this.get('valueBarSortingFn');
