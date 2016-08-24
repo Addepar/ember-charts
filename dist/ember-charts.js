@@ -1,5 +1,5 @@
 /*!
-* ember-charts v1.1.2
+* ember-charts v1.1.3
 * Copyright 2012-2016 Addepar Inc.
 * See LICENSE.md
 */
@@ -5924,16 +5924,28 @@ define('ember-charts/mixins/time-series-labeler', ['exports', 'module', 'ember']
       var gXAxis = this.get('xAxis'),
           minorTickInterval = this.get('minorTickInterval'),
           labels,
-          ticks;
+          ticks,
+          minorDates;
       // for the labels we need to reset all of the styles in case the graph updates
       // by being resized.
       gXAxis.selectAll('line').attr("y2", "6");
       gXAxis.selectAll('text').style("display", "block");
-      // Select and remove any previous signs of minor ticking
-      labels = gXAxis.selectAll('text').filter(function (value, index) {
+
+      // Need comparison data to do our tick label filtering
+      minorDates = this.get('labelledTicks').map(function (item) {
+        return new Date(item).getTime();
+      }).filter(function (value, index) {
         return index % minorTickInterval !== 0;
       });
 
+      // We have an issue where the nodes come back out of order.  This is a
+      // side effect of redrawing the axis.  D3 don't give two [cares] about the
+      // insertion order of nodes - they are simply translated into place.  This
+      // occurs when the selection with the NEW data is made - the existing ones
+      // updated - then the new ones appended on .enter(...)
+      labels = gXAxis.selectAll('text').filter(function (value) {
+        return minorDates.length > 0 && minorDates.indexOf(value.getTime()) !== -1;
+      });
       ticks = gXAxis.selectAll('line').filter(function (value, index) {
         return index % minorTickInterval !== 0;
       });
