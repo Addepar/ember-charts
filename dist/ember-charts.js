@@ -2728,14 +2728,21 @@ define('ember-charts/components/stacked-vertical-bar-chart', ['exports', 'module
       }, {});
     }),
 
-    // Data grouped by bar with all slices sorted correctly in each bar
-    // (sliceSortOrder is an implicit dependency through the sortSlices() calls)
-    sortedData: _Ember['default'].computed('dataGroupedByBarWithOther', 'sliceSortOrder', function () {
+    sortedData: _Ember['default'].computed('dataGroupedByBarWithOther', 'sliceSortingFn', 'otherSliceLabel', function () {
       var _this = this;
 
-      var groupedData = this.get('dataGroupedByBarWithOther');
+      var groupedData, otherSliceLabel, sortedSlices;
+      groupedData = this.get('dataGroupedByBarWithOther');
+      otherSliceLabel = this.get('otherSliceLabel');
       return _.reduce(groupedData, function (result, barData, barLabel) {
-        result[barLabel] = _this.sortSlices(barData);
+        sortedSlices = _.clone(barData).sort(_this.get('sliceSortingFn'));
+        for (var i = 0; i < sortedSlices.length; i++) {
+          if (sortedSlices[i].sliceLabel === otherSliceLabel) {
+            sortedSlices.push(sortedSlices.splice(i, 1)[0]);
+            break;
+          }
+        }
+        result[barLabel] = sortedSlices;
         return result;
       }, {});
     }),
@@ -2781,6 +2788,68 @@ define('ember-charts/components/stacked-vertical-bar-chart', ['exports', 'module
     // Slice and Bar Sorting
     // ----------------------------------------------------------------------------
 
+    defaultCompareFn: function defaultCompareFn(label1, label2) {
+      if (label1 < label2) {
+        return -1;
+      } else if (label1 > label2) {
+        return 1;
+      } else {
+        return 0;
+      }
+    },
+
+    sliceSortKey: 'value',
+
+    sliceOrderByValue: _Ember['default'].computed('netBarValues.[]', 'dataGroupedByBarWithOther', function () {
+      var sortedBars, sliceOrder, slicesInBar, allSlices;
+      allSlices = this.get('dataGroupedByBarWithOther');
+      sortedBars = _.sortBy(this.get('netBarValues'), 'value').reverse();
+      sliceOrder = [];
+      sortedBars.forEach(function (bar) {
+        slicesInBar = _.sortBy(allSlices[bar.barLabel], function (slice) {
+          return -Math.abs(slice.value);
+        });
+        slicesInBar.forEach(function (slice) {
+          if (sliceOrder.indexOf(slice.sliceLabel) === -1) {
+            sliceOrder.push(slice.sliceLabel);
+          }
+        });
+      });
+      return sliceOrder;
+    }),
+
+    valueSliceSortingFn: _Ember['default'].computed('sliceOrderByValue.[]', function () {
+      var _this2 = this;
+
+      var sliceOrder = this.get('sliceOrderByValue');
+      return function (slice1, slice2) {
+        return _this2.defaultCompareFn(sliceOrder.indexOf(slice1.sliceLabel), sliceOrder.indexOf(slice2.sliceLabel));
+      };
+    }),
+
+    customSliceSortingFn: _Ember['default'].computed(function () {
+      var _this3 = this;
+
+      return function (slice1, slice2) {
+        return _this3.defaultCompareFn(slice1.sliceLabel, slice2.sliceLabel);
+      };
+    }),
+
+    sliceSortingFn: _Ember['default'].computed('valueSliceSortingFn', 'customSliceSortingFn', 'sliceSortKey', function () {
+      var sliceSortKey = this.get('sliceSortKey');
+      if (sliceSortKey === 'value') {
+        return this.get('valueSliceSortingFn');
+      } else if (sliceSortKey === 'custom') {
+        return this.get('customSliceSortingFn');
+      } else if (sliceSortKey === 'original') {
+        return function () {};
+      } else {
+        throw new Error("Invalid sliceSortKey");
+      }
+    }),
+
+    barSortKey: _Ember['default'].computed.alias('sortKey'),
+
     /**
      * Array containing an object for each bar. These objects contain the barLabel
      * and net value for each bar. Used for bar sorting in `barNames`.
@@ -2806,105 +2875,44 @@ define('ember-charts/components/stacked-vertical-bar-chart', ['exports', 'module
       return sortedBarNames;
     }),
 
-    largestNetValueBar: _Ember['default'].computed('dataGroupedByBarWithOther', function () {
-      return _.max(this.get('dataGroupedByBarWithOther'), function (barData) {
-        return _.reduce(barData, function (p, slice) {
-          return p + slice.value;
-        }, 0);
-      });
-    }),
-
-    sliceSortOrder: _Ember['default'].computed('otherSliceLabel', 'sliceSortingFn', 'largestNetValueBar', 'allSliceLabels.[]', function () {
-      var sortedSlices, remainingSlices, sliceSortingFn, otherSliceLabel, otherLabelIndex;
-      // Sort all slices in the largest bar by absolute value
-      sortedSlices = _.pluck(_.sortBy(this.get('largestNetValueBar'), function (slice) {
-        return -Math.abs(slice.value);
-      }), 'sliceLabel');
-      // Find remaining slices that were not in largest bar, sort them using the
-      // defined slice sorting function, and append them to the largest bar slices
-      remainingSlices = _.difference(this.get('allSliceLabels'), sortedSlices);
-      sliceSortingFn = this.get('sliceSortingFn');
-      sortedSlices = sortedSlices.concat(remainingSlices.sort(sliceSortingFn));
-      // Lastly, pluck the Other slice (if it exists) and push to end.
-      otherSliceLabel = this.get('otherSliceLabel');
-      otherLabelIndex = sortedSlices.indexOf(otherSliceLabel);
-      if (otherLabelIndex !== -1) {
-        sortedSlices.splice(otherLabelIndex, 1);
-        sortedSlices.push(otherSliceLabel);
-      }
-      return sortedSlices;
-    }),
-
-    defaultCompareFn: function defaultCompareFn(label1, label2) {
-      if (label1 < label2) {
-        return -1;
-      } else if (label1 > label2) {
-        return 1;
-      } else {
-        return 0;
-      }
-    },
-
-    // This function is used to compare slice labels in order to sort slices
-    // that are not displayed in the largest bar.
-    // The default sort for remaining slices is alphabetical (ascending), but
-    // this can be overridden by whatever class is extending the
-    // StackedVerticalBarChartComponent.
-    sliceSortingFn: _Ember['default'].computed(function () {
-      return this.defaultCompareFn;
-    }),
-
-    // Takes a set of slices and sorts them using the sliceSortOrder.
-    // Not every bar has a slice for every slice label, so the filter at the end
-    // removes undefined slices.
-    sortSlices: function sortSlices(slices) {
-      return this.get('sliceSortOrder').map(function (sliceLabel) {
-        return slices.filter(function (slice) {
-          return slice.sliceLabel === sliceLabel;
-        })[0];
-      }).filter(function (slice) {
-        return slice;
-      });
-    },
-
     // This function is used to compare bar data (NOT bar labels)
     // in order to sort the bars of the chart.
     //
     customBarSortingFn: _Ember['default'].computed(function () {
-      var _this2 = this;
+      var _this4 = this;
 
       return function (barData1, barData2) {
-        return _this2.defaultCompareFn(barData1.barLabel, barData2.barLabel);
+        return _this4.defaultCompareFn(barData1.barLabel, barData2.barLabel);
       };
     }),
 
     valueBarSortingFn: _Ember['default'].computed(function () {
-      var _this3 = this;
+      var _this5 = this;
 
       return function (barData1, barData2) {
-        return _this3.defaultCompareFn(barData1.value, barData2.value);
+        return _this5.defaultCompareFn(barData1.value, barData2.value);
       };
     }),
 
-    originalOrderSortingFn: _Ember['default'].computed('originalBarOrder', function () {
-      var _this4 = this;
+    originalOrderSortingFn: _Ember['default'].computed('originalBarOrder.[]', function () {
+      var _this6 = this;
 
       var originalOrder = this.get('originalBarOrder');
       return function (barData1, barData2) {
-        return _this4.defaultCompareFn(originalOrder.indexOf(barData1.barLabel), originalOrder.indexOf(barData2.barLabel));
+        return _this6.defaultCompareFn(originalOrder.indexOf(barData1.barLabel), originalOrder.indexOf(barData2.barLabel));
       };
     }),
 
-    barSortingFn: _Ember['default'].computed('valueBarSortingFn', 'customBarSortingFn', 'originalOrderSortingFn', 'sortKey', function () {
-      var sortKey = this.get('sortKey');
-      if (sortKey === 'value') {
+    barSortingFn: _Ember['default'].computed('valueBarSortingFn', 'customBarSortingFn', 'originalOrderSortingFn', 'barSortKey', function () {
+      var barSortKey = this.get('barSortKey');
+      if (barSortKey === 'value') {
         return this.get('valueBarSortingFn');
-      } else if (sortKey === 'custom') {
+      } else if (barSortKey === 'custom') {
         return this.get('customBarSortingFn');
-      } else if (sortKey === 'original') {
+      } else if (barSortKey === 'original') {
         return this.get('originalOrderSortingFn');
       } else {
-        throw new Error("Invalid sortKey");
+        throw new Error("Invalid barSortKey");
       }
     }),
 
@@ -3044,7 +3052,7 @@ define('ember-charts/components/stacked-vertical-bar-chart', ['exports', 'module
     hasLegend: true,
 
     legendItems: _Ember['default'].computed('allSliceLabels.[]', 'sliceColors', 'labelIDMapping.[]', function () {
-      var _this5 = this;
+      var _this7 = this;
 
       var sliceColors = this.get('sliceColors');
       return this.get('allSliceLabels').map(function (label) {
@@ -3056,7 +3064,7 @@ define('ember-charts/components/stacked-vertical-bar-chart', ['exports', 'module
           icon: function icon() {
             return 'square';
           },
-          selector: ".grouping-" + _this5.get('labelIDMapping')[label]
+          selector: ".grouping-" + _this7.get('labelIDMapping')[label]
         };
       });
     }),
@@ -3066,7 +3074,7 @@ define('ember-charts/components/stacked-vertical-bar-chart', ['exports', 'module
     // ----------------------------------------------------------------------------
 
     showDetails: _Ember['default'].computed('isInteractive', function () {
-      var _this6 = this;
+      var _this8 = this;
 
       if (!this.get('isInteractive')) {
         return _Ember['default'].K;
@@ -3086,7 +3094,7 @@ define('ember-charts/components/stacked-vertical-bar-chart', ['exports', 'module
           content.append($('<span class="tip-label" />').text(data.barLabel));
         }
 
-        var formatLabel = _this6.get('formatLabelFunction');
+        var formatLabel = _this8.get('formatLabelFunction');
         var addValueLine = function addValueLine(d) {
           var label = $('<span class="name" />').text(d.sliceLabel + ": ");
           content.append(label);
@@ -3105,12 +3113,12 @@ define('ember-charts/components/stacked-vertical-bar-chart', ['exports', 'module
           // Just hovering over single bar
           addValueLine(data);
         }
-        return _this6.showTooltip(content.html(), d3.event);
+        return _this8.showTooltip(content.html(), d3.event);
       };
     }),
 
     hideDetails: _Ember['default'].computed('isInteractive', function () {
-      var _this7 = this;
+      var _this9 = this;
 
       if (!this.get('isInteractive')) {
         return _Ember['default'].K;
@@ -3125,7 +3133,7 @@ define('ember-charts/components/stacked-vertical-bar-chart', ['exports', 'module
         d3.select(element).classed('hovered', false);
 
         // Hide Tooltip
-        return _this7.hideTooltip();
+        return _this9.hideTooltip();
       };
     }),
 
@@ -3134,17 +3142,17 @@ define('ember-charts/components/stacked-vertical-bar-chart', ['exports', 'module
     // ----------------------------------------------------------------------------
 
     barAttrs: _Ember['default'].computed('graphicLeft', 'graphicTop', 'xBetweenBarScale', function () {
-      var _this8 = this;
+      var _this10 = this;
 
       var xBetweenBarScale = this.get('xBetweenBarScale');
 
       return {
         transform: function transform(d) {
-          var dx = _this8.get('graphicLeft');
+          var dx = _this10.get('graphicLeft');
           if (xBetweenBarScale(d.barLabel)) {
             dx += xBetweenBarScale(d.barLabel);
           }
-          var dy = _this8.get('graphicTop');
+          var dy = _this10.get('graphicTop');
 
           return "translate(" + dx + ", " + dy + ")";
         }
@@ -3152,19 +3160,19 @@ define('ember-charts/components/stacked-vertical-bar-chart', ['exports', 'module
     }),
 
     sliceAttrs: _Ember['default'].computed('yScale', 'barWidth', 'labelIDMapping.[]', 'strokeWidth', function () {
-      var _this9 = this;
+      var _this11 = this;
 
       var yScale, zeroDisplacement;
       zeroDisplacement = 1;
       yScale = this.get('yScale');
       return {
         "class": function _class(slice) {
-          var id = _this9.get('labelIDMapping')[slice.sliceLabel];
+          var id = _this11.get('labelIDMapping')[slice.sliceLabel];
           return "grouping-" + id;
         },
         'stroke-width': this.get('strokeWidth').toString() + 'px',
         width: function width() {
-          return _this9.get('barWidth');
+          return _this11.get('barWidth');
         },
         x: null,
         y: function y(slice) {
@@ -3177,13 +3185,13 @@ define('ember-charts/components/stacked-vertical-bar-chart', ['exports', 'module
     }),
 
     labelAttrs: _Ember['default'].computed('barWidth', 'graphicTop', 'graphicHeight', 'labelPadding', function () {
-      var _this10 = this;
+      var _this12 = this;
 
       return {
         'stroke-width': 0,
         transform: function transform() {
-          var dx = _this10.get('barWidth') / 2;
-          var dy = _this10.get('graphicTop') + _this10.get('graphicHeight') + _this10.get('labelPadding');
+          var dx = _this12.get('barWidth') / 2;
+          var dy = _this12.get('graphicTop') + _this12.get('graphicHeight') + _this12.get('labelPadding');
           return "translate(" + dx + ", " + dy + ")";
         }
       };
@@ -3291,7 +3299,7 @@ define('ember-charts/components/stacked-vertical-bar-chart', ['exports', 'module
     },
 
     updateLayout: function updateLayout() {
-      var _this11 = this;
+      var _this13 = this;
 
       var bars = this.get('bars');
       var labels = bars.select('.groupLabel text').attr('transform', null) // remove any previous rotation attrs
@@ -3309,7 +3317,7 @@ define('ember-charts/components/stacked-vertical-bar-chart', ['exports', 'module
         var rotateLabelDegrees = this.get('rotateLabelDegrees');
         labelTrimmer = _LabelTrimmer['default'].create({
           getLabelSize: function getLabelSize() {
-            return _this11.get('rotatedLabelLength');
+            return _this13.get('rotatedLabelLength');
           },
           getLabelText: function getLabelText(d) {
             return d.barLabel;
