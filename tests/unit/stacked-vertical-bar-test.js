@@ -21,7 +21,7 @@ var three_ranges = [{
 }, {
    sliceLabel: "Label 2",
    barLabel: "Group Two",
-   value: 18
+   value: 17
 }, {
    sliceLabel: "Label 2",
    barLabel: "Group Three",
@@ -33,7 +33,7 @@ var three_ranges = [{
 }, {
    sliceLabel: "Label 3",
    barLabel: "Group Two",
-   value: 17
+   value: 18
 }, {
    sliceLabel: "Label 3",
    barLabel: "Group Three",
@@ -57,19 +57,19 @@ var sliceSortingData = _.cloneDeep(three_ranges).concat([{
 }, {
   sliceLabel: "Label 5",
   barLabel: "Group One",
-  value: 20
+  value: 10
 }, {
   sliceLabel: "Label 5",
   barLabel: "Group Three",
-  value: 20
+  value: 10
 }, {
   sliceLabel: "Label 6",
   barLabel: "Group One",
-  value: 10,
+  value: 20
 }, {
   sliceLabel: "Label 6",
   barLabel: "Group Three",
-  value: 10
+  value: 20
 }]);
 
 moduleForComponent('stacked-vertical-bar-chart', '[Unit] Stacked bar component', {
@@ -465,7 +465,6 @@ test('Negative value slices are displayed below the y=0 axis', function(assert) 
   var component, xAxisElement, xAxisTransformY, negativeSlices;
   negativeSlices = three_ranges.filter((slice) => slice.value < 0);
   assert.expect(negativeSlices.length * 2);
-
   component = this.subject({data: three_ranges});
   this.render();
 
@@ -601,90 +600,65 @@ test("'Other' slice is end-aligned (either positive or negative) for every bar",
   });
 });
 
-test('All slices are sorted correctly within their respective bars', function(assert) {
-  var component, sliceSortOrder, xAxisElement, xAxisTransformY, positiveSlices,
-  negativeSlices, allSlices, currentSliceGrouping, nextSliceGrouping,
-  sliceOutOfOrder;
-  assert.expect(3);
+test('Slices are sorted in correct order for each sliceSortKey', function(assert) {
+  var component, expectedSliceOrders, sliceSortOrder, xAxisElement,
+  xAxisTransformY, positiveSlices, negativeSlices, allSlices,
+  currentSliceGrouping, nextSliceGrouping, sliceOutOfOrder;
+  assert.expect(9);
   component = this.subject({
     data: sliceSortingData,
-    maxNumberOfSlices: 4
+    maxNumberOfSlices: 6,
   });
   this.render();
 
-  // sliceSortOrder maps to: ['Label 1', 'Label 4', 'Label 5', 'Other']
-  sliceSortOrder = ['grouping-2', 'grouping-0', 'grouping-1', 'grouping-3'];
-  xAxisElement = this.$('.tick:not(.minor)');
-  xAxisTransformY = parseInt(xAxisElement.attr('transform').match(/\d+/g)[1]);
-
-  // Check the slice ordering for each bar. This needs to be done separately
-  // for positive and negative slices.
-  this.$('g.bars').each((iBar, bar) => {
-    allSlices = $(bar).find('rect').toArray();
-    // Sort slice elements by 'y' value so they are in order from top to bottom.
-    // Use this order to create positive and negative stacks with slices
-    // sorted by distance from x-axis, ascending.
-    positiveSlices = [];
-    negativeSlices = [];
-    _.sortBy(allSlices, slice => parseInt($(slice).attr('y'))).forEach(slice => {
-      if ($(slice).attr('y') < xAxisTransformY) {
-        positiveSlices.unshift(slice);
-      } else {
-        negativeSlices.push(slice);
-      }
-    });
-    // Verify that every slice in each stack is higher in the sort order than
-    // the next slice. Trigger a flag if this is not true.
-    sliceOutOfOrder = false;
-    [positiveSlices, negativeSlices].forEach(stack => {
-      for (var i = 0; i < stack.length - 1; i++) {
-        currentSliceGrouping = $(stack[i]).attr('class');
-        nextSliceGrouping = $(stack[i + 1]).attr('class');
-        if (sliceSortOrder.indexOf(currentSliceGrouping) >
-            sliceSortOrder.indexOf(nextSliceGrouping)) {
-          sliceOutOfOrder = true;
-        }
-      }
-    });
-    assert.ok(!sliceOutOfOrder, 'All slices are ordered correctly in bar ' + iBar);
-  });
-});
-
-test('Slices not in largest bar are sorted correctly', function(assert) {
-  var component, largestBarLabel, expectedSliceOrder, oldSliceSortingFn,
-  newSliceSortingFn, newExpectedSortOrder;
-  assert.expect(3);
-  component = this.subject({
-    data: sliceSortingData,
-    maxNumberOfSlices: 6
-  });
-  this.render();
-
-  largestBarLabel = component.get('largestNetValueBar')[0].barLabel;
-  expectedSliceOrder = [1,2,3,4,5,6].map(number => 'Label ' + number);
-  assert.equal(largestBarLabel, 'Group Two', 'Group two is the largest bar');
-  assert.ok(_.isEqual(component.get('sliceSortOrder'), expectedSliceOrder),
-    'The slice sorting order is as expected by default');
-
-  // Override the existing slice sorting function (alphabetical) with one that
-  // sorts in reverse alphabetical
-  oldSliceSortingFn = component.get('sliceSortingFn');
-  newSliceSortingFn = function(label1, label2) {
-    return -1 * oldSliceSortingFn(label1, label2);
+  expectedSliceOrders = {
+    'original': ['grouping-0', 'grouping-1', 'grouping-2', 'grouping-3', 'grouping-4', 'grouping-5'],
+    'value': ['grouping-0', 'grouping-2', 'grouping-1', 'grouping-3', 'grouping-5', 'grouping-4'],
+    'custom': ['grouping-0', 'grouping-1', 'grouping-2', 'grouping-3', 'grouping-4', 'grouping-5']
   };
-  Ember.run(() => { component.set('sliceSortingFn', newSliceSortingFn); });
+  ['original', 'value', 'custom'].forEach(sliceSortKey => {
+    Ember.run(() => { component.set('sliceSortKey', sliceSortKey); });
+    sliceSortOrder = expectedSliceOrders[sliceSortKey];
+    xAxisElement = this.$('.tick:not(.minor)');
+    xAxisTransformY = parseInt(xAxisElement.attr('transform').match(/\d+/g)[1]);
 
-  // The new slice sorting function should only be sorting slices that are not
-  // included in the largest net value bar. Any slice type included in the
-  // largest bar should still be sorted by absolute value, descending, which is
-  // not currently overrideable.
-  newExpectedSortOrder = [1,2,3,4,6,5].map(number => "Label " + number);
-  assert.ok(_.isEqual(component.get('sliceSortOrder'), newExpectedSortOrder),
-    'The slice sorting order is changed with a new sorting function');
+    // Check the slice ordering for each bar. This needs to be done separately
+    // for positive and negative slices.
+    this.$('g.bars').each((iBar, bar) => {
+      allSlices = $(bar).find('rect').toArray();
+      // Sort slice elements by 'y' value so they are in order from top to bottom.
+      // Use this order to create positive and negative stacks with slices
+      // sorted by distance from x-axis, ascending.
+      positiveSlices = [];
+      negativeSlices = [];
+      _.sortBy(allSlices, slice => parseInt($(slice).attr('y'))).forEach(slice => {
+        if ($(slice).attr('y') < xAxisTransformY) {
+          positiveSlices.unshift(slice);
+        } else {
+          negativeSlices.push(slice);
+        }
+      });
+      // Verify that every slice in each stack is higher in the sort order than
+      // the next slice. Trigger a flag if this is not true.
+      sliceOutOfOrder = false;
+      [positiveSlices, negativeSlices].forEach(stack => {
+        for (var i = 0; i < stack.length - 1; i++) {
+          currentSliceGrouping = $(stack[i]).attr('class');
+          nextSliceGrouping = $(stack[i + 1]).attr('class');
+          if (sliceSortOrder.indexOf(currentSliceGrouping) >
+          sliceSortOrder.indexOf(nextSliceGrouping)) {
+            sliceOutOfOrder = true;
+          }
+        }
+      });
+      assert.ok(!sliceOutOfOrder, 'All slices are ordered correctly in bar ' +
+        iBar + ' with sliceSortKey=' + sliceSortKey);
+    });
+  });
 });
 
 test('If a slice has a label, it is shown in all bars regardless of minSlicePercent', function(assert) {
-  var modifiedData, component, expectedSliceOrder, $label4Slices;
+  var modifiedData, component, $label4Slices;
   assert.expect(2);
   // Modify input data so there is a slice in the largest net value bar (Group
   // Two) that will definitely NOT be aggregated into the Other slice due to its
@@ -708,9 +682,7 @@ test('If a slice has a label, it is shown in all bars regardless of minSlicePerc
     maxNumberOfSlices: 3
   });
   this.render();
-
-  expectedSliceOrder = ['Label 1', 'Label 4', 'Other'];
-  assert.ok(_.isEqual(component.get('sliceSortOrder'), expectedSliceOrder),
+  assert.ok(component.get('sliceOrderByValue').indexOf('Label 4') !== -1,
     'Label 4 slices are not aggregated into the Other slice initially');
   $label4Slices = this.$('.grouping-0');
   assert.equal($label4Slices.length, 3, 'All three slices for Label 4 are ' +
