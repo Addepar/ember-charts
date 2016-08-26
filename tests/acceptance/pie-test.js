@@ -107,6 +107,6 @@ test('select data: bad_range', function(assert) {
   assert.expect(1);
   fillIn(emberSelectFor('data'), 'bad_range');
   andThen(function() {
-    assert.equal(countArcs(), 3);
+    assert.equal(countArcs(), 4);
   });
 });

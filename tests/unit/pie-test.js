@@ -153,7 +153,7 @@ test('Pie with large other slice', function(assert) {
 
   assert.equal(finishedData.length, 8, 'There are 8 slices by default');
   assert.equal(_.last(finishedData).label, 'Other', 'Last slice is Other when the Other Slice is largest');
-  assert.equal(_.last(finishedData).percent, 34, 'Other percent equals 34');
+  assert.equal(_.last(finishedData).percent, 35, 'Other percent equals 35');
 });
 
 test('Pie with small other slice', function(assert) {
@@ -374,4 +374,71 @@ test('There are no label overlap in the pie charts', function(assert) {
 
   assertNoLabelOverlap(leftPie, labelHeight);
   assertNoLabelOverlap(rightPie, labelHeight);
+});
+
+test('Rounded zero percent slices appear by default', function(assert) {
+  //-------------------- Begin Setup ------------------------//
+  var pieTinySlices = {
+    maxRadius: 200,
+    maxNumberOfSlices: 10,
+    minSlicePercent: 3,
+    maxDecimalPlace: 0,
+    data: [{
+      label: "Label 1",
+      value: 25.3,
+    }, {
+      label: "Label 2",
+      value: 74.4,
+    }, {
+      label: "Label 3",
+      value: 0.1,
+    }, {
+      label: "Label 4",
+      value: 0.2,
+    }]
+  };
+
+  var component = this.subject(pieTinySlices);
+  const labels = this.$().find('.data');
+
+  var zeroPercentSlicePresent = false;
+  for (var i = 0; i < labels.length; i++) {
+    var element = labels[i];
+    if (element.textContent.includes(", 0%"))
+      zeroPercentSlicePresent = true;
+  }
+  assert.ok(zeroPercentSlicePresent);
+});
+
+test('Rounded zero percent slices can be toggled off', function(assert) {
+  //-------------------- Begin Setup ------------------------//
+  var pieTinySlices = {
+    maxRadius: 200,
+    maxNumberOfSlices: 10,
+    minSlicePercent: 3,
+    maxDecimalPlace: 0,
+    includeRoundedZeroPercentSlices: false,
+    data: [{
+      label: "Label 1",
+      value: 25.3,
+    }, {
+      label: "Label 2",
+      value: 74.4,
+    }, {
+      label: "Label 3",
+      value: 0.3,
+    }]
+  };
+
+  var component = this.subject(pieTinySlices);
+  const labels = this.$().find('.data');
+
+  var zeroPercentSlicePresent = false;
+  for (var i = 0; i < labels.length; i++) {
+    var element = labels[i];
+    if ((element.textContent.includes("Label 3")) ||
+        (element.textContent.includes(", 0%")))
+      zeroPercentSlicePresent = true;
+  }
+  assert.ok(zeroPercentSlicePresent === false);
 });
