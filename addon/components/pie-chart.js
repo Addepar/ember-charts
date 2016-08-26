@@ -42,6 +42,9 @@ const PieChartComponent = ChartComponent.extend(FloatingTooltipMixin,
   // will start from the 2 o'clock to 4 o'clock positions.
   rotationOffset: 1/4 * Math.PI,
 
+  // Allows the user to configure whether Rounded Zero Percent Slices should be
+  // included inside of the Pie Chart. For example, if maxDecimalPlace = 0 and
+  // there was a slice of 0.3%, that slice would be rounded down to 0%
   includeRoundedZeroPercentSlices: true,
 
   // ----------------------------------------------------------------------------
@@ -172,6 +175,7 @@ const PieChartComponent = ChartComponent.extend(FloatingTooltipMixin,
       }
     }
 
+    // Round all slices to the appropriate decimal place
     var maxDecimalPlace = this.get('maxDecimalPlace');
     var roundSlices = function(sliceList) {
       sliceList.forEach(function(slice) {
@@ -182,6 +186,7 @@ const PieChartComponent = ChartComponent.extend(FloatingTooltipMixin,
     roundSlices(slicesLeft);
     roundSlices(otherItems);
 
+    // Filter zero percent slices out of the pie chart after they have been rounded
     var filterRoundedZeroPercentSlices = function(sliceList) {
       return sliceList.filter(function(slice) {
         return slice.percent !== 0;

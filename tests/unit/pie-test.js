@@ -404,7 +404,7 @@ test('Rounded zero percent slices appear by default', function(assert) {
   var zeroPercentSlicePresent = false;
   for (var i = 0; i < labels.length; i++) {
     var element = labels[i];
-    if (element.textContent.includes(", 0%"))
+    if (element.textContent === "Other, 0%")
       zeroPercentSlicePresent = true;
   }
   assert.ok(zeroPercentSlicePresent);
@@ -436,8 +436,7 @@ test('Rounded zero percent slices can be toggled off', function(assert) {
   var zeroPercentSlicePresent = false;
   for (var i = 0; i < labels.length; i++) {
     var element = labels[i];
-    if ((element.textContent.includes("Label 3")) ||
-        (element.textContent.includes(", 0%")))
+    if (element.textContent === "Label 3, 0%")
       zeroPercentSlicePresent = true;
   }
   assert.ok(zeroPercentSlicePresent === false);
