@@ -5,7 +5,7 @@ import Ember from 'ember';
 
 export default Ember.Test.registerAsyncHelper('domTriggerEvent', function(app, selector, eventName) {
   var element = $(selector)[0];
-  var event = document.createEvent('SVGEvents');
+  var event = document.createEvent('Events');
   event.initEvent(eventName, true, true);
   return element.dispatchEvent(event);
 });

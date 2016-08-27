@@ -341,7 +341,10 @@ test('There are no label overlap in the pie charts', function(assert) {
     });
 
     for (var i = 0; i < yCoordinateList.length - 1; i++) {
-      assert.ok(yCoordinateList[i+1] - yCoordinateList[i] >= labelHeight);
+      // Accept a tiny bit of overlap (<= .5% of the label height)
+      // to account for floating-point imprecision.
+      var overlap = labelHeight - (yCoordinateList[i+1] - yCoordinateList[i]);
+      assert.ok(overlap <= 0.0 || overlap <= 0.005 * labelHeight);
     }
   };
   //-------------------- End Setup ------------------------//
