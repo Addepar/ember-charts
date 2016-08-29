@@ -616,25 +616,27 @@ test('Slices are sorted in correct order for each sliceSortKey', function(assert
     'value': ['grouping-0', 'grouping-2', 'grouping-1', 'grouping-3', 'grouping-5', 'grouping-4'],
     'custom': ['grouping-0', 'grouping-1', 'grouping-2', 'grouping-3', 'grouping-4', 'grouping-5']
   };
+  xAxisElement = this.$('.tick:not(.minor)');
+  xAxisTransformY = parseInt(xAxisElement.attr('transform').match(/\d+/g)[1]);
   ['original', 'value', 'custom'].forEach(sliceSortKey => {
     Ember.run(() => { component.set('sliceSortKey', sliceSortKey); });
     sliceSortOrder = expectedSliceOrders[sliceSortKey];
-    xAxisElement = this.$('.tick:not(.minor)');
-    xAxisTransformY = parseInt(xAxisElement.attr('transform').match(/\d+/g)[1]);
 
     // Check the slice ordering for each bar. This needs to be done separately
     // for positive and negative slices.
     this.$('g.bars').each((iBar, bar) => {
       allSlices = $(bar).find('rect').toArray();
-      // Sort slice elements by 'y' value so they are in order from top to bottom.
-      // Use this order to create positive and negative stacks with slices
-      // sorted by distance from x-axis, ascending.
       positiveSlices = [];
       negativeSlices = [];
+      // Sort all (positive AND negative) slice elements by 'y' value
       _.sortBy(allSlices, slice => parseInt($(slice).attr('y'))).forEach(slice => {
         if ($(slice).attr('y') < xAxisTransformY) {
+          // Populate positive slice stack from start of array so that slices
+          // are ordered outward from the x-axis
           positiveSlices.unshift(slice);
         } else {
+          // Populate negative slice stack from end of array so that slices
+          // are ordered outward from the x-axis
           negativeSlices.push(slice);
         }
       });
@@ -730,28 +732,27 @@ function assertBarSortingIsCorrect(assert, component, expectedBarOrder, message)
 }
 
 test('Bars are sorted correctly', function(assert) {
-  var component, expectedBarOrder, ascByValueOrder, descByValueOrder,
-  descAlphabetical, descCustomSort;
+  var component, expectedBarOrder;
   assert.expect(8);
   component = this.subject({ data: three_ranges });
   this.render();
 
   // First, test the default sorting: ascending by value
-  ascByValueOrder = ['Group Three', 'Group One', 'Group Two'];
-  assertBarSortingIsCorrect(assert, component, ascByValueOrder,
+  expectedBarOrder = ['Group Three', 'Group One', 'Group Two'];
+  assertBarSortingIsCorrect(assert, component, expectedBarOrder,
     'ascending by value');
 
   // Second, turn off sortAscending so that sort is descending by value
   Ember.run(() => { component.set('sortAscending', false); });
-  descByValueOrder = ['Group Two', 'Group One', 'Group Three'];
-  assertBarSortingIsCorrect(assert, component, descByValueOrder,
+  expectedBarOrder = ['Group Two', 'Group One', 'Group Three'];
+  assertBarSortingIsCorrect(assert, component, expectedBarOrder,
     'descending by value');
 
   // Third, change sortKey to the 'custom' (defaults to alphabetical). Still
   // descending.
   Ember.run(() => { component.set('sortKey', 'custom'); });
-  descAlphabetical = ['Group Two', 'Group Three', 'Group One'];
-  assertBarSortingIsCorrect(assert, component, descAlphabetical, 'descending ' +
+  expectedBarOrder = ['Group Two', 'Group Three', 'Group One'];
+  assertBarSortingIsCorrect(assert, component, expectedBarOrder, 'descending ' +
     'alphabetical, which is the default custom sort');
 
   // Fourth, override the default custom sorting function so that it instead
@@ -766,7 +767,7 @@ test('Bars are sorted correctly', function(assert) {
       return getDigitSum(barData1) - getDigitSum(barData2);
     });
   });
-  descCustomSort = ['Group Two', 'Group One', 'Group Three'];
-  assertBarSortingIsCorrect(assert, component, descCustomSort, 'descending ' +
+  expectedBarOrder = ['Group Two', 'Group One', 'Group Three'];
+  assertBarSortingIsCorrect(assert, component, expectedBarOrder, 'descending ' +
     'custom sort (sum of integers in bar value)');
 });
