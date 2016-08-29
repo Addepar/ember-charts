@@ -604,14 +604,14 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
       .nice(this.get('numYTicks'));
   }),
 
-  allSliceLabels: Ember.computed('otherSliceTypes.[]', 'nonOtherSliceTypes.[]', 'otherSliceLabel', function() {
-    var result, otherSliceTypes, nonOtherSliceTypes;
-    otherSliceTypes = this.get('otherSliceTypes');
-    nonOtherSliceTypes = this.get('nonOtherSliceTypes');
-    result = _.clone(nonOtherSliceTypes);
-    if (otherSliceTypes.length < 2) {
-      result.concat(otherSliceTypes);
-    } else {
+  /**
+   * All slice labels to show in the chart legend. Includes 'Other' slice if
+   * the 'Other' slice is present.
+   * @type {Array.<string>}
+   */
+  allSliceLabels: Ember.computed('nonOtherSliceTypes.[]', 'otherSliceTypes.[]', 'otherSliceLabel', function() {
+    var result = _.clone(this.get('nonOtherSliceTypes'));
+    if (this.get('otherSliceTypes').length > 0) {
       result.push(this.get('otherSliceLabel'));
     }
     return result;
