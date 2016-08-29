@@ -42,6 +42,11 @@ const PieChartComponent = ChartComponent.extend(FloatingTooltipMixin,
   // will start from the 2 o'clock to 4 o'clock positions.
   rotationOffset: 1/4 * Math.PI,
 
+  // Allows the user to configure whether Rounded Zero Percent Slices should be
+  // included inside of the Pie Chart. For example, if maxDecimalPlace = 0 and
+  // there was a slice of 0.3%, that slice would be rounded down to 0%
+  includeRoundedZeroPercentSlices: true,
+
   // ----------------------------------------------------------------------------
   // Data
   // ----------------------------------------------------------------------------
@@ -69,7 +74,7 @@ const PieChartComponent = ChartComponent.extend(FloatingTooltipMixin,
   }),
 
   // Valid data points that have been sorted by selectedSortType
-  sortedData: Ember.computed('filteredData', 'sortKey', 'maxDecimalPlace', function() {
+  sortedData: Ember.computed('filteredData', 'sortKey', function() {
     var data = this.get('filteredData');
     var total = data.reduce(function(p, child) {
       return child.value + p;
@@ -83,7 +88,7 @@ const PieChartComponent = ChartComponent.extend(FloatingTooltipMixin,
         color: d.color,
         label: d.label,
         value: d.value,
-        percent: d3.round(100.0 * d.value / total, this.get('maxDecimalPlace'))
+        percent: 100.0*d.value / total
       };
     });
 
@@ -95,7 +100,7 @@ const PieChartComponent = ChartComponent.extend(FloatingTooltipMixin,
   //
   // When Other is the largest slice, Other is last and the data is sorted in order
   // When Other is not the largest slice, Other is the first and the data after it is sorted in order
-  sortedDataWithOther: Ember.computed('sortedData', 'maxNumberOfSlices', 'minSlicePercent','maxDecimalPlace', function() {
+  sortedDataWithOther: Ember.computed('sortedData', 'maxNumberOfSlices', 'minSlicePercent', 'maxDecimalPlace', 'includeRoundedZeroPercentSlices', function() {
     var lastItem, overflowSlices, slicesLeft;
 
     var data = _.cloneDeep(this.get('sortedData')).reverse();
@@ -104,7 +109,7 @@ const PieChartComponent = ChartComponent.extend(FloatingTooltipMixin,
     var otherItems = [];
     var otherSlice = {
       label: 'Other',
-      percent: 0,
+      percent: 0.0,
       _otherItems: otherItems
     };
 
@@ -118,7 +123,7 @@ const PieChartComponent = ChartComponent.extend(FloatingTooltipMixin,
     if (lowPercentIndex < 0) {
       lowPercentIndex = data.length;
     } else {
-    	// Add low percent slices to other slice
+      // Add low percent slices to other slice
       _.takeRight(data, data.length - lowPercentIndex).forEach(function(d) {
         otherItems.push(d);
         return otherSlice.percent += d.percent;
@@ -170,10 +175,29 @@ const PieChartComponent = ChartComponent.extend(FloatingTooltipMixin,
       }
     }
 
-    otherSlice.percent = d3.round(otherSlice.percent, this.get('maxDecimalPlace'));
+    // Round all slices to the appropriate decimal place
+    var maxDecimalPlace = this.get('maxDecimalPlace');
+    var roundSlices = function(sliceList) {
+      sliceList.forEach(function(slice) {
+        slice.percent = d3.round(1.0 * slice.percent, maxDecimalPlace);
+      });
+    };
+
+    roundSlices(slicesLeft);
+    roundSlices(otherItems);
+
+    // Filter zero percent slices out of the pie chart after they have been rounded
+    var filterRoundedZeroPercentSlices = function(sliceList) {
+      return sliceList.filter(function(slice) {
+        return slice.percent !== 0;
+      });
+    };
+
+    if (this.get('includeRoundedZeroPercentSlices') === false) {
+      slicesLeft = filterRoundedZeroPercentSlices(slicesLeft);
+    }
 
     return slicesLeft.reverse();
-
   }),
 
   otherData: Ember.computed('sortedDataWithOther.[]', 'sortFunction', function() {
