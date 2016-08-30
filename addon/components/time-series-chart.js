@@ -58,6 +58,9 @@ const TimeSeriesChartComponent = ChartComponent.extend(LegendMixin,
   // Bar left offset, as fraction of width of bar
   barLeftOffset: 0.0,
 
+  // Force X-Axis labels to print vertically
+  xAxisVertLabels: false,
+
   // ----------------------------------------------------------------------------
   // Time Series Chart Constants
   // ----------------------------------------------------------------------------
@@ -106,19 +109,13 @@ const TimeSeriesChartComponent = ChartComponent.extend(LegendMixin,
     var groups = groupBy(lineData, (datum) => {
       return this._getLabelOrDefault(datum);
     });
-    // _results = [];
-    // for (groupName in groups) {
-    //   values = groups[groupName];
-    //   _results.push();
-    // }
+
     return _.map(groups, function(values, groupName) {
       return {
         group: groupName,
         values: values
       };
     });
-
-    // return _results;
   }),
 
   // puts barData in a new format.
@@ -186,7 +183,6 @@ const TimeSeriesChartComponent = ChartComponent.extend(LegendMixin,
     }
   },
 
-
   // Given a time, returns the time plus half an interval
   _padTimeForward: function(time, delta) {
     return this._padTimeWithIntervalMultiplier(time, delta, 0.5);
@@ -208,6 +204,42 @@ const TimeSeriesChartComponent = ChartComponent.extend(LegendMixin,
       time = offsetDelta * multiplier + time.getTime();
     }
     return new Date(time);
+  },
+
+  // We'd like to have the option of turning our labels vertical when circumstances
+  // require.  This function gets ALL the labels of the xAxis and rotates them.
+  _rotateXAxisLabels: function() {
+    var gXAxis = this.get('xAxis');
+
+    // If we have a legend it'll take care of the margin bottom adjustments,
+    // else we need to give ourselves some more room for the labels.
+    if (!this.get('hasLegend')) {
+      this.set('marginBottom', 20);
+    }
+
+    gXAxis.selectAll('text')
+      .attr("y", 8)
+      .attr("x", -8)
+      .attr("dy", ".2em")
+      .attr("transform", "rotate(-60)")
+      .style("text-anchor", "end");
+
+    // we also need to mod the legend top padding
+    this.set('legendTopPadding', 30);
+  },
+
+  // Now that we can get our labels all turny, I actually need to straighten them
+  // out if the feature is toggled
+  _straightenXAxisLabels: function() {
+    var gXAxis = this.get('xAxis');
+    // most of these values are static and come from various places, including
+    // the bowels of D3
+    gXAxis.selectAll('text')
+      .attr("y", 9)
+      .attr("x", 0)
+      .attr("dy", "0.71em")
+      .attr("transform", null)
+      .style("text-anchor", "middle");
   },
 
   _barGroups: Ember.computed('barData.@each', 'ungroupedSeriesName', function() {
@@ -239,8 +271,9 @@ const TimeSeriesChartComponent = ChartComponent.extend(LegendMixin,
     return this.get('width') - this.get('graphicLeft');
   }),
 
-  graphicHeight: Ember.computed('height', 'legendHeight', 'legendChartPadding', function() {
-    return this.get('height') - this.get('legendHeight') - this.get('legendChartPadding');
+  graphicHeight: Ember.computed('height', 'legendHeight', 'legendChartPadding', 'marginBottom', function() {
+    var legendSize = this.get('legendHeight') + this.get('legendChartPadding') + (this.get('marginBottom') || 0);
+    return this.get('height') - legendSize;
   }),
 
   // ----------------------------------------------------------------------------
@@ -361,16 +394,33 @@ const TimeSeriesChartComponent = ChartComponent.extend(LegendMixin,
 
   // If there is a dynamic x axis, then assume the value that it is given,
   // and if it is not a dynamic x axis, set it to the number of x axis ticks.
+  //
   // For a dynamic x axis, let the max number of labels be the minimum of
   // the number of x ticks and the assigned value. This is to prevent
   // the assigned value from being so large that labels flood the x axis.
-  maxNumberOfLabels: Ember.computed('numXTicks', 'dynamicXAxis', function(key, value){
-    if (this.get('dynamicXAxis')) {
-      value = _.isNaN(value) ? this.get('DEFAULT_MAX_NUMBER_OF_LABELS') : value;
-      return Math.min(value, this.get('numXTicks'));
-    } else {
-      return this.get('numXTicks');
+  maxNumberOfLabels: Ember.computed('numXTicks', 'dynamicXAxis', 'maxNumberOfRotatedLabels', 'xAxisVertLabels', function(key, value){
+    var allowableTicks = this.get('numXTicks');
+    if (this.get('xAxisVertLabels')) {
+      allowableTicks = this.get('maxNumberOfRotatedLabels');
     }
+
+    if (this.get('dynamicXAxis')) {
+      if (isNaN(value)) {
+        value = this.get('DEFAULT_MAX_NUMBER_OF_LABELS');
+      }
+      return Math.min(value, allowableTicks);
+    } else {
+      return allowableTicks;
+    }
+  }),
+
+  // The footprint of a label rotated at -60 transform
+  maxNumberOfRotatedLabels: Ember.computed('_innerTickSpacingX', 'graphicWidth', 'numXTicks', function() {
+    const radianVal = 30 * (Math.PI / 180);
+    const tickSpacing = Math.sin(radianVal) * this.get('_innerTickSpacingX');
+    const numOfTicks = Math.floor(this.get('graphicWidth') / tickSpacing);
+
+    return Math.max(numOfTicks, this.get('numXTicks'));
   }),
 
   // Create a domain that spans the larger range of bar or line data
@@ -516,12 +566,18 @@ const TimeSeriesChartComponent = ChartComponent.extend(LegendMixin,
       d3.select(element).classed('hovered', true);
 
       var time = data.labelTime != null ? data.labelTime : data.time;
-      var content = "<span class=\"tip-label\">" + (this.get('formatTime')(time)) + "</span>";
+      var content = $('<span>');
+      content.append($("<span class=\"tip-label\">").text(this.get('formatTime')(time)));
+      this.showTooltip(content.html(), d3.event);
+
       var formatLabelFunction = this.get('formatLabelFunction');
 
       var addValueLine = function(d) {
-        content += "<span class=\"name\">" + d.group + ": </span>";
-        return content += "<span class=\"value\">" + (formatLabelFunction(d.value)) + "</span><br/>";
+        var name = $('<span class="name" />').text(d.group + ': ');
+        var value = $('<span class="value" />').text(formatLabelFunction(d.value));
+        content.append(name);
+        content.append(value);
+        content.append('<br />');
       };
 
       if (Ember.isArray(data.values)) {
@@ -530,7 +586,7 @@ const TimeSeriesChartComponent = ChartComponent.extend(LegendMixin,
         addValueLine(data);
       }
 
-      return this.showTooltip(content, d3.event);
+      return this.showTooltip(content.html(), d3.event);
     };
   }),
 
@@ -789,7 +845,10 @@ const TimeSeriesChartComponent = ChartComponent.extend(LegendMixin,
     'hasXAxisTitle',
     'hasYAxisTitle',
     'xTitleHorizontalOffset',
-    'yTitleVerticalOffset'
+    'yTitleVerticalOffset',
+    'xAxisVertLabels',
+    'maxNumberOfMinorTicks',
+    'graphicWidth'
   ],
 
   drawChart: function() {
@@ -812,7 +871,6 @@ const TimeSeriesChartComponent = ChartComponent.extend(LegendMixin,
       .scale(this.get('xTimeScale'))
       .orient('bottom')
       .tickValues(this.get('labelledTicks'))
-      .tickSubdivide(this.get('numberOfMinorTicks'))
       .tickFormat(this.get('formattedTime'))
       .tickSize(6, 3);
 
@@ -820,11 +878,23 @@ const TimeSeriesChartComponent = ChartComponent.extend(LegendMixin,
     var graphicHeight = this.get('graphicHeight');
     var gXAxis = this.get('xAxis');
 
+    // Put our x-axis in the right place
     gXAxis.attr({
-        transform: "translate(0," + graphicTop + graphicHeight + ")"
-      }).call(xAxis);
+      transform: "translate(0," + graphicTop + graphicHeight + ")"
+    }).call(xAxis);
 
-    //tickSize isn't doing anything here, it should take two arguments
+    // If we have minor ticks, this will select the applicable labels and alter
+    // them
+    this.filterMinorTicks();
+
+    // Do we need to turn our axis labels?
+    if (this.get('xAxisVertLabels')) {
+      this._rotateXAxisLabels();
+    } else {
+      this._straightenXAxisLabels();
+    }
+
+    //tickSize draws the Y-axis allignment line across the whole of the graph.
     var yAxis = d3.svg.axis()
       .scale(this.get('yScale'))
       .orient('right')

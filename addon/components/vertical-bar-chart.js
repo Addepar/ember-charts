@@ -375,9 +375,52 @@ const VerticalBarChartComponent = ChartComponent.extend(LegendMixin,
 
   // ----------------------------------------------------------------------------
   // Color Configuration
+  //
+  // We cannot pass the mixed-in method this.getSeriesColor() directly to d3
+  // as the callback to use to color the bars.
+  // This is because for bar groups that do not have a meaningful
+  // non-zero value for an individual bar, the client is free to not pass
+  // a data point for that pair of (group, label) at all.
+  //
+  // In that case, when we use d3 to render bar groups with omitted bars,
+  // using this.getSeriesColor() would tell d3 to use a color palette
+  // with _more_ colors than bars in the bar group (since the number of colors
+  // in the palette is this.numColorSeries).
+  // Hence some bars would likely get a color that doesn't match the color
+  // used for bars with the same label in other bar groups.
+  //
+  // So instead, we provide our own callback this.fnGetBarColor()
+  // that looks at the bar label first and tries to look up the color
+  // based on that. If that fails, then fnGetBarColor() defers to getSeriesColor().
+  //
+  // Note that we still use getSeriesColors() to initialize the mapping
+  // from bar label to bar color, so it would be confusing if we tried to
+  // override the property altogether.
+  //
+  // See bug #172 : https://github.com/Addepar/ember-charts/issues/172
   // ----------------------------------------------------------------------------
 
   numColorSeries: Ember.computed.alias('individualBarLabels.length'),
+
+  barColors: Ember.computed('individualBarLabels.[]', 'getSeriesColor', function() {
+    var fnGetSeriesColor = this.get('getSeriesColor');
+    var result = {};
+    this.get('individualBarLabels').forEach(function(label, iLabel) {
+      result[label] = fnGetSeriesColor(label, iLabel);
+    });
+    return result;
+  }),
+
+  fnGetBarColor: Ember.computed('barColors', function() {
+    var barColors = this.get('barColors');
+    return function(d) {
+      if (!Ember.isNone(d.label)) {
+        return barColors[d.label];
+      } else {
+        return barColors[d];
+      }
+    };
+  }),
 
   // ----------------------------------------------------------------------------
   // Legend Configuration
@@ -387,12 +430,10 @@ const VerticalBarChartComponent = ChartComponent.extend(LegendMixin,
     return this.get('stackBars') || this.get('isGrouped') && this.get('legendItems.length') > 1 && this.get('showLegend');
   }),
 
-  legendItems: Ember.computed('individualBarLabels.[]', 'getSeriesColor', 'stackBars', 'labelIDMapping.[]', function() {
-    var getSeriesColor;
-    getSeriesColor = this.get('getSeriesColor');
+  legendItems: Ember.computed('individualBarLabels.[]', 'barColors', 'stackBars', 'labelIDMapping.[]', function() {
+    var barColors = this.get('barColors');
     return this.get('individualBarLabels').map((label, i) => {
-      var color;
-      color = getSeriesColor(label, i);
+      var color = barColors[label];
       if (this.get('stackBars')) {
         i = this.get('labelIDMapping')[label];
       }
@@ -424,12 +465,15 @@ const VerticalBarChartComponent = ChartComponent.extend(LegendMixin,
       d3.select(element).classed('hovered', true);
 
       // Show tooltip
-      var content =  (data.group) ? "<span class=\"tip-label\">" + data.group + "</span>" : '';
+      var tipLabel = (data.group) ? $("<span class=\"tip-label\" />").text(data.group): '';
+      var content =  $("<span />").append(tipLabel);
 
       var formatLabel = this.get('formatLabelFunction');
       var addValueLine = function(d) {
-        content += "<span class=\"name\">" + d.label + ": </span>";
-        return content += "<span class=\"value\">" + formatLabel(d.value) + "</span><br/>";
+        var label = $("<span class=\"name\" />").text(d.label + ": ");
+        content.append(label);
+        var value = $("<span class=\"value\">").text(formatLabel(d.value));
+        return content.append(value);
       };
 
       if (isGroup) {
@@ -439,7 +483,7 @@ const VerticalBarChartComponent = ChartComponent.extend(LegendMixin,
         // Just hovering over single bar
         addValueLine(data);
       }
-      return this.showTooltip(content, d3.event);
+      return this.showTooltip(content.html(), d3.event);
     };
   }),
 
@@ -479,16 +523,20 @@ const VerticalBarChartComponent = ChartComponent.extend(LegendMixin,
     };
   }),
 
-  stackedBarAttrs: Ember.computed('yScale', 'groupWidth', 'labelIDMapping.[]', function() {
-    var yScale, zeroDisplacement;
-    zeroDisplacement = 1;
-    yScale = this.get('yScale');
+  commonBarAttrs: Ember.computed('labelIDMapping.[]', function() {
     return {
-      "class": (barSection) => {
-        var id;
-        id = this.get('labelIDMapping')[barSection.label];
+      class: (d) => {
+        var id = this.get('labelIDMapping')[d.label];
         return "grouping-" + id;
-      },
+      }
+    };
+  }),
+
+  stackedBarAttrs: Ember.computed('commonBarAttrs', 'yScale', 'groupWidth', function() {
+    var zeroDisplacement = 1;
+    var yScale = this.get('yScale');
+
+    return _.assign({
       'stroke-width': 0,
       width: () => this.get('groupWidth'),
       x: null,
@@ -498,15 +546,14 @@ const VerticalBarChartComponent = ChartComponent.extend(LegendMixin,
       height: function(barSection) {
         return yScale(barSection.y0) - yScale(barSection.y1);
       }
-    };
+    }, this.get('commonBarAttrs'));
   }),
 
-  groupedBarAttrs: Ember.computed('yScale', 'getSeriesColor', 'barWidth', 'xWithinGroupScale', function() {
+  groupedBarAttrs: Ember.computed('commonBarAttrs', 'yScale', 'barWidth', 'xWithinGroupScale', function() {
     var zeroDisplacement = 1;
     var yScale = this.get('yScale');
 
-    return {
-      class: (d, i) => "grouping-" + i,
+    return _.assign({
       'stroke-width': 0,
       width: () => this.get('barWidth'),
       x: (d) => this.get('xWithinGroupScale')(d.label),
@@ -520,7 +567,7 @@ const VerticalBarChartComponent = ChartComponent.extend(LegendMixin,
           return yScale(0) + zeroDisplacement;
         }
       }
-    };
+    }, this.get('commonBarAttrs'));
   }),
 
   labelAttrs: Ember.computed('barWidth', 'isGrouped', 'stackBars', 'groupWidth',
@@ -741,7 +788,7 @@ const VerticalBarChartComponent = ChartComponent.extend(LegendMixin,
     groups.attr(this.get('groupAttrs') );
     groups.selectAll('rect')
       .attr(barAttrs)
-      .style('fill', this.get('getSeriesColor'));
+      .style('fill', this.get('fnGetBarColor'));
     return groups.select('g.groupLabel')
       .attr(this.get('labelAttrs') );
   }
