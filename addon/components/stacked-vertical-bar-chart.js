@@ -5,7 +5,6 @@ import FloatingTooltipMixin from '../mixins/floating-tooltip';
 import AxesMixin from '../mixins/axes';
 import FormattableMixin from '../mixins/formattable';
 import NoMarginChartMixin from '../mixins/no-margin-chart';
-import SortableChartMixin from '../mixins/sortable-chart';
 import AxisTitlesMixin from '../mixins/axis-titles';
 import LabelTrimmer from '../utils/label-trimmer';
 
@@ -19,7 +18,7 @@ import LabelTrimmer from '../utils/label-trimmer';
  */
 const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
   FloatingTooltipMixin, AxesMixin, FormattableMixin, NoMarginChartMixin,
-  AxisTitlesMixin, SortableChartMixin, {
+  AxisTitlesMixin, {
 
   classNames: ['chart-vertical-bar', 'chart-stacked-vertical-bar'],
 
@@ -373,7 +372,7 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
       return this.get('valueSliceSortingFn');
     } else if (sliceSortKey === 'custom') {
       return this.get('customSliceSortingFn');
-    } else if (sliceSortKey === 'original') {
+    } else if (sliceSortKey === 'original' || Ember.isNone(sliceSortKey)) {
       return this.get('originalSliceSortingFn');
     } else {
       throw new Error("Invalid sliceSortKey");
@@ -388,8 +387,15 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
    * @see customBarSortingFn
    * @type {string}
    */
-  barSortKey: Ember.computed.alias('sortKey'),
+  barSortKey: 'value',
 
+
+  /**
+   * Whether bars should be sorted by the `barSortKey` in ascending or
+   * descending order.
+   * @type {boolean}
+   */
+  barSortAscending: true,
 
   /**
    * Comparison function for when bar data when barSortKey is 'value'
@@ -459,7 +465,7 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
       return this.get('valueBarSortingFn');
     } else if (barSortKey === 'custom') {
       return this.get('customBarSortingFn');
-    } else if (barSortKey === 'original') {
+    } else if (barSortKey === 'original' || Ember.isNone(barSortKey)) {
       return this.get('originalBarSortingFn');
     } else {
       throw new Error("Invalid barSortKey");
@@ -487,11 +493,11 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
    * @see barSortingFn
    * @type {Array.<string>}
    */
-  barNames: Ember.computed('netBarValues', 'barSortingFn', 'sortAscending', function() {
+  barNames: Ember.computed('netBarValues', 'barSortingFn', 'barSortAscending', function() {
     var sortedBars, sortedBarNames;
     sortedBars = this.get('netBarValues').sort(this.get('barSortingFn'));
     sortedBarNames = _.pluck(sortedBars, 'barLabel');
-    if (!this.get('sortAscending')) {
+    if (!this.get('barSortAscending')) {
       sortedBarNames.reverse();
     }
     return sortedBarNames;

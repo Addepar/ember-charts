@@ -743,14 +743,14 @@ test('Bars are sorted correctly', function(assert) {
     'ascending by value');
 
   // Second, turn off sortAscending so that sort is descending by value
-  Ember.run(() => { component.set('sortAscending', false); });
+  Ember.run(() => { component.set('barSortAscending', false); });
   expectedBarOrder = ['Group Two', 'Group One', 'Group Three'];
   assertBarSortingIsCorrect(assert, component, expectedBarOrder,
     'descending by value');
 
   // Third, change sortKey to the 'custom' (defaults to alphabetical). Still
   // descending.
-  Ember.run(() => { component.set('sortKey', 'custom'); });
+  Ember.run(() => { component.set('barSortKey', 'custom'); });
   expectedBarOrder = ['Group Two', 'Group Three', 'Group One'];
   assertBarSortingIsCorrect(assert, component, expectedBarOrder, 'descending ' +
     'alphabetical, which is the default custom sort');

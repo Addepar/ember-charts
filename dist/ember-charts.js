@@ -2513,7 +2513,7 @@ define('ember-charts/components/scatter-chart', ['exports', 'module', 'ember', '
 
   module.exports = ScatterChartComponent;
 });
-define('ember-charts/components/stacked-vertical-bar-chart', ['exports', 'module', 'ember', './chart-component', '../mixins/legend', '../mixins/floating-tooltip', '../mixins/axes', '../mixins/formattable', '../mixins/no-margin-chart', '../mixins/sortable-chart', '../mixins/axis-titles', '../utils/label-trimmer'], function (exports, module, _ember, _chartComponent, _mixinsLegend, _mixinsFloatingTooltip, _mixinsAxes, _mixinsFormattable, _mixinsNoMarginChart, _mixinsSortableChart, _mixinsAxisTitles, _utilsLabelTrimmer) {
+define('ember-charts/components/stacked-vertical-bar-chart', ['exports', 'module', 'ember', './chart-component', '../mixins/legend', '../mixins/floating-tooltip', '../mixins/axes', '../mixins/formattable', '../mixins/no-margin-chart', '../mixins/axis-titles', '../utils/label-trimmer'], function (exports, module, _ember, _chartComponent, _mixinsLegend, _mixinsFloatingTooltip, _mixinsAxes, _mixinsFormattable, _mixinsNoMarginChart, _mixinsAxisTitles, _utilsLabelTrimmer) {
   'use strict';
 
   function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
@@ -2532,8 +2532,6 @@ define('ember-charts/components/stacked-vertical-bar-chart', ['exports', 'module
 
   var _NoMarginChartMixin = _interopRequireDefault(_mixinsNoMarginChart);
 
-  var _SortableChartMixin = _interopRequireDefault(_mixinsSortableChart);
-
   var _AxisTitlesMixin = _interopRequireDefault(_mixinsAxisTitles);
 
   var _LabelTrimmer = _interopRequireDefault(_utilsLabelTrimmer);
@@ -2546,7 +2544,7 @@ define('ember-charts/components/stacked-vertical-bar-chart', ['exports', 'module
    * @class
    * @augments ChartComponent
    */
-  var StackedVerticalBarChartComponent = _ChartComponent['default'].extend(_LegendMixin['default'], _FloatingTooltipMixin['default'], _AxesMixin['default'], _FormattableMixin['default'], _NoMarginChartMixin['default'], _AxisTitlesMixin['default'], _SortableChartMixin['default'], {
+  var StackedVerticalBarChartComponent = _ChartComponent['default'].extend(_LegendMixin['default'], _FloatingTooltipMixin['default'], _AxesMixin['default'], _FormattableMixin['default'], _NoMarginChartMixin['default'], _AxisTitlesMixin['default'], {
 
     classNames: ['chart-vertical-bar', 'chart-stacked-vertical-bar'],
 
@@ -2906,7 +2904,7 @@ define('ember-charts/components/stacked-vertical-bar-chart', ['exports', 'module
         return this.get('valueSliceSortingFn');
       } else if (sliceSortKey === 'custom') {
         return this.get('customSliceSortingFn');
-      } else if (sliceSortKey === 'original') {
+      } else if (sliceSortKey === 'original' || _Ember['default'].isNone(sliceSortKey)) {
         return this.get('originalSliceSortingFn');
       } else {
         throw new Error("Invalid sliceSortKey");
@@ -2921,7 +2919,14 @@ define('ember-charts/components/stacked-vertical-bar-chart', ['exports', 'module
      * @see customBarSortingFn
      * @type {string}
      */
-    barSortKey: _Ember['default'].computed.alias('sortKey'),
+    barSortKey: 'value',
+
+    /**
+     * Whether bars should be sorted by the `barSortKey` in ascending or
+     * descending order.
+     * @type {boolean}
+     */
+    barSortAscending: true,
 
     /**
      * Comparison function for when bar data when barSortKey is 'value'
@@ -2996,7 +3001,7 @@ define('ember-charts/components/stacked-vertical-bar-chart', ['exports', 'module
         return this.get('valueBarSortingFn');
       } else if (barSortKey === 'custom') {
         return this.get('customBarSortingFn');
-      } else if (barSortKey === 'original') {
+      } else if (barSortKey === 'original' || _Ember['default'].isNone(barSortKey)) {
         return this.get('originalBarSortingFn');
       } else {
         throw new Error("Invalid barSortKey");
@@ -3024,11 +3029,11 @@ define('ember-charts/components/stacked-vertical-bar-chart', ['exports', 'module
      * @see barSortingFn
      * @type {Array.<string>}
      */
-    barNames: _Ember['default'].computed('netBarValues', 'barSortingFn', 'sortAscending', function () {
+    barNames: _Ember['default'].computed('netBarValues', 'barSortingFn', 'barSortAscending', function () {
       var sortedBars, sortedBarNames;
       sortedBars = this.get('netBarValues').sort(this.get('barSortingFn'));
       sortedBarNames = _.pluck(sortedBars, 'barLabel');
-      if (!this.get('sortAscending')) {
+      if (!this.get('barSortAscending')) {
         sortedBarNames.reverse();
       }
       return sortedBarNames;
