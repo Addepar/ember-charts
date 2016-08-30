@@ -211,3 +211,28 @@ function(assert) {
         ", which is the color in the legend for bar label " + label);
   });
 });
+
+test('Pull Request #182: A bar-specific color override is respected', function(assert) {
+  const chartBaseColor = 'rgb(65, 65, 65)';
+  const barOverrideColor = tinycolor('red').toRgbString();
+  var testData, component, actualBarColors;
+
+  assert.expect(1);
+  testData = _.cloneDeep(threeRanges);
+  testData[0].color = barOverrideColor;
+
+  component = this.subject({
+    data: testData,
+    selectedSeedColor: chartBaseColor,
+  });
+  this.render();
+
+  actualBarColors = component.$('svg rect').map(function() {
+    return tinycolor($(this).css('fill')).toRgbString();
+  });
+  assert.notEqual(
+    actualBarColors.toArray().indexOf(barOverrideColor),
+    -1,
+    "There is a bar in the chart with the correct override color " + barOverrideColor
+  );
+});
