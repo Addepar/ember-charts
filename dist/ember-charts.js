@@ -4884,7 +4884,9 @@ define('ember-charts/components/vertical-bar-chart', ['exports', 'module', 'embe
     fnGetBarColor: _Ember['default'].computed('barColors', function () {
       var barColors = this.get('barColors');
       return function (d) {
-        if (!_Ember['default'].isNone(d.label)) {
+        if (!_Ember['default'].isNone(d.color)) {
+          return d.color;
+        } else if (!_Ember['default'].isNone(d.label)) {
           return barColors[d.label];
         } else {
           return barColors[d];
