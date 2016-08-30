@@ -1393,6 +1393,11 @@ define('ember-charts/components/pie-chart', ['exports', 'module', 'ember', './ch
     // will start from the 2 o'clock to 4 o'clock positions.
     rotationOffset: 1 / 4 * Math.PI,
 
+    // Allows the user to configure whether Rounded Zero Percent Slices should be
+    // included inside of the Pie Chart. For example, if maxDecimalPlace = 0 and
+    // there was a slice of 0.3%, that slice would be rounded down to 0%
+    includeRoundedZeroPercentSlices: true,
+
     // ----------------------------------------------------------------------------
     // Data
     // ----------------------------------------------------------------------------
@@ -1422,9 +1427,7 @@ define('ember-charts/components/pie-chart', ['exports', 'module', 'ember', './ch
     }),
 
     // Valid data points that have been sorted by selectedSortType
-    sortedData: _Ember['default'].computed('filteredData', 'sortKey', 'maxDecimalPlace', function () {
-      var _this = this;
-
+    sortedData: _Ember['default'].computed('filteredData', 'sortKey', function () {
       var data = this.get('filteredData');
       var total = data.reduce(function (p, child) {
         return child.value + p;
@@ -1438,7 +1441,7 @@ define('ember-charts/components/pie-chart', ['exports', 'module', 'ember', './ch
           color: d.color,
           label: d.label,
           value: d.value,
-          percent: d3.round(100.0 * d.value / total, _this.get('maxDecimalPlace'))
+          percent: 100.0 * d.value / total
         };
       });
 
@@ -1450,7 +1453,7 @@ define('ember-charts/components/pie-chart', ['exports', 'module', 'ember', './ch
     //
     // When Other is the largest slice, Other is last and the data is sorted in order
     // When Other is not the largest slice, Other is the first and the data after it is sorted in order
-    sortedDataWithOther: _Ember['default'].computed('sortedData', 'maxNumberOfSlices', 'minSlicePercent', 'maxDecimalPlace', function () {
+    sortedDataWithOther: _Ember['default'].computed('sortedData', 'maxNumberOfSlices', 'minSlicePercent', 'maxDecimalPlace', 'includeRoundedZeroPercentSlices', function () {
       var lastItem, overflowSlices, slicesLeft;
 
       var data = _.cloneDeep(this.get('sortedData')).reverse();
@@ -1459,7 +1462,7 @@ define('ember-charts/components/pie-chart', ['exports', 'module', 'ember', './ch
       var otherItems = [];
       var otherSlice = {
         label: 'Other',
-        percent: 0,
+        percent: 0.0,
         _otherItems: otherItems
       };
 
@@ -1525,7 +1528,27 @@ define('ember-charts/components/pie-chart', ['exports', 'module', 'ember', './ch
         }
       }
 
-      otherSlice.percent = d3.round(otherSlice.percent, this.get('maxDecimalPlace'));
+      // Round all slices to the appropriate decimal place
+      var maxDecimalPlace = this.get('maxDecimalPlace');
+      var roundSlices = function roundSlices(sliceList) {
+        sliceList.forEach(function (slice) {
+          slice.percent = d3.round(1.0 * slice.percent, maxDecimalPlace);
+        });
+      };
+
+      roundSlices(slicesLeft);
+      roundSlices(otherItems);
+
+      // Filter zero percent slices out of the pie chart after they have been rounded
+      var filterRoundedZeroPercentSlices = function filterRoundedZeroPercentSlices(sliceList) {
+        return sliceList.filter(function (slice) {
+          return slice.percent !== 0;
+        });
+      };
+
+      if (this.get('includeRoundedZeroPercentSlices') === false) {
+        slicesLeft = filterRoundedZeroPercentSlices(slicesLeft);
+      }
 
       return slicesLeft.reverse();
     }),
@@ -1675,19 +1698,19 @@ define('ember-charts/components/pie-chart', ['exports', 'module', 'ember', './ch
     // ----------------------------------------------------------------------------
 
     getSliceColor: _Ember['default'].computed('numSlices', 'colorScale', function () {
-      var _this2 = this;
+      var _this = this;
 
       return function (d, i) {
         var index, numSlices;
         if (d.data && d.data.color) {
           return d.data.color;
         }
-        numSlices = _this2.get('numSlices');
+        numSlices = _this.get('numSlices');
         index = numSlices - i - 1;
         if (numSlices !== 1) {
           index = index / (numSlices - 1);
         }
-        return _this2.get('colorScale')(index);
+        return _this.get('colorScale')(index);
       };
     }),
 
@@ -1708,7 +1731,7 @@ define('ember-charts/components/pie-chart', ['exports', 'module', 'ember', './ch
     // ----------------------------------------------------------------------------
 
     showDetails: _Ember['default'].computed('isInteractive', function () {
-      var _this3 = this;
+      var _this2 = this;
 
       if (!this.get('isInteractive')) {
         return _Ember['default'].K;
@@ -1718,22 +1741,22 @@ define('ember-charts/components/pie-chart', ['exports', 'module', 'ember', './ch
         d3.select(element).classed('hovered', true);
         data = d.data;
         if (data._otherItems) {
-          value = _this3.get('otherDataValue');
+          value = _this2.get('otherDataValue');
         } else {
           value = data.value;
         }
-        formatLabelFunction = _this3.get('formatLabelFunction');
+        formatLabelFunction = _this2.get('formatLabelFunction');
 
         content = $('<span>');
         content.append($('<span class="tip-label">').text(data.label));
-        content.append($('<span class="name">').text(_this3.get('tooltipValueDisplayName') + ': '));
+        content.append($('<span class="name">').text(_this2.get('tooltipValueDisplayName') + ': '));
         content.append($('<span class="value">').text(formatLabelFunction(value)));
-        return _this3.showTooltip(content.html(), d3.event);
+        return _this2.showTooltip(content.html(), d3.event);
       };
     }),
 
     hideDetails: _Ember['default'].computed('isInteractive', function () {
-      var _this4 = this;
+      var _this3 = this;
 
       if (!this.get('isInteractive')) {
         return _Ember['default'].K;
@@ -1743,9 +1766,9 @@ define('ember-charts/components/pie-chart', ['exports', 'module', 'ember', './ch
         d3.select(element).classed('hovered', false);
         var data = d.data;
         if (data._otherItems) {
-          return _this4.get('viewport').select('.legend').classed('hovered', false);
+          return _this3.get('viewport').select('.legend').classed('hovered', false);
         } else {
-          return _this4.hideTooltip();
+          return _this3.hideTooltip();
         }
       };
     }),
