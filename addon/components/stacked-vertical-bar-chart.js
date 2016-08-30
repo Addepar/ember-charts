@@ -202,14 +202,14 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
   }),
 
   /**
-   * Input data mapped by barLabel AFTER 'Other' slices have been calculated.
-   * Any data without a barLabel will be aggregated into the bar labelled
-   * `ungroupedSeriesName`.
+   * Input data mapped by barLabel AFTER 'Other' slices have been calculated
+   * and with slices sorted correctly for each bar. Bar sorting is handled by
+   * `barNames`, but slice sorting is handled here.
    * Key: barLabel
    * Value: Array of slice objects (sliceLabel, barLabel, value)
    * @type {Object.<string, Array.Object>>}
    */
-  dataGroupedByBarWithOther: Ember.computed('dataGroupedByBar', 'otherSliceLabel', 'nonOtherSliceTypes.[]', function() {
+  sortedData: Ember.computed('dataGroupedByBar', 'otherSliceLabel', 'nonOtherSliceTypes.[]', 'sliceSortingFn', function() {
     var groupedData, nonOtherSliceTypes, otherSliceLabel;
     groupedData = this.get('dataGroupedByBar');
     nonOtherSliceTypes = this.get('nonOtherSliceTypes');
@@ -227,38 +227,11 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
           otherSlice.value += slice.value;
         }
       });
+      newBarData.sort(this.get('sliceSortingFn'));
       if (otherSlice.value !== 0) {
         newBarData.push(otherSlice);
       }
       result[barLabel] = newBarData;
-      return result;
-    }, {});
-  }),
-
-  /**
-   * Input data mapped by barLabel with 'Other' slice AND slices sorted
-   * correctly. This just modifies the slice order for each bar depending on
-   * the current `sliceSortingFn`.
-   * Key: barLabel
-   * Value: Array of slice objects (sliceLabel, barLabel, value)
-   * @type {Object.<string, Array.Object>>}
-   */
-  sortedData: Ember.computed('dataGroupedByBarWithOther', 'sliceSortingFn', 'otherSliceLabel', 'otherSliceTypes.[]', function() {
-    var groupedData, otherSliceLabel, sortedSlices, otherSliceIndex;
-    groupedData = this.get('dataGroupedByBarWithOther');
-    return _.reduce(groupedData, (result, barData, barLabel) => {
-      sortedSlices = barData.sort(this.get('sliceSortingFn'));
-
-      // If there is an 'Other' slice, move it to the end of the sorted slices.
-      if (this.get('otherSliceTypes').length > 0) {
-        otherSliceLabel = this.get('otherSliceLabel');
-        otherSliceIndex = _.findIndex(sortedSlices, slice => {
-          return slice.sliceLabel === otherSliceLabel;
-        });
-        sortedSlices.push(sortedSlices.splice(otherSliceIndex, 1)[0]);
-      }
-
-      result[barLabel] = sortedSlices;
       return result;
     }, {});
   }),
@@ -330,13 +303,13 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
    * @see valueSliceSortingFn
    * @type {Array.<string>}
    */
-  sliceOrderByValue: Ember.computed('netBarValues.[]', 'dataGroupedByBarWithOther', function() {
-    var sortedBars, sliceOrder, slicesInBar, allSlices;
-    allSlices = this.get('dataGroupedByBarWithOther');
+  sliceOrderByValue: Ember.computed('netBarValues.[]', 'dataGroupedByBar', 'otherSliceLabel', function() {
+    var sortedBars, sliceOrder, slicesInBar, allSlicesByBar;
+    allSlicesByBar = this.get('dataGroupedByBar');
     sortedBars = _.sortBy(this.get('netBarValues'), 'value').reverse();
     sliceOrder = [];
     sortedBars.forEach(bar => {
-      slicesInBar = _.sortBy(allSlices[bar.barLabel], slice => {
+      slicesInBar = _.sortBy(allSlicesByBar[bar.barLabel], slice => {
         return -Math.abs(slice.value);
       });
       slicesInBar.forEach(slice => {
@@ -345,6 +318,7 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
         }
       });
     });
+    sliceOrder.push(this.get('otherSliceLabel'));
     return sliceOrder;
   }),
 
