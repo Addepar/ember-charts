@@ -319,3 +319,112 @@ test('Tick Spacing', function(assert) {
   assert.equal(component.get('_innerTickSpacingX'), 0,
     'tickSpacingX should stay the same when tickSpacingY is changed');
 });
+
+test('Date Difference', function(assert) {
+  // We are going to make sure the Delta between two dates matches what we expect
+  assert.expect(7);
+  var startDate = new Date('2014-01-01'),
+    endDate = new Date('2016-01-01'),
+    component = this.subject(),
+    testingParams = [
+      {interval: 'seconds', expected: 63072000},
+      {interval: 'hours', expected: 17520},
+      {interval: 'days', expected: 730},
+      {interval: 'weeks', expected: 104},
+      {interval: 'months', expected: 24},
+      {interval: 'quarters', expected: 8},
+      {interval: 'years', expected: 2}
+    ];
+
+  for (var i in testingParams) {
+    assert.equal(component.numTimeBetween(testingParams[i].interval, startDate.getTime(), endDate.getTime()),
+      testingParams[i].expected,
+      'Expected value found for the numTimeBetween function: ' + testingParams[i].interval);
+  }
+});
+
+test('Quarterly Filter', function(assert) {
+  // We want to make sure the Quarter filter is working as expected.
+  assert.expect(9);
+  var startDate = new Date('2014-01-01'),
+    endDate = new Date('2016-01-01'),
+    component = this.subject(),
+    candidateMonths = d3.time.months(startDate.getTime(), endDate.getTime()),
+    filteredMonths;
+
+  filteredMonths = component.filterLabelsForQuarters(candidateMonths);
+  assert.equal(filteredMonths.length, 8, 'The filtered results contains the correct number of labels');
+  for (var i in filteredMonths) {
+    assert.equal(filteredMonths[i].getMonth() % 3,
+      0, 'The filtered month is the start of a quarter');
+  }
+});
+
+
+test('Minor Tick Filter', function(assert) {
+  assert.expect(13);
+  var component = this.subject(),
+    candidateLabels = null,
+    expectedFiltered = [1404198000000, 1406876400000, 1409554800000, 1412146800000, 1414825200000, 1417420800000, 1435734000000, 1438412400000, 1441090800000, 1443682800000, 1446361200000, 1448956800000],
+    filteredCount = 0,
+    filteredMonths, len, item, i;
+
+  candidateLabels = [
+    new Date('Wed Jan 01 2014 00:00:00 GMT-0800 (PST)'),
+    new Date('Tue Jul 01 2014 00:00:00 GMT-0700 (PDT)'),
+    new Date('Thu Jan 01 2015 00:00:00 GMT-0800 (PST)'),
+    new Date('Wed Jul 01 2015 00:00:00 GMT-0700 (PDT)'),
+    new Date('Sat Feb 01 2014 00:00:00 GMT-0800 (PST)'),
+    new Date('Fri Aug 01 2014 00:00:00 GMT-0700 (PDT)'),
+    new Date('Sun Feb 01 2015 00:00:00 GMT-0800 (PST)'),
+    new Date('Sat Aug 01 2015 00:00:00 GMT-0700 (PDT)'),
+    new Date('Sat Mar 01 2014 00:00:00 GMT-0800 (PST)'),
+    new Date('Mon Sep 01 2014 00:00:00 GMT-0700 (PDT)'),
+    new Date('Sun Mar 01 2015 00:00:00 GMT-0800 (PST)'),
+    new Date('Tue Sep 01 2015 00:00:00 GMT-0700 (PDT)'),
+    new Date('Tue Apr 01 2014 00:00:00 GMT-0700 (PDT)'),
+    new Date('Wed Oct 01 2014 00:00:00 GMT-0700 (PDT)'),
+    new Date('Wed Apr 01 2015 00:00:00 GMT-0700 (PDT)'),
+    new Date('Thu Oct 01 2015 00:00:00 GMT-0700 (PDT)'),
+    new Date('Thu May 01 2014 00:00:00 GMT-0700 (PDT)'),
+    new Date('Sat Nov 01 2014 00:00:00 GMT-0700 (PDT)'),
+    new Date('Fri May 01 2015 00:00:00 GMT-0700 (PDT)'),
+    new Date('Sun Nov 01 2015 00:00:00 GMT-0700 (PDT)'),
+    new Date('Sun Jun 01 2014 00:00:00 GMT-0700 (PDT)'),
+    new Date('Mon Dec 01 2014 00:00:00 GMT-0800 (PST)'),
+    new Date('Mon Jun 01 2015 00:00:00 GMT-0700 (PDT)'),
+    new Date('Tue Dec 01 2015 00:00:00 GMT-0800 (PST)')
+  ];
+
+  Ember.run(function() {
+    component.set('xAxis', {
+      selectAll: function() {
+        Ember.merge(Array.prototype, {
+          style: function(){
+            // using closure to set the result set
+            filteredMonths = this;
+            return this;
+          },
+          attr: function(){ return null; }
+        });
+        return candidateLabels;
+      }
+    });
+
+    component.set('labelledTicks', candidateLabels);
+    component.set('maxNumberOfMinorTicks', 2);
+    component.set('minorTickInterval', 2);
+  });
+
+  component.filterMinorTicks();
+  // we expect to see 12 filtered items here.
+  assert.equal(filteredMonths.length, 12,
+    "The correct number of labels have been converted to minor ticks");
+
+  len = filteredMonths.length;
+  for (i = 0; i < len; i++) {
+    item = filteredMonths[i];
+    assert.notEqual(expectedFiltered.indexOf(item.getTime()), -1,
+      "A label was correctly filtered out - #["+i+"] " + item.getTime() + " which wasn't in: " + expectedFiltered.join(', '));
+  }
+});

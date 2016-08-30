@@ -14,6 +14,7 @@
         data=data
         labelWidthMultiplier=labelWidthMultiplier
         maxDecimalPlace=maxDecimalPlace
+        includeRoundedZeroPercentSlices=includeRoundedZeroPercentSlices
       }}
     </div>
   </div>
@@ -76,6 +77,19 @@
           <div class="col-lg-8">
             {{scrubber-component min="0" max="8" step="1" value=maxDecimalPlace}}
             <span class="help-block">Maximum Decimal Place: {{maxDecimalPlace}}</span>
+          </div>
+        </div>
+        <div class="form-group">
+          <div class="col-lg-offset-4 col-lg-8">
+            <div class="checkbox">
+              <label>
+                {{input
+                  type="checkbox"
+                  checked=includeRoundedZeroPercentSlices
+                }}
+                Include Rounded Zero Percent Slices
+              </label>
+            </div>
           </div>
         </div>
       </div>

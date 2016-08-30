@@ -102,40 +102,52 @@ export default Ember.Mixin.create({
   // The ordering of each time domain from most specific to least specific
   DOMAIN_ORDERING: ['S', 'H', 'D', 'W', 'M', 'Q', 'Y'],
 
-  // This is the number of subdivisions between each major tick on the x
-  // axis. Minor ticks have no labels. For instance, if your maxNumberOfLabels
-  // is 10, and you are charting 20 weeks, there will be 10
-  // major ticks with one subivision (minor ticks) between.
-  numberOfMinorTicks: Ember.computed('xDomain', 'xAxisTimeInterval', 'labelledTicks', function() {
-    var allTicks, domain, findTick, firstIndex, interval, labelledTicks, xDomain, secondIndex, start, stop;
-    labelledTicks = this.get('labelledTicks');
-    xDomain = this.get('xDomain');
-    start = xDomain[0];
-    stop = xDomain[1];
-    domain = this.get('xAxisTimeInterval');
-    interval = domain === 'Q' ? this.MONTHS_IN_QUARTER : 1;
+  // D3 No longer handles "minor ticks" for the user, but has instead reverted
+  // to a strategy of allowing the user to handle rendered ticks as they see
+  // fit.
+  // maxNumberOfMinorTicks sets a threshold that is useful when determining our
+  // interval. This represents the number of ticks that could be drawn between
+  // major ticks. For instance, we may 'allow' 2 minor ticks, but only need
+  // to render a single minor tick between labels.
+  //
+  // minorTickInterval is the modulo for the items to be removed.  This number
+  // will be between 1 and the maxNumberOfMinorTicks
+  //
+  // A maxNumberOfMinorTicks=0 and minorTickInterval=1 essentailly disables the
+  // minor tick feature.
+  maxNumberOfMinorTicks: 0,
+  minorTickInterval: 1,
 
-    // All the ticks which occur between start and stop (including
-    // unlabelled ticks)
-    allTicks = d3.time[domainTypeToLabellerType[domain]](start, stop, interval);
-    if (labelledTicks.length < 2) {
-      return 0;
-    }
+  filterMinorTicks: function () {
+    var gXAxis = this.get('xAxis'),
+      minorTickInterval = this.get('minorTickInterval'),
+      labels, ticks, minorDates;
+    // for the labels we need to reset all of the styles in case the graph updates
+    // by being resized.
+    gXAxis.selectAll('line').attr("y2", "6");
+    gXAxis.selectAll('text').style("display", "block");
 
-    // equality for ticks
-    findTick = function(tick) {
-      return function(x) {
-        return +x === +tick;
-      };
-    };
+    // Need comparison data to do our tick label filtering
+    minorDates = this.get('labelledTicks').map(function(item) {
+      return new Date(item).getTime();
+    }).filter(function(value, index) {
+      return index % minorTickInterval !== 0;
+    });
 
-    // Returns the difference between where the second labelled value
-    // occurs in the unlabelled array and where the first occurs - e.g. in
-    // the above example 3 - 1 - 1 => 1 subdivision tick.
-    secondIndex = _.findIndex(allTicks, findTick(labelledTicks[1]));
-    firstIndex = _.findIndex(allTicks, findTick(labelledTicks[0]));
-    return secondIndex - firstIndex - 1;
-  }),
+    // We have an issue where the nodes come back out of order.  This is a
+    // side effect of redrawing the axis.  D3 don't give two [cares] about the
+    // insertion order of nodes - they are simply translated into place.  This
+    // occurs when the selection with the NEW data is made - the existing ones
+    // updated - then the new ones appended on .enter(...)
+    labels = gXAxis.selectAll('text').filter(function(value) {
+      return minorDates.length > 0 && minorDates.indexOf(value.getTime()) !== -1;
+    });
+    ticks = gXAxis.selectAll('line').filter(function(value, index) {
+      return index % minorTickInterval !== 0;
+    });
+    labels.style("display", "none");
+    ticks.attr("y2", "12");
+  },
 
   // A candidate set of ticks on which labels can appear.
   unfilteredLabelledTicks: Ember.computed('xDomain', 'centerAxisLabels', 'xAxisTimeInterval', function() {
@@ -181,6 +193,51 @@ export default Ember.Mixin.create({
     return this.get('unfilteredLabelledTicks').filter(this.get('tickFilter'));
   }),
 
+  // We need a method to figure out the interval specifity
+  intervalSpecificity: Ember.computed('times', 'minTimeSpecificity', function(){
+    var ind1, ind2, domainTypes, maxNumberOfLabels, i, len, timeBetween;
+
+    // Now the real trick is if there is any allowance for minor ticks we should
+    // consider inflating the max allowed ticks to see if we can fit in a more
+    // specific domain.  Previous versions would increase the specifity one step
+    // which would then be cut out in filtering.
+    // A single minor tick alows us to double our capacity - 2 to triple
+    maxNumberOfLabels = this.get('maxNumberOfLabels') * (this.get('maxNumberOfMinorTicks') + 1);
+
+    // Find the segments that we'll test for (inclusive)
+    ind1 = this.get('DOMAIN_ORDERING').indexOf(this.get('minTimeSpecificity'));
+    ind2 = this.get('DOMAIN_ORDERING').indexOf(this.get('maxTimeSpecificity')) + 1;
+    // Refers to the metrics used for the labelling
+    if (ind2 < 0) {
+      domainTypes = this.get('DOMAIN_ORDERING').slice(ind1);
+    } else {
+      domainTypes = this.get('DOMAIN_ORDERING').slice(ind1, ind2);
+    }
+
+    for (i = 0, len = domainTypes.length; i < len; i++) {
+      timeBetween = this.get('times')[domainTypes[i]];
+      if (timeBetween <= maxNumberOfLabels) {
+        return domainTypes[i];
+      }
+    }
+    return this.get('maxTimeSpecificity');
+  }),
+
+  times: Ember.computed('xDomain', function() {
+    var ret, domain, start, stop, types, len, i;
+
+    ret = {};
+    domain = this.get('xDomain');
+    start = domain[0];
+    stop = domain[1];
+    types = this.get('DOMAIN_ORDERING');
+
+    for (i = 0, len = types.length; i < len; i++) {
+      ret[types[i]] = this.numTimeBetween(domainTypeToLongDomainType[types[i]], start, stop);
+    }
+    return ret;
+  }),
+
   _advanceMiddle: function(time, interval, count) {
     return new Date((time = time.getTime() / 2 + d3.time[interval].offset(time, count) / 2));
   },
@@ -194,7 +251,7 @@ export default Ember.Mixin.create({
       case 'seconds':
         return (stop - start) / 1000;
       case 'hours':
-        return (stop - start) / 1000;
+        return (stop - start) / 3600000;
       case 'days':
         return (stop - start) / 86400000;
       case 'weeks':
@@ -220,70 +277,69 @@ export default Ember.Mixin.create({
   // If the minTimeSpecificity or maxTimeSpecificity are set, then the labels
   // are limited to fall between the time units between these bounds.
   dynamicXLabelling: function(start, stop) {
-    var d, domainType, domainTypes, i, ind1, ind2, interval, j, labellerTypes, labels, len, maxNumberOfLabels, timeBetween, times;
-    ind1 = this.get('DOMAIN_ORDERING').indexOf(this.get('minTimeSpecificity'));
-    ind2 = this.get('DOMAIN_ORDERING').indexOf(this.get('maxTimeSpecificity'));
+    var timeUnit, candidateLabels;
 
-
-    // Refers to the metrics used for the labelling
-    domainTypes = this.get('DOMAIN_ORDERING').slice(ind1, +ind2 + 1 || 9e9);
-
-    // The labeller type to create the labels for each metric
-    labellerTypes = (function() {
-      var j, len, results;
-      results = [];
-      for (j = 0, len = domainTypes.length; j < len; j++) {
-        domainType = domainTypes[j];
-        results.push(domainTypeToLabellerType[domainType]);
-      }
-      return results;
-    })();
-
-    // The time span in various metrics
-    times = (function() {
-      var j, len, results;
-      results = [];
-      for (j = 0, len = domainTypes.length; j < len; j++) {
-        d = domainTypes[j];
-        results.push(this.numTimeBetween(domainTypeToLongDomainType[d], start, stop));
-      }
-      return results;
-    }).call(this);
-    labels = null;
-    maxNumberOfLabels = this.get('maxNumberOfLabels');
-
-    for (i = j = 0, len = times.length; j < len; i = ++j) {
-      timeBetween = times[i];
-
-      // quarter labels are calculated by simply getting month labels with 3
-      // month gaps
-      interval = null;
-      if (timeBetween < maxNumberOfLabels) {
-        interval = domainTypes[i] === 'Q' ? this.MONTHS_IN_QUARTER : 1;
-      } else if (domainTypes[i] === this.get('maxTimeSpecificity') || times[i + 1] < maxNumberOfLabels * (this.get('SPECIFICITY_RATIO'))) {
-        if (domainTypes[i] === 'Q') {
-          interval = Math.ceil(this.MONTHS_IN_QUARTER * timeBetween / maxNumberOfLabels);
-        } else {
-          interval = Math.ceil(timeBetween / maxNumberOfLabels);
-        }
-      }
-      if (interval != null) {
-        this.set('xAxisTimeInterval', domainTypes[i]);
-        labels = this.filterLabels(d3.time[labellerTypes[i]](start, stop), interval);
-        break;
-      }
+    timeUnit = this.get('intervalSpecificity');
+    this.set('xAxisTimeInterval', timeUnit);
+    candidateLabels = d3.time[domainTypeToLabellerType[timeUnit]](start, stop);
+    if (timeUnit === 'Q') {
+      // Normalize quarters
+      candidateLabels = this.filterLabelsForQuarters(candidateLabels);
     }
-    return labels;
+    return this.filterLabels(candidateLabels, timeUnit);
   },
-  filterLabels: function(array, interval){
-    return array.filter(function filterLabels(d, i) {
-      return i % interval === 0;
+
+  // So we need to filter and do a little math to see if we are going have any
+  // minor ticks in our graph.  We'll be using the maxNumberOfMinorTicks as a
+  // control to know if we're filtering or simply relegating the labels to a
+  // mere tick.
+  filterLabels: function(labelCandidates, domain){
+    var maxNumberOfLabels, maxNumberOfMinorTicks, modulo, len;
+
+    maxNumberOfLabels = this.get('maxNumberOfLabels');
+    maxNumberOfMinorTicks = this.get('maxNumberOfMinorTicks');
+    len = labelCandidates.length;
+
+    if (len > maxNumberOfLabels && typeof(this.customFilterLibrary[domain]) === "function") {
+      labelCandidates = this.customFilterLibrary[domain](maxNumberOfLabels, maxNumberOfMinorTicks, labelCandidates);
+      len = labelCandidates.length;
+    } else if (len > maxNumberOfLabels) {
+      // This tells us how many times we can half the results until we're at or
+      // below our maxNumberOfLabels threshold. Derived from:
+      // len ∕ 2ⁿ ≤ maxNumberOfLabels
+      // Math.log(x) / Math.LN2
+      modulo = Math.ceil(Math.log(len/(maxNumberOfLabels * (maxNumberOfMinorTicks + 1))) / Math.LN2) + 1;
+      labelCandidates = labelCandidates.filter(function(d, i) {
+        return i % Math.pow(2, modulo) === 0;
+      });
+      len = labelCandidates.length;
+    }
+
+    // So now we figure out (if we have added space for) the number of minor
+    // ticks that will be shown in the presentiation.
+    if (maxNumberOfMinorTicks > 0) {
+      this.set('minorTickInterval', Math.ceil(len / maxNumberOfLabels));
+    }
+    return labelCandidates;
+  },
+
+  filterLabelsForQuarters: function(dates){
+    // Pretty simple; getMonth is a 0 based index of the month.  We do modulo
+    // for the time being.
+    return dates.filter(function(d) {
+      return d.getMonth() % 3 === 0;
     });
   },
+
+  // We have an option of suppling custom filters based on the date type.  This
+  // way we can append any special behavior or pruning algorithm to Months that
+  // wouldn't be applicable to Weeks
+  customFilterLibrary: {},
+
   // Returns the function which returns the labelled intervals between
   // start and stop for the selected interval.
-  tickLabelerFn: Ember.computed('dynamicXAxis', 'maxNumberOfLabels', 'xAxisTimeInterval',
-    'SPECIFICITY_RATIO', 'minTimeSpecificity', 'maxTimeSpecificity',
+  tickLabelerFn: Ember.computed('dynamicXAxis', 'maxNumberOfLabels', 'maxNumberOfMinorTicks', 'xAxisVertLabels',
+    'xAxisTimeInterval', 'SPECIFICITY_RATIO', 'minTimeSpecificity', 'maxTimeSpecificity',
     function() {
       if (this.get('dynamicXAxis')) {
         return _.bind(function(start, stop) {
@@ -291,24 +347,16 @@ export default Ember.Mixin.create({
         }, this);
       } else {
         return _.bind(function(start, stop) {
-            var domain, interval, timeBetween;
-            domain = this.get('xAxisTimeInterval');
-            timeBetween = this.numTimeBetween(domainTypeToLongDomainType[domain], start, stop);
-            if (domain === 'Q') {
-              if (timeBetween > this.get('maxNumberOfLabels')) {
-                return d3.time.years(start, stop);
-              } else {
-                return d3.time.months(start, stop, this.MONTHS_IN_QUARTER);
-              }
-            } else {
-              if (timeBetween > this.get('maxNumberOfLabels')) {
-                interval = Math.ceil(timeBetween / this.get('maxNumberOfLabels'));
-              } else {
-                interval = 1;
-              }
-
-              return this.filterLabels(d3.time[domainTypeToLabellerType[domain]](start, stop), interval);
-            }
+          var domain, candidateLabels;
+          domain = this.get('xAxisTimeInterval');
+          // So we're going to use the interval we defined as a the maxTimeSpecificity
+          this.set('maxTimeSpecificity', domain);
+          candidateLabels = d3.time[domainTypeToLabellerType[domain]](start, stop);
+          if (domain === 'Q') {
+            // Normalize quarters
+            candidateLabels = this.filterLabelsForQuarters(candidateLabels);
+          }
+          return this.filterLabels(candidateLabels, domain);
         }, this);
       }
     }

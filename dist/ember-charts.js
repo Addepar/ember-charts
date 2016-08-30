@@ -1,5 +1,5 @@
 /*!
-* ember-charts v1.0.0
+* ember-charts v1.1.3
 * Copyright 2012-2016 Addepar Inc.
 * See LICENSE.md
 */
@@ -254,12 +254,11 @@ define('ember-charts/components/bubble-chart', ['exports', 'module', 'ember', '.
 
         // Show tooltip
         var formatLabel = this.get('formatLabel');
-        // Line 1
-        var content = "<span class=\"tip-label\">" + data.label + "</span>";
-        // Line 2
-        content += "<span class=\"name\">" + this.get('tooltipValueDisplayName') + ": </span>";
-        content += "<span class=\"value\">" + formatLabel(data.value) + "</span>";
-        return this.showTooltip(content, d3.event);
+        var content = $('<span>');
+        content.append($('<span class="tip-label">').text(data.label));
+        content.append($('<span class="name">').text(this.get('tooltipValueDisplayName') + ': '));
+        content.append($('<span class="value">').text(formatLabel(data.value)));
+        return this.showTooltip(content.html(), d3.event);
       };
     }),
 
@@ -884,12 +883,11 @@ define('ember-charts/components/horizontal-bar-chart', ['exports', 'module', 'em
 
         // Show tooltip
         var formatLabel = _this.get('formatLabelFunction');
-        // Line 1
-        var content = '<span class=\'tip-label\'>' + data.label + '</span>';
-        // Line 2
-        content += '<span class=\'name\'>' + _this.get('tooltipValueDisplayName') + ': </span>';
-        content += '<span class=\'value\'>' + formatLabel(data.value) + '</span>';
-        return _this.showTooltip(content, d3.event);
+        var content = $('<span>');
+        content.append($('<span class="tip-label">').text(data.label));
+        content.append($('<span class="name">').text(_this.get('tooltipValueDisplayName') + ': '));
+        content.append($('<span class="value">').text(formatLabel(data.value)));
+        return _this.showTooltip(content.html(), d3.event);
       };
     }),
 
@@ -1395,6 +1393,11 @@ define('ember-charts/components/pie-chart', ['exports', 'module', 'ember', './ch
     // will start from the 2 o'clock to 4 o'clock positions.
     rotationOffset: 1 / 4 * Math.PI,
 
+    // Allows the user to configure whether Rounded Zero Percent Slices should be
+    // included inside of the Pie Chart. For example, if maxDecimalPlace = 0 and
+    // there was a slice of 0.3%, that slice would be rounded down to 0%
+    includeRoundedZeroPercentSlices: true,
+
     // ----------------------------------------------------------------------------
     // Data
     // ----------------------------------------------------------------------------
@@ -1424,9 +1427,7 @@ define('ember-charts/components/pie-chart', ['exports', 'module', 'ember', './ch
     }),
 
     // Valid data points that have been sorted by selectedSortType
-    sortedData: _Ember['default'].computed('filteredData', 'sortKey', 'maxDecimalPlace', function () {
-      var _this = this;
-
+    sortedData: _Ember['default'].computed('filteredData', 'sortKey', function () {
       var data = this.get('filteredData');
       var total = data.reduce(function (p, child) {
         return child.value + p;
@@ -1440,7 +1441,7 @@ define('ember-charts/components/pie-chart', ['exports', 'module', 'ember', './ch
           color: d.color,
           label: d.label,
           value: d.value,
-          percent: d3.round(100.0 * d.value / total, _this.get('maxDecimalPlace'))
+          percent: 100.0 * d.value / total
         };
       });
 
@@ -1452,7 +1453,7 @@ define('ember-charts/components/pie-chart', ['exports', 'module', 'ember', './ch
     //
     // When Other is the largest slice, Other is last and the data is sorted in order
     // When Other is not the largest slice, Other is the first and the data after it is sorted in order
-    sortedDataWithOther: _Ember['default'].computed('sortedData', 'maxNumberOfSlices', 'minSlicePercent', 'maxDecimalPlace', function () {
+    sortedDataWithOther: _Ember['default'].computed('sortedData', 'maxNumberOfSlices', 'minSlicePercent', 'maxDecimalPlace', 'includeRoundedZeroPercentSlices', function () {
       var lastItem, overflowSlices, slicesLeft;
 
       var data = _.cloneDeep(this.get('sortedData')).reverse();
@@ -1461,7 +1462,7 @@ define('ember-charts/components/pie-chart', ['exports', 'module', 'ember', './ch
       var otherItems = [];
       var otherSlice = {
         label: 'Other',
-        percent: 0,
+        percent: 0.0,
         _otherItems: otherItems
       };
 
@@ -1527,7 +1528,27 @@ define('ember-charts/components/pie-chart', ['exports', 'module', 'ember', './ch
         }
       }
 
-      otherSlice.percent = d3.round(otherSlice.percent, this.get('maxDecimalPlace'));
+      // Round all slices to the appropriate decimal place
+      var maxDecimalPlace = this.get('maxDecimalPlace');
+      var roundSlices = function roundSlices(sliceList) {
+        sliceList.forEach(function (slice) {
+          slice.percent = d3.round(1.0 * slice.percent, maxDecimalPlace);
+        });
+      };
+
+      roundSlices(slicesLeft);
+      roundSlices(otherItems);
+
+      // Filter zero percent slices out of the pie chart after they have been rounded
+      var filterRoundedZeroPercentSlices = function filterRoundedZeroPercentSlices(sliceList) {
+        return sliceList.filter(function (slice) {
+          return slice.percent !== 0;
+        });
+      };
+
+      if (this.get('includeRoundedZeroPercentSlices') === false) {
+        slicesLeft = filterRoundedZeroPercentSlices(slicesLeft);
+      }
 
       return slicesLeft.reverse();
     }),
@@ -1677,19 +1698,19 @@ define('ember-charts/components/pie-chart', ['exports', 'module', 'ember', './ch
     // ----------------------------------------------------------------------------
 
     getSliceColor: _Ember['default'].computed('numSlices', 'colorScale', function () {
-      var _this2 = this;
+      var _this = this;
 
       return function (d, i) {
         var index, numSlices;
         if (d.data && d.data.color) {
           return d.data.color;
         }
-        numSlices = _this2.get('numSlices');
+        numSlices = _this.get('numSlices');
         index = numSlices - i - 1;
         if (numSlices !== 1) {
           index = index / (numSlices - 1);
         }
-        return _this2.get('colorScale')(index);
+        return _this.get('colorScale')(index);
       };
     }),
 
@@ -1710,7 +1731,7 @@ define('ember-charts/components/pie-chart', ['exports', 'module', 'ember', './ch
     // ----------------------------------------------------------------------------
 
     showDetails: _Ember['default'].computed('isInteractive', function () {
-      var _this3 = this;
+      var _this2 = this;
 
       if (!this.get('isInteractive')) {
         return _Ember['default'].K;
@@ -1720,20 +1741,22 @@ define('ember-charts/components/pie-chart', ['exports', 'module', 'ember', './ch
         d3.select(element).classed('hovered', true);
         data = d.data;
         if (data._otherItems) {
-          value = _this3.get('otherDataValue');
+          value = _this2.get('otherDataValue');
         } else {
           value = data.value;
         }
-        formatLabelFunction = _this3.get('formatLabelFunction');
-        content = "<span class=\"tip-label\">" + data.label + "</span>";
-        content += "<span class=\"name\">" + _this3.get('tooltipValueDisplayName') + ": </span>";
-        content += "<span class=\"value\">" + formatLabelFunction(value) + "</span>";
-        return _this3.showTooltip(content, d3.event);
+        formatLabelFunction = _this2.get('formatLabelFunction');
+
+        content = $('<span>');
+        content.append($('<span class="tip-label">').text(data.label));
+        content.append($('<span class="name">').text(_this2.get('tooltipValueDisplayName') + ': '));
+        content.append($('<span class="value">').text(formatLabelFunction(value)));
+        return _this2.showTooltip(content.html(), d3.event);
       };
     }),
 
     hideDetails: _Ember['default'].computed('isInteractive', function () {
-      var _this4 = this;
+      var _this3 = this;
 
       if (!this.get('isInteractive')) {
         return _Ember['default'].K;
@@ -1743,9 +1766,9 @@ define('ember-charts/components/pie-chart', ['exports', 'module', 'ember', './ch
         d3.select(element).classed('hovered', false);
         var data = d.data;
         if (data._otherItems) {
-          return _this4.get('viewport').select('.legend').classed('hovered', false);
+          return _this3.get('viewport').select('.legend').classed('hovered', false);
         } else {
-          return _this4.hideTooltip();
+          return _this3.hideTooltip();
         }
       };
     }),
@@ -2290,13 +2313,14 @@ define('ember-charts/components/scatter-chart', ['exports', 'module', 'ember', '
         d3.select(element).classed('hovered', true);
         var formatXValue = _this4.get('formatXValue');
         var formatYValue = _this4.get('formatYValue');
-        var content = "<span class=\"tip-label\">" + data.group + "</span>";
-        content += "<span class=\"name\">" + _this4.get('xValueDisplayName') + ": </span>";
-        content += "<span class=\"value\">" + formatXValue(data.xValue) + "</span><br/>";
-        content += "<span class=\"name\">" + _this4.get('yValueDisplayName') + ": </span>";
-        content += "<span class=\"value\">" + formatYValue(data.yValue) + "</span>";
+        var xValueDisplayName = $('<span class="name" />').text(_this4.get('xValueDisplayName') + ': ');
+        var yValueDisplayName = $('<span class="name" />').text(_this4.get('yValueDisplayName') + ': ');
+        var xValue = $('<span class="value" />').text(formatXValue(data.xValue));
+        var yValue = $('<span class="value" />').text(formatYValue(data.yValue));
 
-        return _this4.showTooltip(content, d3.event);
+        var content = $('<span />');
+        content.append($('<span class="tip-label" />').text(data.group)).append(xValueDisplayName).append(xValue).append('<br />').append(yValueDisplayName).append(yValue);
+        _this4.showTooltip(content.html(), d3.event);
       };
     }),
 
@@ -3568,6 +3592,9 @@ define('ember-charts/components/time-series-chart', ['exports', 'module', 'ember
     // Bar left offset, as fraction of width of bar
     barLeftOffset: 0.0,
 
+    // Force X-Axis labels to print vertically
+    xAxisVertLabels: false,
+
     // ----------------------------------------------------------------------------
     // Time Series Chart Constants
     // ----------------------------------------------------------------------------
@@ -3618,19 +3645,13 @@ define('ember-charts/components/time-series-chart', ['exports', 'module', 'ember
       var groups = (0, _utilsGroupBy.groupBy)(lineData, function (datum) {
         return _this._getLabelOrDefault(datum);
       });
-      // _results = [];
-      // for (groupName in groups) {
-      //   values = groups[groupName];
-      //   _results.push();
-      // }
+
       return _.map(groups, function (values, groupName) {
         return {
           group: groupName,
           values: values
         };
       });
-
-      // return _results;
     }),
 
     // puts barData in a new format.
@@ -3723,6 +3744,32 @@ define('ember-charts/components/time-series-chart', ['exports', 'module', 'ember
       return new Date(time);
     },
 
+    // We'd like to have the option of turning our labels vertical when circumstances
+    // require.  This function gets ALL the labels of the xAxis and rotates them.
+    _rotateXAxisLabels: function _rotateXAxisLabels() {
+      var gXAxis = this.get('xAxis');
+
+      // If we have a legend it'll take care of the margin bottom adjustments,
+      // else we need to give ourselves some more room for the labels.
+      if (!this.get('hasLegend')) {
+        this.set('marginBottom', 20);
+      }
+
+      gXAxis.selectAll('text').attr("y", 8).attr("x", -8).attr("dy", ".2em").attr("transform", "rotate(-60)").style("text-anchor", "end");
+
+      // we also need to mod the legend top padding
+      this.set('legendTopPadding', 30);
+    },
+
+    // Now that we can get our labels all turny, I actually need to straighten them
+    // out if the feature is toggled
+    _straightenXAxisLabels: function _straightenXAxisLabels() {
+      var gXAxis = this.get('xAxis');
+      // most of these values are static and come from various places, including
+      // the bowels of D3
+      gXAxis.selectAll('text').attr("y", 9).attr("x", 0).attr("dy", "0.71em").attr("transform", null).style("text-anchor", "middle");
+    },
+
     _barGroups: _Ember['default'].computed('barData.@each', 'ungroupedSeriesName', function () {
       var _this3 = this;
 
@@ -3754,8 +3801,9 @@ define('ember-charts/components/time-series-chart', ['exports', 'module', 'ember
       return this.get('width') - this.get('graphicLeft');
     }),
 
-    graphicHeight: _Ember['default'].computed('height', 'legendHeight', 'legendChartPadding', function () {
-      return this.get('height') - this.get('legendHeight') - this.get('legendChartPadding');
+    graphicHeight: _Ember['default'].computed('height', 'legendHeight', 'legendChartPadding', 'marginBottom', function () {
+      var legendSize = this.get('legendHeight') + this.get('legendChartPadding') + (this.get('marginBottom') || 0);
+      return this.get('height') - legendSize;
     }),
 
     // ----------------------------------------------------------------------------
@@ -3873,16 +3921,33 @@ define('ember-charts/components/time-series-chart', ['exports', 'module', 'ember
 
     // If there is a dynamic x axis, then assume the value that it is given,
     // and if it is not a dynamic x axis, set it to the number of x axis ticks.
+    //
     // For a dynamic x axis, let the max number of labels be the minimum of
     // the number of x ticks and the assigned value. This is to prevent
     // the assigned value from being so large that labels flood the x axis.
-    maxNumberOfLabels: _Ember['default'].computed('numXTicks', 'dynamicXAxis', function (key, value) {
-      if (this.get('dynamicXAxis')) {
-        value = _.isNaN(value) ? this.get('DEFAULT_MAX_NUMBER_OF_LABELS') : value;
-        return Math.min(value, this.get('numXTicks'));
-      } else {
-        return this.get('numXTicks');
+    maxNumberOfLabels: _Ember['default'].computed('numXTicks', 'dynamicXAxis', 'maxNumberOfRotatedLabels', 'xAxisVertLabels', function (key, value) {
+      var allowableTicks = this.get('numXTicks');
+      if (this.get('xAxisVertLabels')) {
+        allowableTicks = this.get('maxNumberOfRotatedLabels');
       }
+
+      if (this.get('dynamicXAxis')) {
+        if (isNaN(value)) {
+          value = this.get('DEFAULT_MAX_NUMBER_OF_LABELS');
+        }
+        return Math.min(value, allowableTicks);
+      } else {
+        return allowableTicks;
+      }
+    }),
+
+    // The footprint of a label rotated at -60 transform
+    maxNumberOfRotatedLabels: _Ember['default'].computed('_innerTickSpacingX', 'graphicWidth', 'numXTicks', function () {
+      var radianVal = 30 * (Math.PI / 180);
+      var tickSpacing = Math.sin(radianVal) * this.get('_innerTickSpacingX');
+      var numOfTicks = Math.floor(this.get('graphicWidth') / tickSpacing);
+
+      return Math.max(numOfTicks, this.get('numXTicks'));
     }),
 
     // Create a domain that spans the larger range of bar or line data
@@ -4012,12 +4077,18 @@ define('ember-charts/components/time-series-chart', ['exports', 'module', 'ember
         d3.select(element).classed('hovered', true);
 
         var time = data.labelTime != null ? data.labelTime : data.time;
-        var content = "<span class=\"tip-label\">" + _this4.get('formatTime')(time) + "</span>";
+        var content = $('<span>');
+        content.append($("<span class=\"tip-label\">").text(_this4.get('formatTime')(time)));
+        _this4.showTooltip(content.html(), d3.event);
+
         var formatLabelFunction = _this4.get('formatLabelFunction');
 
         var addValueLine = function addValueLine(d) {
-          content += "<span class=\"name\">" + d.group + ": </span>";
-          return content += "<span class=\"value\">" + formatLabelFunction(d.value) + "</span><br/>";
+          var name = $('<span class="name" />').text(d.group + ': ');
+          var value = $('<span class="value" />').text(formatLabelFunction(d.value));
+          content.append(name);
+          content.append(value);
+          content.append('<br />');
         };
 
         if (_Ember['default'].isArray(data.values)) {
@@ -4026,7 +4097,7 @@ define('ember-charts/components/time-series-chart', ['exports', 'module', 'ember
           addValueLine(data);
         }
 
-        return _this4.showTooltip(content, d3.event);
+        return _this4.showTooltip(content.html(), d3.event);
       };
     }),
 
@@ -4290,7 +4361,7 @@ define('ember-charts/components/time-series-chart', ['exports', 'module', 'ember
     // ----------------------------------------------------------------------------
 
     renderVars: ['barLeftOffset', 'labelledTicks', 'xGroupScale', 'xTimeScale', 'yScale', 'xValueDisplayName', 'yValueDisplayName', 'hasAxisTitles', // backward compatibility support.
-    'hasXAxisTitle', 'hasYAxisTitle', 'xTitleHorizontalOffset', 'yTitleVerticalOffset'],
+    'hasXAxisTitle', 'hasYAxisTitle', 'xTitleHorizontalOffset', 'yTitleVerticalOffset', 'xAxisVertLabels', 'maxNumberOfMinorTicks', 'graphicWidth'],
 
     drawChart: function drawChart() {
       this.updateBarData();
@@ -4308,17 +4379,29 @@ define('ember-charts/components/time-series-chart', ['exports', 'module', 'ember
     },
 
     updateAxes: function updateAxes() {
-      var xAxis = d3.svg.axis().scale(this.get('xTimeScale')).orient('bottom').tickValues(this.get('labelledTicks')).tickSubdivide(this.get('numberOfMinorTicks')).tickFormat(this.get('formattedTime')).tickSize(6, 3);
+      var xAxis = d3.svg.axis().scale(this.get('xTimeScale')).orient('bottom').tickValues(this.get('labelledTicks')).tickFormat(this.get('formattedTime')).tickSize(6, 3);
 
       var graphicTop = this.get('graphicTop');
       var graphicHeight = this.get('graphicHeight');
       var gXAxis = this.get('xAxis');
 
+      // Put our x-axis in the right place
       gXAxis.attr({
         transform: "translate(0," + graphicTop + graphicHeight + ")"
       }).call(xAxis);
 
-      //tickSize isn't doing anything here, it should take two arguments
+      // If we have minor ticks, this will select the applicable labels and alter
+      // them
+      this.filterMinorTicks();
+
+      // Do we need to turn our axis labels?
+      if (this.get('xAxisVertLabels')) {
+        this._rotateXAxisLabels();
+      } else {
+        this._straightenXAxisLabels();
+      }
+
+      //tickSize draws the Y-axis allignment line across the whole of the graph.
       var yAxis = d3.svg.axis().scale(this.get('yScale')).orient('right').ticks(this.get('numYTicks')).tickSize(this.get('graphicWidth')).tickFormat(this.get('formatValueAxis'));
 
       var gYAxis = this.get('yAxis');
@@ -4762,9 +4845,52 @@ define('ember-charts/components/vertical-bar-chart', ['exports', 'module', 'embe
 
     // ----------------------------------------------------------------------------
     // Color Configuration
+    //
+    // We cannot pass the mixed-in method this.getSeriesColor() directly to d3
+    // as the callback to use to color the bars.
+    // This is because for bar groups that do not have a meaningful
+    // non-zero value for an individual bar, the client is free to not pass
+    // a data point for that pair of (group, label) at all.
+    //
+    // In that case, when we use d3 to render bar groups with omitted bars,
+    // using this.getSeriesColor() would tell d3 to use a color palette
+    // with _more_ colors than bars in the bar group (since the number of colors
+    // in the palette is this.numColorSeries).
+    // Hence some bars would likely get a color that doesn't match the color
+    // used for bars with the same label in other bar groups.
+    //
+    // So instead, we provide our own callback this.fnGetBarColor()
+    // that looks at the bar label first and tries to look up the color
+    // based on that. If that fails, then fnGetBarColor() defers to getSeriesColor().
+    //
+    // Note that we still use getSeriesColors() to initialize the mapping
+    // from bar label to bar color, so it would be confusing if we tried to
+    // override the property altogether.
+    //
+    // See bug #172 : https://github.com/Addepar/ember-charts/issues/172
     // ----------------------------------------------------------------------------
 
     numColorSeries: _Ember['default'].computed.alias('individualBarLabels.length'),
+
+    barColors: _Ember['default'].computed('individualBarLabels.[]', 'getSeriesColor', function () {
+      var fnGetSeriesColor = this.get('getSeriesColor');
+      var result = {};
+      this.get('individualBarLabels').forEach(function (label, iLabel) {
+        result[label] = fnGetSeriesColor(label, iLabel);
+      });
+      return result;
+    }),
+
+    fnGetBarColor: _Ember['default'].computed('barColors', function () {
+      var barColors = this.get('barColors');
+      return function (d) {
+        if (!_Ember['default'].isNone(d.label)) {
+          return barColors[d.label];
+        } else {
+          return barColors[d];
+        }
+      };
+    }),
 
     // ----------------------------------------------------------------------------
     // Legend Configuration
@@ -4774,14 +4900,12 @@ define('ember-charts/components/vertical-bar-chart', ['exports', 'module', 'embe
       return this.get('stackBars') || this.get('isGrouped') && this.get('legendItems.length') > 1 && this.get('showLegend');
     }),
 
-    legendItems: _Ember['default'].computed('individualBarLabels.[]', 'getSeriesColor', 'stackBars', 'labelIDMapping.[]', function () {
+    legendItems: _Ember['default'].computed('individualBarLabels.[]', 'barColors', 'stackBars', 'labelIDMapping.[]', function () {
       var _this2 = this;
 
-      var getSeriesColor;
-      getSeriesColor = this.get('getSeriesColor');
+      var barColors = this.get('barColors');
       return this.get('individualBarLabels').map(function (label, i) {
-        var color;
-        color = getSeriesColor(label, i);
+        var color = barColors[label];
         if (_this2.get('stackBars')) {
           i = _this2.get('labelIDMapping')[label];
         }
@@ -4817,12 +4941,15 @@ define('ember-charts/components/vertical-bar-chart', ['exports', 'module', 'embe
         d3.select(element).classed('hovered', true);
 
         // Show tooltip
-        var content = data.group ? "<span class=\"tip-label\">" + data.group + "</span>" : '';
+        var tipLabel = data.group ? $("<span class=\"tip-label\" />").text(data.group) : '';
+        var content = $("<span />").append(tipLabel);
 
         var formatLabel = _this3.get('formatLabelFunction');
         var addValueLine = function addValueLine(d) {
-          content += "<span class=\"name\">" + d.label + ": </span>";
-          return content += "<span class=\"value\">" + formatLabel(d.value) + "</span><br/>";
+          var label = $("<span class=\"name\" />").text(d.label + ": ");
+          content.append(label);
+          var value = $("<span class=\"value\">").text(formatLabel(d.value));
+          return content.append(value);
         };
 
         if (isGroup) {
@@ -4832,7 +4959,7 @@ define('ember-charts/components/vertical-bar-chart', ['exports', 'module', 'embe
           // Just hovering over single bar
           addValueLine(data);
         }
-        return _this3.showTooltip(content, d3.event);
+        return _this3.showTooltip(content.html(), d3.event);
       };
     }),
 
@@ -4875,21 +5002,27 @@ define('ember-charts/components/vertical-bar-chart', ['exports', 'module', 'embe
       };
     }),
 
-    stackedBarAttrs: _Ember['default'].computed('yScale', 'groupWidth', 'labelIDMapping.[]', function () {
+    commonBarAttrs: _Ember['default'].computed('labelIDMapping.[]', function () {
       var _this6 = this;
 
-      var yScale, zeroDisplacement;
-      zeroDisplacement = 1;
-      yScale = this.get('yScale');
       return {
-        "class": function _class(barSection) {
-          var id;
-          id = _this6.get('labelIDMapping')[barSection.label];
+        'class': function _class(d) {
+          var id = _this6.get('labelIDMapping')[d.label];
           return "grouping-" + id;
-        },
+        }
+      };
+    }),
+
+    stackedBarAttrs: _Ember['default'].computed('commonBarAttrs', 'yScale', 'groupWidth', function () {
+      var _this7 = this;
+
+      var zeroDisplacement = 1;
+      var yScale = this.get('yScale');
+
+      return _.assign({
         'stroke-width': 0,
         width: function width() {
-          return _this6.get('groupWidth');
+          return _this7.get('groupWidth');
         },
         x: null,
         y: function y(barSection) {
@@ -4898,25 +5031,22 @@ define('ember-charts/components/vertical-bar-chart', ['exports', 'module', 'embe
         height: function height(barSection) {
           return yScale(barSection.y0) - yScale(barSection.y1);
         }
-      };
+      }, this.get('commonBarAttrs'));
     }),
 
-    groupedBarAttrs: _Ember['default'].computed('yScale', 'getSeriesColor', 'barWidth', 'xWithinGroupScale', function () {
-      var _this7 = this;
+    groupedBarAttrs: _Ember['default'].computed('commonBarAttrs', 'yScale', 'barWidth', 'xWithinGroupScale', function () {
+      var _this8 = this;
 
       var zeroDisplacement = 1;
       var yScale = this.get('yScale');
 
-      return {
-        'class': function _class(d, i) {
-          return "grouping-" + i;
-        },
+      return _.assign({
         'stroke-width': 0,
         width: function width() {
-          return _this7.get('barWidth');
+          return _this8.get('barWidth');
         },
         x: function x(d) {
-          return _this7.get('xWithinGroupScale')(d.label);
+          return _this8.get('xWithinGroupScale')(d.label);
         },
         height: function height(d) {
           return Math.max(0, Math.abs(yScale(d.value) - yScale(0)) - zeroDisplacement);
@@ -4928,22 +5058,22 @@ define('ember-charts/components/vertical-bar-chart', ['exports', 'module', 'embe
             return yScale(0) + zeroDisplacement;
           }
         }
-      };
+      }, this.get('commonBarAttrs'));
     }),
 
     labelAttrs: _Ember['default'].computed('barWidth', 'isGrouped', 'stackBars', 'groupWidth', 'xWithinGroupScale', 'graphicTop', 'graphicHeight', 'labelPadding', function () {
-      var _this8 = this;
+      var _this9 = this;
 
       return {
         'stroke-width': 0,
         transform: function transform(d) {
-          var dx = _this8.get('barWidth') / 2;
-          if (_this8.get('isGrouped') || _this8.get('stackBars')) {
-            dx += _this8.get('groupWidth') / 2 - _this8.get('barWidth') / 2;
+          var dx = _this9.get('barWidth') / 2;
+          if (_this9.get('isGrouped') || _this9.get('stackBars')) {
+            dx += _this9.get('groupWidth') / 2 - _this9.get('barWidth') / 2;
           } else {
-            dx += _this8.get('xWithinGroupScale')(d.group);
+            dx += _this9.get('xWithinGroupScale')(d.group);
           }
-          var dy = _this8.get('graphicTop') + _this8.get('graphicHeight') + _this8.get('labelPadding');
+          var dy = _this9.get('graphicTop') + _this9.get('graphicHeight') + _this9.get('labelPadding');
           return "translate(" + dx + ", " + dy + ")";
         }
       };
@@ -5064,7 +5194,7 @@ define('ember-charts/components/vertical-bar-chart', ['exports', 'module', 'embe
     },
 
     updateLayout: function updateLayout() {
-      var _this9 = this;
+      var _this10 = this;
 
       var groups = this.get('groups');
       var labels = groups.select('.groupLabel text').attr('transform', null) // remove any previous rotation attrs
@@ -5082,7 +5212,7 @@ define('ember-charts/components/vertical-bar-chart', ['exports', 'module', 'embe
         var rotateLabelDegrees = this.get('rotateLabelDegrees');
         labelTrimmer = _LabelTrimmer['default'].create({
           getLabelSize: function getLabelSize() {
-            return _this9.get('rotatedLabelLength');
+            return _this10.get('rotatedLabelLength');
           },
           getLabelText: function getLabelText(d) {
             return d.group;
@@ -5142,7 +5272,7 @@ define('ember-charts/components/vertical-bar-chart', ['exports', 'module', 'embe
       var barAttrs = this.get('stackBars') ? this.get('stackedBarAttrs') : this.get('groupedBarAttrs');
 
       groups.attr(this.get('groupAttrs'));
-      groups.selectAll('rect').attr(barAttrs).style('fill', this.get('getSeriesColor'));
+      groups.selectAll('rect').attr(barAttrs).style('fill', this.get('fnGetBarColor'));
       return groups.select('g.groupLabel').attr(this.get('labelAttrs'));
     }
   });
@@ -6081,6 +6211,16 @@ define('ember-charts/mixins/legend', ['exports', 'module', 'ember', '../utils/la
       return this.get('numLegendRows') * this.get('legendItemHeight');
     }),
 
+    // Bottom margin is equal to the total amount of space the legend needs,
+    _marginBottom: _Ember['default'].computed('legendHeight', 'hasLegend', 'marginTop', function () {
+      // If the legend is enabled then we need some extra breathing room
+      return this.get('hasLegend') ? this.get('legendHeight') : this.get('marginBottom');
+    }),
+
+    marginBottom: _Ember['default'].computed('_marginBottom', 'minimumTopBottomMargin', function () {
+      return Math.max(this.get('_marginBottom'), this.get('minimumTopBottomMargin'));
+    }),
+
     // Dynamically calculate the size of each legend item
     legendItemWidth: _Ember['default'].computed('legendWidth', 'minLegendItemWidth', 'maxLegendItemWidth', 'legendItems.length', function () {
 
@@ -6242,16 +6382,24 @@ define('ember-charts/mixins/legend', ['exports', 'module', 'ember', '../utils/la
         if (data.selector) {
           _this.get('viewport').selectAll(data.selector).classed('hovered', true);
         }
-        var content = "<span class=\"tip-label\">" + data.label + "</span>";
-        if (data.xValue != null) {
+
+        var content = $("<span />");
+        content.append($("<span class=\"tip-label\">").text(data.label));
+        if (!_Ember['default'].isNone(data.xValue)) {
           var formatXValue = _this.get('formatXValue');
-          var formatYValue = _this.get('formatYValue');
-          content += "<span class=\"name\">" + _this.get('tooltipXValueDisplayName') + ": </span>";
-          content += "<span class=\"value\">" + formatXValue(data.xValue) + "</span><br/>";
-          content += "<span class=\"name\">" + _this.get('tooltipYValueDisplayName') + ": </span>";
-          content += "<span class=\"value\">" + formatYValue(data.yValue) + "</span>";
+          content.append($('<span class="name" />').text(_this.get('tooltipXValueDisplayName') + ': '));
+          content.append($('<span class="value" />').text(formatXValue(data.xValue)));
+          if (!_Ember['default'].isNone(data.yValue)) {
+            content.append('<br />');
+          }
         }
-        return _this.showTooltip(content, d3.event);
+        if (!_Ember['default'].isNone(data.yValue)) {
+          var formatYValue = _this.get('formatYValue');
+          content.append($('<span class="name" />').text(_this.get('tooltipYValueDisplayName') + ': '));
+          content.append($('<span class="value" />').text(formatYValue(data.yValue)));
+        }
+
+        _this.showTooltip(content.html(), d3.event);
       };
     }),
 
@@ -6792,40 +6940,54 @@ define('ember-charts/mixins/time-series-labeler', ['exports', 'module', 'ember']
     // The ordering of each time domain from most specific to least specific
     DOMAIN_ORDERING: ['S', 'H', 'D', 'W', 'M', 'Q', 'Y'],
 
-    // This is the number of subdivisions between each major tick on the x
-    // axis. Minor ticks have no labels. For instance, if your maxNumberOfLabels
-    // is 10, and you are charting 20 weeks, there will be 10
-    // major ticks with one subivision (minor ticks) between.
-    numberOfMinorTicks: _Ember['default'].computed('xDomain', 'xAxisTimeInterval', 'labelledTicks', function () {
-      var allTicks, domain, findTick, firstIndex, interval, labelledTicks, xDomain, secondIndex, start, stop;
-      labelledTicks = this.get('labelledTicks');
-      xDomain = this.get('xDomain');
-      start = xDomain[0];
-      stop = xDomain[1];
-      domain = this.get('xAxisTimeInterval');
-      interval = domain === 'Q' ? this.MONTHS_IN_QUARTER : 1;
+    // D3 No longer handles "minor ticks" for the user, but has instead reverted
+    // to a strategy of allowing the user to handle rendered ticks as they see
+    // fit.
+    // maxNumberOfMinorTicks sets a threshold that is useful when determining our
+    // interval. This represents the number of ticks that could be drawn between
+    // major ticks. For instance, we may 'allow' 2 minor ticks, but only need
+    // to render a single minor tick between labels.
+    //
+    // minorTickInterval is the modulo for the items to be removed.  This number
+    // will be between 1 and the maxNumberOfMinorTicks
+    //
+    // A maxNumberOfMinorTicks=0 and minorTickInterval=1 essentailly disables the
+    // minor tick feature.
+    maxNumberOfMinorTicks: 0,
+    minorTickInterval: 1,
 
-      // All the ticks which occur between start and stop (including
-      // unlabelled ticks)
-      allTicks = d3.time[domainTypeToLabellerType[domain]](start, stop, interval);
-      if (labelledTicks.length < 2) {
-        return 0;
-      }
+    filterMinorTicks: function filterMinorTicks() {
+      var gXAxis = this.get('xAxis'),
+          minorTickInterval = this.get('minorTickInterval'),
+          labels,
+          ticks,
+          minorDates;
+      // for the labels we need to reset all of the styles in case the graph updates
+      // by being resized.
+      gXAxis.selectAll('line').attr("y2", "6");
+      gXAxis.selectAll('text').style("display", "block");
 
-      // equality for ticks
-      findTick = function (tick) {
-        return function (x) {
-          return +x === +tick;
-        };
-      };
+      // Need comparison data to do our tick label filtering
+      minorDates = this.get('labelledTicks').map(function (item) {
+        return new Date(item).getTime();
+      }).filter(function (value, index) {
+        return index % minorTickInterval !== 0;
+      });
 
-      // Returns the difference between where the second labelled value
-      // occurs in the unlabelled array and where the first occurs - e.g. in
-      // the above example 3 - 1 - 1 => 1 subdivision tick.
-      secondIndex = _.findIndex(allTicks, findTick(labelledTicks[1]));
-      firstIndex = _.findIndex(allTicks, findTick(labelledTicks[0]));
-      return secondIndex - firstIndex - 1;
-    }),
+      // We have an issue where the nodes come back out of order.  This is a
+      // side effect of redrawing the axis.  D3 don't give two [cares] about the
+      // insertion order of nodes - they are simply translated into place.  This
+      // occurs when the selection with the NEW data is made - the existing ones
+      // updated - then the new ones appended on .enter(...)
+      labels = gXAxis.selectAll('text').filter(function (value) {
+        return minorDates.length > 0 && minorDates.indexOf(value.getTime()) !== -1;
+      });
+      ticks = gXAxis.selectAll('line').filter(function (value, index) {
+        return index % minorTickInterval !== 0;
+      });
+      labels.style("display", "none");
+      ticks.attr("y2", "12");
+    },
 
     // A candidate set of ticks on which labels can appear.
     unfilteredLabelledTicks: _Ember['default'].computed('xDomain', 'centerAxisLabels', 'xAxisTimeInterval', function () {
@@ -6871,6 +7033,51 @@ define('ember-charts/mixins/time-series-labeler', ['exports', 'module', 'ember']
       return this.get('unfilteredLabelledTicks').filter(this.get('tickFilter'));
     }),
 
+    // We need a method to figure out the interval specifity
+    intervalSpecificity: _Ember['default'].computed('times', 'minTimeSpecificity', function () {
+      var ind1, ind2, domainTypes, maxNumberOfLabels, i, len, timeBetween;
+
+      // Now the real trick is if there is any allowance for minor ticks we should
+      // consider inflating the max allowed ticks to see if we can fit in a more
+      // specific domain.  Previous versions would increase the specifity one step
+      // which would then be cut out in filtering.
+      // A single minor tick alows us to double our capacity - 2 to triple
+      maxNumberOfLabels = this.get('maxNumberOfLabels') * (this.get('maxNumberOfMinorTicks') + 1);
+
+      // Find the segments that we'll test for (inclusive)
+      ind1 = this.get('DOMAIN_ORDERING').indexOf(this.get('minTimeSpecificity'));
+      ind2 = this.get('DOMAIN_ORDERING').indexOf(this.get('maxTimeSpecificity')) + 1;
+      // Refers to the metrics used for the labelling
+      if (ind2 < 0) {
+        domainTypes = this.get('DOMAIN_ORDERING').slice(ind1);
+      } else {
+        domainTypes = this.get('DOMAIN_ORDERING').slice(ind1, ind2);
+      }
+
+      for (i = 0, len = domainTypes.length; i < len; i++) {
+        timeBetween = this.get('times')[domainTypes[i]];
+        if (timeBetween <= maxNumberOfLabels) {
+          return domainTypes[i];
+        }
+      }
+      return this.get('maxTimeSpecificity');
+    }),
+
+    times: _Ember['default'].computed('xDomain', function () {
+      var ret, domain, start, stop, types, len, i;
+
+      ret = {};
+      domain = this.get('xDomain');
+      start = domain[0];
+      stop = domain[1];
+      types = this.get('DOMAIN_ORDERING');
+
+      for (i = 0, len = types.length; i < len; i++) {
+        ret[types[i]] = this.numTimeBetween(domainTypeToLongDomainType[types[i]], start, stop);
+      }
+      return ret;
+    }),
+
     _advanceMiddle: function _advanceMiddle(time, interval, count) {
       return new Date(time = time.getTime() / 2 + d3.time[interval].offset(time, count) / 2);
     },
@@ -6884,7 +7091,7 @@ define('ember-charts/mixins/time-series-labeler', ['exports', 'module', 'ember']
         case 'seconds':
           return (stop - start) / 1000;
         case 'hours':
-          return (stop - start) / 1000;
+          return (stop - start) / 3600000;
         case 'days':
           return (stop - start) / 86400000;
         case 'weeks':
@@ -6910,92 +7117,84 @@ define('ember-charts/mixins/time-series-labeler', ['exports', 'module', 'ember']
     // If the minTimeSpecificity or maxTimeSpecificity are set, then the labels
     // are limited to fall between the time units between these bounds.
     dynamicXLabelling: function dynamicXLabelling(start, stop) {
-      var d, domainType, domainTypes, i, ind1, ind2, interval, j, labellerTypes, labels, len, maxNumberOfLabels, timeBetween, times;
-      ind1 = this.get('DOMAIN_ORDERING').indexOf(this.get('minTimeSpecificity'));
-      ind2 = this.get('DOMAIN_ORDERING').indexOf(this.get('maxTimeSpecificity'));
+      var timeUnit, candidateLabels;
 
-      // Refers to the metrics used for the labelling
-      domainTypes = this.get('DOMAIN_ORDERING').slice(ind1, +ind2 + 1 || 9e9);
-
-      // The labeller type to create the labels for each metric
-      labellerTypes = (function () {
-        var j, len, results;
-        results = [];
-        for (j = 0, len = domainTypes.length; j < len; j++) {
-          domainType = domainTypes[j];
-          results.push(domainTypeToLabellerType[domainType]);
-        }
-        return results;
-      })();
-
-      // The time span in various metrics
-      times = (function () {
-        var j, len, results;
-        results = [];
-        for (j = 0, len = domainTypes.length; j < len; j++) {
-          d = domainTypes[j];
-          results.push(this.numTimeBetween(domainTypeToLongDomainType[d], start, stop));
-        }
-        return results;
-      }).call(this);
-      labels = null;
-      maxNumberOfLabels = this.get('maxNumberOfLabels');
-
-      for (i = j = 0, len = times.length; j < len; i = ++j) {
-        timeBetween = times[i];
-
-        // quarter labels are calculated by simply getting month labels with 3
-        // month gaps
-        interval = null;
-        if (timeBetween < maxNumberOfLabels) {
-          interval = domainTypes[i] === 'Q' ? this.MONTHS_IN_QUARTER : 1;
-        } else if (domainTypes[i] === this.get('maxTimeSpecificity') || times[i + 1] < maxNumberOfLabels * this.get('SPECIFICITY_RATIO')) {
-          if (domainTypes[i] === 'Q') {
-            interval = Math.ceil(this.MONTHS_IN_QUARTER * timeBetween / maxNumberOfLabels);
-          } else {
-            interval = Math.ceil(timeBetween / maxNumberOfLabels);
-          }
-        }
-        if (interval != null) {
-          this.set('xAxisTimeInterval', domainTypes[i]);
-          labels = this.filterLabels(d3.time[labellerTypes[i]](start, stop), interval);
-          break;
-        }
+      timeUnit = this.get('intervalSpecificity');
+      this.set('xAxisTimeInterval', timeUnit);
+      candidateLabels = d3.time[domainTypeToLabellerType[timeUnit]](start, stop);
+      if (timeUnit === 'Q') {
+        // Normalize quarters
+        candidateLabels = this.filterLabelsForQuarters(candidateLabels);
       }
-      return labels;
+      return this.filterLabels(candidateLabels, timeUnit);
     },
-    filterLabels: function filterLabels(array, interval) {
-      return array.filter(function filterLabels(d, i) {
-        return i % interval === 0;
+
+    // So we need to filter and do a little math to see if we are going have any
+    // minor ticks in our graph.  We'll be using the maxNumberOfMinorTicks as a
+    // control to know if we're filtering or simply relegating the labels to a
+    // mere tick.
+    filterLabels: function filterLabels(labelCandidates, domain) {
+      var maxNumberOfLabels, maxNumberOfMinorTicks, modulo, len;
+
+      maxNumberOfLabels = this.get('maxNumberOfLabels');
+      maxNumberOfMinorTicks = this.get('maxNumberOfMinorTicks');
+      len = labelCandidates.length;
+
+      if (len > maxNumberOfLabels && typeof this.customFilterLibrary[domain] === "function") {
+        labelCandidates = this.customFilterLibrary[domain](maxNumberOfLabels, maxNumberOfMinorTicks, labelCandidates);
+        len = labelCandidates.length;
+      } else if (len > maxNumberOfLabels) {
+        // This tells us how many times we can half the results until we're at or
+        // below our maxNumberOfLabels threshold. Derived from:
+        // len ∕ 2ⁿ ≤ maxNumberOfLabels
+        // Math.log(x) / Math.LN2
+        modulo = Math.ceil(Math.log(len / (maxNumberOfLabels * (maxNumberOfMinorTicks + 1))) / Math.LN2) + 1;
+        labelCandidates = labelCandidates.filter(function (d, i) {
+          return i % Math.pow(2, modulo) === 0;
+        });
+        len = labelCandidates.length;
+      }
+
+      // So now we figure out (if we have added space for) the number of minor
+      // ticks that will be shown in the presentiation.
+      if (maxNumberOfMinorTicks > 0) {
+        this.set('minorTickInterval', Math.ceil(len / maxNumberOfLabels));
+      }
+      return labelCandidates;
+    },
+
+    filterLabelsForQuarters: function filterLabelsForQuarters(dates) {
+      // Pretty simple; getMonth is a 0 based index of the month.  We do modulo
+      // for the time being.
+      return dates.filter(function (d) {
+        return d.getMonth() % 3 === 0;
       });
     },
+
+    // We have an option of suppling custom filters based on the date type.  This
+    // way we can append any special behavior or pruning algorithm to Months that
+    // wouldn't be applicable to Weeks
+    customFilterLibrary: {},
+
     // Returns the function which returns the labelled intervals between
     // start and stop for the selected interval.
-    tickLabelerFn: _Ember['default'].computed('dynamicXAxis', 'maxNumberOfLabels', 'xAxisTimeInterval', 'SPECIFICITY_RATIO', 'minTimeSpecificity', 'maxTimeSpecificity', function () {
+    tickLabelerFn: _Ember['default'].computed('dynamicXAxis', 'maxNumberOfLabels', 'maxNumberOfMinorTicks', 'xAxisVertLabels', 'xAxisTimeInterval', 'SPECIFICITY_RATIO', 'minTimeSpecificity', 'maxTimeSpecificity', function () {
       if (this.get('dynamicXAxis')) {
         return _.bind(function (start, stop) {
           return this.dynamicXLabelling(start, stop);
         }, this);
       } else {
         return _.bind(function (start, stop) {
-          var domain, interval, timeBetween;
+          var domain, candidateLabels;
           domain = this.get('xAxisTimeInterval');
-          timeBetween = this.numTimeBetween(domainTypeToLongDomainType[domain], start, stop);
+          // So we're going to use the interval we defined as a the maxTimeSpecificity
+          this.set('maxTimeSpecificity', domain);
+          candidateLabels = d3.time[domainTypeToLabellerType[domain]](start, stop);
           if (domain === 'Q') {
-            if (timeBetween > this.get('maxNumberOfLabels')) {
-              return d3.time.years(start, stop);
-            } else {
-              return d3.time.months(start, stop, this.MONTHS_IN_QUARTER);
-            }
-          } else {
-            if (timeBetween > this.get('maxNumberOfLabels')) {
-              interval = Math.ceil(timeBetween / this.get('maxNumberOfLabels'));
-            } else {
-              interval = 1;
-            }
-
-            return this.filterLabels(d3.time[domainTypeToLabellerType[domain]](start, stop), interval);
+            // Normalize quarters
+            candidateLabels = this.filterLabelsForQuarters(candidateLabels);
           }
+          return this.filterLabels(candidateLabels, domain);
         }, this);
       }
     }),
