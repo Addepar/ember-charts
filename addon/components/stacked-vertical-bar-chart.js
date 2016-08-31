@@ -63,14 +63,13 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
   strokeWidth: 1,
 
   /**
-   * Space between bars, as fraction of bar size
+   * Space between bars, as fraction of bar size.
+   * Must be between 0 and 1 (inclusive). Default value of 0 means there is
+   * NO padding initially between bars. This can be overridden or changed to
+   * adjust the bar spacing.
    * @type {number}
    */
-  betweenBarPadding: Ember.computed('numSlices', function() {
-    // Use padding to make sure bars have a maximum thickness.
-    var scale = d3.scale.linear().domain([1, 8]).range([1.25, 0.25]).clamp(true);
-    return scale(this.get('numSlices'));
-  }),
+  betweenBarPadding: 0,
 
   /**
    * Number of unique slice types in the chart (ie, number of legend items)
@@ -628,8 +627,8 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
     return d3.scale.ordinal()
       .domain(this.get('barNames'))
       .rangeRoundBands([0, this.get('graphicWidth')],
-                       betweenBarPadding / 2,
-                       betweenBarPadding / 2);
+                       betweenBarPadding,
+                       betweenBarPadding);
   }),
 
   // Override axis mix-in min and max values to listen to the scale's domain
