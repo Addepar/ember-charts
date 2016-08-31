@@ -396,12 +396,49 @@ var MyVbcComponent = VerticalBarChartComponent.extend({ ... });</pre>
       </td>
     </tr>
     <tr>
-      <td>sortKey</td>
+      <td>barSortKey</td>
       <td>'value'</td>
       <td>
-        <p>Name of the field from each data point used for sorting when chart is grouped
-        horizontally. The chart is sorted by the field's value for the first data
-        point in each group, and each group is sorted by the field as well.</p>
+        <p>Identifier to determine how the bars should be sorted within the chart.
+        This can be set to either 'value', 'original', or 'custom'. This will affect
+        which bar sorting function is used. The 'value' option will sort by net
+        bar value. The 'original' option will sort bars by the order in which their
+        bar labels appear in the original input data. The 'custom' option will sort
+        bars alphabetically by bar label by default, but the `customBarSortingFn`
+        can be overridden to sort bars in a user-defined manner.</p>
+      </td>
+    </tr>
+    <tr>
+      <td>barSortAscending</td>
+      <td>true</td>
+      <td>
+        <p>Whether the sorted bars (as dictated by the `barSortKey`) are sorted
+        in ascending or descending order.</p>
+      </td>
+    </tr>
+    <tr>
+      <td>otherSliceName</td>
+      <td>'Other'</td>
+      <td>
+        <p>If there are more slices than can be displayed (per maxNumberOfSlices),
+        or if some slice labels fail to meet the minSlicePercent threshold, the
+        smallest slices will be aggregated into a slice with this name in each bar.</p>
+      </td>
+    </tr>
+    <tr>
+      <td>sliceSortKey</td>
+      <td>'value'</td>
+      <td>
+        <p>Identifier to determine how the slices should be sorted within each bar.
+        This can be set to either 'value', 'original', or 'custom'. This will affect
+        which slice sorting function is used. The 'value' option will determine a
+        slice sort order by looking at bars in order of highest net-value, sorting
+        the slices within this bar by highest absolute value, and adding any slice
+        to the order that has not yet been seen. The 'original' option will sort
+        slices by the order in which they appear in the original input data. The
+        'custom' option will sort slices alphabetically by slice label by default,
+        but the `customSliceSortingFn` can be overridden to sort slices in a
+        user-defined manner.</p>
       </td>
     </tr>
   </table>
