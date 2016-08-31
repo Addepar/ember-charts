@@ -2687,7 +2687,10 @@ define('ember-charts/components/stacked-vertical-bar-chart', ['exports', 'module
 
     /**
      * The sliceLabels that will be explicitly shown in the chart and not
-     * aggregated into the 'Other' slice.
+     * aggregated into the 'Other' slice. The parameters for which slice labels
+     * get bucket in 'Other' are `minSlicePercent` and `maxNumberOfSlices`.
+     * @see minSlicePercent
+     * @see maxNumberOfSlices
      * @type {Array.<string>}
      */
     nonOtherSliceTypes: _Ember['default'].computed('minSlicePercent', 'maxNumberOfSlices', 'largestSliceData.[]', function () {
@@ -2695,22 +2698,30 @@ define('ember-charts/components/stacked-vertical-bar-chart', ['exports', 'module
       minSlicePercent = this.get('minSlicePercent');
       largestSliceData = this.get('largestSliceData');
 
-      // Filter out any slice labels that do not meet the minSlicePercent req.
+      // First, filter out any slice labels that do not meet the minSlicePercent
+      // threshold. These slices are 'too thin' to show on their own, as they will
+      // create too much noise in the stacked bar chart, so we lump them into
+      // the one 'Other' slice.
       nonOtherSlices = _.filter(largestSliceData, function (sliceData) {
         return sliceData.percentOfBar >= minSlicePercent;
       });
 
-      // Sort by size of largest bar and take the biggest (N - 1) slices, where N
-      // is the max number we can display. This saves one slice for 'Other'.
+      // Next, sort the remaining slices by size and take the biggest (N - 1)
+      // slices, where N is the max number we can display (this saves one slice
+      // for 'Other').
       maxNumberOfSlices = this.get('maxNumberOfSlices');
       nonOtherSlices = _.takeRight(_.sortBy(nonOtherSlices, 'percentOfBar'), maxNumberOfSlices - 1);
 
+      // At this point, everything in `nonOtherSlices` meets both the thresholds
+      // set by `minSlicePercent` and `maxNumberOfSlices` and deserves to be shown
+      // on its own with its own legend items.
       if (largestSliceData.length - nonOtherSlices.length <= 1) {
-        // If no slice labels were filtered out, or if only one was filtered out,
-        // we can just show all slice labels explicitly (no 'Other' slice).
+        // If 0 or 1 slice labels were filtered out, we can just show all slice
+        // labels explicitly. We only want the 'Other' slice if it has at least
+        // 2 slice labels contained aggregated inside.
         return _.pluck(largestSliceData, 'sliceLabel');
       } else {
-        // Otherwise, return the slice labels that passed the filters.
+        // Otherwise, just return the slice labels that passed the filters.
         return _.pluck(nonOtherSlices, 'sliceLabel');
       }
     }),
@@ -2730,7 +2741,7 @@ define('ember-charts/components/stacked-vertical-bar-chart', ['exports', 'module
      * and with slices sorted correctly for each bar. Bar sorting is handled by
      * `barNames`, but slice sorting is handled here.
      * Key: barLabel
-     * Value: Array of slice objects (sliceLabel, barLabel, value)
+     * Value: Array of [sorted] slice objects (sliceLabel, barLabel, value)
      * @type {Object.<string, Array.Object>>}
      */
     sortedData: _Ember['default'].computed('dataGroupedByBar', 'otherSliceLabel', 'nonOtherSliceTypes.[]', 'sliceSortingFn', function () {
@@ -2741,6 +2752,9 @@ define('ember-charts/components/stacked-vertical-bar-chart', ['exports', 'module
       nonOtherSliceTypes = this.get('nonOtherSliceTypes');
       otherSliceLabel = this.get('otherSliceLabel');
       return _.reduce(groupedData, function (result, barData, barLabel) {
+        // Create an empty 'Other' slice. Go through every slice in each bar
+        // and look for slices that need to be aggregated into 'Other', updating
+        // the value of the otherSlice along the way.
         var newBarData, otherSlice;
         newBarData = [];
         otherSlice = { barLabel: barLabel,
@@ -2898,7 +2912,7 @@ define('ember-charts/components/stacked-vertical-bar-chart', ['exports', 'module
      * The current slice sorting function, depending on what sliceSortKey is.
      * @type {function}
      */
-    sliceSortingFn: _Ember['default'].computed('valueSliceSortingFn', 'customSliceSortingFn', 'sliceSortKey', function () {
+    sliceSortingFn: _Ember['default'].computed('valueSliceSortingFn', 'customSliceSortingFn', 'originalSliceSortingFn', 'sliceSortKey', function () {
       var sliceSortKey = this.get('sliceSortKey');
       if (sliceSortKey === 'value') {
         return this.get('valueSliceSortingFn');
