@@ -2598,14 +2598,6 @@ define('ember-charts/components/stacked-vertical-bar-chart', ['exports', 'module
     betweenBarPadding: 0,
 
     /**
-     * Number of unique slice types in the chart (ie, number of legend items)
-     * @type {number}
-     */
-    numSlices: _Ember['default'].computed('barNames.length', 'allSliceLabels.length', function () {
-      return this.get('barNames.length') * this.get('allSliceLabels.length') || 0;
-    }),
-
-    /**
      * Space allocated for rotated labels on the bottom of the chart. If labels
      * are rotated, they will be extended beyond labelHeight up to maxLabelHeight
      * @type {number}
@@ -2670,8 +2662,8 @@ define('ember-charts/components/stacked-vertical-bar-chart', ['exports', 'module
       var dataGroupedBySlice, largestSlice, largestBarValue, largestSliceData;
       dataGroupedBySlice = this.get('dataGroupedBySlice');
       largestBarValue = this.get('largestGrossBarValue');
-      largestSliceData = _.map(dataGroupedBySlice, function (sliceTypeData, sliceLabel) {
-        largestSlice = _.max(sliceTypeData, function (slice) {
+      largestSliceData = _.map(dataGroupedBySlice, function (slices, sliceLabel) {
+        largestSlice = _.max(slices, function (slice) {
           return Math.abs(slice.value);
         });
         return {
