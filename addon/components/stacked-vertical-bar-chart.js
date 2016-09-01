@@ -685,7 +685,7 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
   hasLegend: true,
 
   legendItems: Ember.computed('allSliceLabels.[]', 'sliceColors',
-      'labelIDMapping.[]', function() {
+      'labelIDMapping', function() {
     var sliceColors = this.get('sliceColors');
     return this.get('allSliceLabels').map((label) => {
       var color = sliceColors[label];
@@ -785,7 +785,7 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
     };
   }),
 
-  sliceAttrs: Ember.computed('yScale', 'barWidth', 'labelIDMapping.[]',
+  sliceAttrs: Ember.computed('yScale', 'barWidth', 'labelIDMapping',
       'strokeWidth', function() {
     var yScale, zeroDisplacement;
     zeroDisplacement = 1;
