@@ -411,7 +411,9 @@ const VerticalBarChartComponent = ChartComponent.extend(LegendMixin,
   fnGetBarColor: Ember.computed('barColors', function() {
     var barColors = this.get('barColors');
     return function(d) {
-      if (!Ember.isNone(d.label)) {
+      if (!Ember.isNone(d.color)) {
+        return d.color;
+      } else if (!Ember.isNone(d.label)) {
         return barColors[d.label];
       } else {
         return barColors[d];
