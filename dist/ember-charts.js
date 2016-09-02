@@ -2773,37 +2773,38 @@ define('ember-charts/components/stacked-vertical-bar-chart', ['exports', 'module
      * and color.
      * @type {Array.<Object>}
      */
-    finishedData: _Ember['default'].computed('sortedData', 'otherSliceLabel', function () {
-      var posTop, negBottom, stackedValues, otherSliceLabel;
-      otherSliceLabel = this.get('otherSliceLabel');
-      return _.map(this.get('sortedData'), function (values, barLabel) {
+    finishedData: _Ember['default'].computed('sortedData', function () {
+      var posTop, negBottom, stackedSlices;
+      return _.map(this.get('sortedData'), function (slices, barLabel) {
+        // We need to track the top and bottom of the bar so we know where to
+        // add any positive or negative slices, respectively.
         posTop = 0;
         negBottom = 0;
-        stackedValues = _.map(values, function (d) {
+        stackedSlices = _.map(slices, function (slice) {
           var yMin, yMax;
-          if (d.value < 0) {
+          if (slice.value < 0) {
             yMax = negBottom;
-            negBottom += d.value;
+            negBottom += slice.value;
             yMin = negBottom;
           } else {
             yMin = posTop;
-            posTop += d.value;
+            posTop += slice.value;
             yMax = posTop;
           }
           return {
             yMin: yMin,
             yMax: yMax,
-            value: d.value,
-            barLabel: d.barLabel,
-            sliceLabel: d.sliceLabel,
-            color: d.color
+            value: slice.value,
+            barLabel: slice.barLabel,
+            sliceLabel: slice.sliceLabel,
+            color: slice.color
           };
         });
 
         return {
           barLabel: barLabel,
-          values: values,
-          stackedValues: stackedValues,
+          slices: slices,
+          stackedSlices: stackedSlices,
           max: posTop,
           min: negBottom
         };
@@ -3070,6 +3071,7 @@ define('ember-charts/components/stacked-vertical-bar-chart', ['exports', 'module
       if (this.get('_shouldRotateLabels')) {
         labelSize = this.get('maxLabelHeight');
       } else {
+        // Inherited from parent class ChartComponent
         labelSize = this.get('labelHeight');
       }
       return labelSize + this.get('labelPadding');
@@ -3121,8 +3123,8 @@ define('ember-charts/components/stacked-vertical-bar-chart', ['exports', 'module
     }),
 
     /**
-     * All slice labels to show in the chart legend. Includes 'Other' slice if
-     * the 'Other' slice is present.
+     * All slice labels to show in the chart legend. Includes 'Other' slice if the
+     * 'Other' slice is present.
      * @type {Array.<string>}
      */
     allSliceLabels: _Ember['default'].computed('nonOtherSliceTypes.[]', 'otherSliceTypes.[]', 'otherSliceLabel', function () {
@@ -3195,7 +3197,7 @@ define('ember-charts/components/stacked-vertical-bar-chart', ['exports', 'module
 
     hasLegend: true,
 
-    legendItems: _Ember['default'].computed('allSliceLabels.[]', 'sliceColors', 'labelIDMapping.[]', function () {
+    legendItems: _Ember['default'].computed('allSliceLabels.[]', 'sliceColors', 'labelIDMapping', function () {
       var _this8 = this;
 
       var sliceColors = this.get('sliceColors');
@@ -3226,7 +3228,7 @@ define('ember-charts/components/stacked-vertical-bar-chart', ['exports', 'module
 
       return function (data, i, element) {
         // Specify whether we are on an individual bar or group
-        var isGroup = _Ember['default'].isArray(data.values);
+        var isGroup = _Ember['default'].isArray(data.slices);
 
         // Do hover detail style stuff here
         element = isGroup ? element.parentNode.parentNode : element;
@@ -3252,7 +3254,7 @@ define('ember-charts/components/stacked-vertical-bar-chart', ['exports', 'module
 
         if (isGroup) {
           // Display all bar details if hovering over axis group label
-          data.values.forEach(addValueLine);
+          data.slices.forEach(addValueLine);
         } else {
           // Just hovering over single bar
           addValueLine(data);
@@ -3270,7 +3272,7 @@ define('ember-charts/components/stacked-vertical-bar-chart', ['exports', 'module
 
       return function (data, i, element) {
         // if we exited the group label undo for the group
-        if (_Ember['default'].isArray(data.values)) {
+        if (_Ember['default'].isArray(data.slices)) {
           element = element.parentNode.parentNode;
         }
         // Undo hover style stuff
@@ -3303,7 +3305,7 @@ define('ember-charts/components/stacked-vertical-bar-chart', ['exports', 'module
       };
     }),
 
-    sliceAttrs: _Ember['default'].computed('yScale', 'barWidth', 'labelIDMapping.[]', 'strokeWidth', function () {
+    sliceAttrs: _Ember['default'].computed('yScale', 'barWidth', 'labelIDMapping', 'strokeWidth', function () {
       var _this12 = this;
 
       var yScale, zeroDisplacement;
@@ -3430,7 +3432,7 @@ define('ember-charts/components/stacked-vertical-bar-chart', ['exports', 'module
       bars.exit().remove();
 
       var subdata = function subdata(d) {
-        return d.stackedValues;
+        return d.stackedSlices;
       };
 
       var slices = bars.selectAll('rect').data(subdata);
