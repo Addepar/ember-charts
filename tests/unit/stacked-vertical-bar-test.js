@@ -78,10 +78,6 @@ moduleForComponent('stacked-vertical-bar-chart', '[Unit] Stacked bar component',
   afterEach: function () {}
 });
 
-test("it exists", function(assert) {
-  assert.ok(this.subject());
-});
-
 test('Margins are the right size', function(assert) {
   assert.expect(3);
   var component = this.subject();
@@ -114,15 +110,34 @@ const getHeightOfSvgSlice = function(slice) {
   return getFloatAttrValueOfSvgSlice(slice, 'height');
 };
 
-const PERCENT_TOLERANCE = 0.01;
+/**
+ * Helper function to extract transform values from an HTML element.
+ * These values are stored inside a string in the 'transform' attribute, so
+ * some massaging must be done.
+ *
+ * For example, if the HTML looks as follows:
+ *   <g class='tick' transform='translate(0.0, 42.0)' ... />
+ * then calling this helper with this element will return either 0.0 or 42.0,
+ * depending on whether index is 0 or 1.
+ * @function
+ * @param  {jQuery} $element - HTML element wrapped in jQuery
+ * @param  {number} index - Either 0 or 1, whether to extract the x transform
+ *                          value or y transform value
+ * @return {float}
+ */
+const getFloatTransformValue = function($element, index) {
+  return parseFloat($element.attr('transform').match(/\d+(\.\d+)?/g)[index]);
+};
+
+const PERCENT_TOLERANCE = 0.0001;
 
 const equalsWithTolerance = function(actual, expected) {
   var tolerance = Math.abs(expected * PERCENT_TOLERANCE);
-  return ((actual < 0.0) === (expected < 0.0)) &&
-    (Math.abs(actual - expected) < tolerance);
+  return Math.abs(actual - expected) < tolerance;
 };
 
-test('Within each bar, the stacking slices have the correct heights relative to each other', function(assert) {
+test('Within each bar, the stacking slices have the correct heights relative to each other',
+    function(assert) {
   var dataByBarLabel, barData, svgBarsByBarLabel, barLabel, svgBar, slices,
     barHeight, sliceHeights, iSlice, expectedSliceHeights, barDatum;
   assert.expect(three_ranges.length);
@@ -240,7 +255,8 @@ test('The bars have the correct heights relative to each other', function(assert
   }
 });
 
-test('The bars have the correct heights relative to the values on the y-axis ticks', function(assert) {
+test('The bars have the correct heights relative to the values on the y-axis ticks',
+    function(assert) {
   var dataByBarLabel, grossBarSums, pixelsPerDataUnit, expectedBarHeights,
     actualBarHeights, barLabel;
 
@@ -269,10 +285,8 @@ test('The bars have the correct heights relative to the values on the y-axis tic
     var firstTickSvg = this.$('svg g.y.axis g.tick')[0];
     var secondTickSvg = this.$('svg g.y.axis g.tick')[1];
 
-    var firstTickTransformY =
-      parseFloat($(firstTickSvg).attr('transform').match(/\d+(\.\d+)?/g)[1]);
-    var secondTickTransformY =
-      parseFloat($(secondTickSvg).attr('transform').match(/\d+(\.\d+)?/g)[1]);
+    var firstTickTransformY = getFloatTransformValue($(firstTickSvg), 1);
+    var secondTickTransformY = getFloatTransformValue($(secondTickSvg), 1);
 
     var firstTickLabel = parseFloat($(firstTickSvg).text());
     var secondTickLabel = parseFloat($(secondTickSvg).text());
@@ -311,7 +325,8 @@ test('The bars have the correct heights relative to the values on the y-axis tic
   }
 });
 
-test('All stacking slices with the same label have the same color as shown in the legend', function(assert) {
+test('All stacking slices with the same label have the same color as shown in the legend',
+    function(assert) {
   var component, sliceLabels, legendColorsBySliceLabel;
 
   sliceLabels = _.keys(_.groupBy(three_ranges, 'sliceLabel'));
@@ -469,7 +484,7 @@ test('Negative value slices are displayed below the y=0 axis', function(assert) 
   this.render();
 
   xAxisElement = this.$('.tick:not(.minor)');
-  xAxisTransformY = parseInt(xAxisElement.attr('transform').match(/\d+/g)[1]);
+  xAxisTransformY = getFloatTransformValue(xAxisElement, 1);
 
   negativeSlices.forEach(function(slice) {
     var $containerBar, sliceSelector, $negativeSlice, sliceSpecificMessage;
@@ -500,7 +515,8 @@ test('Negative value slices are displayed below the y=0 axis', function(assert) 
  * @param  {number} expectedSliceCount - number of total slices expected
  * @param  {string} scenarioIndex - unique string for assertion being run
  */
-function assertOtherSliceIsCorrect(assert, component, expectedSliceLabels, expectedSliceCount, scenarioIndex) {
+function assertOtherSliceIsCorrect(assert, component, expectedSliceLabels,
+    expectedSliceCount, scenarioIndex) {
   var $slices, $otherSliceLegendItem, otherSliceLabel;
   $slices = $('g.bars rect'); // All slices that exist in the DOM
   otherSliceLabel = component.get('otherSliceLabel');
@@ -515,7 +531,8 @@ function assertOtherSliceIsCorrect(assert, component, expectedSliceLabels, expec
   }
 }
 
-test("'Other' slice correctly aggregates smallest slices when there are too many", function(assert) {
+test("'Other' slice correctly aggregates smallest slices when there are too many",
+    function(assert) {
   var component, otherSliceLabel, expectedSliceLabels, scenarioThreeData,
   scenarioFourData;
   assert.expect(12);
@@ -580,7 +597,8 @@ test("'Other' slice correctly aggregates smallest slices when there are too many
   assertOtherSliceIsCorrect(assert, component, expectedSliceLabels, 6, 'Four');
 });
 
-test("'Other' slice is end-aligned (either positive or negative) for every bar", function(assert) {
+test("'Other' slice is end-aligned (either positive or negative) for every bar",
+    function(assert) {
   var component, nonOtherSlices, otherSliceYPos, otherSliceOnEnd;
   assert.expect(3);
   component = this.subject({
@@ -612,12 +630,15 @@ test('Slices are sorted in correct order for each sliceSortKey', function(assert
   this.render();
 
   expectedSliceOrders = {
-    'original': ['grouping-0', 'grouping-1', 'grouping-2', 'grouping-3', 'grouping-4', 'grouping-5'],
-    'value': ['grouping-0', 'grouping-2', 'grouping-1', 'grouping-3', 'grouping-5', 'grouping-4'],
-    'custom': ['grouping-0', 'grouping-1', 'grouping-2', 'grouping-3', 'grouping-4', 'grouping-5']
+    'original': [ 'grouping-0', 'grouping-1', 'grouping-2',
+                  'grouping-3', 'grouping-4', 'grouping-5' ],
+    'value':    [ 'grouping-0', 'grouping-2', 'grouping-1',
+                  'grouping-3', 'grouping-5', 'grouping-4' ],
+    'custom':   [ 'grouping-0', 'grouping-1', 'grouping-2',
+                  'grouping-3', 'grouping-4', 'grouping-5' ]
   };
   xAxisElement = this.$('.tick:not(.minor)');
-  xAxisTransformY = parseInt(xAxisElement.attr('transform').match(/\d+/g)[1]);
+  xAxisTransformY = getFloatTransformValue(xAxisElement, 1);
   ['original', 'value', 'custom'].forEach(sliceSortKey => {
     Ember.run(() => { component.set('sliceSortKey', sliceSortKey); });
     sliceSortOrder = expectedSliceOrders[sliceSortKey];
@@ -659,7 +680,8 @@ test('Slices are sorted in correct order for each sliceSortKey', function(assert
   });
 });
 
-test('If a slice has a label, it is shown in all bars regardless of minSlicePercent', function(assert) {
+test('If a slice has a label, it is shown in all bars regardless of minSlicePercent',
+    function(assert) {
   var modifiedData, component, $label4Slices;
   assert.expect(2);
   // Modify input data so there is a slice in the largest net value bar (Group
@@ -705,8 +727,7 @@ test('Zero-value slices are never shown in the legend', function(assert) {
 
 
 /**
- * assertBarSortingIsCorrect - Helper function that performs 2 assertions
- *    pertaining to bar sorting:
+ * Helper function that performs 2 assertions pertaining to bar sorting:
  *    1) Bar sorting order is correct in the `barNames` property, which is
  *       inevitably determines how D3 renders the bar order
  *    2) Bar sorting is visually correct on the page (ie, whether the D3
@@ -723,9 +744,7 @@ function assertBarSortingIsCorrect(assert, component, expectedBarOrder, message)
   var sortedBarElements, sortedBarElementLabels;
   assert.ok(_.isEqual(component.get('barNames'), expectedBarOrder),
     'Bars are logically sorted correctly (in data structure) for ' + message);
-  sortedBarElements = _.sortBy($('.bars'), bar => {
-    return parseInt($(bar).attr('transform').match(/\d+/g)[0]);
-  });
+  sortedBarElements = _.sortBy($('.bars'), bar => getFloatTransformValue($(bar), 0));
   sortedBarElementLabels = _.map(sortedBarElements, bar => $(bar).text());
   assert.ok(_.isEqual(sortedBarElementLabels, expectedBarOrder), 'Bars are ' +
     'visually sorted correctly (on the DOM) for ' + message);

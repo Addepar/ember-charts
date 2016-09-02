@@ -251,37 +251,38 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
    * and color.
    * @type {Array.<Object>}
    */
-  finishedData: Ember.computed('sortedData', 'otherSliceLabel', function() {
-    var posTop, negBottom, stackedValues, otherSliceLabel;
-    otherSliceLabel = this.get('otherSliceLabel');
-    return _.map(this.get('sortedData'), (values, barLabel) => {
+  finishedData: Ember.computed('sortedData', function() {
+    var posTop, negBottom, stackedSlices;
+    return _.map(this.get('sortedData'), (slices, barLabel) => {
+      // We need to track the top and bottom of the bar so we know where to
+      // add any positive or negative slices, respectively.
       posTop = 0;
       negBottom = 0;
-      stackedValues = _.map(values, function(d) {
+      stackedSlices = _.map(slices, function(slice) {
         var yMin, yMax;
-        if (d.value < 0) {
+        if (slice.value < 0) {
           yMax = negBottom;
-          negBottom += d.value;
+          negBottom += slice.value;
           yMin = negBottom;
         } else {
           yMin = posTop;
-          posTop += d.value;
+          posTop += slice.value;
           yMax = posTop;
         }
         return {
           yMin: yMin,
           yMax: yMax,
-          value: d.value,
-          barLabel: d.barLabel,
-          sliceLabel: d.sliceLabel,
-          color: d.color
+          value: slice.value,
+          barLabel: slice.barLabel,
+          sliceLabel: slice.sliceLabel,
+          color: slice.color
         };
       });
 
       return {
         barLabel: barLabel,
-        values: values,
-        stackedValues: stackedValues,
+        slices: slices,
+        stackedSlices: stackedSlices,
         max: posTop,
         min: negBottom
       };
@@ -544,6 +545,7 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
     if (this.get('_shouldRotateLabels')) {
       labelSize = this.get('maxLabelHeight');
     } else {
+      // Inherited from parent class ChartComponent
       labelSize = this.get('labelHeight');
     }
     return labelSize + this.get('labelPadding');
@@ -602,8 +604,8 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
   }),
 
   /**
-   * All slice labels to show in the chart legend. Includes 'Other' slice if
-   * the 'Other' slice is present.
+   * All slice labels to show in the chart legend. Includes 'Other' slice if the
+   * 'Other' slice is present.
    * @type {Array.<string>}
    */
   allSliceLabels: Ember.computed('nonOtherSliceTypes.[]', 'otherSliceTypes.[]',
@@ -710,7 +712,7 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
 
     return (data, i, element) => {
       // Specify whether we are on an individual bar or group
-      var isGroup = Ember.isArray(data.values);
+      var isGroup = Ember.isArray(data.slices);
 
       // Do hover detail style stuff here
       element = isGroup ? element.parentNode.parentNode : element;
@@ -736,7 +738,7 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
 
       if (isGroup) {
         // Display all bar details if hovering over axis group label
-        data.values.forEach(addValueLine);
+        data.slices.forEach(addValueLine);
       } else {
         // Just hovering over single bar
         addValueLine(data);
@@ -752,7 +754,7 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
 
     return (data, i, element) => {
       // if we exited the group label undo for the group
-      if (Ember.isArray(data.values)) {
+      if (Ember.isArray(data.slices)) {
         element = element.parentNode.parentNode;
       }
       // Undo hover style stuff
@@ -927,7 +929,7 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
       .on("mouseout", function(d, i) { return hideDetails(d, i, this); });
     bars.exit().remove();
 
-    var subdata = function(d) { return d.stackedValues; };
+    var subdata = function(d) { return d.stackedSlices; };
 
     var slices = bars.selectAll('rect').data(subdata);
     slices.enter().append('rect')

@@ -11,15 +11,18 @@ const StackedVerticalBarController = VerticalBarController.extend({
     'custom (default: alphabetical)': 'custom'
   },
 
-  barSortKeys: Ember.computed(function() {
+  barSortKeys: Ember.computed('barSortKeyOptions', function() {
     return Ember.A(_.keys(this.get('barSortKeyOptions')));
   }),
 
   selectedBarSortKey: 'value',
 
-  sortKey: Ember.computed('selectedBarSortKey', function() {
+  barSortKey: Ember.computed('barSortKeyOptions', 'selectedBarSortKey',
+      function() {
     return this.get('barSortKeyOptions')[this.get('selectedBarSortKey')];
   }),
+
+  barSortAscending: false,
 
   sliceSortKeyOptions: {
     'value': 'value',
@@ -27,17 +30,16 @@ const StackedVerticalBarController = VerticalBarController.extend({
     'custom (default: alphabetical)': 'custom'
   },
 
-  sliceSortKeys: Ember.computed(function() {
+  sliceSortKeys: Ember.computed('sliceSortKeyOptions', function() {
     return Ember.A(_.keys(this.get('sliceSortKeyOptions')));
   }),
 
   selectedSliceSortKey: 'value',
 
-  sliceSortKey: Ember.computed('selectedSliceSortKey', function() {
+  sliceSortKey: Ember.computed('sliceSortKeyOptions', 'selectedSliceSortKey',
+      function() {
     return this.get('sliceSortKeyOptions')[this.get('selectedSliceSortKey')];
   }),
-
-  sortAscending: false,
 
   rawDataHash: Ember.computed(function() {
     var dataHash = _.cloneDeep(this._super());
