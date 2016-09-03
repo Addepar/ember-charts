@@ -1004,10 +1004,6 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
       .classed('major', false)
       .classed('minor', true);
 
-    gYAxis.selectAll('g')
-      .filter(function(d) { return d === 0; })
-      .classed('major', true);
-
     gYAxis.selectAll('text')
       .style('text-anchor', 'end')
       .attr({
