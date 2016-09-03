@@ -3514,10 +3514,6 @@ define('ember-charts/components/stacked-vertical-bar-chart', ['exports', 'module
         return d !== 0;
       }).classed('major', false).classed('minor', true);
 
-      gYAxis.selectAll('g').filter(function (d) {
-        return d === 0;
-      }).classed('major', true);
-
       gYAxis.selectAll('text').style('text-anchor', 'end').attr({
         x: -this.get('labelPadding')
       });
