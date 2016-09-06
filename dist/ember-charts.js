@@ -3167,8 +3167,22 @@ define('ember-charts/components/stacked-vertical-bar-chart', ['exports', 'module
     // Color Configuration
     // ---------------------------------------------------------------------------
 
+    /**
+     * Total number of colors needed to display.
+     * When calculating the default slice colors, D3 divides a color gradient up
+     * using this number to create an 'even' distribution of colors.
+     * @type {number}
+     */
     numColorSeries: _Ember['default'].computed.alias('allSliceLabels.length'),
 
+    /**
+     * Map between sliceLabels and default slice color.
+     * These colors are calculated by D3 with `getSeriesColor`, which maps the
+     * range of sliceLabels against a color gradient. In order to customize the
+     * colors for each individual sliceLabel, this property can be overridden or
+     * extended.
+     * @type {Object.<string,string>}
+     */
     sliceColors: _Ember['default'].computed('allSliceLabels.[]', 'getSeriesColor', function () {
       var fnGetSeriesColor = this.get('getSeriesColor');
       var result = {};
@@ -3178,16 +3192,16 @@ define('ember-charts/components/stacked-vertical-bar-chart', ['exports', 'module
       return result;
     }),
 
-    fnGetSliceColor: _Ember['default'].computed('sliceColors.[]', 'getSeriesColor', function () {
+    /**
+     * Function that returns the correct color for a given slice.
+     * Used by D3 to dynamically set the color for each slice rect element in
+     * `updateGraphic`.
+     * @type {function}
+     */
+    fnGetSliceColor: _Ember['default'].computed('sliceColors.[]', function () {
       var sliceColors = this.get('sliceColors');
-      var fnGetSeriesColor = this.get('getSeriesColor');
-
-      return function (d, i) {
-        if (d.sliceLabel && sliceColors[d.sliceLabel]) {
-          return sliceColors[d.sliceLabel];
-        } else {
-          return fnGetSeriesColor(d, i);
-        }
+      return function (d) {
+        return sliceColors[d.sliceLabel];
       };
     }),
 
