@@ -405,8 +405,8 @@ const VerticalBarChartComponent = ChartComponent.extend(LegendMixin,
   barColors: Ember.computed('individualBarLabels.[]', 'getSeriesColor', function() {
     var fnGetSeriesColor = this.get('getSeriesColor');
     var result = {};
-    this.get('individualBarLabels').forEach(function(label, iLabel) {
-      result[label] = fnGetSeriesColor(label, iLabel);
+    this.get('individualBarLabels').forEach(function(label, labelIndex) {
+      result[label] = fnGetSeriesColor(label, labelIndex);
     });
     return result;
   }),

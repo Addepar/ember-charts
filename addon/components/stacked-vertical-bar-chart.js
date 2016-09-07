@@ -674,8 +674,8 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
       function() {
     var fnGetSeriesColor = this.get('getSeriesColor');
     var result = {};
-    this.get('allSliceLabels').forEach(function(label, iLabel) {
-      result[label] = fnGetSeriesColor(label, iLabel);
+    this.get('allSliceLabels').forEach(function(label, labelIndex) {
+      result[label] = fnGetSeriesColor(label, labelIndex);
     });
     return result;
   }),

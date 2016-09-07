@@ -49,8 +49,8 @@ const StackedVerticalBarController = VerticalBarController.extend({
         continue;
       }
 
-      for (var iDatum = 0; iDatum < dataset.length; iDatum++) {
-        var datum = dataset[iDatum];
+      for (var datumIndex = 0; datumIndex < dataset.length; datumIndex++) {
+        var datum = dataset[datumIndex];
         datum.barLabel = datum.group;
         datum.sliceLabel = datum.label;
         delete datum.group;

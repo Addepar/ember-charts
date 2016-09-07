@@ -129,17 +129,16 @@ const getFloatTransformValue = function($element, index) {
   return parseFloat($element.attr('transform').match(/\d+(\.\d+)?/g)[index]);
 };
 
-const PERCENT_TOLERANCE = 0.0001;
-
 const equalsWithTolerance = function(actual, expected) {
-  var tolerance = Math.abs(expected * PERCENT_TOLERANCE);
-  return Math.abs(actual - expected) < tolerance;
+  // Allowed error tolerance
+  var EPSILON = 0.000001;
+  return Math.abs(actual - expected) < EPSILON;
 };
 
 test('Within each bar, the stacking slices have the correct heights relative to each other',
     function(assert) {
   var dataByBarLabel, barData, svgBarsByBarLabel, barLabel, svgBar, slices,
-    barHeight, sliceHeights, iSlice, expectedSliceHeights, barDatum;
+    barHeight, sliceHeights, sliceIndex, expectedSliceHeights, barDatum;
   assert.expect(three_ranges.length);
 
   dataByBarLabel = _.groupBy(_.cloneDeep(three_ranges), 'barLabel');
@@ -147,13 +146,9 @@ test('Within each bar, the stacking slices have the correct heights relative to 
   // Compute the expected heights of each slice as a percentage
   // of the height of the whole bar.
   _.forEach(dataByBarLabel, function(barData) {
-    var iDatum;
-    var grossBarSum = 0.0;
-    for (iDatum = 0; iDatum < barData.length; iDatum++) {
-      grossBarSum += Math.abs(barData[iDatum].value);
-    }
-    for (iDatum = 0; iDatum < barData.length; iDatum++) {
-      barData[iDatum].percentOfBar = Math.abs(barData[iDatum].value) / grossBarSum;
+    var grossBarSum = _.sum(barData, slice => Math.abs(slice.value));
+    for (sliceIndex = 0; sliceIndex < barData.length; sliceIndex++) {
+      barData[sliceIndex].percentOfBar = Math.abs(barData[sliceIndex].value) / grossBarSum;
     }
   });
 
@@ -180,8 +175,8 @@ test('Within each bar, the stacking slices have the correct heights relative to 
     // Find the absolute expected heights of each slice
     // using the actual overall height of the bar.
     expectedSliceHeights = [];
-    for (iSlice = 0; iSlice < slices.length; iSlice++) {
-      barDatum = dataByBarLabel[barLabel][iSlice];
+    for (sliceIndex = 0; sliceIndex < slices.length; sliceIndex++) {
+      barDatum = dataByBarLabel[barLabel][sliceIndex];
       expectedSliceHeights.push(barHeight * barDatum.percentOfBar);
     }
     expectedSliceHeights.sort(diff);
@@ -193,15 +188,15 @@ test('Within each bar, the stacking slices have the correct heights relative to 
     // FIXME(SBC): is there a workaround for the noted limitation?
     // E.g. by looking at the hover tooltip or color palette?
     //
-    for (iSlice = 0; iSlice < slices.length; iSlice++) {
+    for (sliceIndex = 0; sliceIndex < slices.length; sliceIndex++) {
       assert.ok(
         equalsWithTolerance(
-          sliceHeights[iSlice],
-          expectedSliceHeights[iSlice]),
+          sliceHeights[sliceIndex],
+          expectedSliceHeights[sliceIndex]),
         "The bar for '" + barLabel +
-          "' has a slice with height " + expectedSliceHeights[iSlice] +
+          "' has a slice with height " + expectedSliceHeights[sliceIndex] +
           " px out of " + barHeight +
-          " px (actual height: " + sliceHeights[iSlice] +
+          " px (actual height: " + sliceHeights[sliceIndex] +
           " px)");
     }
   }
@@ -217,11 +212,7 @@ test('The bars have the correct heights relative to each other', function(assert
   // Compute the expected heights of each bar as a percentage
   // of the expected height of the shortest bar.
   grossBarSums = _.mapValues(dataByBarLabel, function(barData) {
-    var sum = 0.0;
-    for (var iDatum = 0; iDatum < barData.length; iDatum++) {
-      sum += Math.abs(barData[iDatum].value);
-    }
-    return sum;
+    return _.sum(barData, slice => Math.abs(slice.value));
   });
   minGrossBarSum = _.min(_.values(grossBarSums));
   expectedBarHeightRatios = _.mapValues(grossBarSums, function(sum) {
@@ -266,11 +257,7 @@ test('The bars have the correct heights relative to the values on the y-axis tic
   // Compute the expected heights of each bar as a percentage
   // of the expected height of the shortest bar.
   grossBarSums = _.mapValues(dataByBarLabel, function(barData) {
-    var sum = 0.0;
-    for (var iDatum = 0; iDatum < barData.length; iDatum++) {
-      sum += Math.abs(barData[iDatum].value);
-    }
-    return sum;
+    return _.sum(barData, slice => Math.abs(slice.value));
   });
 
   this.subject({data: three_ranges});
@@ -420,10 +407,10 @@ test('Stacking slices within a single bar do not cover up each other', function(
 
     // For each pair of slices "next" to each other,
     // check that the two slices in that pair do not overlap.
-    for (var iSlice = 1; iSlice < slices.length; iSlice++) {
-      var aboveSliceY = getYCoordOfSvgSlice(slices[iSlice-1]);
-      var aboveSliceHeight = getFloatAttrValueOfSvgSlice(slices[iSlice-1], 'height');
-      var thisSliceY = getYCoordOfSvgSlice(slices[iSlice]);
+    for (var sliceIndex = 1; sliceIndex < slices.length; sliceIndex++) {
+      var aboveSliceY = getYCoordOfSvgSlice(slices[sliceIndex-1]);
+      var aboveSliceHeight = getFloatAttrValueOfSvgSlice(slices[sliceIndex-1], 'height');
+      var thisSliceY = getYCoordOfSvgSlice(slices[sliceIndex]);
       assert.ok(
         equalsWithTolerance(
           thisSliceY,
@@ -503,8 +490,7 @@ test('Negative value slices are displayed below the y=0 axis', function(assert) 
 
 
 /**
- * assertOtherSliceIsCorrect - Helper function that performs 3 assertions
- *    pertaining to the 'Other' slice:
+ * Helper function that performs 3 assertions pertaining to the 'Other' slice:
  *    1) The slice labels shown in the legend are as expected
  *    2) The total number of slices in the DOM is as expected
  *    3) The existence of the 'Other' slice is as expected
