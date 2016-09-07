@@ -3186,8 +3186,8 @@ define('ember-charts/components/stacked-vertical-bar-chart', ['exports', 'module
     sliceColors: _Ember['default'].computed('allSliceLabels.[]', 'getSeriesColor', function () {
       var fnGetSeriesColor = this.get('getSeriesColor');
       var result = {};
-      this.get('allSliceLabels').forEach(function (label, iLabel) {
-        result[label] = fnGetSeriesColor(label, iLabel);
+      this.get('allSliceLabels').forEach(function (label, labelIndex) {
+        result[label] = fnGetSeriesColor(label, labelIndex);
       });
       return result;
     }),
@@ -4897,8 +4897,8 @@ define('ember-charts/components/vertical-bar-chart', ['exports', 'module', 'embe
     barColors: _Ember['default'].computed('individualBarLabels.[]', 'getSeriesColor', function () {
       var fnGetSeriesColor = this.get('getSeriesColor');
       var result = {};
-      this.get('individualBarLabels').forEach(function (label, iLabel) {
-        result[label] = fnGetSeriesColor(label, iLabel);
+      this.get('individualBarLabels').forEach(function (label, labelIndex) {
+        result[label] = fnGetSeriesColor(label, labelIndex);
       });
       return result;
     }),
