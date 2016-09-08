@@ -196,7 +196,7 @@ const VerticalBarChartComponent = ChartComponent.extend(LegendMixin,
       if (Ember.isEmpty(this.get('data'))) {
         return Ember.A();
       }
-      // If we have grouped data and do not have stackBars turned on, split the
+      // If we do NOT have grouped data and do not have stackBars turned on, split the
       // data up so it gets drawn in separate groups and labeled
       return _.map(this.get('sortedData'), function(d) {
         return {
@@ -288,11 +288,44 @@ const VerticalBarChartComponent = ChartComponent.extend(LegendMixin,
       .nice(this.get('numYTicks'));
   }),
 
-  individualBarLabels: Ember.computed('groupedData.[]', function() {
+  groupedIndividualBarLabels: Ember.computed('groupedData.[]', function() {
     var groups = _.map(_.values(this.get('groupedData')), function(g) {
       return _.pluck(g, 'label');
     });
     return _.uniq(_.flatten(groups));
+  }),
+
+  ungroupedIndividualBarLabels: Ember.computed('sortedData.@each.label', function() {
+    return _.map(this.get('sortedData'), 'label');
+  }),
+
+  // The labels of the bars in the chart.
+  //
+  // When the bars in the chart are grouped, this CP returns the de-duplicated
+  // set of labels that can appear within a single group,
+  // in the order that they should appear in the group.
+  // Per this.groupedData, this order is lexicographical by the label name,
+  // regardless of this.sortKey. That is to ensure that the bar for
+  // a given label is always in the same position within every group.
+  // (See: https://github.com/Addepar/ember-charts/pull/81 )
+  //
+  // When the chart is not grouped, the labels are in the order that they
+  // appear in the sorted bar data points, and are not de-duplicated.
+  // (This is okay because whether or not the chart is grouped,
+  // the client has the responsibility to make sure there are no dupe
+  // (bar label, group label) pairs in the bar data.)
+  //
+  individualBarLabels: Ember.computed(
+    'isGrouped',
+    'stackBars',
+    'groupedIndividualBarLabels',
+    'ungroupedIndividualBarLabels',
+  function() {
+    if (this.get('isGrouped') || this.get('stackBars')) {
+      return this.get('groupedIndividualBarLabels');
+    } else {
+      return this.get('ungroupedIndividualBarLabels');
+    }
   }),
 
   labelIDMapping: Ember.computed('individualBarLabels.[]', function() {
