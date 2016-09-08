@@ -193,8 +193,9 @@
         <p>Data to be represented by bars.  This is an array of data points.  Each
         data point is an object with at least two fields: <em>value</em>
         (Number), and <em>label</em> (String).  A third field <em>group</em>
-        (String) is optional for each data point.  The prescence of the group
-        field will group the bars based on the value of this field.</p>
+        (String) is optional for each data point.  If there are multiple distinct
+        values for <em>group</em>, the chart will group the bars and label each
+        bar group by the value of this field..</p>
         <div class="highlight">
 <pre class="prettyprint lang-js">// percentage absolute return
 [
@@ -250,9 +251,24 @@
       <td>sortKey</td>
       <td>value</td>
       <td>
-        <p>Field from each data point used for sorting when chart is grouped
-        horizontally. The chart is sorted by the field's value for the first data
-        point in each group, and each group is sorted by the field as well.</p>
+        <p>The field from each data point object in <em>data</em>
+        used to sort the bars when the bars are NOT grouped
+        horizontally (that is, when the objects in <em>data</em>
+        all have the same value for <em>group</em>).</p>
+        <p>When the bars are grouped, <em>sortKey</em> and <em>sortAscending</em>
+        are ignored; instead, bars within a bar group are sorted lexicographically
+        by their <em>label</em>, and bar groups are sorted lexicographically
+        by their <em>group</em> label.</p>
+      </td>
+    </tr>
+    <tr>
+      <td>sortAscending</td>
+      <td>true</td>
+      <td>
+        <p>Whether or not the bar sort order imposed by <em>sortKey</em>
+        is ascending.</p>
+        <p>As noted above, both this option and <em>sortKey</em>
+        are respected only when the bars are NOT grouped.</p>
       </td>
     </tr>
   </table>

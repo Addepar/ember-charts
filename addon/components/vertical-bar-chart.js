@@ -304,6 +304,10 @@ const VerticalBarChartComponent = ChartComponent.extend(LegendMixin,
   // When the bars in the chart are grouped, this CP returns the de-duplicated
   // set of labels that can appear within a single group,
   // in the order that they should appear in the group.
+  // Per this.groupedData, this order is lexicographical by the label name,
+  // regardless of this.sortKey. That is to ensure that the bar for
+  // a given label is always in the same position within every group.
+  // (See: https://github.com/Addepar/ember-charts/pull/81 )
   //
   // When the chart is not grouped, the labels are in the order that they
   // appear in the sorted bar data points, and are not de-duplicated.
