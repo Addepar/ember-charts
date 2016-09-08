@@ -770,7 +770,7 @@ test('Bars are sorted correctly', function(assert) {
   Ember.run(() => { component.set('barSortAscending', false); });
   expectedBarOrder = ['Group Three', 'Group Two', 'Group One'];
   assertBarSortingIsCorrect(assert, component, expectedBarOrder,
-    'descending by original order')
+    'descending by original order');
 
   // barSortKey = 'custom', barSortAscending = true
   // customBarSortingFn is default function (alphabetical sort)
