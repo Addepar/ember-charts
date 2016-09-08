@@ -733,46 +733,85 @@ function assertBarSortingIsCorrect(assert, component, expectedBarOrder, message)
   sortedBarElements = _.sortBy($('.bars'), bar => getFloatTransformValue($(bar), 0));
   sortedBarElementLabels = _.map(sortedBarElements, bar => $(bar).text());
   assert.ok(_.isEqual(sortedBarElementLabels, expectedBarOrder), 'Bars are ' +
-    'visually sorted correctly (on the DOM) for ' + message);
+    'visually sorted correctly (in the DOM) for ' + message);
 }
 
+// Test both the logical and visual bar sorting (ie, making sure the chart
+// visually represents the sorted data in the component, and that both of these
+// are sorted as expected) for every combination of barSortKey and
+// barSortAscending
 test('Bars are sorted correctly', function(assert) {
   var component, expectedBarOrder;
-  assert.expect(8);
+  assert.expect(16);
   component = this.subject({ data: three_ranges });
   this.render();
 
-  // First, test the default sorting: ascending by value
+  // barSortKey = 'value', barSortAscending = true
   expectedBarOrder = ['Group Three', 'Group One', 'Group Two'];
   assertBarSortingIsCorrect(assert, component, expectedBarOrder,
     'ascending by value');
 
-  // Second, turn off sortAscending so that sort is descending by value
+  // barSortKey = 'value', barSortAscending = false
   Ember.run(() => { component.set('barSortAscending', false); });
   expectedBarOrder = ['Group Two', 'Group One', 'Group Three'];
   assertBarSortingIsCorrect(assert, component, expectedBarOrder,
     'descending by value');
 
-  // Third, change sortKey to the 'custom' (defaults to alphabetical). Still
-  // descending.
-  Ember.run(() => { component.set('barSortKey', 'custom'); });
-  expectedBarOrder = ['Group Two', 'Group Three', 'Group One'];
-  assertBarSortingIsCorrect(assert, component, expectedBarOrder, 'descending ' +
-    'alphabetical, which is the default custom sort');
-
-  // Fourth, override the default custom sorting function so that it instead
-  // will sum the integers of a bar's value. Still descending.
-  Ember.run(() => { component.set('customBarSortingFn',
-    function(barData1, barData2) {
-      function getDigitSum(barData) {
-        return ('' + Math.abs(barData.value))
-        .split('')
-        .reduce((sum, num) => sum + parseInt(num), 0);
-      }
-      return getDigitSum(barData1) - getDigitSum(barData2);
-    });
+  // barSortKey = 'original', barSortAscending = true
+  Ember.run(() => {
+    component.set('barSortKey', 'original');
+    component.set('barSortAscending', true);
   });
+  expectedBarOrder = ['Group One', 'Group Two', 'Group Three'];
+  assertBarSortingIsCorrect(assert, component, expectedBarOrder,
+    'ascending by original order');
+
+  // barSortKey = 'original', barSortAscending = false
+  Ember.run(() => { component.set('barSortAscending', false); });
+  expectedBarOrder = ['Group Three', 'Group Two', 'Group One'];
+  assertBarSortingIsCorrect(assert, component, expectedBarOrder,
+    'descending by original order')
+
+  // barSortKey = 'custom', barSortAscending = true
+  // customBarSortingFn is default function (alphabetical sort)
+  Ember.run(() => {
+    component.set('barSortKey', 'custom');
+    component.set('barSortAscending', true);
+  });
+  expectedBarOrder = ['Group One', 'Group Three', 'Group Two'];
+  assertBarSortingIsCorrect(assert, component, expectedBarOrder,
+    'ascending alphabetical');
+
+  // barSortKey = 'custom', barSortAscending = false
+  // customBarSortingFn is default function (alphabetical sort)
+  Ember.run(() => { component.set('barSortAscending', false); });
+  expectedBarOrder = ['Group Two', 'Group Three', 'Group One'];
+  assertBarSortingIsCorrect(assert, component, expectedBarOrder,
+    'descending alphabetical');
+
+  // barSortKey = 'custom', barSortAscending = true
+  // Override the default customBarSortingFn so that it instead will sum the
+  // integers of a bar's value and sort by this value
+  Ember.run(() => {
+    component.set('customBarSortingFn',
+      function(barData1, barData2) {
+        function getDigitSum(barData) {
+          return ('' + Math.abs(barData.value))
+          .split('')
+          .reduce((sum, num) => sum + parseInt(num), 0);
+        }
+        return getDigitSum(barData1) - getDigitSum(barData2);
+      });
+    component.set('barSortAscending', true);
+  });
+  expectedBarOrder = ['Group Three', 'Group One', 'Group Two'];
+  assertBarSortingIsCorrect(assert, component, expectedBarOrder,
+    'ascending custom sort (sum of integers in bar value)');
+
+  // barSortKey = 'custom', barSortAscending = false
+  // Same overridden customBarSortingFn as previous assertion
+  Ember.run(() => { component.set('barSortAscending', false); });
   expectedBarOrder = ['Group Two', 'Group One', 'Group Three'];
-  assertBarSortingIsCorrect(assert, component, expectedBarOrder, 'descending ' +
-    'custom sort (sum of integers in bar value)');
+  assertBarSortingIsCorrect(assert, component, expectedBarOrder,
+    'descending custom sort (sum of integers in bar value)');
 });
