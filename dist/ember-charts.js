@@ -2589,13 +2589,31 @@ define('ember-charts/components/stacked-vertical-bar-chart', ['exports', 'module
     strokeWidth: 1,
 
     /**
-     * Space between bars, as fraction of bar size.
-     * Must be between 0 and 1 (inclusive). Default value of 0 means there is
-     * NO padding initially between bars. This can be overridden or changed to
-     * adjust the bar spacing.
+     * Default space between bars, as a fraction of bar size. This can be
+     * overridden to be any value between 0 and 1.
+     * If not overridden, the default padding here is calculated as a function of
+     * the number of bars in the chart. More bars results in a smaller padding
+     * ratio, and vice versa. The range values (0.625, 0.125) result in padding
+     * values that copies the default padding settings in unstacked
+     * VerticalBarChartComponent, and were chosen to create a good default look
+     * for any chart, regardless of how many bars it contains.
+     *
+     * NOTE:
+     * If you DO NOT want the betweenBarPadding to dynamically change based
+     * on number of slices, this should be overridden to some fixed number between
+     * 0 and 1.
+     *
+     * If you DO want the betweenBarPadding to dynamically change but don't like
+     * the default domain/range values set here, override this to adjust those
+     * accordingly. View the following D3 documentation for more detail about
+     * domain and range settings:
+     * https://github.com/d3/d3-3.x-api-reference/blob/master/Ordinal-Scales.md#ordinal_domain
      * @type {number}
      */
-    betweenBarPadding: 0,
+    betweenBarPadding: _Ember['default'].computed('barNames.length', function () {
+      var scale = d3.scale.linear().domain([1, 8]).range([0.625, 0.125]).clamp(true);
+      return scale(this.get('barNames.length'));
+    }),
 
     /**
      * Space allocated for rotated labels on the bottom of the chart. If labels
@@ -3149,7 +3167,11 @@ define('ember-charts/components/stacked-vertical-bar-chart', ['exports', 'module
     xBetweenBarScale: _Ember['default'].computed('graphicWidth', 'barNames', 'betweenBarPadding', function () {
       var betweenBarPadding = this.get('betweenBarPadding');
 
-      return d3.scale.ordinal().domain(this.get('barNames')).rangeRoundBands([0, this.get('graphicWidth')], betweenBarPadding, betweenBarPadding);
+      return d3.scale.ordinal().domain(this.get('barNames')).rangeRoundBands([0, this.get('graphicWidth')],
+      // inner padding (between bars)
+      betweenBarPadding,
+      // outer padding (between outer bars and edge)
+      betweenBarPadding);
     }),
 
     // Override axis mix-in min and max values to listen to the scale's domain
