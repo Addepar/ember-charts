@@ -96,6 +96,35 @@ test('Margins are the right size', function(assert) {
   assert.equal(component.get('marginBottom'), 0, 'no bottom margin');
 });
 
+test('Sorting bars by value works when the chart is not grouped', function(assert) {
+  const chartConfig = {
+    data: [{
+      label: "Label 1",
+      value: 20
+    }, {
+      label: "Label 2",
+      value: -1
+    }],
+    sortKey: 'value',
+    sortAscending: true
+  };
+  var component, bar1, bar2, bar1x, bar2x;
+
+  assert.expect(3);
+  component = this.subject(chartConfig);
+  this.render();
+
+  bar1 = component.$('g.bars:contains(Label 1) rect');
+  bar2 = component.$('g.bars:contains(Label 2) rect');
+  assert.equal(bar1.length, 1, 'There is a bar for Label 1');
+  assert.equal(bar2.length, 1, 'There is a bar for Label 2');
+
+  // Check that the bar for Label 1 is on the _right_.
+  bar1x = parseInt(bar1.attr('x'));
+  bar2x = parseInt(bar2.attr('x'));
+  assert.ok(bar1x > bar2x, 'The bar for Label 1 is to the right of the one for Label 2');
+});
+
 test('Stacked bar chart data is sorted correctly', function(assert) {
   var component = this.subject();
   assert.expect(8);
