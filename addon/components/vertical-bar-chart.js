@@ -508,7 +508,8 @@ const VerticalBarChartComponent = ChartComponent.extend(LegendMixin,
         var label = $("<span class=\"name\" />").text(d.label + ": ");
         content.append(label);
         var value = $("<span class=\"value\">").text(formatLabel(d.value));
-        return content.append(value);
+        content.append(value);
+        content.append('<br />');
       };
 
       if (isGroup) {
