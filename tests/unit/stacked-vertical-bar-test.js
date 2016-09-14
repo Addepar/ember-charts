@@ -616,7 +616,7 @@ test('Slices are sorted in correct order for each sliceSortKey', function(assert
   this.render();
 
   expectedSliceOrders = {
-    'original': [ 'grouping-0', 'grouping-1', 'grouping-2',
+    'none': [ 'grouping-0', 'grouping-1', 'grouping-2',
                   'grouping-3', 'grouping-4', 'grouping-5' ],
     'value':    [ 'grouping-0', 'grouping-2', 'grouping-1',
                   'grouping-3', 'grouping-5', 'grouping-4' ],
@@ -625,7 +625,7 @@ test('Slices are sorted in correct order for each sliceSortKey', function(assert
   };
   xAxisElement = this.$('.tick:not(.minor)');
   xAxisTransformY = getFloatTransformValue(xAxisElement, 1);
-  ['original', 'value', 'custom'].forEach(sliceSortKey => {
+  ['none', 'value', 'custom'].forEach(sliceSortKey => {
     Ember.run(() => { component.set('sliceSortKey', sliceSortKey); });
     sliceSortOrder = expectedSliceOrders[sliceSortKey];
 
@@ -757,20 +757,20 @@ test('Bars are sorted correctly', function(assert) {
   assertBarSortingIsCorrect(assert, component, expectedBarOrder,
     'descending by value');
 
-  // barSortKey = 'original', barSortAscending = true
+  // barSortKey = 'none', barSortAscending = true
   Ember.run(() => {
-    component.set('barSortKey', 'original');
+    component.set('barSortKey', 'none');
     component.set('barSortAscending', true);
   });
   expectedBarOrder = ['Group One', 'Group Two', 'Group Three'];
   assertBarSortingIsCorrect(assert, component, expectedBarOrder,
-    'ascending by original order');
+    'ascending with no sorting');
 
-  // barSortKey = 'original', barSortAscending = false
+  // barSortKey = 'none', barSortAscending = false
   Ember.run(() => { component.set('barSortAscending', false); });
   expectedBarOrder = ['Group Three', 'Group Two', 'Group One'];
   assertBarSortingIsCorrect(assert, component, expectedBarOrder,
-    'descending by original order');
+    'descending with no sorting');
 
   // barSortKey = 'custom', barSortAscending = true
   // customBarSortingFn is default function (alphabetical sort)

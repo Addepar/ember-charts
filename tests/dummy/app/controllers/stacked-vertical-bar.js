@@ -7,7 +7,7 @@ const StackedVerticalBarController = VerticalBarController.extend({
 
   barSortKeyOptions: {
     'value': 'value',
-    'original input order': 'original',
+    'unsorted': 'none',
     'custom (default: alphabetical)': 'custom'
   },
 
@@ -26,7 +26,7 @@ const StackedVerticalBarController = VerticalBarController.extend({
 
   sliceSortKeyOptions: {
     'value': 'value',
-    'original input order': 'original',
+    'unsorted': 'none',
     'custom (default: alphabetical)': 'custom'
   },
 

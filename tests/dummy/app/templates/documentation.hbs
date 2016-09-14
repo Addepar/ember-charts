@@ -423,9 +423,9 @@ var MyVbcComponent = VerticalBarChartComponent.extend({ ... });</pre>
       <td>'value'</td>
       <td>
         <p>Identifier to determine how the bars should be sorted within the chart.
-        This can be set to either 'value', 'original', or 'custom'. This will affect
+        This can be set to either 'value', 'none', or 'custom'. This will affect
         which bar sorting function is used. The 'value' option will sort by net
-        bar value. The 'original' option will sort bars by the order in which their
+        bar value. The 'none' option will leave bars in the order in which their
         bar labels appear in the original input data. The 'custom' option will sort
         bars alphabetically by bar label by default, but the `customBarSortingFn`
         can be overridden to sort bars in a user-defined manner.</p>
@@ -453,11 +453,11 @@ var MyVbcComponent = VerticalBarChartComponent.extend({ ... });</pre>
       <td>'value'</td>
       <td>
         <p>Identifier to determine how the slices should be sorted within each bar.
-        This can be set to either 'value', 'original', or 'custom'. This will affect
+        This can be set to either 'value', 'none', or 'custom'. This will affect
         which slice sorting function is used. The 'value' option will determine a
         slice sort order by looking at bars in order of highest net-value, sorting
         the slices within this bar by highest absolute value, and adding any slice
-        to the order that has not yet been seen. The 'original' option will sort
+        to the order that has not yet been seen. The 'none' option will leave
         slices by the order in which they appear in the original input data. The
         'custom' option will sort slices alphabetically by slice label by default,
         but the `customSliceSortingFn` can be overridden to sort slices in a

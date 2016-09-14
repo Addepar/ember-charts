@@ -312,10 +312,10 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
   // ---------------------------------------------------------------------------
 
   /**
-   * Key used to determine slice sorting order. Can be 'value', 'original', or
+   * Key used to determine slice sorting order. Can be 'value', 'none', or
    * 'other'.
    * @see valueSliceSortingFn
-   * @see originalSliceSortingFn
+   * @see originalOrderSliceSortingFn
    * @see customSliceSortingFn
    * @type {string}
    */
@@ -379,13 +379,13 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
   }),
 
   /**
-   * Comparison function for slices when sliceSortKey is 'original'
+   * Comparison function for slices when sliceSortKey is 'none'
    * Sort each slice within its bar based on the order it is listed in the
    * original input data.
    * @see sliceSortKey
    * @type {function}
    */
-  originalSliceSortingFn: Ember.computed('data.[]', function() {
+  originalOrderSliceSortingFn: Ember.computed('data.[]', function() {
     var data = this.get('data');
     return (slice1, slice2) => {
       return this.defaultCompareFn(data.indexOf(slice1), data.indexOf(slice2));
@@ -397,24 +397,24 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
    * @type {function}
    */
   sliceSortingFn: Ember.computed('valueSliceSortingFn', 'customSliceSortingFn',
-      'originalSliceSortingFn', 'sliceSortKey', function() {
+      'originalOrderSliceSortingFn', 'sliceSortKey', function() {
     var sliceSortKey = this.get('sliceSortKey');
     if (sliceSortKey === 'value') {
       return this.get('valueSliceSortingFn');
     } else if (sliceSortKey === 'custom') {
       return this.get('customSliceSortingFn');
-    } else if (sliceSortKey === 'original' || Ember.isNone(sliceSortKey)) {
-      return this.get('originalSliceSortingFn');
+    } else if (sliceSortKey === 'none' || Ember.isNone(sliceSortKey)) {
+      return this.get('originalOrderSliceSortingFn');
     } else {
       throw new Error("Invalid sliceSortKey");
     }
   }),
 
   /**
-   * Key used to determine bar sorting order. Can be 'value', 'original', or
+   * Key used to determine bar sorting order. Can be 'value', 'none', or
    * 'other'.
    * @see valueBarSortingFn
-   * @see originalBarSortingFn
+   * @see originalOrderBarSortingFn
    * @see customBarSortingFn
    * @type {string}
    */
@@ -443,8 +443,8 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
   /**
    * The original order that bar labels are listed from the input data.
    * We preserve this order so that bars can be sorted in the original input
-   * order when `barSortKey` is set to 'original'.
-   * @see originalBarSortingFn
+   * order when `barSortKey` is set to 'none'.
+   * @see originalOrderBarSortingFn
    * @type {Array.<String>}
    */
   originalBarOrder: Ember.computed('data.[]', function() {
@@ -471,14 +471,14 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
   }),
 
   /**
-   * Comparison function for bar data when barSortKey is 'original'
+   * Comparison function for bar data when barSortKey is 'none'
    * Sort bars based on the order each barLabel appears in the original input
    * data.
    * @see originalBarOrder
    * @see barSortKey
    * @type {function}
    */
-  originalBarSortingFn: Ember.computed('originalBarOrder.[]', function() {
+  originalOrderBarSortingFn: Ember.computed('originalBarOrder.[]', function() {
     var originalOrder = this.get('originalBarOrder');
     return (barData1, barData2) => {
       return this.defaultCompareFn(originalOrder.indexOf(barData1.barLabel),
@@ -491,14 +491,14 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
    * @type {function}
    */
   barSortingFn: Ember.computed('valueBarSortingFn', 'customBarSortingFn',
-      'originalBarSortingFn', 'barSortKey', function() {
+      'originalOrderBarSortingFn', 'barSortKey', function() {
     var barSortKey = this.get('barSortKey');
     if (barSortKey === 'value') {
       return this.get('valueBarSortingFn');
     } else if (barSortKey === 'custom') {
       return this.get('customBarSortingFn');
-    } else if (barSortKey === 'original' || Ember.isNone(barSortKey)) {
-      return this.get('originalBarSortingFn');
+    } else if (barSortKey === 'none' || Ember.isNone(barSortKey)) {
+      return this.get('originalOrderBarSortingFn');
     } else {
       throw new Error("Invalid barSortKey");
     }
