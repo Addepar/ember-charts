@@ -2834,10 +2834,10 @@ define('ember-charts/components/stacked-vertical-bar-chart', ['exports', 'module
     // ---------------------------------------------------------------------------
 
     /**
-     * Key used to determine slice sorting order. Can be 'value', 'original', or
+     * Key used to determine slice sorting order. Can be 'value', 'none', or
      * 'other'.
      * @see valueSliceSortingFn
-     * @see originalSliceSortingFn
+     * @see originalOrderSliceSortingFn
      * @see customSliceSortingFn
      * @type {string}
      */
@@ -2903,13 +2903,13 @@ define('ember-charts/components/stacked-vertical-bar-chart', ['exports', 'module
     }),
 
     /**
-     * Comparison function for slices when sliceSortKey is 'original'
+     * Comparison function for slices when sliceSortKey is 'none'
      * Sort each slice within its bar based on the order it is listed in the
      * original input data.
      * @see sliceSortKey
      * @type {function}
      */
-    originalSliceSortingFn: _Ember['default'].computed('data.[]', function () {
+    originalOrderSliceSortingFn: _Ember['default'].computed('data.[]', function () {
       var _this4 = this;
 
       var data = this.get('data');
@@ -2922,24 +2922,24 @@ define('ember-charts/components/stacked-vertical-bar-chart', ['exports', 'module
      * The current slice sorting function, depending on what sliceSortKey is.
      * @type {function}
      */
-    sliceSortingFn: _Ember['default'].computed('valueSliceSortingFn', 'customSliceSortingFn', 'originalSliceSortingFn', 'sliceSortKey', function () {
+    sliceSortingFn: _Ember['default'].computed('valueSliceSortingFn', 'customSliceSortingFn', 'originalOrderSliceSortingFn', 'sliceSortKey', function () {
       var sliceSortKey = this.get('sliceSortKey');
       if (sliceSortKey === 'value') {
         return this.get('valueSliceSortingFn');
       } else if (sliceSortKey === 'custom') {
         return this.get('customSliceSortingFn');
-      } else if (sliceSortKey === 'original' || _Ember['default'].isNone(sliceSortKey)) {
-        return this.get('originalSliceSortingFn');
+      } else if (sliceSortKey === 'none' || _Ember['default'].isNone(sliceSortKey)) {
+        return this.get('originalOrderSliceSortingFn');
       } else {
         throw new Error("Invalid sliceSortKey");
       }
     }),
 
     /**
-     * Key used to determine bar sorting order. Can be 'value', 'original', or
+     * Key used to determine bar sorting order. Can be 'value', 'none', or
      * 'other'.
      * @see valueBarSortingFn
-     * @see originalBarSortingFn
+     * @see originalOrderBarSortingFn
      * @see customBarSortingFn
      * @type {string}
      */
@@ -2969,8 +2969,8 @@ define('ember-charts/components/stacked-vertical-bar-chart', ['exports', 'module
     /**
      * The original order that bar labels are listed from the input data.
      * We preserve this order so that bars can be sorted in the original input
-     * order when `barSortKey` is set to 'original'.
-     * @see originalBarSortingFn
+     * order when `barSortKey` is set to 'none'.
+     * @see originalOrderBarSortingFn
      * @type {Array.<String>}
      */
     originalBarOrder: _Ember['default'].computed('data.[]', function () {
@@ -2999,14 +2999,14 @@ define('ember-charts/components/stacked-vertical-bar-chart', ['exports', 'module
     }),
 
     /**
-     * Comparison function for bar data when barSortKey is 'original'
+     * Comparison function for bar data when barSortKey is 'none'
      * Sort bars based on the order each barLabel appears in the original input
      * data.
      * @see originalBarOrder
      * @see barSortKey
      * @type {function}
      */
-    originalBarSortingFn: _Ember['default'].computed('originalBarOrder.[]', function () {
+    originalOrderBarSortingFn: _Ember['default'].computed('originalBarOrder.[]', function () {
       var _this7 = this;
 
       var originalOrder = this.get('originalBarOrder');
@@ -3019,14 +3019,14 @@ define('ember-charts/components/stacked-vertical-bar-chart', ['exports', 'module
      * The current bar sorting function, depending on what barSortKey is.
      * @type {function}
      */
-    barSortingFn: _Ember['default'].computed('valueBarSortingFn', 'customBarSortingFn', 'originalBarSortingFn', 'barSortKey', function () {
+    barSortingFn: _Ember['default'].computed('valueBarSortingFn', 'customBarSortingFn', 'originalOrderBarSortingFn', 'barSortKey', function () {
       var barSortKey = this.get('barSortKey');
       if (barSortKey === 'value') {
         return this.get('valueBarSortingFn');
       } else if (barSortKey === 'custom') {
         return this.get('customBarSortingFn');
-      } else if (barSortKey === 'original' || _Ember['default'].isNone(barSortKey)) {
-        return this.get('originalBarSortingFn');
+      } else if (barSortKey === 'none' || _Ember['default'].isNone(barSortKey)) {
+        return this.get('originalOrderBarSortingFn');
       } else {
         throw new Error("Invalid barSortKey");
       }
