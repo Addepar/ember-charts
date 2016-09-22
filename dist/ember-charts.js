@@ -2837,7 +2837,7 @@ define('ember-charts/components/time-series-chart', ['exports', 'module', 'ember
         return [new Date(), new Date()];
       }
 
-      var first = _.first(groupedBarData);
+      var first = _.head(groupedBarData);
       var last = _.last(groupedBarData);
       var startTime = new Date(first[0].time);
       var endTime = new Date(last[0].time);
@@ -3761,7 +3761,7 @@ define('ember-charts/components/vertical-bar-chart', ['exports', 'module', 'embe
 
     groupedIndividualBarLabels: _Ember['default'].computed('groupedData.[]', function () {
       var groups = _.map(_.values(this.get('groupedData')), function (g) {
-        return _.pluck(g, 'label');
+        return _.map(g, 'label');
       });
       return _.uniq(_.flatten(groups));
     }),
