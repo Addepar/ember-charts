@@ -111,7 +111,6 @@ const VerticalBarChartComponent = ChartComponent.extend(LegendMixin,
       // in `individualBarLabels`
     	return [];
    	}
-
     data = groupBy(data, (d) => {
       return d.group || this.get('ungroupedSeriesName');
     });
@@ -180,7 +179,11 @@ const VerticalBarChartComponent = ChartComponent.extend(LegendMixin,
       stackedValues = _.map(this.get('data'), function(d) {
         return {
           y0: y0,
-          y1: y0 += Math.max(d.value, 0)
+          y1: y0 += Math.max(d.value, 0),
+          value: d.value,
+          group: d.group,
+          label: d.label,
+          color: d.color
         };
       });
 
@@ -435,8 +438,8 @@ const VerticalBarChartComponent = ChartComponent.extend(LegendMixin,
   barColors: Ember.computed('individualBarLabels.[]', 'getSeriesColor', function() {
     var fnGetSeriesColor = this.get('getSeriesColor');
     var result = {};
-    this.get('individualBarLabels').forEach(function(label, iLabel) {
-      result[label] = fnGetSeriesColor(label, iLabel);
+    this.get('individualBarLabels').forEach(function(label, labelIndex) {
+      result[label] = fnGetSeriesColor(label, labelIndex);
     });
     return result;
   }),
@@ -505,7 +508,8 @@ const VerticalBarChartComponent = ChartComponent.extend(LegendMixin,
         var label = $("<span class=\"name\" />").text(d.label + ": ");
         content.append(label);
         var value = $("<span class=\"value\">").text(formatLabel(d.value));
-        return content.append(value);
+        content.append(value);
+        content.append('<br />');
       };
 
       if (isGroup) {
