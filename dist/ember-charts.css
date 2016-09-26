@@ -78,6 +78,12 @@ svg text {
 .chart-grouped-bar .axis path {
   opacity: 0;
 }
+.chart-stacked-vertical-bar rect {
+  stroke: white;
+}
+.chart-stacked-vertical-bar rect.hovered {
+  stroke: white !important;
+}
 .chart-scatter .axis .tick {
   fill: none;
   stroke: #aaaaaa;
@@ -125,7 +131,7 @@ circle {
 .chart-frame .chart-tooltip line,
 .chart-frame .chart-tooltip path,
 .chart-frame .chart-tooltip rect {
-  stroke-width: 0;
+  stroke-width: 1px;
 }
 .chart-frame .hovered {
   fill: #08c !important;

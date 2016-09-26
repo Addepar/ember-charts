@@ -1,24 +1,26 @@
 <div class="col-md-10 col-md-offset-2 left-border main-content-container">
   <div class="chart-header">
-    <h2>Vertical Bar Chart</h2>
+    <h2>Stacked Bar Chart</h2>
   </div>
 
   <div class="example-container">
     <div class="chart-container">
-      {{vertical-bar-chart
+      {{stacked-vertical-bar-chart
         maxBarThickness=maxBarThickness
         selectedSeedColor=selectedSeedColor
         data=data
         maxLabelHeight=maxLabelHeight
-        withinGroupPadding=withinGroupPadding
-        betweenGroupPadding=betweenGroupPadding
-        stackBars=stackBars
+        betweenBarPadding=betweenBarPadding
         hasXAxisTitle=hasXAxisTitle
         hasYAxisTitle=hasYAxisTitle
         xValueDisplayName=xValueDisplayName
         yValueDisplayName=yValueDisplayName
         xTitleHorizontalOffset=xTitleHorizontalOffset
         yTitleVerticalOffset=yTitleVerticalOffset
+        strokeWidth=strokeWidth
+        barSortKey=barSortKey
+        barSortAscending=barSortAscending
+        sliceSortKey=sliceSortKey
       }}
     </div>
   </div>
@@ -49,6 +51,39 @@
           </div>
         </div>
         <div class="form-group">
+          <label class="col-lg-4 control-label" data-test="bar-sorting">Slice Sort Key</label>
+          <div class="col-lg-8">
+            {{view "select"
+            content=sliceSortKeys
+            value=selectedSliceSortKey
+            class="form-control"
+          }}
+        </div>
+      </div>
+        <div class="form-group">
+          <label class="col-lg-4 control-label" data-test="bar-sorting">Bar Sort Key</label>
+          <div class="col-lg-8">
+            {{view "select"
+              content=barSortKeys
+              value=selectedBarSortKey
+              class="form-control"
+            }}
+          </div>
+        </div>
+        <div class="form-group">
+          <div class="col-lg-offset-4 col-lg-8">
+            <div class="checkbox">
+              <label>
+                {{input
+                  type="checkbox"
+                  checked=barSortAscending
+                }}
+                Sort Bars Ascending
+              </label>
+            </div>
+          </div>
+        </div>
+        <div class="form-group">
           <label class="col-lg-4 control-label">Rotated Label Height</label>
           <div class="col-lg-8">
             {{scrubber-component min="20" max="100" value=maxLabelHeight}}
@@ -56,27 +91,17 @@
           </div>
         </div>
         <div class="form-group">
-          <label class="col-lg-4 control-label">Between Group Padding</label>
+          <label class="col-lg-4 control-label">Between Bar Padding</label>
           <div class="col-lg-8">
-            {{scrubber-component min="0" max="2" step="0.05" value=betweenGroupPadding}}
-            <span class="help-block">Between Group Padding: {{betweenGroupPadding}}</span>
+            {{scrubber-component min="0" max="1" step="0.05" value=betweenBarPadding}}
+            <span class="help-block">Between Bar Padding: {{betweenBarPadding}}</span>
           </div>
         </div>
         <div class="form-group">
-          <label class="col-lg-4 control-label">Within Group Padding</label>
+          <label class="col-lg-4 control-label">Slice Outline Thickness</label>
           <div class="col-lg-8">
-            {{scrubber-component min="0" max="2" step="0.05" value=withinGroupPadding}}
-            <span class="help-block">Within Group Padding: {{withinGroupPadding}}</span>
-          </div>
-        </div>
-        <div class="form-group">
-          <div class="col-lg-offset-4 col-lg-8">
-            <div class="checkbox">
-              <label>
-                {{input type="checkbox" checked=stackBars}} Stacked Bars
-                <span style="color: red">(DEPRECATED)</span>
-              </label>
-            </div>
+            {{scrubber-component min="0" max="5" step="0.1" value=strokeWidth}}
+            <span class="help-block">Slice Outline Thickness: {{strokeWidth}}</span>
           </div>
         </div>
 

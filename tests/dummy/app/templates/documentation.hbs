@@ -1,7 +1,27 @@
 {{!-- To add shadow main-content-container-shadow --}}
 <div class="col-md-10 col-md-offset-2 left-border main-content-container">
   <h1>Ember Charts API</h1>
-  <h2>Time-series-chart Options</h2>
+  <p>
+    Each chart type in Ember Charts is implemented by a separate <em>Ember.Component</em>
+    child class, which is the default export of its own ES6 module.
+    For example, to use vertical bar charts, you'd use the
+    <em>'ember-charts/components/vertical-bar-chart'</em>     module:
+  </p>
+
+<pre>&lbrace;&lbrace;!-- to use the component view in your template --&rbrace;&rbrace;
+&lbrace;&lbrace;vertical-bar-chart data=bindingVar ... &rbrace;&rbrace;
+
+// to extend the component class in your own script
+import VerticalBarChartComponent from 'ember-charts/components/vertical-bar-chart';
+var MyVbcComponent = VerticalBarChartComponent.extend({ ... });</pre>
+
+  <p>
+    To set the options below, create an object of the correct component class
+    and set the corresponding properties on that object.
+  </p>
+
+
+  <h2>Time Series Chart Options - <em>'ember-charts/components/time-series-chart'</em></h2>
   <table class="table ember-charts-options">
     <tr>
       <th style="width: 200px;">Option</th>
@@ -101,32 +121,12 @@
   </table>
 
   <hr>
-  <h2>Horizontal-Bar Options</h2>
+  <h2>Horizontal Bar Chart Options - <em>'ember-charts/components/horizontal-bar-chart'</em></h2>
   <table class="table ember-charts-options">
     <tr>
       <th style="width: 200px;">Option</th>
       <th style="width: 150px;">Default</th>
       <th>Description</th>
-    </tr>
-    <tr>
-      <td>minBarThickness</td>
-      <td>20</td>
-      <td>
-        <p>Miminum bar width in pixels.</p>
-      </td>
-    </tr>
-    <tr>
-      <td>maxBarThickness</td>
-      <td>60</td>
-      <td>
-        <p>Maximum bar width in pixels.</p>
-      </td>
-    </tr>
-    <tr>
-      <td>selectedSeedColor</td>
-      <td>rgb(65, 65, 65)</td>
-      <td><p>Base color that the color palette will be generated from.</p>
-    </td>
     </tr>
     <tr>
       <td>data</td>
@@ -156,21 +156,11 @@
       </td>
     </tr>
     <tr>
-      <td>sortKey</td>
-      <td>value</td>
+      <td>minBarThickness</td>
+      <td>20</td>
       <td>
-        <p>Field from each data point by which the bars will be sorted.</p>
+        <p>Minimum bar width in pixels.</p>
       </td>
-    </tr>
-  </table>
-
-  <hr>
-  <h2>Vertical-Bar Options</h2>
-  <table class="table ember-charts-options">
-    <tr>
-      <th style="width: 200px;">Option</th>
-      <th style="width: 150px;">Default</th>
-      <th>Description</th>
     </tr>
     <tr>
       <td>maxBarThickness</td>
@@ -182,10 +172,26 @@
     <tr>
       <td>selectedSeedColor</td>
       <td>rgb(65, 65, 65)</td>
+      <td><p>Base color that the color palette will be generated from.</p>
+    </td>
+    </tr>
+    <tr>
+      <td>sortKey</td>
+      <td>'value'</td>
       <td>
-        <p>Base color that the color palette will be generated from.</p>
+        <p>Name of the field from each data point by which the bars will be sorted.</p>
       </td>
-   </tr>
+    </tr>
+  </table>
+
+  <hr>
+  <h2>(Unstacked) Vertical Bar Chart Options - <em>'ember-charts/components/vertical-bar-chart'</em></h2>
+  <table class="table ember-charts-options">
+    <tr>
+      <th style="width: 200px;">Option</th>
+      <th style="width: 150px;">Default</th>
+      <th>Description</th>
+    </tr>
     <tr>
       <td>data</td>
       <td>undefined</td>
@@ -225,6 +231,20 @@
       </td>
     </tr>
     <tr>
+      <td>maxBarThickness</td>
+      <td>60</td>
+      <td>
+        <p>Maximum bar width in pixels.</p>
+      </td>
+    </tr>
+    <tr>
+      <td>selectedSeedColor</td>
+      <td>rgb(65, 65, 65)</td>
+      <td>
+        <p>Base color that the color palette will be generated from.</p>
+      </td>
+    </tr>
+    <tr>
       <td>maxLabelHeight</td>
       <td>50</td>
       <td>
@@ -237,21 +257,29 @@
       <td>withinGroupPadding</td>
       <td>0</td>
       <td>
-        <p>Space between bars, as fraction of bar size.</p>
+        <p>Space between bars within a single bar group, as a fraction of the bar width.</p>
       </td>
     </tr>
     <tr>
-      <td>stackBars</td>
-      <td>false</td>
+      <td>betweenGroupPadding</td>
+      <td>0</td>
       <td>
-        <p>Stacks bars, otherwise it groups them  horizontally.</p>
+        <p>Space between bar groups, as a fraction of the group width.</p>
+      </td>
+    </tr>
+    <tr>
+      <td>ungroupedSeriesName</td>
+      <td>'Other'</td>
+      <td>
+        <p>If some but not all data points have a <em>group</em> field,
+        then the ones that don't will be displayed in a group with this label.</p>
       </td>
     </tr>
     <tr>
       <td>sortKey</td>
-      <td>value</td>
+      <td>'value'</td>
       <td>
-        <p>The field from each data point object in <em>data</em>
+        <p>The name of the field from each data point
         used to sort the bars when the bars are NOT grouped
         horizontally (that is, when the objects in <em>data</em>
         all have the same value for <em>group</em>).</p>
@@ -271,15 +299,207 @@
         are respected only when the bars are NOT grouped.</p>
       </td>
     </tr>
+    <tr>
+      <td>stackBars</td>
+      <td>false</td>
+      <td>
+        <p>Displays data points with the same <em>group</em> field value as
+        slices in a single stacked bar; otherwise, displays them as separate
+        bars in a group as described above.</p>
+        <p> <span style="color: red">DEPRECATED:</span>
+        This feature does not correctly handle data points with negative <em>values</em>.
+        Consider using the Stacked Vertical Bar Chart instead.
+        </p>
+      </td>
+    </tr>
   </table>
 
   <hr>
-  <h2>Pie Options</h2>
+  <h2>Stacked Vertical Bar Chart Options - <em>'ember-charts/components/stacked-vertical-bar-chart'</em></h2>
   <table class="table ember-charts-options">
     <tr>
       <th style="width: 200px;">Option</th>
       <th style="width: 150px;">Default</th>
       <th>Description</th>
+    </tr>
+    <tr>
+      <td>data</td>
+      <td>undefined</td>
+      <td>
+        <p>Data to be represented by bars.  This is an array of data points;
+        each data point will be displayed as a stacking slice within a single
+        stacked bar.</p>
+        <p>Each data point is an object with at least two fields: <em>value</em>
+        (Number), and <em>sliceLabel</em> (String).  A third field <em>barLabel</em>
+        (String) is optional for each data point.  If at least one data point has
+        a <em>barLabel</em> field, then there will be multiple bars displayed,
+        each labeled with the value of this field.</p>
+        <div class="highlight">
+<pre class="prettyprint lang-js">// percentage absolute return
+[
+  {
+    value: 21.51,
+    sliceLabel: 'Google',
+    barLabel: 'Tech'
+  },
+  {
+    value: 10.10,
+    sliceLabel: 'Microsoft',
+    barLabel: 'Tech'
+  },
+  {
+    value: 15.32,
+    sliceLabel: 'ExxonMobil',
+    barLabel: 'Energy'
+  },
+  {
+    value: -7.11,
+    sliceLabel: 'Schlumberger',
+    barLabel: 'Energy'
+  },
+  ...
+]</pre>
+        </div>
+      </td>
+    </tr>
+    <tr>
+      <td>maxBarThickness</td>
+      <td>60</td>
+      <td>
+        <p>Maximum bar width in pixels.</p>
+      </td>
+    </tr>
+    <tr>
+      <td>strokeWidth</td>
+      <td>1</td>
+      <td>
+        <p>Width of the white border surrounding each slice in pixels.</p>
+      </td>
+    </tr>
+    <tr>
+      <td>selectedSeedColor</td>
+      <td>rgb(65, 65, 65)</td>
+      <td>
+        <p>Base color that the color palette will be generated from.</p>
+      </td>
+    </tr>
+    <tr>
+      <td>maxLabelHeight</td>
+      <td>50</td>
+      <td>
+        <p>Space allocated for rotated labels on the bottom of the chart. If labels
+        are rotated, they will be extended beyond labelHeight up to
+        maxLabelHeight.</p>
+      </td>
+    </tr>
+    <tr>
+      <td>labelHeight</td>
+      <td>15</td>
+      <td>
+        <p>Space allocated for unrotated labels on the bottom of the chart. If
+        labels are rotated, the maxLabelHeight value will be used instead.</p>
+      </td>
+    </tr>
+    <tr>
+      <td>betweenBarPadding</td>
+      <td>0</td>
+      <td>
+        <p>Space between bars, as a fraction of the bar width.</p>
+        <p>COMPATIBILITY NOTE: If and when support for groups of stacked bars is added,
+        this will be replaced by two properties to track the space between bar groups
+        and the space between bars within a group.</p>
+      </td>
+    </tr>
+    <tr>
+      <td>ungroupedSeriesName</td>
+      <td>'Other'</td>
+      <td>
+        <p>If some but not all data points have a <em>barLabel</em> field,
+        then the ones that don't will be displayed in a bar with this label.</p>
+      </td>
+    </tr>
+    <tr>
+      <td>barSortKey</td>
+      <td>'value'</td>
+      <td>
+        <p>Identifier to determine how the bars should be sorted within the chart.
+        This can be set to either 'value', 'none', or 'custom'. This will affect
+        which bar sorting function is used. The 'value' option will sort by net
+        bar value. The 'none' option will leave bars in the order in which their
+        bar labels appear in the original input data. The 'custom' option will sort
+        bars alphabetically by bar label by default, but the `customBarSortingFn`
+        can be overridden to sort bars in a user-defined manner.</p>
+      </td>
+    </tr>
+    <tr>
+      <td>barSortAscending</td>
+      <td>true</td>
+      <td>
+        <p>Whether the sorted bars (as dictated by the `barSortKey`) are sorted
+        in ascending or descending order.</p>
+      </td>
+    </tr>
+    <tr>
+      <td>otherSliceName</td>
+      <td>'Other'</td>
+      <td>
+        <p>If there are more slices than can be displayed (per maxNumberOfSlices),
+        or if some slice labels fail to meet the minSlicePercent threshold, the
+        smallest slices will be aggregated into a slice with this name in each bar.</p>
+      </td>
+    </tr>
+    <tr>
+      <td>sliceSortKey</td>
+      <td>'value'</td>
+      <td>
+        <p>Identifier to determine how the slices should be sorted within each bar.
+        This can be set to either 'value', 'none', or 'custom'. This will affect
+        which slice sorting function is used. The 'value' option will determine a
+        slice sort order by looking at bars in order of highest net-value, sorting
+        the slices within this bar by highest absolute value, and adding any slice
+        to the order that has not yet been seen. The 'none' option will leave
+        slices by the order in which they appear in the original input data. The
+        'custom' option will sort slices alphabetically by slice label by default,
+        but the `customSliceSortingFn` can be overridden to sort slices in a
+        user-defined manner.</p>
+      </td>
+    </tr>
+  </table>
+
+  <hr>
+  <h2>Pie Chart Options - <em>'ember-charts/components/pie-chart'</em></h2>
+  <table class="table ember-charts-options">
+    <tr>
+      <th style="width: 200px;">Option</th>
+      <th style="width: 150px;">Default</th>
+      <th>Description</th>
+    </tr>
+    <tr>
+      <td>data</td>
+      <td>undefined</td>
+      <td>
+        <p>Data to be represented by pie-slices.  This is an array of data points.
+        Each data point is an object with at least two fields: <em>value</em>
+        (Number), and <em>label</em> (String).</p>
+        <div class="highlight">
+<pre class="prettyprint lang-js">// Population
+[
+  {
+  value: 825111,
+  label: 'San Francisco'
+  },
+  {
+  value: 984299,
+  label: 'San Jose'
+  },
+  {
+  value: 400740,
+  label: 'Oakland'
+  },
+  ...
+]</pre>
+        </div>
+      </td>
     </tr>
     <tr>
       <td>maxRadius</td>
@@ -315,54 +535,20 @@
     </tr>
     <tr>
       <td>sortKey</td>
-      <td>value</td>
+      <td>'value'</td>
       <td>
-        <p>Field from each data point by which the pie-slices will be sorted.</p>
-      </td>
-    </tr>
-    <tr>
-      <td>data</td>
-      <td>undefined</td>
-      <td>
-        <p>Data to be represented by pie-slices.  This is an array of data points.
-        Each data point is an object with at least two fields: <em>value</em>
-        (Number), and <em>label</em> (String).</p>
-        <div class="highlight">
-<pre class="prettyprint lang-js">// Population
-[
-  {
-  value: 825111,
-  label: 'San Francisco'
-  },
-  {
-  value: 984299,
-  label: 'San Jose'
-  },
-  {
-  value: 400740,
-  label: 'Oakland'
-  },
-  ...
-]</pre>
-        </div>
+        <p>Name of the field from each data point by which the pie-slices will be sorted.</p>
       </td>
     </tr>
   </table>
 
   <hr>
-  <h2>Scatter Options</h2>
+  <h2>Scatter Chart Options - <em>'ember-charts/components/scatter-chart'</em></h2>
   <table class="table ember-charts-options">
     <tr>
       <th style="width: 200px;">Option</th>
       <th style="width: 150px;">Default</th>
       <th>Description</th>
-    </tr>
-    <tr>
-      <td>dotRadius</td>
-      <td>7</td>
-      <td>
-        <p>Size of each icon on the scatter plot.</p>
-      </td>
     </tr>
     <tr>
       <td>data</td>
@@ -408,6 +594,13 @@
       </td>
     </tr>
     <tr>
+      <td>dotRadius</td>
+      <td>7</td>
+      <td>
+        <p>Size of each icon on the scatter plot.</p>
+      </td>
+    </tr>
+    <tr>
       <td>selectedSeedColor</td>
       <td>rgb(65, 65, 65)</td>
       <td>
@@ -417,7 +610,7 @@
   </table>
 
   <hr>
-  <h2>Bubble Options</h2>
+  <h2>Bubble Chart Options - <em>'ember-charts/components/bubble-chart'</em></h2>
   <table class="table ember-charts-options">
     <tr>
       <th style="width: 200px;">Option</th>
