@@ -46,6 +46,10 @@ export default Ember.Mixin.create({
   // years, months, weeks, days
   // This is used only when a dynamic x axis is not used
   selectedInterval: 'M',
+  // There are also cases where the selected interval is different from a
+  // computed interval for the Aggregation of Bars.  If there is a delta then
+  // this will be set and used for the bar offset.
+  computedBarInterval: null,
 
   // [Dynamic X Axis] dynamically set the labelling of the x axis
   dynamicXAxis: false,
