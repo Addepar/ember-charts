@@ -3731,7 +3731,8 @@ define('ember-charts/components/time-series-chart', ['exports', 'module', 'ember
     // Transforms the center of the bar graph for the drawing based on the
     // specified barLeftOffset
     _transformCenter: function _transformCenter(time) {
-      var delta = this._getTimeDeltaFromSelectedInterval();
+      var interval = this.get('computedBarInterval') || this.get('selectedInterval');
+      var delta = this._getTimeDeltaFromSelectedInterval(interval);
       var offset = this.get('barLeftOffset');
       if (offset !== 0) {
         time = this._padTimeWithIntervalMultiplier(time, delta, offset);
@@ -3742,8 +3743,8 @@ define('ember-charts/components/time-series-chart', ['exports', 'module', 'ember
     // Since selected interval and time delta don't use the same naming convention
     // this converts the selected interval to the time delta convention for the
     // padding functions.
-    _getTimeDeltaFromSelectedInterval: function _getTimeDeltaFromSelectedInterval() {
-      switch (this.get('selectedInterval')) {
+    _getTimeDeltaFromSelectedInterval: function _getTimeDeltaFromSelectedInterval(interval) {
+      switch (interval) {
         case 'years':
         case 'Y':
           return 'year';
@@ -4118,18 +4119,12 @@ define('ember-charts/components/time-series-chart', ['exports', 'module', 'ember
         d3.select(element).classed('hovered', true);
 
         var time = data.labelTime != null ? data.labelTime : data.time;
-        var content = $('<span>');
-        content.append($("<span class=\"tip-label\">").text(_this4.get('formatTime')(time)));
-        _this4.showTooltip(content.html(), d3.event);
-
+        var content = "<span class=\"tip-label\">" + _this4.get('formatTime')(time) + "</span>";
         var formatLabelFunction = _this4.get('formatLabelFunction');
 
         var addValueLine = function addValueLine(d) {
-          var name = $('<span class="name" />').text(d.group + ': ');
-          var value = $('<span class="value" />').text(formatLabelFunction(d.value));
-          content.append(name);
-          content.append(value);
-          content.append('<br />');
+          content += "<span class=\"name\">" + d.group + ": </span>";
+          return content += "<span class=\"value\">" + formatLabelFunction(d.value) + "</span><br/>";
         };
 
         if (_Ember['default'].isArray(data.values)) {
@@ -4138,7 +4133,7 @@ define('ember-charts/components/time-series-chart', ['exports', 'module', 'ember
           addValueLine(data);
         }
 
-        return _this4.showTooltip(content.html(), d3.event);
+        return _this4.showTooltip(content, d3.event);
       };
     }),
 
@@ -6956,6 +6951,10 @@ define('ember-charts/mixins/time-series-labeler', ['exports', 'module', 'ember']
     // years, months, weeks, days
     // This is used only when a dynamic x axis is not used
     selectedInterval: 'M',
+    // There are also cases where the selected interval is different from a
+    // computed interval for the Aggregation of Bars.  If there is a delta then
+    // this will be set and used for the bar offset.
+    computedBarInterval: null,
 
     // [Dynamic X Axis] dynamically set the labelling of the x axis
     dynamicXAxis: false,
@@ -7318,64 +7317,33 @@ define('ember-charts/mixins/time-series-labeler', ['exports', 'module', 'ember']
     })
   });
 });
-define("ember-charts/templates/components/chart-component", ["exports", "module"], function (exports, module) {
-  "use strict";
+define('ember-charts/templates/components/chart-component', ['exports', 'module'], function (exports, module) {
+  'use strict';
 
-  module.exports = Ember.HTMLBars.template((function () {
-    return {
-      isHTMLBars: true,
-      revision: "Ember@1.12.1",
-      blockParams: 0,
-      cachedFragment: null,
-      hasRendered: false,
-      build: function build(dom) {
-        var el0 = dom.createDocumentFragment();
-        dom.setNamespace("http://www.w3.org/2000/svg");
-        var el1 = dom.createElement("svg");
-        var el2 = dom.createTextNode("\n  ");
-        dom.appendChild(el1, el2);
-        var el2 = dom.createElement("g");
-        dom.setAttribute(el2, "class", "chart-viewport");
-        dom.appendChild(el1, el2);
-        var el2 = dom.createTextNode("\n");
-        dom.appendChild(el1, el2);
-        dom.appendChild(el0, el1);
-        return el0;
-      },
-      render: function render(context, env, contextualElement) {
-        var dom = env.dom;
-        var hooks = env.hooks,
-            get = hooks.get,
-            attribute = hooks.attribute;
-        dom.detectNamespace(contextualElement);
-        var fragment;
-        if (env.useFragmentCache && dom.canClone) {
-          if (this.cachedFragment === null) {
-            fragment = this.build(dom);
-            if (this.hasRendered) {
-              this.cachedFragment = fragment;
-            } else {
-              this.hasRendered = true;
-            }
-          }
-          if (this.cachedFragment) {
-            fragment = dom.cloneNode(this.cachedFragment, true);
-          }
-        } else {
-          fragment = this.build(dom);
-        }
-        var element0 = dom.childAt(fragment, [0]);
-        var element1 = dom.childAt(element0, [1]);
-        var attrMorph0 = dom.createAttrMorph(element0, 'width');
-        var attrMorph1 = dom.createAttrMorph(element0, 'height');
-        var attrMorph2 = dom.createAttrMorph(element1, 'transform');
-        attribute(env, attrMorph0, element0, "width", get(env, context, "outerWidth"));
-        attribute(env, attrMorph1, element0, "height", get(env, context, "outerHeight"));
-        attribute(env, attrMorph2, element1, "transform", get(env, context, "transformViewport"));
-        return fragment;
-      }
-    };
-  })());
+  module.exports = Ember.HTMLBars.template(function anonymous(Handlebars, depth0, helpers, partials, data) {
+    this.compilerInfo = [4, '>= 1.0.0'];
+    helpers = this.merge(helpers, Ember.Handlebars.helpers);data = data || {};
+    var buffer = '',
+        stack1;
+
+    data.buffer.push("<svg width=");
+    stack1 = helpers._triageMustache.call(depth0, "outerWidth", { hash: {}, hashTypes: {}, hashContexts: {}, contexts: [depth0], types: ["ID"], data: data });
+    if (stack1 || stack1 === 0) {
+      data.buffer.push(stack1);
+    }
+    data.buffer.push(" height=");
+    stack1 = helpers._triageMustache.call(depth0, "outerHeight", { hash: {}, hashTypes: {}, hashContexts: {}, contexts: [depth0], types: ["ID"], data: data });
+    if (stack1 || stack1 === 0) {
+      data.buffer.push(stack1);
+    }
+    data.buffer.push(">\n  <g class=\"chart-viewport\" transform=");
+    stack1 = helpers._triageMustache.call(depth0, "transformViewport", { hash: {}, hashTypes: {}, hashContexts: {}, contexts: [depth0], types: ["ID"], data: data });
+    if (stack1 || stack1 === 0) {
+      data.buffer.push(stack1);
+    }
+    data.buffer.push("></g>\n</svg>");
+    return buffer;
+  });
 });
 define("ember-charts/utils/group-by", ["exports"], function (exports) {
 	"use strict";

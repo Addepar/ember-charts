@@ -152,7 +152,8 @@ const TimeSeriesChartComponent = ChartComponent.extend(LegendMixin,
   // Transforms the center of the bar graph for the drawing based on the
   // specified barLeftOffset
   _transformCenter: function(time) {
-    var delta = this._getTimeDeltaFromSelectedInterval();
+    var interval = this.get('computedBarInterval') || this.get('selectedInterval');
+    var delta = this._getTimeDeltaFromSelectedInterval(interval);
     var offset = this.get('barLeftOffset');
     if (offset !== 0) {
       time = this._padTimeWithIntervalMultiplier(time, delta, offset);
@@ -163,8 +164,8 @@ const TimeSeriesChartComponent = ChartComponent.extend(LegendMixin,
   // Since selected interval and time delta don't use the same naming convention
   // this converts the selected interval to the time delta convention for the
   // padding functions.
-  _getTimeDeltaFromSelectedInterval: function() {
-    switch (this.get('selectedInterval')) {
+  _getTimeDeltaFromSelectedInterval: function(interval) {
+    switch (interval) {
       case 'years':
       case 'Y':
         return 'year';
@@ -566,18 +567,12 @@ const TimeSeriesChartComponent = ChartComponent.extend(LegendMixin,
       d3.select(element).classed('hovered', true);
 
       var time = data.labelTime != null ? data.labelTime : data.time;
-      var content = $('<span>');
-      content.append($("<span class=\"tip-label\">").text(this.get('formatTime')(time)));
-      this.showTooltip(content.html(), d3.event);
-
+      var content = "<span class=\"tip-label\">" + (this.get('formatTime')(time)) + "</span>";
       var formatLabelFunction = this.get('formatLabelFunction');
 
       var addValueLine = function(d) {
-        var name = $('<span class="name" />').text(d.group + ': ');
-        var value = $('<span class="value" />').text(formatLabelFunction(d.value));
-        content.append(name);
-        content.append(value);
-        content.append('<br />');
+        content += "<span class=\"name\">" + d.group + ": </span>";
+        return content += "<span class=\"value\">" + (formatLabelFunction(d.value)) + "</span><br/>";
       };
 
       if (Ember.isArray(data.values)) {
@@ -586,7 +581,7 @@ const TimeSeriesChartComponent = ChartComponent.extend(LegendMixin,
         addValueLine(data);
       }
 
-      return this.showTooltip(content.html(), d3.event);
+      return this.showTooltip(content, d3.event);
     };
   }),
 
