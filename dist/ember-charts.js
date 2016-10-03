@@ -7317,7 +7317,6 @@ define('ember-charts/mixins/time-series-labeler', ['exports', 'module', 'ember']
     })
   });
 });
-<<<<<<< HEAD
 define('ember-charts/templates/components/chart-component', ['exports', 'module', 'ember'], function (exports, module, _ember) {
   'use strict';
 
@@ -7325,8 +7324,7 @@ define('ember-charts/templates/components/chart-component', ['exports', 'module'
 
   var _Ember = _interopRequireDefault(_ember);
 
-  module.exports = _Ember['default'].Handlebars.template(function anonymous(Handlebars, depth0, helpers, partials, data
-  /**/) {
+  module.exports = _Ember['default'].Handlebars.template(function anonymous(Handlebars, depth0, helpers, partials, data) {
     this.compilerInfo = [4, '>= 1.0.0'];
     helpers = this.merge(helpers, _Ember['default'].Handlebars.helpers);data = data || {};
     var buffer = '',
@@ -7345,33 +7343,6 @@ define('ember-charts/templates/components/chart-component', ['exports', 'module'
         'transform': "transformViewport"
       }, hashTypes: { 'transform': "ID" }, hashContexts: { 'transform': depth0 }, contexts: [], types: [], data: data })));
     data.buffer.push("></g>\n</svg>\n");
-=======
-define('ember-charts/templates/components/chart-component', ['exports', 'module'], function (exports, module) {
-  'use strict';
-
-  module.exports = Ember.HTMLBars.template(function anonymous(Handlebars, depth0, helpers, partials, data) {
-    this.compilerInfo = [4, '>= 1.0.0'];
-    helpers = this.merge(helpers, Ember.Handlebars.helpers);data = data || {};
-    var buffer = '',
-        stack1;
-
-    data.buffer.push("<svg width=");
-    stack1 = helpers._triageMustache.call(depth0, "outerWidth", { hash: {}, hashTypes: {}, hashContexts: {}, contexts: [depth0], types: ["ID"], data: data });
-    if (stack1 || stack1 === 0) {
-      data.buffer.push(stack1);
-    }
-    data.buffer.push(" height=");
-    stack1 = helpers._triageMustache.call(depth0, "outerHeight", { hash: {}, hashTypes: {}, hashContexts: {}, contexts: [depth0], types: ["ID"], data: data });
-    if (stack1 || stack1 === 0) {
-      data.buffer.push(stack1);
-    }
-    data.buffer.push(">\n  <g class=\"chart-viewport\" transform=");
-    stack1 = helpers._triageMustache.call(depth0, "transformViewport", { hash: {}, hashTypes: {}, hashContexts: {}, contexts: [depth0], types: ["ID"], data: data });
-    if (stack1 || stack1 === 0) {
-      data.buffer.push(stack1);
-    }
-    data.buffer.push("></g>\n</svg>");
->>>>>>> 25d9d2e... The bar interval (an its offset) isn't always equal to the selectedInterval
     return buffer;
   });
 });
