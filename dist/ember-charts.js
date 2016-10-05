@@ -4119,12 +4119,18 @@ define('ember-charts/components/time-series-chart', ['exports', 'module', 'ember
         d3.select(element).classed('hovered', true);
 
         var time = data.labelTime != null ? data.labelTime : data.time;
-        var content = "<span class=\"tip-label\">" + _this4.get('formatTime')(time) + "</span>";
+        var content = $('<span>');
+        content.append($("<span class=\"tip-label\">").text(_this4.get('formatTime')(time)));
+        _this4.showTooltip(content.html(), d3.event);
+
         var formatLabelFunction = _this4.get('formatLabelFunction');
 
         var addValueLine = function addValueLine(d) {
-          content += "<span class=\"name\">" + d.group + ": </span>";
-          return content += "<span class=\"value\">" + formatLabelFunction(d.value) + "</span><br/>";
+          var name = $('<span class="name" />').text(d.group + ': ');
+          var value = $('<span class="value" />').text(formatLabelFunction(d.value));
+          content.append(name);
+          content.append(value);
+          content.append('<br />');
         };
 
         if (_Ember['default'].isArray(data.values)) {
@@ -4133,7 +4139,7 @@ define('ember-charts/components/time-series-chart', ['exports', 'module', 'ember
           addValueLine(data);
         }
 
-        return _this4.showTooltip(content, d3.event);
+        return _this4.showTooltip(content.html(), d3.event);
       };
     }),
 

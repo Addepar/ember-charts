@@ -567,12 +567,18 @@ const TimeSeriesChartComponent = ChartComponent.extend(LegendMixin,
       d3.select(element).classed('hovered', true);
 
       var time = data.labelTime != null ? data.labelTime : data.time;
-      var content = "<span class=\"tip-label\">" + (this.get('formatTime')(time)) + "</span>";
+      var content = $('<span>');
+      content.append($("<span class=\"tip-label\">").text(this.get('formatTime')(time)));
+      this.showTooltip(content.html(), d3.event);
+
       var formatLabelFunction = this.get('formatLabelFunction');
 
       var addValueLine = function(d) {
-        content += "<span class=\"name\">" + d.group + ": </span>";
-        return content += "<span class=\"value\">" + (formatLabelFunction(d.value)) + "</span><br/>";
+        var name = $('<span class="name" />').text(d.group + ': ');
+        var value = $('<span class="value" />').text(formatLabelFunction(d.value));
+        content.append(name);
+        content.append(value);
+        content.append('<br />');
       };
 
       if (Ember.isArray(data.values)) {
@@ -581,7 +587,7 @@ const TimeSeriesChartComponent = ChartComponent.extend(LegendMixin,
         addValueLine(data);
       }
 
-      return this.showTooltip(content, d3.event);
+      return this.showTooltip(content.html(), d3.event);
     };
   }),
 
