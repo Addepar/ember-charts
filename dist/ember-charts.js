@@ -3731,8 +3731,15 @@ define('ember-charts/components/time-series-chart', ['exports', 'module', 'ember
     // Transforms the center of the bar graph for the drawing based on the
     // specified barLeftOffset
     _transformCenter: function _transformCenter(time) {
+      // Transform Center is designed to offset Bar graphs against the labels on
+      // the x axis.  That offset is based on the time unit selected.  This means
+      // that a graph might have a selectedInterval of Months, but that the bars
+      // are based on Weeks.  So if you were to shift a bar 1/2 of an interval it
+      // would move 15 days instead of 15 weeks.  The fix is to check to see if
+      // the bars are of a different interval first, before defaulting to the
+      // selectedInterval
       var interval = this.get('computedBarInterval') || this.get('selectedInterval');
-      var delta = this._getTimeDeltaFromSelectedInterval(interval);
+      var delta = this._getTimeDeltaFromInterval(interval);
       var offset = this.get('barLeftOffset');
       if (offset !== 0) {
         time = this._padTimeWithIntervalMultiplier(time, delta, offset);
@@ -3743,7 +3750,7 @@ define('ember-charts/components/time-series-chart', ['exports', 'module', 'ember
     // Since selected interval and time delta don't use the same naming convention
     // this converts the selected interval to the time delta convention for the
     // padding functions.
-    _getTimeDeltaFromSelectedInterval: function _getTimeDeltaFromSelectedInterval(interval) {
+    _getTimeDeltaFromInterval: function _getTimeDeltaFromInterval(interval) {
       switch (interval) {
         case 'years':
         case 'Y':
