@@ -3731,7 +3731,15 @@ define('ember-charts/components/time-series-chart', ['exports', 'module', 'ember
     // Transforms the center of the bar graph for the drawing based on the
     // specified barLeftOffset
     _transformCenter: function _transformCenter(time) {
-      var delta = this._getTimeDeltaFromSelectedInterval();
+      // Transform Center is designed to offset Bar graphs against the labels on
+      // the x axis.  That offset is based on the time unit selected.  This means
+      // that a graph might have a selectedInterval of Months, but that the bars
+      // are based on Weeks.  So if you were to shift a bar 1/2 of an interval it
+      // would move 15 days instead of 15 weeks.  The fix is to check to see if
+      // the bars are of a different interval first, before defaulting to the
+      // selectedInterval
+      var interval = this.get('computedBarInterval') || this.get('selectedInterval');
+      var delta = this._getTimeDeltaFromInterval(interval);
       var offset = this.get('barLeftOffset');
       if (offset !== 0) {
         time = this._padTimeWithIntervalMultiplier(time, delta, offset);
@@ -3742,8 +3750,8 @@ define('ember-charts/components/time-series-chart', ['exports', 'module', 'ember
     // Since selected interval and time delta don't use the same naming convention
     // this converts the selected interval to the time delta convention for the
     // padding functions.
-    _getTimeDeltaFromSelectedInterval: function _getTimeDeltaFromSelectedInterval() {
-      switch (this.get('selectedInterval')) {
+    _getTimeDeltaFromInterval: function _getTimeDeltaFromInterval(interval) {
+      switch (interval) {
         case 'years':
         case 'Y':
           return 'year';
@@ -6956,6 +6964,10 @@ define('ember-charts/mixins/time-series-labeler', ['exports', 'module', 'ember']
     // years, months, weeks, days
     // This is used only when a dynamic x axis is not used
     selectedInterval: 'M',
+    // There are also cases where the selected interval is different from a
+    // computed interval for the Aggregation of Bars.  If there is a delta then
+    // this will be set and used for the bar offset.
+    computedBarInterval: null,
 
     // [Dynamic X Axis] dynamically set the labelling of the x axis
     dynamicXAxis: false,
@@ -7318,6 +7330,7 @@ define('ember-charts/mixins/time-series-labeler', ['exports', 'module', 'ember']
     })
   });
 });
+<<<<<<< HEAD
 define('ember-charts/templates/components/chart-component', ['exports', 'module', 'ember'], function (exports, module, _ember) {
   'use strict';
 
@@ -7345,6 +7358,33 @@ define('ember-charts/templates/components/chart-component', ['exports', 'module'
         'transform': "transformViewport"
       }, hashTypes: { 'transform': "ID" }, hashContexts: { 'transform': depth0 }, contexts: [], types: [], data: data })));
     data.buffer.push("></g>\n</svg>\n");
+=======
+define('ember-charts/templates/components/chart-component', ['exports', 'module'], function (exports, module) {
+  'use strict';
+
+  module.exports = Ember.HTMLBars.template(function anonymous(Handlebars, depth0, helpers, partials, data) {
+    this.compilerInfo = [4, '>= 1.0.0'];
+    helpers = this.merge(helpers, Ember.Handlebars.helpers);data = data || {};
+    var buffer = '',
+        stack1;
+
+    data.buffer.push("<svg width=");
+    stack1 = helpers._triageMustache.call(depth0, "outerWidth", { hash: {}, hashTypes: {}, hashContexts: {}, contexts: [depth0], types: ["ID"], data: data });
+    if (stack1 || stack1 === 0) {
+      data.buffer.push(stack1);
+    }
+    data.buffer.push(" height=");
+    stack1 = helpers._triageMustache.call(depth0, "outerHeight", { hash: {}, hashTypes: {}, hashContexts: {}, contexts: [depth0], types: ["ID"], data: data });
+    if (stack1 || stack1 === 0) {
+      data.buffer.push(stack1);
+    }
+    data.buffer.push(">\n  <g class=\"chart-viewport\" transform=");
+    stack1 = helpers._triageMustache.call(depth0, "transformViewport", { hash: {}, hashTypes: {}, hashContexts: {}, contexts: [depth0], types: ["ID"], data: data });
+    if (stack1 || stack1 === 0) {
+      data.buffer.push(stack1);
+    }
+    data.buffer.push("></g>\n</svg>");
+>>>>>>> 82b71f4... The bar interval (an its offset) isn't always equal to the selectedInterval (#185)
     return buffer;
   });
 });
