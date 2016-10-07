@@ -2114,7 +2114,8 @@ define('ember-charts/components/scatter-chart', ['exports', 'module', 'ember', '
     graphicLeft: _Ember['default'].computed.alias('labelWidthOffset'),
 
     graphicHeight: _Ember['default'].computed('height', 'legendHeight', 'legendChartPadding', function () {
-      return this.get('height') - this.get('legendHeight') - this.get('legendChartPadding');
+      var legendSize = this.get('legendHeight') + this.get('legendChartPadding') + (this.get('marginBottom') || 0);
+      return this.get('height') - legendSize;
     }),
 
     graphicWidth: _Ember['default'].computed('width', 'labelWidthOffset', function () {
