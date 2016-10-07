@@ -112,7 +112,8 @@ const ScatterChartComponent = ChartComponent.extend(LegendMixin, FloatingTooltip
   graphicLeft: Ember.computed.alias('labelWidthOffset'),
 
   graphicHeight: Ember.computed('height', 'legendHeight', 'legendChartPadding', function() {
-    return this.get('height') - this.get('legendHeight') - this.get('legendChartPadding');
+    var legendSize = this.get('legendHeight') + this.get('legendChartPadding') + (this.get('marginBottom') || 0);
+    return this.get('height') - legendSize;
   }),
 
   graphicWidth: Ember.computed('width', 'labelWidthOffset', function() {
