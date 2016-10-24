@@ -625,13 +625,14 @@ const HorizontalBarChartComponent = ChartComponent.extend(FloatingTooltipMixin,
     this.set('labelWidth', labelWidths.left);
 
     // Add a few extra pixels of padding to ensure that labels don't clip off
-    // the edge of the chart
+    // the edge of the chart.  If the chart can be scrolled around we need a
+    // little extra padding to deal with the scrollbars.
     const labelPadding = this.get('labelPadding');
     const axisTitleOffset = this.get('yAxisTitleHeightOffset');
 
     this.setProperties({
       horizontalMarginLeft: labelWidths.left + labelPadding + axisTitleOffset,
-      horizontalMarginRight: labelWidths.right + labelPadding
+      horizontalMarginRight: labelWidths.right + labelPadding + (this.get('isInteractive') ? 15 : 0)
     });
 
     const maxLabelWidth = this.get('maxLabelWidth');
