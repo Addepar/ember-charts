@@ -54,18 +54,18 @@
 
   Plus extra bug fixes and smaller features:
 
-    * Incorrect wording in the documentation was fixed (#153, #170)
-    * Fixed color on Scatter chart legend (#152)
-    * Allow configuring whether to add margin padding to Scatter charts with the
-      new `hasXDomainPadding` and `hasYDomainPadding` boolean properties (#150)
-    * Pie Chart Decimal Point Formatting (#158)
-    * Pie Chart Label Intersect Improvement (#159, #162)
-    * Mismatched Node type would throw exceptions (#168)
-    * Vertical Bar charts no longer incorrectly color their bars when their
-      input data do not have the same number of bar data points for all bar groups;
-      fixes bug #172 (#173)
-    * The wrong bars were being highlighted on legend mouse hover in Vertical Bar charts;
-      fixes bug #172 (#173)
+  * Incorrect wording in the documentation was fixed (#153, #170)
+  * Fixed color on Scatter chart legend (#152)
+  * Allow configuring whether to add margin padding to Scatter charts with the
+    new `hasXDomainPadding` and `hasYDomainPadding` boolean properties (#150)
+  * Pie Chart Decimal Point Formatting (#158)
+  * Pie Chart Label Intersect Improvement (#159, #162)
+  * Mismatched Node type would throw exceptions (#168)
+  * Vertical Bar charts no longer incorrectly color their bars when their
+    input data do not have the same number of bar data points for all bar groups;
+    fixes bug #172 (#173)
+  * The wrong bars were being highlighted on legend mouse hover in Vertical Bar charts;
+    fixes bug #172 (#173)
 
 ### Ember Charts 1.0.0 _(November 4, 2015)_
   The first version of Ember Charts in the npm repository!
