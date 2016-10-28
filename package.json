@@ -19,7 +19,7 @@
     "node": ">= 0.10.0"
   },
   "author": "",
-  "license": "MIT",
+  "license": "BSD-3-Clause",
   "devDependencies": {
     "broccoli": "^0.13.0",
     "broccoli-asset-rev": "^2.0.2",
