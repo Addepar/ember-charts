@@ -1,5 +1,5 @@
 /*!
-* ember-charts v1.1.3
+* ember-charts v1.2.0
 * Copyright 2012-2016 Addepar Inc.
 * See LICENSE.md
 */
@@ -7339,7 +7339,8 @@ define('ember-charts/templates/components/chart-component', ['exports', 'module'
 
   var _Ember = _interopRequireDefault(_ember);
 
-  module.exports = _Ember['default'].Handlebars.template(function anonymous(Handlebars, depth0, helpers, partials, data) {
+  module.exports = _Ember['default'].Handlebars.template(function anonymous(Handlebars, depth0, helpers, partials, data
+  /**/) {
     this.compilerInfo = [4, '>= 1.0.0'];
     helpers = this.merge(helpers, _Ember['default'].Handlebars.helpers);data = data || {};
     var buffer = '',
