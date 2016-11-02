@@ -17,7 +17,7 @@ http://opensource.addepar.com/ember-charts/
 http://emberjs.jsbin.com/rekawobugu/1/edit
 
 Unfortunately, this version of Ember Charts is out of date,
-but the current maintainers of Ember Charts at Addepar have not been
+and the current maintainers of Ember Charts at Addepar have not been
 able to update it recently.
 
 #### Installation with Ember CLI (Recommended)
@@ -66,8 +66,8 @@ Now you can:
 - Run tests: http://localhost:4200/tests
 
 As noted in the full [contribution guidelines](CONTRIBUTING.md),
-before submitting a pull request, please compile the globals-based version of
-Ember Charts (the `dist` folder):
+please compile the globals-based version of Ember Charts (the `dist` folder)
+before submitting a pull request:
 
 ```bash
 npm install -g grunt-cli      # install grunt
