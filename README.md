@@ -16,7 +16,15 @@ http://opensource.addepar.com/ember-charts/
 
 http://emberjs.jsbin.com/rekawobugu/1/edit
 
+Unfortunately, this version of Ember Charts is out of date,
+and the current maintainers of Ember Charts at Addepar have not been
+able to update it recently.
+
 #### Installation with Ember CLI (Recommended)
+
+Ember Charts is an Ember CLI addon published to the public NPM
+repository at https://www.npmjs.com/package/ember-charts ,
+so it can be installed like so:
 
 ```bash
 # ember-cli >= 0.2.0
@@ -26,7 +34,7 @@ ember install:addon ember-charts
 ember install ember-charts
 ```
 
-Once it's installed, you can customize the look of ember-charts with CSS.
+Once it's installed, you can customize the look of Ember Charts with CSS.
 
 #### Installation with Bower (Globals-Based Version)
 
@@ -45,7 +53,7 @@ instructions under "Running Old Versions" to display the old guides.
 
 #### Developing or Testing
 
-After cloning this repo, install dependencies and run the demo app:
+After cloning this repo, install dependencies and run the demo application:
 
 ```bash
 npm install
@@ -57,8 +65,9 @@ Now you can:
 - View the demos and read the documentation: http://localhost:4200
 - Run tests: http://localhost:4200/tests
 
-Before submitting a pull request, please compile the globals-based version of
-Ember Charts (the `dist` folder):
+As noted in the full [contribution guidelines](CONTRIBUTING.md),
+please compile the globals-based version of Ember Charts (the `dist` folder)
+before submitting a pull request:
 
 ```bash
 npm install -g grunt-cli      # install grunt
@@ -104,26 +113,36 @@ In a nutshell, this means:
 * Making backwards-compatible bug fixes increases the patch version
 
 
-## Maintainers
+## Releasing a New Version (For Maintainers)
 Update version numbers and release using https://github.com/webpro/grunt-release-it:
 
-```
-$ vim CHANGELOG.md
-$ grunt release-it:<options>
-```
-
-By default, this will release a new patch version. Other suggested commands:
-
-```
-$ grunt release-it:minor
-$ grunt release-it:major
-$ grunt release-it:X.Y.Z
+```bash
+vim CHANGELOG.md
+grunt release-it:<options>
+npm publish # access needed to publish new Addepar-owned npm packages
 ```
 
-Ember Charts uses the "distribution repository" feature of `release-it` to push to
-the `gh-pages` branch and update documentation. When prompted, do NOT update the
-tag for the distribution repository. We'll streamline the release process a bit
-more soon.
+By default, `grunt release-it` without options will increment the
+<patch> version number (X.Y.Z --> X.Y.(Z+1)) in the `VERSION` file,
+update the globals-based version of Ember Charts, and then commit
+the resulting changes to the ember-charts git repository.
+
+If you want to control the version number, use these options:
+
+```bash
+grunt release-it:minor
+grunt release-it:major
+grunt release-it:X.Y.Z
+```
+
+Ember Charts uses the "distribution repository" feature of `grunt release-it` to push to
+the `gh-pages` branch of the ember-charts git repo, from which the demo and documentation
+website is automatically published.
+
+When prompted by `grunt release-it`, do NOT update the tag for the
+distribution repository OR publish to npm (the latter will try to publish the `gh-pages`
+branch, not the `master` branch; npm publishing is done in the separate command
+above). We'll streamline the release process a bit more soon.
 
 
 ## Copyright and License
@@ -131,4 +150,4 @@ Copyright © 2013 Addepar, Inc. All Rights Reserved
 
 Licensed under the BSD License (the "License"); you may not use this work
 except in compliance with the License. You may obtain a copy of the License in
-the LICENSE.md file.
+the [LICENSE.md](LICENSE.md) file.

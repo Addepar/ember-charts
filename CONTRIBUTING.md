@@ -48,16 +48,17 @@ Guidelines for bug reports:
 
 ## Feature requests
 
-Feature requests are welcome. But take a moment to find out whether your idea
-fits with the scope and aims of the project. It's up to *you* to make a strong
-case to convince the project's developers of the merits of this feature. Please
-provide as much detail and context as possible.
+Feature requests are welcome, but take a moment to find out whether your idea
+fits with the scope and aims of Ember Charts. It's up to *you* to make a strong
+case to convince the Ember Charts developer community of the merits of this
+feature. Please provide as much detail and context as possible.
+
 
 ## Writing Code in Ember Charts
 
 Ember Charts uses newer/non-portable JavaScript features, such as
 ECMAScript 6 modules. It is compiled into older/portable JavaScript
-using [Grunt](http://gruntjs.com/). Contributing to ember-charts
+using [Grunt](http://gruntjs.com/). Contributing to Ember Charts
 requires that you have grunt and NPM (for pulling in dependencies) locally
 installed.
 
@@ -75,23 +76,21 @@ The folder structure of Ember Charts is as follows:
   of the code in `ember-charts/addon`. It should not be directly modified
   but instead generated using `grunt dist`.
 
+
 ## Pull requests
 
-Good pull requests—patches, improvements, new features—are a fantastic
+Good pull requests - patches, improvements, new features - are a fantastic
 help. They should remain focused in scope and avoid containing unrelated
 commits.
 
 **Please ask first** before embarking on any significant pull request (e.g.
 implementing features, refactoring code, porting to a different language),
-otherwise you risk spending a lot of time working on something that the
-project's developers might not want to merge into the project.
+otherwise you risk spending a lot of time working on something that
+other Ember Charts developers might not want to merge into the project.
 
-For now, pull requests aren't required to have tests. Once we've established
-a testing infrastructure, pull requests that introduce new functionality should
-come with tests for that functionality.
 
 Adhering to the following process is the best way to get your work
-included in the project:
+included in Ember Charts:
 
 1. [Fork](http://help.github.com/fork-a-repo/) the project, clone your fork,
    and configure the remotes:
@@ -119,7 +118,8 @@ included in the project:
    git checkout -b <topic-branch-name>
    ```
 
-4. Before committing changes, make sure to compile modified CoffeeScript files.
+4. Before committing changes, make sure to regenerate the globals-based build,
+   which is in the `ember-charts/dist` folder:
 
    ```bash
    grunt dist
@@ -146,13 +146,23 @@ included in the project:
 8. [Open a Pull Request](https://help.github.com/articles/using-pull-requests/)
     with a clear title and description against the `master` branch.
 
-**IMPORTANT**: By submitting a patch, you agree to allow the project owners to
-license your work under the terms of the [BSD License](LICENSE).
+**IMPORTANT**: By submitting a patch, you agree to allow Addepar to
+license your work under the terms of the [BSD License](LICENSE.md).
 
 
 ## Running tests
 
-Coming soon!
+Like many other Ember-CLI packages, Ember Charts runs its tests with:
+
+```bash
+ember test
+```
+
+When you push any changes to any branch of the Addepar/ember-charts
+git repository on GitHub, `ember test` will be automatically run
+by [Travis-CI](https://travis-ci.org/Addepar/ember-charts).
+Unfortunately, as far as we know, this service is not
+available for your GitHub fork repo.
 
 
 ## Syntax:
@@ -165,8 +175,8 @@ Coming soon!
 
 ## License
 
-By contributing your code, you agree to license your contribution under the
-[BSD license](LICENSE).
+As noted above, by contributing your code, you agree to license
+your contribution under the [BSD License](LICENSE.md).
 
 
 #### NOTE: Largely copied from https://github.com/twbs/bootstrap/blob/master/CONTRIBUTING.md
