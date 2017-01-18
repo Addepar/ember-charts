@@ -564,7 +564,6 @@ const TimeSeriesChartComponent = ChartComponent.extend(LegendMixin,
   // Tooltip Configuration
   // ----------------------------------------------------------------------------
 
-
   showDetails: Ember.computed('isInteractive', function() {
     if (!this.get('isInteractive')) {
       return Ember.K;
@@ -574,10 +573,10 @@ const TimeSeriesChartComponent = ChartComponent.extend(LegendMixin,
       d3.select(element).classed('hovered', true);
 
       var time = data.labelTime != null ? data.labelTime : data.time;
+      time = this.adjustTimeForShowDetails(time);
       var content = $('<span>');
       content.append($("<span class=\"tip-label\">").text(this.get('formatTime')(time)));
       this.showTooltip(content.html(), d3.event);
-
       var formatLabelFunction = this.get('formatLabelFunction');
 
       var addValueLine = function(d) {
@@ -608,6 +607,17 @@ const TimeSeriesChartComponent = ChartComponent.extend(LegendMixin,
       return this.hideTooltip();
     };
   }),
+
+  /**
+   * This is a convience method that allows users to overide the time returned
+   * for the showDetails labels.  Some users might want to nudge or round the
+   * date to create a cleaner details label for their user.
+   * @param  {Date} time
+   * @return {Date} The altered input object
+   */
+  adjustTimeForShowDetails: function(time) {
+    return time;
+  },
 
   // ----------------------------------------------------------------------------
   // Styles
@@ -970,9 +980,18 @@ const TimeSeriesChartComponent = ChartComponent.extend(LegendMixin,
     this.removeAllSeries();
 
     var series = this.get('series');
+    var showDetails = this.get('showDetails');
+    var hideDetails = this.get('hideDetails');
+    
     series.enter()
       .append('g').attr('class', 'series')
-      .append('path').attr('class', 'line');
+      .append('path').attr('class', 'line')
+        .on("mouseover", function(d, i) {
+          return showDetails(d, i, this);
+        })
+        .on("mouseout", function(d, i) {
+          return hideDetails(d, i, this);
+        });
     series.exit()
       .remove();
   },

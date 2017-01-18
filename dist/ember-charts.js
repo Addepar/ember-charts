@@ -1,6 +1,6 @@
 /*!
 * ember-charts v1.2.0
-* Copyright 2012-2016 Addepar Inc.
+* Copyright 2012-2017 Addepar Inc.
 * See LICENSE.md
 */
 (function(){;
@@ -4128,10 +4128,10 @@ define('ember-charts/components/time-series-chart', ['exports', 'module', 'ember
         d3.select(element).classed('hovered', true);
 
         var time = data.labelTime != null ? data.labelTime : data.time;
+        time = _this4.adjustTimeForShowDetails(time);
         var content = $('<span>');
         content.append($("<span class=\"tip-label\">").text(_this4.get('formatTime')(time)));
         _this4.showTooltip(content.html(), d3.event);
-
         var formatLabelFunction = _this4.get('formatLabelFunction');
 
         var addValueLine = function addValueLine(d) {
@@ -4164,6 +4164,17 @@ define('ember-charts/components/time-series-chart', ['exports', 'module', 'ember
         return _this5.hideTooltip();
       };
     }),
+
+    /**
+     * This is a convience method that allows users to overide the time returned
+     * for the showDetails labels.  Some users might want to nudge or round the
+     * date to create a cleaner details label for their user.
+     * @param  {Date} time
+     * @return {Date} The altered input object
+     */
+    adjustTimeForShowDetails: function adjustTimeForShowDetails(time) {
+      return time;
+    },
 
     // ----------------------------------------------------------------------------
     // Styles
@@ -4507,7 +4518,14 @@ define('ember-charts/components/time-series-chart', ['exports', 'module', 'ember
       this.removeAllSeries();
 
       var series = this.get('series');
-      series.enter().append('g').attr('class', 'series').append('path').attr('class', 'line');
+      var showDetails = this.get('showDetails');
+      var hideDetails = this.get('hideDetails');
+
+      series.enter().append('g').attr('class', 'series').append('path').attr('class', 'line').on("mouseover", function (d, i) {
+        return showDetails(d, i, this);
+      }).on("mouseout", function (d, i) {
+        return hideDetails(d, i, this);
+      });
       series.exit().remove();
     },
 
@@ -7339,8 +7357,7 @@ define('ember-charts/templates/components/chart-component', ['exports', 'module'
 
   var _Ember = _interopRequireDefault(_ember);
 
-  module.exports = _Ember['default'].Handlebars.template(function anonymous(Handlebars, depth0, helpers, partials, data
-  /**/) {
+  module.exports = _Ember['default'].Handlebars.template(function anonymous(Handlebars, depth0, helpers, partials, data) {
     this.compilerInfo = [4, '>= 1.0.0'];
     helpers = this.merge(helpers, _Ember['default'].Handlebars.helpers);data = data || {};
     var buffer = '',
