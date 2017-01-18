@@ -4130,10 +4130,10 @@ define('ember-charts/components/time-series-chart', ['exports', 'module', 'ember
         d3.select(element).classed('hovered', true);
 
         var time = data.labelTime != null ? data.labelTime : data.time;
+        time = _this4.adjustTimeForShowDetails(time);
         var content = $('<span>');
         content.append($("<span class=\"tip-label\">").text(_this4.get('formatTime')(time)));
         _this4.showTooltip(content.html(), d3.event);
-
         var formatLabelFunction = _this4.get('formatLabelFunction');
 
         var addValueLine = function addValueLine(d) {
@@ -4166,6 +4166,17 @@ define('ember-charts/components/time-series-chart', ['exports', 'module', 'ember
         return _this5.hideTooltip();
       };
     }),
+
+    /**
+     * This is a convience method that allows users to overide the time returned
+     * for the showDetails labels.  Some users might want to nudge or round the
+     * date to create a cleaner details label for their user.
+     * @param  {Date} time
+     * @return {Date} The altered input object
+     */
+    adjustTimeForShowDetails: function adjustTimeForShowDetails(time) {
+      return time;
+    },
 
     // ----------------------------------------------------------------------------
     // Styles
