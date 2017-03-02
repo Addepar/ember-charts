@@ -572,10 +572,7 @@ const TimeSeriesChartComponent = ChartComponent.extend(LegendMixin,
     return (data, i, element) => {
       d3.select(element).classed('hovered', true);
 
-      if (data.labelTime === undefined || data.time === undefined) {
-        debugger;
-      }
-      var time = data.labelTime != null ? data.labelTime : data.time;
+      var time = Ember.isNone(data.labelTime) ? data.labelTime : data.time;
       time = this.adjustTimeForShowDetails(time);
       var content = $('<span>');
       content.append($("<span class=\"tip-label\">").text(this.get('formatTime')(time)));
