@@ -569,8 +569,8 @@ const TimeSeriesChartComponent = ChartComponent.extend(LegendMixin,
       return Ember.K;
     }
   
-    event = d3.event
     return (data, i, element) => {
+      event = d3.event
       Ember.run.schedule('afterRender', () => {
         d3.select(element).classed('hovered', true);
 
