@@ -572,6 +572,9 @@ const TimeSeriesChartComponent = ChartComponent.extend(LegendMixin,
     return (data, i, element) => {
       d3.select(element).classed('hovered', true);
 
+      if (data.labelTime === null || data.time === null) {
+        debugger;
+      }
       var time = data.labelTime != null ? data.labelTime : data.time;
       time = this.adjustTimeForShowDetails(time);
       var content = $('<span>');
