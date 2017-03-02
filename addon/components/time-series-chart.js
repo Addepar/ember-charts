@@ -570,33 +570,30 @@ const TimeSeriesChartComponent = ChartComponent.extend(LegendMixin,
     }
   
     return (data, i, element) => {
-      event = d3.event
-      Ember.run.schedule('afterRender', () => {
-        d3.select(element).classed('hovered', true);
+      d3.select(element).classed('hovered', true);
 
-        var time = data.labelTime != null ? data.labelTime : data.time;
-        time = this.adjustTimeForShowDetails(time);
-        var content = $('<span>');
-        content.append($("<span class=\"tip-label\">").text(this.get('formatTime')(time)));
-        this.showTooltip(content.html(), event);
-        var formatLabelFunction = this.get('formatLabelFunction');
+      var time = data.labelTime != null ? data.labelTime : data.time;
+      time = this.adjustTimeForShowDetails(time);
+      var content = $('<span>');
+      content.append($("<span class=\"tip-label\">").text(this.get('formatTime')(time)));
+      this.showTooltip(content.html(), event);
+      var formatLabelFunction = this.get('formatLabelFunction');
 
-        var addValueLine = function(d) {
-          var name = $('<span class="name" />').text(d.group + ': ');
-          var value = $('<span class="value" />').text(formatLabelFunction(d.value));
-          content.append(name);
-          content.append(value);
-          content.append('<br />');
-        };
+      var addValueLine = function(d) {
+        var name = $('<span class="name" />').text(d.group + ': ');
+        var value = $('<span class="value" />').text(formatLabelFunction(d.value));
+        content.append(name);
+        content.append(value);
+        content.append('<br />');
+      };
 
-        if (Ember.isArray(data.values)) {
-          data.values.forEach(addValueLine);
-        } else {
-          addValueLine(data);
-        }
+      if (Ember.isArray(data.values)) {
+        data.values.forEach(addValueLine);
+      } else {
+        addValueLine(data);
+      }
 
-        return this.showTooltip(content.html(), d3.event);
-      });
+      return this.showTooltip(content.html(), d3.event);
     };
   }),
 
@@ -961,10 +958,14 @@ const TimeSeriesChartComponent = ChartComponent.extend(LegendMixin,
     var bars = groups.selectAll('rect').data(function(d) { return d; });
     bars.enter().append('rect')
       .on("mouseover", function(d, i) {
-        return showDetails(d, i, this);
+        Ember.run.schedule('afterRender', () => {
+          return showDetails(d, i, this);
+        });
       })
       .on("mouseout", function(d, i) {
-        return hideDetails(d, i, this);
+        Ember.run.schedule('afterRender', () => {
+          return hideDetails(d, i, this);
+        });
       });
     bars.exit().remove();
   },
