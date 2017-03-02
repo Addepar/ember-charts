@@ -964,14 +964,10 @@ const TimeSeriesChartComponent = ChartComponent.extend(LegendMixin,
     var bars = groups.selectAll('rect').data(function(d) { return d; });
     bars.enter().append('rect')
       .on("mouseover", function(d, i) {
-        Ember.run.schedule('afterRender', () => {
           return showDetails(d, i, this);
-        });
       })
       .on("mouseout", function(d, i) {
-        Ember.run.schedule('afterRender', () => {
           return hideDetails(d, i, this);
-        });
       });
     bars.exit().remove();
   },
@@ -997,14 +993,10 @@ const TimeSeriesChartComponent = ChartComponent.extend(LegendMixin,
       .append('g').attr('class', 'series')
       .append('path').attr('class', 'line')
         .on("mouseover", function(d, i) {
-          Ember.run.schedule('afterRender', () => {
             return showDetails(d, i, this);
-          });
         })
         .on("mouseout", function(d, i) {
-          Ember.run.schedule('afterRender', () => {
             return hideDetails(d, i, this);
-          });
         });
     series.exit()
       .remove();
