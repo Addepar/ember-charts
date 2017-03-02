@@ -572,7 +572,7 @@ const TimeSeriesChartComponent = ChartComponent.extend(LegendMixin,
     return (data, i, element) => {
       d3.select(element).classed('hovered', true);
 
-      var time = Ember.isNone(data.labelTime) ? data.labelTime : data.time;
+      var time = not Ember.isNone(data.labelTime) ? data.labelTime : data.time;
       if (Ember.isNone(time)) {
         debugger;
       }
