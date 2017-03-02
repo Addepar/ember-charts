@@ -994,10 +994,14 @@ const TimeSeriesChartComponent = ChartComponent.extend(LegendMixin,
       .append('g').attr('class', 'series')
       .append('path').attr('class', 'line')
         .on("mouseover", function(d, i) {
-          return showDetails(d, i, this);
+          Ember.run.schedule('afterRender', () => {
+            return showDetails(d, i, this);
+          });
         })
         .on("mouseout", function(d, i) {
-          return hideDetails(d, i, this);
+          Ember.run.schedule('afterRender', () => {
+            return hideDetails(d, i, this);
+          });
         });
     series.exit()
       .remove();
