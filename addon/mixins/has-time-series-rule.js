@@ -42,8 +42,16 @@ export default Ember.Mixin.create({
 
     lineMarkers.enter()
       .append('path')
-      .on("mouseover", function(d, i) { return showDetails(d, i, this); })
-      .on("mouseout", function(d, i) { return hideDetails(d, i, this); })
+      .on("mouseover", function(d, i) { 
+        Ember.run.schedule('afterRender', () => {
+          return showDetails(d, i, this); 
+        });
+      })
+      .on("mouseout", function(d, i) { 
+        Ember.run.schedule('afterRender', () => {
+          return hideDetails(d, i, this); 
+        });
+      })
       .attr({
         class: 'line-marker',
         fill: this.get('lineColorFn'),

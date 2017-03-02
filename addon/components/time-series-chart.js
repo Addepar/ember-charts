@@ -579,7 +579,7 @@ const TimeSeriesChartComponent = ChartComponent.extend(LegendMixin,
       time = this.adjustTimeForShowDetails(time);
       var content = $('<span>');
       content.append($("<span class=\"tip-label\">").text(this.get('formatTime')(time)));
-      this.showTooltip(content.html(), event);
+      this.showTooltip(content.html(), d3.event);
       var formatLabelFunction = this.get('formatLabelFunction');
 
       var addValueLine = function(d) {
