@@ -568,7 +568,8 @@ const TimeSeriesChartComponent = ChartComponent.extend(LegendMixin,
     if (!this.get('isInteractive')) {
       return Ember.K;
     }
-
+  
+    event = d3.event
     return (data, i, element) => {
       Ember.run.schedule('afterRender', () => {
         d3.select(element).classed('hovered', true);
@@ -577,7 +578,7 @@ const TimeSeriesChartComponent = ChartComponent.extend(LegendMixin,
         time = this.adjustTimeForShowDetails(time);
         var content = $('<span>');
         content.append($("<span class=\"tip-label\">").text(this.get('formatTime')(time)));
-        this.showTooltip(content.html(), d3.event);
+        this.showTooltip(content.html(), event);
         var formatLabelFunction = this.get('formatLabelFunction');
 
         var addValueLine = function(d) {
