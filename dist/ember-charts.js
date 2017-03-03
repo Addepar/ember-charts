@@ -4520,10 +4520,9 @@ define('ember-charts/components/time-series-chart', ['exports', 'module', 'ember
       this.removeAllSeries();
 
       var series = this.get('series');
-      var showDetails = this.get('showDetails');
-      var hideDetails = this.get('hideDetails');
 
       series.enter().append('g').attr('class', 'series').append('path').attr('class', 'line');
+
       series.exit().remove();
     },
 
