@@ -31,7 +31,7 @@
     "broccoli-filter": "^0.1.7",
     "broccoli-funnel": "^0.1.6",
     "broccoli-less-single": "^0.1.5",
-    "broccoli-merge-trees": "^0.2.1",
+    "broccoli-merge-trees": "1.2.1",
     "broccoli-static-compiler": "^0.2.1",
     "broccoli-writer": "^0.1.1",
     "ember-cli": "1.13.8",
