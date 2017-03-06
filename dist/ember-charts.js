@@ -4518,14 +4518,9 @@ define('ember-charts/components/time-series-chart', ['exports', 'module', 'ember
       this.removeAllSeries();
 
       var series = this.get('series');
-      var showDetails = this.get('showDetails');
-      var hideDetails = this.get('hideDetails');
 
-      series.enter().append('g').attr('class', 'series').append('path').attr('class', 'line').on("mouseover", function (d, i) {
-        return showDetails(d, i, this);
-      }).on("mouseout", function (d, i) {
-        return hideDetails(d, i, this);
-      });
+      series.enter().append('g').attr('class', 'series').append('path').attr('class', 'line');
+
       series.exit().remove();
     },
 
@@ -7357,7 +7352,8 @@ define('ember-charts/templates/components/chart-component', ['exports', 'module'
 
   var _Ember = _interopRequireDefault(_ember);
 
-  module.exports = _Ember['default'].Handlebars.template(function anonymous(Handlebars, depth0, helpers, partials, data) {
+  module.exports = _Ember['default'].Handlebars.template(function anonymous(Handlebars, depth0, helpers, partials, data
+  /**/) {
     this.compilerInfo = [4, '>= 1.0.0'];
     helpers = this.merge(helpers, _Ember['default'].Handlebars.helpers);data = data || {};
     var buffer = '',
