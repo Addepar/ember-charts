@@ -980,18 +980,11 @@ const TimeSeriesChartComponent = ChartComponent.extend(LegendMixin,
     this.removeAllSeries();
 
     var series = this.get('series');
-    var showDetails = this.get('showDetails');
-    var hideDetails = this.get('hideDetails');
-    
+
     series.enter()
       .append('g').attr('class', 'series')
-      .append('path').attr('class', 'line')
-        .on("mouseover", function(d, i) {
-          return showDetails(d, i, this);
-        })
-        .on("mouseout", function(d, i) {
-          return hideDetails(d, i, this);
-        });
+      .append('path').attr('class', 'line');
+      
     series.exit()
       .remove();
   },
