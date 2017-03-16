@@ -3,12 +3,15 @@
   "dry-run": false,
   "verbose": false,
   "force": false,
-  "pkgFiles": ["package.json"],
+  "pkgFiles": ["package.json","bower.json"],
   "increment": "patch",
   "commitMessage": "Release %s",
   "tagName": "v%s",
   "tagAnnotation": "Release %s",
   "buildCommand": "ember build --environment='production'",
+  "src": {
+    "beforeStageCommand": "node update-version.js"
+  },
   "dist": {
     "repo": "git@github.com:addepar/ember-charts.git#gh-pages",
     "stageDir": ".stage",
