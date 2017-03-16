@@ -57,10 +57,8 @@ feature. Please provide as much detail and context as possible.
 ## Writing Code in Ember Charts
 
 Ember Charts uses newer/non-portable JavaScript features, such as
-ECMAScript 6 modules. It is compiled into older/portable JavaScript
-using [Grunt](http://gruntjs.com/). Contributing to Ember Charts
-requires that you have grunt and NPM (for pulling in dependencies) locally
-installed.
+ECMAScript 6 modules. Contributing to Ember Charts requires that you have NPM
+(for pulling in dependencies) locally installed.
 
 The folder structure of Ember Charts is as follows:
 
@@ -72,9 +70,6 @@ The folder structure of Ember Charts is as follows:
   * Unit tests: `ember-charts/tests/unit`
   * The demo application you get with `ember serve`: `ember-charts/tests/dummy`
   * Acceptance tests for the demo app: `ember-charts/tests/acceptance`
-- The `ember-charts/dist` folder contains the compiled globals-based version
-  of the code in `ember-charts/addon`. It should not be directly modified
-  but instead generated using `grunt dist`.
 
 
 ## Pull requests
@@ -118,32 +113,25 @@ included in Ember Charts:
    git checkout -b <topic-branch-name>
    ```
 
-4. Before committing changes, make sure to regenerate the globals-based build,
-   which is in the `ember-charts/dist` folder:
-
-   ```bash
-   grunt dist
-   ```
-
-5. Commit your changes in logical chunks. Please adhere to these [git commit
+4. Commit your changes in logical chunks. Please adhere to these [git commit
    message guidelines](http://tbaggery.com/2008/04/19/a-note-about-git-commit-messages.html)
    or your code is unlikely be merged into the main project. Use Git's
    [interactive rebase](https://help.github.com/articles/interactive-rebase)
    feature to tidy up your commits before making them public.
 
-6. Locally merge (or rebase) the upstream development branch into your topic branch:
+5. Locally merge (or rebase) the upstream development branch into your topic branch:
 
    ```bash
    git pull [--rebase] upstream master
    ```
 
-7. Push your topic branch up to your fork:
+6. Push your topic branch up to your fork:
 
    ```bash
    git push origin <topic-branch-name>
    ```
 
-8. [Open a Pull Request](https://help.github.com/articles/using-pull-requests/)
+7. [Open a Pull Request](https://help.github.com/articles/using-pull-requests/)
     with a clear title and description against the `master` branch.
 
 **IMPORTANT**: By submitting a patch, you agree to allow Addepar to
