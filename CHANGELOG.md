@@ -1,5 +1,15 @@
 # Ember Charts Changelog
 
+### Ember Charts 1.2.1 _(March 16, 2017)_
+  Minor documentation updates and small bugfixes:
+
+  * Updates documentation for installing and maintaining ember-charts (#192, #201)
+  * Removes grunt dependencies and grunt-generated global dist files that were
+    necessary prior to the Ember-CLI upgrade, and updates the documentation
+    accordingly (#201)
+  * Fixes a bug where labels in line series charts could be off by one day (#198)
+  * Prevent modifying attributes during the render cycle (#189, improves #155)
+
 ### Ember Charts 1.2.0 _(October 28, 2016)_
   Most important: A number of reflected cross-site scripting (XSS) vulnerabilities
   were fixed (1050884d5bc17658f017666fbca15605481661ad, #177, #178).
