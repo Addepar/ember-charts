@@ -125,8 +125,8 @@ git repository.
 If you want to control the version number, use these options:
 
 ```bash
-release-it minor # 1.2.3 -> 2.0.0
-release-it major # 1.2.3 -> 1.3.0
+release-it major # 1.2.3 -> 2.0.0
+release-it minor # 1.2.3 -> 1.3.0
 release-it X.Y.Z # 1.2.3 -> X.Y.Z
 ```
 
