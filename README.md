@@ -43,8 +43,6 @@ npm install -g bower      # install Bower
 bower install ember-charts --save
 ```
 
-Or, just include `dist/ember-charts.js` and `dist/ember-charts.css` in your app.
-
 Using Ember Charts with bower is **deprecated** and will eventually be removed.
 We recommend that you migrate your apps to Ember CLI! Documentation has been
 updated to show Ember CLI usage. If you need documentation for globals-based
@@ -65,14 +63,6 @@ Now you can:
 - View the demos and read the documentation: http://localhost:4200
 - Run tests: http://localhost:4200/tests
 
-As noted in the full [contribution guidelines](CONTRIBUTING.md),
-please compile the globals-based version of Ember Charts (the `dist` folder)
-before submitting a pull request:
-
-```bash
-npm install -g grunt-cli      # install grunt
-grunt dist
-```
 
 ## Dependencies
 * ember
@@ -114,36 +104,45 @@ In a nutshell, this means:
 
 
 ## Releasing a New Version (For Maintainers)
-Update version numbers and release using https://github.com/webpro/grunt-release-it:
+Prior to releasing, ensure that the CHANGELOG.md is updated to track any changes
+that have been made since the prior release.
+
+We increment version numbers and release using [release-it](https://github.com/webpro/release-it):
 
 ```bash
-vim CHANGELOG.md
-grunt release-it:<options>
-npm publish # access needed to publish new Addepar-owned npm packages
+npm install release-it -g # if not already installed
+release-it <options>
 ```
 
-By default, `grunt release-it` without options will increment the
-<patch> version number (X.Y.Z --> X.Y.(Z+1)) in the `VERSION` file,
-update the globals-based version of Ember Charts, and then commit
-the resulting changes to the ember-charts git repository.
+The local configuration file for `release-it` is named `.release.json`, found in the
+root directory of the repository.
+
+By default, `release-it` without options will increment the
+<patch> version number (`X.Y.Z` --> `X.Y.(Z+1)`) in the `VERSION` file and
+`package.json` file, and then commit the resulting changes to the ember-charts
+git repository.
 
 If you want to control the version number, use these options:
 
 ```bash
-grunt release-it:minor
-grunt release-it:major
-grunt release-it:X.Y.Z
+release-it minor # 1.2.3 -> 2.0.0
+release-it major # 1.2.3 -> 1.3.0
+release-it X.Y.Z # 1.2.3 -> X.Y.Z
 ```
 
-Ember Charts uses the "distribution repository" feature of `grunt release-it` to push to
-the `gh-pages` branch of the ember-charts git repo, from which the demo and documentation
-website is automatically published.
+Ember Charts has also configured `release-it` to automatically update the `gh-pages`
+branch (from which the demo and documentation website is published). This is done using
+the "distribution repository" feature of `release-it`, which pushes the `/ember-dist/`
+directory after constructing it with `ember build`. These options can be seen in the
+`.release.json` file under "dist" options.
 
-When prompted by `grunt release-it`, do NOT update the tag for the
-distribution repository OR publish to npm (the latter will try to publish the `gh-pages`
-branch, not the `master` branch; npm publishing is done in the separate command
-above). We'll streamline the release process a bit more soon.
+`release-it` is also configured to automatically publish the updated version to
+`npm`. Previously we could not do this using `release-it` because it would attempt to
+publish the `dist.repo` instead of the source repo, but we can now override that using
+`"forcePublishSourceRepo": true` in `.release.json`.
 
+Lastly, the new version should be released on Github, which can be done via the Github UI
+after the steps above are complete.
 
 ## Copyright and License
 Copyright © 2013 Addepar, Inc. All Rights Reserved

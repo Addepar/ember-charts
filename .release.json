@@ -8,10 +8,16 @@
   "commitMessage": "Release %s",
   "tagName": "v%s",
   "tagAnnotation": "Release %s",
-  "buildCommand": "grunt dist",
-  "distRepo": false,
-  "distStageDir": ".stage",
-  "distBase": "",
-  "distFiles": ["dist/**/*"],
-  "publish": false
+  "buildCommand": "ember build --environment='production'",
+  "dist": {
+    "repo": "git@github.com:addepar/ember-charts.git#gh-pages",
+    "stageDir": ".stage",
+    "baseDir": "ember-dist",
+    "files": ["**/*"]
+  },
+  "npm": {
+    "publish": true,
+    "publishPath": ".",
+    "forcePublishSourceRepo": true
+  }
 }
