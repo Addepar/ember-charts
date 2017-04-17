@@ -22,6 +22,12 @@ const ScatterChartComponent = ChartComponent.extend(LegendMixin, FloatingTooltip
   formatXValue: d3.format(',.2f'),
   formatYValue: d3.format(',.2f'),
 
+  /**
+   * Removes unnecessary padding around the chart
+   * @type {Number}
+   */
+  verticalMargin: 0,
+
   // Size of each icon on the scatter plot
   dotRadius: 7,
 
