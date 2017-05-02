@@ -38,7 +38,7 @@ export default ChartComponent.extend(FloatingTooltipMixin, {
 
   showDetails: Ember.computed('isInteractive', function() {
     if (this.get('isInteractive')) {
-      return Ember.K;
+      return () => {};
     }
 
     return function(data, i, element) {
@@ -57,7 +57,7 @@ export default ChartComponent.extend(FloatingTooltipMixin, {
 
   hideDetails: Ember.computed('isInteractive', function() {
     if (this.get('isInteractive')) {
-      return Ember.K;
+      return () => {};
     }
 
     return function(data, i, element) {

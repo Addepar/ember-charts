@@ -252,7 +252,7 @@ export default Ember.Mixin.create({
 
   showLegendDetails: Ember.computed('isInteractive', function() {
     if (!this.get('isInteractive')) {
-      return Ember.K;
+      return () => {};
     }
 
     var _this = this;
@@ -284,7 +284,7 @@ export default Ember.Mixin.create({
 
   hideLegendDetails: Ember.computed('isInteractive', function() {
     if (!this.get('isInteractive')) {
-      return Ember.K;
+      return () => {};
     }
 
     var _this = this;
