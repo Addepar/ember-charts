@@ -20,7 +20,7 @@ svg .axis .tick.minor line {
   stroke: #dddddd;
   stroke-width: 2px;
 }
-svg text {
+svg .chart-viewport text {
   cursor: default;
   fill: #888888;
   font-size: 11px;
