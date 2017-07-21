@@ -770,7 +770,7 @@ const TimeSeriesChartComponent = ChartComponent.extend(LegendMixin,
   // ----------------------------------------------------------------------------
 
   hasLegend: Ember.computed( 'legendItems.length', 'showLegend', function() {
-    return this.get('legendItems.length') > 1 && this.get('showLegend');
+    return this.get('legendItems.length') > 1 || this.get('showLegend');
   }),
 
   legendItems: Ember.computed('xBetweenSeriesDomain', 'xWithinGroupDomain',
