@@ -157,7 +157,7 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
     dataGroupedBySlice = this.get('dataGroupedBySlice');
     largestBarValue = this.get('largestGrossBarValue');
     largestSliceData = _.map(dataGroupedBySlice, (slices, sliceLabel) => {
-      largestSlice = _.max(slices, (slice) => {
+      largestSlice = _.maxBy(slices, (slice) => {
         return Math.abs(slice.value);
       });
       return {
@@ -206,10 +206,10 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
       // If 0 or 1 slice labels were filtered out, we can just show all slice
       // labels explicitly. We only want the 'Other' slice if it has at least
       // 2 slice labels contained aggregated inside.
-      return _.pluck(largestSliceData, 'sliceLabel');
+      return _.map(largestSliceData, 'sliceLabel');
     } else {
       // Otherwise, just return the slice labels that passed the filters.
-      return _.pluck(nonOtherSlices, 'sliceLabel');
+      return _.map(nonOtherSlices, 'sliceLabel');
     }
   }),
 
@@ -220,7 +220,7 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
    */
   otherSliceTypes: Ember.computed('largestSliceData.[]',
       'nonOtherSliceTypes.[]', function() {
-    var allSliceTypes = _.pluck(this.get('largestSliceData'), 'sliceLabel');
+    var allSliceTypes = _.map(this.get('largestSliceData'), 'sliceLabel');
     return _.difference(allSliceTypes, this.get('nonOtherSliceTypes'));
   }),
 
@@ -529,7 +529,7 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
       function() {
     var sortedBars, sortedBarNames;
     sortedBars = this.get('netBarValues').sort(this.get('barSortingFn'));
-    sortedBarNames = _.pluck(sortedBars, 'barLabel');
+    sortedBarNames = _.map(sortedBars, 'barLabel');
     if (!this.get('barSortAscending')) {
       sortedBarNames.reverse();
     }
