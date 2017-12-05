@@ -171,7 +171,7 @@ const HorizontalBarChartComponent = ChartComponent.extend(FloatingTooltipMixin,
     // Evenly split up height for bars with space between bars
     return d3.scale.ordinal()
       .domain(d3.range(this.get('numBars')))
-      .rangeRoundBands([0, this.get('height')], this.get('barPadding'));
+      .rangeBands([0, this.get('height')], this.get('barPadding'));
   }),
 
   // Space in pixels allocated to each bar + padding
