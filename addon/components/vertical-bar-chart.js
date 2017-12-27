@@ -488,7 +488,7 @@ const VerticalBarChartComponent = ChartComponent.extend(LegendMixin,
 
   showDetails: Ember.computed('isInteractive', function() {
     if (!this.get('isInteractive')) {
-      return Ember.K;
+      return this;
     }
 
     return (data, i, element) => {
@@ -525,7 +525,7 @@ const VerticalBarChartComponent = ChartComponent.extend(LegendMixin,
 
   hideDetails: Ember.computed('isInteractive', function() {
     if (!this.get('isInteractive')) {
-      return Ember.K;
+      return this;
     }
 
     return (data, i, element) => {
