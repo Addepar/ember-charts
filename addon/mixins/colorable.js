@@ -90,7 +90,10 @@ export default Ember.Mixin.create({
       var colorRange = _this.get('getColorRange')(seedColor);
       var colorScale = _this.get('getColorScale')(seedColor);
       if (numColorSeries === 1) {
-        return colorRange[0];
+        // ember-charts doesn't parse RGB color in this method.
+        // Use Hex instead.
+        // .toString() will return a hex string.
+        return colorRange[0].toString();
       } else {
         return colorScale(i / (numColorSeries - 1));
       }
