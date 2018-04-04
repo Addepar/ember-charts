@@ -146,7 +146,7 @@ test('Within each bar, the stacking slices have the correct heights relative to 
   // Compute the expected heights of each slice as a percentage
   // of the height of the whole bar.
   _.forEach(dataByBarLabel, function(barData) {
-    var grossBarSum = _.sumBy(barData, slice => Math.abs(slice.value));
+    var grossBarSum = _.sum(barData, slice => Math.abs(slice.value));
     for (sliceIndex = 0; sliceIndex < barData.length; sliceIndex++) {
       barData[sliceIndex].percentOfBar = Math.abs(barData[sliceIndex].value) / grossBarSum;
     }
@@ -212,7 +212,7 @@ test('The bars have the correct heights relative to each other', function(assert
   // Compute the expected heights of each bar as a percentage
   // of the expected height of the shortest bar.
   grossBarSums = _.mapValues(dataByBarLabel, function(barData) {
-    return _.sumBy(barData, slice => Math.abs(slice.value));
+    return _.sum(barData, slice => Math.abs(slice.value));
   });
   minGrossBarSum = _.min(_.values(grossBarSums));
   expectedBarHeightRatios = _.mapValues(grossBarSums, function(sum) {
@@ -257,7 +257,7 @@ test('The bars have the correct heights relative to the values on the y-axis tic
   // Compute the expected heights of each bar as a percentage
   // of the expected height of the shortest bar.
   grossBarSums = _.mapValues(dataByBarLabel, function(barData) {
-    return _.sumBy(barData, slice => Math.abs(slice.value));
+    return _.sum(barData, slice => Math.abs(slice.value));
   });
 
   this.subject({data: three_ranges});

@@ -109,7 +109,7 @@ test("Value/Grouping Labels appear on the left/right when all data is 0 or negat
   this.render();
 
   const barGroups = component.$('g.bar');
-  const allLabelsCorrectlyPositioned = _.every(barGroups, function(group) {
+  const allLabelsCorrectlyPositioned = _.all(barGroups, function(group) {
     const groupLabel = $('text.group', group);
     const valueLabel = $('text.value', group);
     return valueLabel.offset().left < groupLabel.offset().left;
@@ -140,7 +140,7 @@ test("Labels aren't trimmed when width is small", function(assert) {
   Ember.run(() => component.set('defaultOuterWidth', 300));
 
   const groupLabels = component.$('text.group');
-  const noLabelsTruncated = _.every(groupLabels, function(label) {
+  const noLabelsTruncated = _.all(groupLabels, function(label) {
     return label.textContent.indexOf('...') === -1;
   });
   assert.ok(noLabelsTruncated,

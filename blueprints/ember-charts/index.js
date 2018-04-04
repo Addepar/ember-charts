@@ -9,7 +9,7 @@ module.exports = {
         'target': '~3.5.3'
       }, {
         'name': 'lodash',
-        'target': '~4.17.4'
+        'target': '~3.10.0'
       }
     ]);
   }
