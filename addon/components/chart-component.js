@@ -129,7 +129,7 @@ const ChartComponent = Ember.Component.extend(ColorableMixin, ResizeHandlerMixin
   outerWidth: Ember.computed.alias('defaultOuterWidth'),
 
   width: Ember.computed('outerWidth', 'marginLeft', 'marginRight', function() {
-    return this.get('outerWidth') - this.get('marginLeft') - this.get('marginRight');
+    return Math.abs(this.get('outerWidth') - this.get('marginLeft') - this.get('marginRight'));
   }),
 
   height: Ember.computed('outerHeight', 'marginBottom', 'marginTop', function() {
