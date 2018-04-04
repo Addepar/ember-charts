@@ -325,7 +325,7 @@ const TimeSeriesChartComponent = ChartComponent.extend(LegendMixin,
       return [new Date(), new Date()];
     }
 
-    var first = _.head(groupedBarData);
+    var first = _.first(groupedBarData);
     var last = _.last(groupedBarData);
     var startTime = new Date(first[0].time);
     var endTime = new Date(last[0].time);
