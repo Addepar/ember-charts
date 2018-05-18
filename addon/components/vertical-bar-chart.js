@@ -293,7 +293,7 @@ const VerticalBarChartComponent = ChartComponent.extend(LegendMixin,
 
   groupedIndividualBarLabels: Ember.computed('groupedData.[]', function() {
     var groups = _.map(_.values(this.get('groupedData')), function(g) {
-      return _.pluck(g, 'label');
+      return _.map(g, 'label');
     });
     return _.uniq(_.flatten(groups));
   }),
