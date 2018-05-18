@@ -157,7 +157,7 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
     dataGroupedBySlice = this.get('dataGroupedBySlice');
     largestBarValue = this.get('largestGrossBarValue');
     largestSliceData = _.map(dataGroupedBySlice, (slices, sliceLabel) => {
-      largestSlice = _.max(slices, (slice) => {
+      largestSlice = _.maxBy(slices, (slice) => {
         return Math.abs(slice.value);
       });
       return {
