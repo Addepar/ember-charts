@@ -2730,10 +2730,10 @@ define('ember-charts/components/stacked-vertical-bar-chart', ['exports', 'module
         // If 0 or 1 slice labels were filtered out, we can just show all slice
         // labels explicitly. We only want the 'Other' slice if it has at least
         // 2 slice labels contained aggregated inside.
-        return _.map(largestSliceData, 'sliceLabel');
+        return _.pluck(largestSliceData, 'sliceLabel');
       } else {
         // Otherwise, just return the slice labels that passed the filters.
-        return _.map(nonOtherSlices, 'sliceLabel');
+        return _.pluck(nonOtherSlices, 'sliceLabel');
       }
     }),
 
@@ -2743,7 +2743,7 @@ define('ember-charts/components/stacked-vertical-bar-chart', ['exports', 'module
      * @type {Array.<string>}
      */
     otherSliceTypes: _Ember['default'].computed('largestSliceData.[]', 'nonOtherSliceTypes.[]', function () {
-      var allSliceTypes = _.map(this.get('largestSliceData'), 'sliceLabel');
+      var allSliceTypes = _.pluck(this.get('largestSliceData'), 'sliceLabel');
       return _.difference(allSliceTypes, this.get('nonOtherSliceTypes'));
     }),
 
@@ -3058,7 +3058,7 @@ define('ember-charts/components/stacked-vertical-bar-chart', ['exports', 'module
     barNames: _Ember['default'].computed('netBarValues', 'barSortingFn', 'barSortAscending', function () {
       var sortedBars, sortedBarNames;
       sortedBars = this.get('netBarValues').sort(this.get('barSortingFn'));
-      sortedBarNames = _.map(sortedBars, 'barLabel');
+      sortedBarNames = _.pluck(sortedBars, 'barLabel');
       if (!this.get('barSortAscending')) {
         sortedBarNames.reverse();
       }
@@ -3898,7 +3898,7 @@ define('ember-charts/components/time-series-chart', ['exports', 'module', 'ember
         return [new Date(), new Date()];
       }
 
-      var first = _.head(groupedBarData);
+      var first = _.first(groupedBarData);
       var last = _.last(groupedBarData);
       var startTime = new Date(first[0].time);
       var endTime = new Date(last[0].time);
@@ -4838,7 +4838,7 @@ define('ember-charts/components/vertical-bar-chart', ['exports', 'module', 'embe
 
     groupedIndividualBarLabels: _Ember['default'].computed('groupedData.[]', function () {
       var groups = _.map(_.values(this.get('groupedData')), function (g) {
-        return _.map(g, 'label');
+        return _.pluck(g, 'label');
       });
       return _.uniq(_.flatten(groups));
     }),
