@@ -61,6 +61,6 @@
   },
   "ember-addon": {
     "configPath": "tests/dummy/config",
-    "demoURL": "http://opensource.addepar.com/ember-charts"
+    "demoURL": "https://opensource.addepar.com/ember-charts"
   }
 }
