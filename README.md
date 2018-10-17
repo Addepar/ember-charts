@@ -1,4 +1,4 @@
-# Ember Charts [![Build Status](https://secure.travis-ci.org/Addepar/ember-charts.svg?branch=master)](http://travis-ci.org/Addepar/ember-charts)
+# Ember Charts [![Build Status](https://secure.travis-ci.org/Addepar/ember-charts.svg?branch=master)](https://travis-ci.org/Addepar/ember-charts)
 
 A charting library built with the Ember.js and d3.js frameworks. It includes
 time series, bar, pie, and scatter charts which are easy to extend and modify.
@@ -7,14 +7,14 @@ best practices in chart interactivity and presentation.
 
 
 ## Demo and Documentation
-http://opensource.addepar.com/ember-charts/
+https://opensource.addepar.com/ember-charts/
 
 
 ## Getting Started
 
 #### JS Bin Starter Kit
 
-http://emberjs.jsbin.com/rekawobugu/1/edit
+https://emberjs.jsbin.com/rekawobugu/1/edit
 
 Unfortunately, this version of Ember Charts is out of date,
 and the current maintainers of Ember Charts at Addepar have not been
@@ -92,7 +92,7 @@ opening issues and working on the project.
 
 ## Versioning
 
-Ember Charts uses [Semantic Versioning](http://semver.org) to keep track of
+Ember Charts uses [Semantic Versioning](https://semver.org) to keep track of
 releases using the following format:
 
 `<major>.<minor>.<patch>`
