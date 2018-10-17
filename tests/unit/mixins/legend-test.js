@@ -33,7 +33,7 @@ test('drwaing legend works', function(assert) {
       label: 'short legend',
       icon: (d, i) => { return 'line'; }
   }];
-  var svg = document.createElementNS("https://www.w3.org/2000/svg", "svg");
+  var svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
   var viewport = d3.select(svg)
                   .append('g')
                   .attr('class', 'chart-viewport');
