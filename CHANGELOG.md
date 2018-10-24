@@ -1,5 +1,16 @@
 # Ember Charts Changelog
 
+### Ember Charts 1.2.2 _(October 24, 2018)_
+  Fixes minor bugs and implements some minor security improvements throughout the repository.
+
+  * Updates lodash dependency to v4.17.4
+  * Fixes a minor bug for horizontal bar charts where the width could be set to a negative
+    value in certain edge cases, causing issues (#217)
+  * Fixes a minor bug with chart colors in which the chart would not be able to parse an RGB color
+    passed in by the user
+  * Changes links in README, config files, and dummy app to use HTTPS instead of HTTP, and removes
+    usages of target="_BLANK" in dummy app to remove security vulnerability (#223)
+
 ### Ember Charts 1.2.1 _(March 16, 2017)_
   Minor documentation updates and small bugfixes:
 
