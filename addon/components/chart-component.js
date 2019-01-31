@@ -223,6 +223,7 @@ const ChartComponent = Ember.Component.extend(ColorableMixin, ResizeHandlerMixin
 
   init: function() {
     this._super();
+    this._scheduledDrawCount = 0;
     _.uniq(this.get('renderVars')).forEach((renderVar) => {
       this.addObserver(renderVar, this.drawOnce);
       // This is just to ensure that observers added above fire even
@@ -247,7 +248,8 @@ const ChartComponent = Ember.Component.extend(ColorableMixin, ResizeHandlerMixin
   },
 
   drawOnce: function() {
-    Ember.run.once(this, this.get('draw'));
+    this._scheduledDrawCount++;
+    Ember.run.schedule('afterRender', this, this.draw);
   },
 
   onResizeEnd: function() {
@@ -266,6 +268,10 @@ const ChartComponent = Ember.Component.extend(ColorableMixin, ResizeHandlerMixin
 
   // Remove previous drawing
   draw: function() {
+    this._scheduledDrawCount--;
+    if (this._scheduledDrawCount > 0) {
+      return;
+    }
     if ((this._state || this.state) !== "inDOM") {
       return;
     }
