@@ -346,10 +346,10 @@ const HorizontalBarChartComponent = ChartComponent.extend(FloatingTooltipMixin,
 
   didInsertElement: function() {
     this._super(...arguments);
-    // TODO (philn): This `Ember.run.next` was added to fix a bug where
-    // a horizontal bar chart was rendered incorrectly the first time, but
-    // correctly on subsequent renders. Still not entirely clear why that is.
-    this._scheduledRedraw = Ember.run.next( () => {
+    this._scheduledRedraw = Ember.run.schedule( 'afterRender', () => {
+      if (this.isDestroying || !this.element) {
+        return;
+      }
       this._updateDimensions();
       this.drawOnce();
     });
