@@ -242,6 +242,9 @@ const ChartComponent = Ember.Component.extend(ColorableMixin, ResizeHandlerMixin
   didInsertElement: function() {
     this._super();
     Ember.run.scheduleOnce('afterRender', this, function() {
+      if (this.isDestroying || !this.element) {
+        return;
+      }
       this._updateDimensions();
       this.drawOnce();
     });
