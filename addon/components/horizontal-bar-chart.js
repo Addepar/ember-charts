@@ -185,7 +185,7 @@ const HorizontalBarChartComponent = ChartComponent.extend(FloatingTooltipMixin,
 
   showDetails: Ember.computed('isInteractive', function() {
     if (!this.get('isInteractive')) {
-      return Ember.K;
+      return this;
     }
 
     return (data, i, element) => {
@@ -205,7 +205,7 @@ const HorizontalBarChartComponent = ChartComponent.extend(FloatingTooltipMixin,
 
   hideDetails: Ember.computed('isInteractive', function() {
     if (!this.get('isInteractive')) {
-      return Ember.K;
+      return this;
     }
 
     return (data, i, element) => {
