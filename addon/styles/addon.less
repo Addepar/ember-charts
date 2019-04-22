@@ -14,36 +14,42 @@
 // General Chart CSS
 // ----------------------------------------------------------------------
 
+.chart-frame {
+  svg {
+    // Note: Important for Firefox
+    display: block;
 
-svg {
-  // Note: Important for Firefox
-  display: block;
+    .chart-background {
+      fill: transparent;
+    }
 
-  .chart-background {
-    fill: transparent;
+    .axis {
+      line,
+      path {
+        fill: none;
+        stroke: @axis-color;
+        stroke-width: 1px;
+      }
+
+      .tick.minor line {
+        stroke: @axis-minor-tick-color;
+        stroke-width: 2px;
+      }
+    }
+
+    .chart-viewport {
+      text {
+        cursor: default;
+        fill: @label-color;
+        font-size: @font-size;
+        shape-rendering: crispEdges;
+      }
+    }
   }
 
-  .axis {
-    line,
-    path {
-      fill: none;
-      stroke: @axis-color;
-      stroke-width: 1px;
-    }
-
-    .tick.minor line {
-      stroke: @axis-minor-tick-color;
-      stroke-width: 2px;
-    }
-  }
-
-  .chart-viewport {
-    text {
-      cursor: default;
-      fill: @label-color;
-      font-size: @font-size;
-      shape-rendering: crispEdges;
-    }
+  circle {
+    stroke-width: 1px;
+    stroke: rgba(0, 0, 0, 0.1);
   }
 }
 
@@ -107,24 +113,6 @@ svg {
       opacity: 0;
     }
   }
-
-  // .y.axis path {
-  //   opacity: 0;
-  // }
-
-  // .y.axis .tick {
-  //   font-size: 11px;
-  // }
-
-  // .rule {
-  //   stroke: @axis-minor-tick-color;
-  // }
-
-  // .line-marker,
-  // .line-marker.hovered {
-  //   stroke-width: 1.5px;
-  //   /*fill: transparent !important;*/
-  // }
 }
 
 //
@@ -179,16 +167,6 @@ svg {
       opacity: 0;
     }
   }
-}
-
-//
-// Bubble
-// ----------------------------------------------------------------------
-
-// TODO(Louis): This is bad and needs refactoring
-circle {
-  stroke-width: 1px;
-  stroke: rgba(0, 0, 0, 0.1);
 }
 
 //
