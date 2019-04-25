@@ -31,6 +31,13 @@ export default Ember.Mixin.create({
   lineColorFn: null,
   graphicHeight: null,
 
+  willDestroyElement: function() {
+    let lineMarkers = this._getLineMarkers();
+    lineMarkers.on('mouseover', null);
+    lineMarkers.on('mouseout', null);
+    this._super(...arguments);
+  },
+
   // # ----------------------------------------------------------------------
   // # Drawing Functions
   // # ----------------------------------------------------------------------
