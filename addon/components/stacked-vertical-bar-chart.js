@@ -96,6 +96,19 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
    */
   maxLabelHeight: 50,
 
+
+  willDestroyElement: function() {
+    let bars = this.get('bars');
+    bars.on('mouseover', null);
+    bars.on('mouseout', null);
+
+    let slices = bars.selectAll('rect');
+    slices.on('mouseover', null);
+    slices.on('mouseout', null);
+
+    this._super(...arguments);
+  },
+
   // ---------------------------------------------------------------------------
   // Data
   // ---------------------------------------------------------------------------

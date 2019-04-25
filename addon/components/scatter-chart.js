@@ -61,6 +61,18 @@ const ScatterChartComponent = ChartComponent.extend(LegendMixin, FloatingTooltip
   **/
   hasYDomainPadding: true,
 
+  willDestroyElement: function() {
+    let groups = this.get('groups');
+    groups.on('mouseover', null);
+    groups.on('mouseout', null);
+
+    let totalGroup = this.get('viewport').select('.totalgroup');
+    totalGroup.on('mouseover', null);
+    totalGroup.on('mouseout', null);
+
+    this._super(...arguments);
+  },
+
   // ----------------------------------------------------------------------------
   // Data
   // ----------------------------------------------------------------------------

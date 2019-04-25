@@ -77,9 +77,18 @@ export default Ember.Mixin.create({
   // if you want to override default legend behavior, override showLegend
   showLegend: true,
 
+  willDestroyElement: function() {
+    let legend = this.get('legend');
+    let legendItems = legend.selectAll('.legend-item');
+    legendItems.on('mouseover', null);
+    legendItems.on('mouseout', null);
+    this._super(...arguments);
+  },
+
   // ----------------------------------------------------------------------------
   // Layout
   // ----------------------------------------------------------------------------
+
 
   // Outside bounds of legend
   legendWidth: Ember.computed.alias('width'),
