@@ -1,15 +1,21 @@
 ---
 language: node_js
 node_js:
-  - "6.17.1"
+  - "8"
 
-sudo: false
+sudo: required
+dist: trusty
 
 cache:
   yarn: true
 
+global:
+  - JOBS=1
+
 env:
   - EMBER_TRY_SCENARIO=default
+  - EMBER_TRY_SCENARIO=ember-1.12
+  - EMBER_TRY_SCENARIO=ember-1.13
 
 matrix:
   fast_finish: true
@@ -25,4 +31,4 @@ install:
   - bower install
 
 script:
-  - ember try $EMBER_TRY_SCENARIO test
+  - ember try:one $EMBER_TRY_SCENARIO test --skip-cleanup

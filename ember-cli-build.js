@@ -1,6 +1,5 @@
 /* jshint node: true */
 /* global require, module */
-
 var EmberAddon = require('ember-cli/lib/broccoli/ember-addon');
 
 /*
@@ -11,10 +10,14 @@ var EmberAddon = require('ember-cli/lib/broccoli/ember-addon');
   behave. You most likely want to be modifying `./index.js` or app's Brocfile
 */
 
-var app = new EmberAddon();
-app.import(app.bowerDirectory + '/jquery-ui/themes/base/jquery-ui.css');
-app.import(app.bowerDirectory + '/d3/d3.js');
-app.import(app.bowerDirectory + '/lodash/lodash.js');
-app.import(app.bowerDirectory + '/tinycolor/tinycolor.js');
+module.exports = function(defaults) {
+  var app = new EmberAddon(defaults, {
+    // Add options here
+  });
+  app.import(app.bowerDirectory + '/jquery-ui/themes/base/jquery-ui.css');
+  app.import(app.bowerDirectory + '/d3/d3.js');
+  app.import(app.bowerDirectory + '/lodash/lodash.js');
+  app.import(app.bowerDirectory + '/tinycolor/tinycolor.js');
 
-module.exports = app.toTree();
+  return app.toTree();
+};
