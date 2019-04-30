@@ -38,7 +38,7 @@
     "ember-load-initializers": "^0.5.1",
     "ember-resolver": "^2.0.3",
     "loader.js": "^4.0.1",
-    "release-it": "~9.8.3"
+    "release-it": "~10.4.5"
   },
   "keywords": [
     "ember-addon"
