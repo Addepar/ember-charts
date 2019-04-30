@@ -1,14 +1,12 @@
 ---
 language: node_js
 node_js:
-  - "6.9.2"
+  - "6.17.1"
 
 sudo: false
 
 cache:
-  directories:
-    - node_modules
-    - vendor
+  yarn: true
 
 env:
   - EMBER_TRY_SCENARIO=default
@@ -17,13 +15,13 @@ matrix:
   fast_finish: true
 
 before_install:
+  - curl -o- -L https://yarnpkg.com/install.sh | bash
+  - export PATH=$HOME/.yarn/bin:$PATH
   - export PATH=/usr/local/phantomjs-2.0.1/bin:$PATH
-  - "npm config set spin false"
-  - "npm install -g npm@^2"
 
 install:
-  - npm install -g bower
-  - npm install
+  - yarn global add bower
+  - yarn install --no-lockfile --non-interactive
   - bower install
 
 script:

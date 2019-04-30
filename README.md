@@ -54,7 +54,7 @@ instructions under "Running Old Versions" to display the old guides.
 After cloning this repo, install dependencies and run the demo application:
 
 ```bash
-npm install
+yarn
 bower install
 ember serve
 ```
@@ -110,8 +110,7 @@ that have been made since the prior release.
 We increment version numbers and release using [release-it](https://github.com/webpro/release-it):
 
 ```bash
-npm install release-it -g # if not already installed
-release-it <options>
+yarn run release-it <options>
 ```
 
 The local configuration file for `release-it` is named `.release.json`, found in the
@@ -125,9 +124,9 @@ git repository.
 If you want to control the version number, use these options:
 
 ```bash
-release-it major # 1.2.3 -> 2.0.0
-release-it minor # 1.2.3 -> 1.3.0
-release-it X.Y.Z # 1.2.3 -> X.Y.Z
+yarn run release-it major # 1.2.3 -> 2.0.0
+yarn run release-it minor # 1.2.3 -> 1.3.0
+yarn run release-it X.Y.Z # 1.2.3 -> X.Y.Z
 ```
 
 Ember Charts has also configured `release-it` to automatically update the `gh-pages`

@@ -16,7 +16,7 @@
     "url": "https://github.com/Addepar/ember-charts.git"
   },
   "engines": {
-    "node": ">= 0.10.0"
+    "node": "6"
   },
   "author": "",
   "license": "BSD-3-Clause",
@@ -48,6 +48,7 @@
     "ember-export-application-global": "^1.0.2",
     "ember-try": "0.0.6",
     "glob": "^4.0.5",
+    "release-it": "~9.8.3",
     "rimraf": "2.3.1",
     "rsvp": "^3.0.13",
     "walk-sync": "^0.1.3"
