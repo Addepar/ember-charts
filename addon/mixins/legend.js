@@ -78,10 +78,12 @@ export default Ember.Mixin.create({
   showLegend: true,
 
   willDestroyElement: function() {
-    let legend = this.get('legend');
-    let legendItems = legend.selectAll('.legend-item');
-    legendItems.on('mouseover', null);
-    legendItems.on('mouseout', null);
+    if(this._hasMouseEventListeners) {
+      let legend = this.get('legend');
+      let legendItems = legend.selectAll('.legend-item');
+      legendItems.on('mouseover', null);
+      legendItems.on('mouseout', null);
+    }
     this._super(...arguments);
   },
 
@@ -343,6 +345,7 @@ export default Ember.Mixin.create({
 
     var showLegendDetails = this.get('showLegendDetails');
     var hideLegendDetails = this.get('hideLegendDetails');
+    this._hasMouseEventListeners = true;
     var legendItems =
       legend.selectAll('.legend-item')
             .data(this.get('legendItems'))

@@ -27,9 +27,12 @@ const PieLegendMixin = Ember.Mixin.create({
   showLegend: true,
 
   willDestroyElement: function() {
-    let legend = this.get('legend');
-    legend.on('mouseover', null);
-    legend.on('mouseout', null);
+    if(this._hasMouseEventListeners) {
+      let legend = this.get('legend');
+      legend.on('mouseover', null);
+      legend.on('mouseout', null);
+    }
+
     this._super(...arguments);
   },
 
@@ -105,6 +108,7 @@ const PieLegendMixin = Ember.Mixin.create({
       return;
     }
     this.clearLegend();
+    this._hasMouseEventListeners = true;
     var legend = this.get('legend').attr(this.get('legendAttrs'));
 
     // Bind hover state to the legend

@@ -360,9 +360,11 @@ const HorizontalBarChartComponent = ChartComponent.extend(FloatingTooltipMixin,
    * @override
    */
   willDestroyElement: function() {
-    let groups = this.get('groups');
-    groups.on('mouseover', null);
-    groups.on('mouseout', null);
+    if(this._hasMouseEventListeners) {
+      let groups = this.get('groups');
+      groups.on('mouseover', null);
+      groups.on('mouseout', null);
+    }
     Ember.run.cancel(this._scheduledRedraw);
     this._super(...arguments);
   },
@@ -398,6 +400,7 @@ const HorizontalBarChartComponent = ChartComponent.extend(FloatingTooltipMixin,
     var groups = this.get('groups');
     var showDetails = this.get('showDetails');
     var hideDetails = this.get('hideDetails');
+    this._hasMouseEventListeners = true;
 
     var entering = groups.enter()
       .append('g').attr('class', 'bar')

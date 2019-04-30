@@ -62,10 +62,7 @@ const TimeSeriesChartComponent = ChartComponent.extend(LegendMixin,
   xAxisVertLabels: false,
 
   willDestroyElement: function() {
-    var groups = this.get('groups');
-    var bars = groups.selectAll('rect');
-    bars.on('mouseover', null);
-    bars.on('mouseout', null);
+    this._removeMouseEventListeners();
 
     this._super(...arguments);
   },
@@ -819,7 +816,17 @@ const TimeSeriesChartComponent = ChartComponent.extend(LegendMixin,
   // ----------------------------------------------------------------------------
 
   removeAllGroups: function() {
+    this._removeMouseEventListeners();
     this.get('viewport').selectAll('.bars').remove();
+  },
+
+  _removeMouseEventListeners: function() {
+    if(this._hasMouseEventListeners) {
+      let groups = this.get('groups');
+      let bars = groups.selectAll('rect');
+      bars.on('mouseover', null);
+      bars.on('mouseout', null);
+    }
   },
 
   groups: Ember.computed(function() {
@@ -957,6 +964,7 @@ const TimeSeriesChartComponent = ChartComponent.extend(LegendMixin,
     var groups = this.get('groups');
     var showDetails = this.get('showDetails');
     var hideDetails = this.get('hideDetails');
+    this._hasMouseEventListeners = true;
 
     // Ensure bars are always inserted behind lines
     groups.enter()
