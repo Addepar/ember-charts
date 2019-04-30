@@ -14,6 +14,8 @@ global:
 
 env:
   - EMBER_TRY_SCENARIO=default
+  - EMBER_TRY_SCENARIO=ember-1.12
+  - EMBER_TRY_SCENARIO=ember-1.13
 
 matrix:
   fast_finish: true
