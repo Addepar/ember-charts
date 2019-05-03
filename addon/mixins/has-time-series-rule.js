@@ -32,9 +32,12 @@ export default Ember.Mixin.create({
   graphicHeight: null,
 
   willDestroyElement: function() {
-    let lineMarkers = this._getLineMarkers();
-    lineMarkers.on('mouseover', null);
-    lineMarkers.on('mouseout', null);
+    if(this._hasMouseEventListeners) {
+      let lineMarkers = this._getLineMarkers();
+      lineMarkers.on('mouseover', null);
+      lineMarkers.on('mouseout', null);
+    }
+
     this._super(...arguments);
   },
 
@@ -46,6 +49,7 @@ export default Ember.Mixin.create({
     var lineMarkers = this._getLineMarkers();
     var showDetails = this.get('showDetails');
     var hideDetails = this.get('hideDetails');
+    this._hasMouseEventListeners = true;
 
     lineMarkers.enter()
       .append('path')
