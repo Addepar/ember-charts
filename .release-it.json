@@ -1,0 +1,23 @@
+{
+  "scripts": {
+    "beforeStart": ["rm -rf .stage", "git clone git@github.com:addepar/ember-charts.git -b gh-pages .stage"],
+    "beforeStage": "ember build --environment=production",
+    "afterRelease": [
+      "cp -r ember-dist/* .stage",
+      "cd .stage && git add . --all && git commit -m 'Release ${version}' && git push"
+    ]
+  },
+  "git": {
+    "commitMessage": "Release ${version}",
+    "tagName": "v${version}",
+    "tagAnnotation": "Release ${version}"
+  },
+  "npm": {
+    "publish": true
+  },
+  "plugins": {
+    "@release-it/bumper": {
+      "out": ["bower.json", { "file": "VERSION", "type": "text/plain" }]
+    }
+  }
+}

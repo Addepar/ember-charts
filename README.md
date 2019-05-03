@@ -107,13 +107,13 @@ In a nutshell, this means:
 Prior to releasing, ensure that the CHANGELOG.md is updated to track any changes
 that have been made since the prior release.
 
-We increment version numbers and release using [release-it](https://github.com/webpro/release-it):
+We increment version numbers and release using [release-it](https://github.com/release-it/release-it):
 
 ```bash
-$(npm bin)/release-it <options>
+npm run release -- <options>
 ```
 
-The local configuration file for `release-it` is named `.release.json`, found in the
+The local configuration file for `release-it` is named `.release-it.json`, found in the
 root directory of the repository.
 
 By default, `release-it` without options will increment the
@@ -124,21 +124,18 @@ git repository.
 If you want to control the version number, use these options:
 
 ```bash
-$(npm bin)/release-it major # 1.2.3 -> 2.0.0
-$(npm bin)/release-it minor # 1.2.3 -> 1.3.0
-$(npm bin)/release-it X.Y.Z # 1.2.3 -> X.Y.Z
+npm run release -- major # 1.2.3 -> 2.0.0
+npm run release -- minor # 1.2.3 -> 1.3.0
+npm run release -- X.Y.Z # 1.2.3 -> X.Y.Z
 ```
 
 Ember Charts has also configured `release-it` to automatically update the `gh-pages`
-branch (from which the demo and documentation website is published). This is done using
-the "distribution repository" feature of `release-it`, which pushes the `/ember-dist/`
-directory after constructing it with `ember build`. These options can be seen in the
-`.release.json` file under "dist" options.
+branch (from which the demo and documentation website is published). This is done by
+pushing the `/ember-dist/` directory after constructing it with `ember build`.
+These commands can be seen in the `.release-it.json` file.
 
 `release-it` is also configured to automatically publish the updated version to
-`npm`. Previously we could not do this using `release-it` because it would attempt to
-publish the `dist.repo` instead of the source repo, but we can now override that using
-`"forcePublishSourceRepo": true` in `.release.json`.
+`npm`.
 
 Lastly, the new version should be released on Github, which can be done via the Github UI
 after the steps above are complete.
