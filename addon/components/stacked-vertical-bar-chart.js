@@ -98,15 +98,13 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
 
 
   willDestroyElement: function() {
-    if(this._hasMouseEventListeners) {
-      let bars = this.get('bars');
-      bars.on('mouseover', null);
-      bars.on('mouseout', null);
+    let bars = this.get('bars');
+    bars.on('mouseover', null);
+    bars.on('mouseout', null);
 
-      let slices = bars.selectAll('rect');
-      slices.on('mouseover', null);
-      slices.on('mouseout', null);
-    }
+    let slices = bars.selectAll('rect');
+    slices.on('mouseover', null);
+    slices.on('mouseout', null);
 
     this._super(...arguments);
   },
@@ -965,7 +963,6 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
     var bars = this.get('bars');
     var showDetails = this.get('showDetails');
     var hideDetails = this.get('hideDetails');
-    this._hasMouseEventListeners = true;
 
     var entering = bars.enter()
       .append('g').attr('class', 'bars');

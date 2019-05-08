@@ -54,15 +54,13 @@ const VerticalBarChartComponent = ChartComponent.extend(LegendMixin,
   maxLabelHeight: 50,
 
   willDestroyElement: function() {
-    if(this._hasMouseEventListeners) {
-      let groups = this.get('groups');
-      groups.on('mouseover', null);
-      groups.on('mouseout', null);
+    let groups = this.get('groups');
+    groups.on('mouseover', null);
+    groups.on('mouseout', null);
 
-      let bars = groups.selectAll('rect');
-      bars.on('mouseover', null);
-      bars.on('mouseout', null);
-    }
+    let bars = groups.selectAll('rect');
+    bars.on('mouseover', null);
+    bars.on('mouseout', null);
 
     this._super(...arguments);
   },
@@ -736,7 +734,6 @@ const VerticalBarChartComponent = ChartComponent.extend(LegendMixin,
     var groups = this.get('groups');
     var showDetails = this.get('showDetails');
     var hideDetails = this.get('hideDetails');
-    this._hasMouseEventListeners = true;
 
     var entering = groups.enter()
       .append('g').attr('class', 'bars');

@@ -48,11 +48,9 @@ const PieChartComponent = ChartComponent.extend(FloatingTooltipMixin,
   includeRoundedZeroPercentSlices: true,
 
   willDestroyElement: function() {
-    if(this._hasMouseEventListeners) {
-      let groups = this.get('groups');
-      groups.on('mouseover', null);
-      groups.on('mouseout', null);
-    }
+    let groups = this.get('groups');
+    groups.on('mouseover', null);
+    groups.on('mouseout', null);
     this._super(...arguments);
   },
 
@@ -595,7 +593,6 @@ const PieChartComponent = ChartComponent.extend(FloatingTooltipMixin,
     groups = this.get('groups');
     showDetails = this.get('showDetails');
     hideDetails = this.get('hideDetails');
-    this._hasMouseEventListeners = true;
     entering = groups.enter().append('g').attr({
       "class": 'arc'
     }).on("mouseover", function(d, i) {

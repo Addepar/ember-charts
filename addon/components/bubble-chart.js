@@ -69,12 +69,10 @@ export default ChartComponent.extend(FloatingTooltipMixin, {
   }),
 
   willDestroyElement: function() {
-    if(this._hasMouseEventListeners) {
-      let vis = this.get('viewport');
-      let circles = vis.selectAll("circle");
-      circles.on('mouseover', null);
-      circles.on('mouseout', null);
-    }
+    let vis = this.get('viewport');
+    let circles = vis.selectAll("circle");
+    circles.on('mouseover', null);
+    circles.on('mouseout', null);
 
     this._super(...arguments);
   },
@@ -131,7 +129,6 @@ export default ChartComponent.extend(FloatingTooltipMixin, {
     var showDetails = this.get('showDetails');
     var hideDetails = this.get('hideDetails');
     var fill_color = this.get('getSeriesColor');
-    this._hasMouseEventListeners = true;
 
     var circles = vis.selectAll("circle")
       .data(nodes, (d) => d.id);

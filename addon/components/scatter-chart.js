@@ -62,16 +62,13 @@ const ScatterChartComponent = ChartComponent.extend(LegendMixin, FloatingTooltip
   hasYDomainPadding: true,
 
   willDestroyElement: function() {
-    if(this._hasMouseEventListeners) {
-      let groups = this.get('groups');
-      groups.on('mouseover', null);
-      groups.on('mouseout', null);
+    let groups = this.get('groups');
+    groups.on('mouseover', null);
+    groups.on('mouseout', null);
 
-      let viewport = this.get('viewport');
-      let totalGroup = viewport.select('.totalgroup');
-      totalGroup.on('mouseover', null);
-      totalGroup.on('mouseout', null);
-    }
+    let totalGroup = this.get('viewport').select('.totalgroup');
+    totalGroup.on('mouseover', null);
+    totalGroup.on('mouseout', null);
 
     this._super(...arguments);
   },
@@ -528,7 +525,6 @@ const ScatterChartComponent = ChartComponent.extend(LegendMixin, FloatingTooltip
   updateGraphic: function() {
     var showDetails = this.get('showDetails');
     var hideDetails = this.get('hideDetails');
-    this._hasMouseEventListeners = true;
 
     this.get('groups')
       .selectAll('.dot')
