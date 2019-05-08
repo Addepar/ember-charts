@@ -53,18 +53,6 @@ const VerticalBarChartComponent = ChartComponent.extend(LegendMixin,
   // are rotated, they will be extended beyond labelHeight up to maxLabelHeight
   maxLabelHeight: 50,
 
-  willDestroyElement: function() {
-    let groups = this.get('groups');
-    groups.on('mouseover', null);
-    groups.on('mouseout', null);
-
-    let bars = groups.selectAll('rect');
-    bars.on('mouseover', null);
-    bars.on('mouseout', null);
-
-    this._super(...arguments);
-  },
-
   // ----------------------------------------------------------------------------
   // Data
   // ----------------------------------------------------------------------------

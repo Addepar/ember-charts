@@ -61,15 +61,6 @@ const TimeSeriesChartComponent = ChartComponent.extend(LegendMixin,
   // Force X-Axis labels to print vertically
   xAxisVertLabels: false,
 
-  willDestroyElement: function() {
-    var groups = this.get('groups');
-    var bars = groups.selectAll('rect');
-    bars.on('mouseover', null);
-    bars.on('mouseout', null);
-
-    this._super(...arguments);
-  },
-
   // ----------------------------------------------------------------------------
   // Time Series Chart Constants
   // ----------------------------------------------------------------------------
@@ -993,7 +984,7 @@ const TimeSeriesChartComponent = ChartComponent.extend(LegendMixin,
     series.enter()
       .append('g').attr('class', 'series')
       .append('path').attr('class', 'line');
-
+      
     series.exit()
       .remove();
   },

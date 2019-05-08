@@ -68,16 +68,6 @@ export default ChartComponent.extend(FloatingTooltipMixin, {
     };
   }),
 
-  willDestroyElement: function() {
-    let vis = this.get('viewport');
-    let circles = vis.selectAll("circle");
-    circles.on('mouseover', null);
-    circles.on('mouseout', null);
-
-    this._super(...arguments);
-  },
-
-
   // ----------------------------------------------------------------------------
   // Data
   // ----------------------------------------------------------------------------

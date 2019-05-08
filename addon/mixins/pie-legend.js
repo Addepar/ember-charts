@@ -26,13 +26,6 @@ const PieLegendMixin = Ember.Mixin.create({
   // if you want to override default legend behavior, override showLegend
   showLegend: true,
 
-  willDestroyElement: function() {
-    let legend = this.get('legend');
-    legend.on('mouseover', null);
-    legend.on('mouseout', null);
-    this._super(...arguments);
-  },
-
   // ----------------------------------------------------------------------------
   // Layout
   // ----------------------------------------------------------------------------

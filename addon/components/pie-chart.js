@@ -47,13 +47,6 @@ const PieChartComponent = ChartComponent.extend(FloatingTooltipMixin,
   // there was a slice of 0.3%, that slice would be rounded down to 0%
   includeRoundedZeroPercentSlices: true,
 
-  willDestroyElement: function() {
-    let groups = this.get('groups');
-    groups.on('mouseover', null);
-    groups.on('mouseout', null);
-    this._super(...arguments);
-  },
-
   // ----------------------------------------------------------------------------
   // Data
   // ----------------------------------------------------------------------------
