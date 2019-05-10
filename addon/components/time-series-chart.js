@@ -817,20 +817,24 @@ const TimeSeriesChartComponent = ChartComponent.extend(LegendMixin,
 
   removeAllGroups: function() {
     this._removeMouseEventListeners();
-    this.get('viewport').selectAll('.bars').remove();
+    this.getViewportBars().remove();
   },
 
   _removeMouseEventListeners: function() {
     if(this._hasMouseEventListeners) {
-      let groups = this.get('groups');
-      let bars = groups.selectAll('rect');
+      let viewportBars = this.getViewportBars();
+      let bars = viewportBars.selectAll('rect');
       bars.on('mouseover', null);
       bars.on('mouseout', null);
     }
   },
 
+  getViewportBars() {
+    return this.get('viewport').selectAll('.bars');
+  },
+
   groups: Ember.computed(function() {
-    return this.get('viewport').selectAll('.bars').data(this.get('_groupedBarData'));
+    return this.getViewportBars().data(this.get('_groupedBarData'));
   }).volatile(),
 
   removeAllSeries: function() {

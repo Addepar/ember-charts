@@ -96,14 +96,13 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
    */
   maxLabelHeight: 50,
 
-
   willDestroyElement: function() {
     if(this._hasMouseEventListeners) {
-      let bars = this.get('bars');
-      bars.on('mouseover', null);
-      bars.on('mouseout', null);
+      let viewportBars = this.getViewportBars();
+      viewportBars.on('mouseover', null);
+      viewportBars.on('mouseout', null);
 
-      let slices = bars.selectAll('rect');
+      let slices = viewportBars.selectAll('rect');
       slices.on('mouseover', null);
       slices.on('mouseout', null);
     }
@@ -871,10 +870,12 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
   // Selections
   // ---------------------------------------------------------------------------
 
+  getViewportBars() {
+    return this.get('viewport').selectAll('.bars');
+  },
+
   bars: Ember.computed(function() {
-    return this.get('viewport')
-               .selectAll('.bars')
-               .data(this.get('finishedData'));
+    return this.getViewportBars().data(this.get('finishedData'));
   }).volatile(),
 
   yAxis: Ember.computed(function() {
