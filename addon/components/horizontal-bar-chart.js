@@ -321,11 +321,13 @@ const HorizontalBarChartComponent = ChartComponent.extend(FloatingTooltipMixin,
   // ----------------------------------------------------------------------------
   // Selections
   // ----------------------------------------------------------------------------
+ 
+  getViewportBars() {
+    return this.get('viewport').selectAll('.bar');
+  },
 
   groups: Ember.computed(function() {
-    return this.get('viewport')
-      .selectAll('.bar')
-      .data(this.get('finishedData'));
+    return this.getViewportBars().data(this.get('finishedData'));
   }).volatile(),
 
   yAxis: Ember.computed(function() {
@@ -361,9 +363,9 @@ const HorizontalBarChartComponent = ChartComponent.extend(FloatingTooltipMixin,
    */
   willDestroyElement: function() {
     if(this._hasMouseEventListeners) {
-      let groups = this.get('groups');
-      groups.on('mouseover', null);
-      groups.on('mouseout', null);
+      let viewportBars = this.getViewportBars();
+      viewportBars.on('mouseover', null);
+      viewportBars.on('mouseout', null);
     }
     Ember.run.cancel(this._scheduledRedraw);
     this._super(...arguments);

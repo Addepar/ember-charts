@@ -49,9 +49,9 @@ const PieChartComponent = ChartComponent.extend(FloatingTooltipMixin,
 
   willDestroyElement: function() {
     if(this._hasMouseEventListeners) {
-      let groups = this.get('groups');
-      groups.on('mouseover', null);
-      groups.on('mouseout', null);
+      let viewportArc = this.getViewportArc();
+      viewportArc.on('mouseover', null);
+      viewportArc.on('mouseout', null);
     }
     this._super(...arguments);
   },
@@ -564,9 +564,13 @@ const PieChartComponent = ChartComponent.extend(FloatingTooltipMixin,
   // Selections
   // ----------------------------------------------------------------------------
 
+  getViewportArc() {
+    return this.get('viewport').selectAll('.arc');
+  },
+
   groups: Ember.computed(function() {
     var data = this.get('pie')(this.get('finishedData'));
-    return this.get('viewport').selectAll('.arc').data(data);
+    return this.getViewportArc().data(data);
   }).volatile(),
 
   // ----------------------------------------------------------------------------

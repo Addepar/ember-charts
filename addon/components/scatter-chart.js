@@ -63,9 +63,9 @@ const ScatterChartComponent = ChartComponent.extend(LegendMixin, FloatingTooltip
 
   willDestroyElement: function() {
     if(this._hasMouseEventListeners) {
-      let groups = this.get('groups');
-      groups.on('mouseover', null);
-      groups.on('mouseout', null);
+      let viewportGroups = this.getViewportGroups();
+      viewportGroups.on('mouseover', null);
+      viewportGroups.on('mouseout', null);
 
       let viewport = this.get('viewport');
       let totalGroup = viewport.select('.totalgroup');
@@ -383,9 +383,13 @@ const ScatterChartComponent = ChartComponent.extend(LegendMixin, FloatingTooltip
   // ----------------------------------------------------------------------------
   // Selections
   // ----------------------------------------------------------------------------
+    //
+  getViewportGroups() {
+    return this.get('viewport').selectAll('.group');
+  },
 
   groups: Ember.computed(function() {
-    return this.get('viewport').selectAll('.group').data(this.get('finishedData'));
+    return this.getViewportGroups().data(this.get('finishedData'));
   }).volatile(),
 
   selectOrCreateAxis: function(selector) {

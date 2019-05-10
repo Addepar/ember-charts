@@ -55,11 +55,11 @@ const VerticalBarChartComponent = ChartComponent.extend(LegendMixin,
 
   willDestroyElement: function() {
     if(this._hasMouseEventListeners) {
-      let groups = this.get('groups');
-      groups.on('mouseover', null);
-      groups.on('mouseout', null);
+      let viewportBars = this.getViewportBars();
+      viewportBars.on('mouseover', null);
+      viewportBars.on('mouseout', null);
 
-      let bars = groups.selectAll('rect');
+      let bars = viewportBars.selectAll('rect');
       bars.on('mouseover', null);
       bars.on('mouseout', null);
     }
@@ -641,8 +641,12 @@ const VerticalBarChartComponent = ChartComponent.extend(LegendMixin,
   // Selections
   // ----------------------------------------------------------------------------
 
+  getViewportBars() {
+    return this.get('viewport').selectAll('.bars');
+  },
+
   groups: Ember.computed(function() {
-    return this.get('viewport').selectAll('.bars').data(this.get('finishedData'));
+    return this.getViewportBars().data(this.get('finishedData'));
   }).volatile(),
 
   yAxis: Ember.computed(function() {
