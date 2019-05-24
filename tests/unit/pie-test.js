@@ -137,6 +137,20 @@ test('Legend renders correctly', function(assert) {
     'Legend contains text for all values in the other slice');
 });
 
+test('Legend renders correctly with custom other label', function(assert) {
+  const component = this.subject({
+    data: asset_values,
+    otherLabel: 'Different Other Label',
+    minSlicePercent: 15
+  });
+  const legend = this.$().find('.legend');
+  const legendText = $('text', legend).text();
+  const expectedLegendText = "Different Other Label: Private Equity (4%), Hedge Fund (4%), Cash & Cash Equivalent (13%)";
+  assert.equal(legend.length, 1, 'Has a legend for other slice');
+  assert.equal(legendText, expectedLegendText,
+    'Legend contains text for all values in the other slice');
+});
+
 test('Margins are the right size when showLegend is no', function(assert) {
   var component = this.subject(pieContent);
 
