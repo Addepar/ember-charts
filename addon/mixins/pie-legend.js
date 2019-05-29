@@ -133,7 +133,7 @@ const PieLegendMixin = Ember.Mixin.create({
       }
     });
     var row = labels.append('text')
-                .text("Other: " + labelStrings[0])
+                .text(this.get('otherLabel') + ": " + labelStrings[0])
                 .attr(this.get('legendLabelAttrs'));
 
     // Try adding each label. If that makes the current line too long,

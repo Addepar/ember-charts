@@ -104,6 +104,8 @@ const PieChartComponent = ChartComponent.extend(FloatingTooltipMixin,
     return _.sortBy(data, this.get('sortKey'));
   }),
 
+  otherLabel: 'Other',
+
   // This takes the sorted slices that have percents calculated and returns
   // sorted slices that obey the "other" slice aggregation rules
   //
@@ -117,7 +119,7 @@ const PieChartComponent = ChartComponent.extend(FloatingTooltipMixin,
     var minSlicePercent = this.get('minSlicePercent');
     var otherItems = [];
     var otherSlice = {
-      label: 'Other',
+      label: this.get('otherLabel'),
       percent: 0.0,
       _otherItems: otherItems
     };
