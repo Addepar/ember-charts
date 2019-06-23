@@ -319,7 +319,7 @@ const ScatterChartComponent = ChartComponent.extend(LegendMixin, FloatingTooltip
 
   showDetails: Ember.computed('isInteractive', function() {
     if (!this.get('isInteractive')) {
-      return Ember.K;
+      return () => {};
     }
 
     return (data, i, element) => {
@@ -344,7 +344,7 @@ const ScatterChartComponent = ChartComponent.extend(LegendMixin, FloatingTooltip
 
   hideDetails: Ember.computed('isInteractive', function() {
     if (!this.get('isInteractive')) {
-      return Ember.K;
+      return () => {};
     }
 
     return (data, i, element) => {

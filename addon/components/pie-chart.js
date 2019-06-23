@@ -389,7 +389,7 @@ const PieChartComponent = ChartComponent.extend(FloatingTooltipMixin,
 
   showDetails: Ember.computed('isInteractive', function() {
     if (!this.get('isInteractive')) {
-      return Ember.K;
+      return () => {};
     }
     return (d, i, element) => {
       var content, data, formatLabelFunction, value;
@@ -412,7 +412,7 @@ const PieChartComponent = ChartComponent.extend(FloatingTooltipMixin,
 
   hideDetails: Ember.computed('isInteractive', function() {
     if (!this.get('isInteractive')) {
-      return Ember.K;
+      return () => {};
     }
 
     return (d, i, element) => {

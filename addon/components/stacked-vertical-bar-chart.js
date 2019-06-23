@@ -754,7 +754,7 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
 
   showDetails: Ember.computed('isInteractive', function() {
     if (!this.get('isInteractive')) {
-      return Ember.K;
+      return () => {};
     }
 
     return (data, i, element) => {
@@ -793,7 +793,7 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
 
   hideDetails: Ember.computed('isInteractive', function() {
     if (!this.get('isInteractive')) {
-      return Ember.K;
+      return () => {};
     }
 
     return (data, i, element) => {
