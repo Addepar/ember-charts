@@ -1,57 +1,40 @@
-import Ember from 'ember';
-import { module, test } from 'qunit';
-import startApp from '../helpers/start-app';
+import { test } from 'qunit';
+import moduleForAcceptance from '../helpers/module-for-acceptance';
 
-var application;
+moduleForAcceptance('Acceptance | site navigation');
 
-module('Acceptance | site navigation', {
-  beforeEach: function() {
-    application = startApp();
-  },
-
-  afterEach: function() {
-    Ember.run(application, 'destroy');
-  }
+test('visiting /', async function(assert) {
+  await visit('/');
+    
+  assert.equal(currentURL(), '/overview');
 });
 
-test('visiting /', function(assert) {
-  visit('/');
-  andThen(function() {
-    assert.equal(currentURL(), '/overview');
-  });
+test('visiting /overview', async function(assert) {
+  await visit('/');
+    
+  assert.equal(currentURL(), '/overview');
 });
 
-test('visiting /overview', function(assert) {
-  visit('/');
-  andThen(function() {
-    assert.equal(currentURL(), '/overview');
-  });
+test('visiting /time-series', async function(assert) {
+  await visit('/time-series');
+    
+  assert.equal(currentURL(), '/time-series');
 });
 
-test('visiting /time-series', function(assert) {
-  visit('/time-series');
-  andThen(function() {
-    assert.equal(currentURL(), '/time-series');
-  });
+test('visiting /horizontal-bar', async function(assert) {
+  await visit('/horizontal-bar');
+    
+  assert.equal(currentURL(), '/horizontal-bar');
 });
 
-test('visiting /horizontal-bar', function(assert) {
-  visit('/horizontal-bar');
-  andThen(function() {
-    assert.equal(currentURL(), '/horizontal-bar');
-  });
+test('visiting /pie', async function(assert) {
+  await visit('/pie');
+    
+  assert.equal(currentURL(), '/pie');
 });
 
-test('visiting /pie', function(assert) {
-  visit('/pie');
-  andThen(function() {
-    assert.equal(currentURL(), '/pie');
-  });
-});
-
-test('visiting /scatter', function(assert) {
-  visit('/scatter');
-  andThen(function() {
-    assert.equal(currentURL(), '/scatter');
-  });
+test('visiting /scatter', async function(assert) {
+  await visit('/scatter');
+    
+  assert.equal(currentURL(), '/scatter');
 });
