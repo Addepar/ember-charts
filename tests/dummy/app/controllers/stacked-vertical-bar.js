@@ -1,4 +1,5 @@
 import Ember from 'ember';
+import { cloneDeep, keys } from 'lodash-es';
 import VerticalBarController from './vertical-bar';
 
 const StackedVerticalBarController = VerticalBarController.extend({
@@ -12,7 +13,7 @@ const StackedVerticalBarController = VerticalBarController.extend({
   },
 
   barSortKeys: Ember.computed('barSortKeyOptions', function() {
-    return Ember.A(_.keys(this.get('barSortKeyOptions')));
+    return Ember.A(keys(this.get('barSortKeyOptions')));
   }),
 
   selectedBarSortKey: 'value',
@@ -31,7 +32,7 @@ const StackedVerticalBarController = VerticalBarController.extend({
   },
 
   sliceSortKeys: Ember.computed('sliceSortKeyOptions', function() {
-    return Ember.A(_.keys(this.get('sliceSortKeyOptions')));
+    return Ember.A(keys(this.get('sliceSortKeyOptions')));
   }),
 
   selectedSliceSortKey: 'value',
@@ -42,7 +43,7 @@ const StackedVerticalBarController = VerticalBarController.extend({
   }),
 
   rawDataHash: Ember.computed(function() {
-    var dataHash = _.cloneDeep(this._super());
+    var dataHash = cloneDeep(this._super());
     for (var datasetName in dataHash) {
       var dataset = dataHash[datasetName];
       if (dataset === null || dataset === void 0) {

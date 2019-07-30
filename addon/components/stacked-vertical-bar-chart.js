@@ -1,4 +1,5 @@
 import Ember from 'ember';
+import { clone, difference, filter, groupBy, map, max, maxBy, range, reduce, sortBy, takeRight, zipObject } from 'lodash-es';
 import ChartComponent from './chart-component';
 import LegendMixin from '../mixins/legend';
 import FloatingTooltipMixin from '../mixins/floating-tooltip';
@@ -121,7 +122,7 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
    * @type {Object.<string, Array.<Object>>}
    */
   dataGroupedBySlice: Ember.computed('data.[]', function() {
-    return _.groupBy(this.get('data'), 'sliceLabel');
+    return groupBy(this.get('data'), 'sliceLabel');
   }),
 
   /**
@@ -136,7 +137,7 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
   dataGroupedByBar: Ember.computed('ungroupedSeriesName', 'data.[]',
       function() {
     var ungroupedSeriesName = this.get('ungroupedSeriesName');
-    return _.groupBy(this.get('data'), (slice) => {
+    return groupBy(this.get('data'), (slice) => {
       return slice.barLabel || ungroupedSeriesName;
     });
   }),
@@ -149,12 +150,12 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
    * @type {number}
    */
   largestGrossBarValue: Ember.computed('dataGroupedByBar', function() {
-    var grossBarValues = _.map(this.get('dataGroupedByBar'), (barData) => {
+    var grossBarValues = map(this.get('dataGroupedByBar'), (barData) => {
       return barData.reduce((sum, slice) => {
         return sum + Math.abs(slice.value);
       }, 0);
     });
-    return _.max(grossBarValues);
+    return max(grossBarValues);
   }),
 
   /**
@@ -170,8 +171,8 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
     var dataGroupedBySlice, largestSlice, largestBarValue, largestSliceData;
     dataGroupedBySlice = this.get('dataGroupedBySlice');
     largestBarValue = this.get('largestGrossBarValue');
-    largestSliceData = _.map(dataGroupedBySlice, (slices, sliceLabel) => {
-      largestSlice = _.maxBy(slices, (slice) => {
+    largestSliceData = map(dataGroupedBySlice, (slices, sliceLabel) => {
+      largestSlice = maxBy(slices, (slice) => {
         return Math.abs(slice.value);
       });
       return {
@@ -202,7 +203,7 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
     // threshold. These slices are 'too thin' to show on their own, as they will
     // create too much noise in the stacked bar chart, so we lump them into
     // the one 'Other' slice.
-    nonOtherSlices = _.filter(largestSliceData, (sliceData) => {
+    nonOtherSlices = filter(largestSliceData, (sliceData) => {
       return sliceData.percentOfBar >= minSlicePercent;
     });
 
@@ -210,8 +211,7 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
     // slices, where N is the max number we can display (this saves one slice
     // for 'Other').
     maxNumberOfSlices = this.get('maxNumberOfSlices');
-    nonOtherSlices = _.takeRight(_.sortBy(nonOtherSlices, 'percentOfBar'),
-                                 maxNumberOfSlices - 1);
+    nonOtherSlices = takeRight(sortBy(nonOtherSlices, 'percentOfBar'), maxNumberOfSlices - 1);
 
     // At this point, everything in `nonOtherSlices` meets both the thresholds
     // set by `minSlicePercent` and `maxNumberOfSlices` and deserves to be shown
@@ -220,10 +220,10 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
       // If 0 or 1 slice labels were filtered out, we can just show all slice
       // labels explicitly. We only want the 'Other' slice if it has at least
       // 2 slice labels contained aggregated inside.
-      return _.map(largestSliceData, 'sliceLabel');
+      return map(largestSliceData, 'sliceLabel');
     } else {
       // Otherwise, just return the slice labels that passed the filters.
-      return _.map(nonOtherSlices, 'sliceLabel');
+      return map(nonOtherSlices, 'sliceLabel');
     }
   }),
 
@@ -234,8 +234,8 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
    */
   otherSliceTypes: Ember.computed('largestSliceData.[]',
       'nonOtherSliceTypes.[]', function() {
-    var allSliceTypes = _.map(this.get('largestSliceData'), 'sliceLabel');
-    return _.difference(allSliceTypes, this.get('nonOtherSliceTypes'));
+    var allSliceTypes = map(this.get('largestSliceData'), 'sliceLabel');
+    return difference(allSliceTypes, this.get('nonOtherSliceTypes'));
   }),
 
   /**
@@ -252,7 +252,7 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
     groupedData = this.get('dataGroupedByBar');
     nonOtherSliceTypes = this.get('nonOtherSliceTypes');
     otherSliceLabel = this.get('otherSliceLabel');
-    return _.reduce(groupedData, (result, barData, barLabel) => {
+    return reduce(groupedData, (result, barData, barLabel) => {
       // Create an empty 'Other' slice. Go through every slice in each bar
       // and look for slices that need to be aggregated into 'Other', updating
       // the value of the otherSlice along the way.
@@ -285,12 +285,12 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
    */
   finishedData: Ember.computed('sortedData', function() {
     var posTop, negBottom, stackedSlices;
-    return _.map(this.get('sortedData'), (slices, barLabel) => {
+    return map(this.get('sortedData'), (slices, barLabel) => {
       // We need to track the top and bottom of the bar so we know where to
       // add any positive or negative slices, respectively.
       posTop = 0;
       negBottom = 0;
-      stackedSlices = _.map(slices, function(slice) {
+      stackedSlices = map(slices, function(slice) {
         var yMin, yMax;
         if (slice.value < 0) {
           yMax = negBottom;
@@ -349,10 +349,10 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
       'otherSliceLabel', function() {
     var sortedBars, sliceOrder, slicesInBar, allSlicesByBar;
     allSlicesByBar = this.get('dataGroupedByBar');
-    sortedBars = _.sortBy(this.get('netBarValues'), 'value').reverse();
+    sortedBars = sortBy(this.get('netBarValues'), 'value').reverse();
     sliceOrder = [];
     sortedBars.forEach(bar => {
-      slicesInBar = _.sortBy(allSlicesByBar[bar.barLabel], slice => {
+      slicesInBar = sortBy(allSlicesByBar[bar.barLabel], slice => {
         return -Math.abs(slice.value);
       });
       slicesInBar.forEach(slice => {
@@ -525,7 +525,7 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
    */
   netBarValues: Ember.computed('dataGroupedByBar', function() {
     var dataGroupedByBar = this.get('dataGroupedByBar');
-    return _.map(dataGroupedByBar, (barData, barLabel) => {
+    return map(dataGroupedByBar, (barData, barLabel) => {
       var barValue = barData.reduce((sum, slice) => {
         return sum + slice.value;
       }, 0);
@@ -543,7 +543,7 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
       function() {
     var sortedBars, sortedBarNames;
     sortedBars = this.get('netBarValues').sort(this.get('barSortingFn'));
-    sortedBarNames = _.map(sortedBars, 'barLabel');
+    sortedBarNames = map(sortedBars, 'barLabel');
     if (!this.get('barSortAscending')) {
       sortedBarNames.reverse();
     }
@@ -642,7 +642,7 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
    */
   allSliceLabels: Ember.computed('nonOtherSliceTypes.[]', 'otherSliceTypes.[]',
       'otherSliceLabel', function() {
-    var result = _.clone(this.get('nonOtherSliceTypes'));
+    var result = clone(this.get('nonOtherSliceTypes'));
     if (this.get('otherSliceTypes').length > 0) {
       result.push(this.get('otherSliceLabel'));
     }
@@ -651,7 +651,7 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
 
   labelIDMapping: Ember.computed('allSliceLabels.[]', function() {
     var allSliceLabels = this.get('allSliceLabels');
-    return _.zipObject(allSliceLabels, _.range(allSliceLabels.length));
+    return zipObject(allSliceLabels, range(allSliceLabels.length));
   }),
 
   // The space in pixels allocated to each bar

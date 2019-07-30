@@ -24,8 +24,10 @@
     "release": "release-it"
   },
   "dependencies": {
+    "ember-auto-import": "^1.5.2",
     "ember-cli-babel": "^7.7.3",
-    "ember-cli-less": "~1.3.1"
+    "ember-cli-less": "~1.3.1",
+    "lodash-es": "^4.17.15"
   },
   "devDependencies": {
     "@ember/optional-features": "^0.7.0",

@@ -1,4 +1,5 @@
 import Ember from 'ember';
+import { keys, values } from 'lodash-es';
 import ChartComponent from './chart-component';
 
 import LegendMixin from '../mixins/legend';
@@ -104,8 +105,8 @@ const ScatterChartComponent = ChartComponent.extend(LegendMixin, FloatingTooltip
 
     var groupedData = groupBy(data, (d) => d.group || this.get('ungroupedSeriesName'));
 
-    this.set('groupNames', _.keys(groupedData));
-    return _.values(groupedData);
+    this.set('groupNames', keys(groupedData));
+    return values(groupedData);
   }),
 
   groupNames: [],

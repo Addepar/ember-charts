@@ -1,4 +1,5 @@
 import Ember from 'ember';
+import { uniq } from 'lodash-es';
 import ResizeHandlerMixin from '../mixins/resize-handler';
 import ColorableMixin from '../mixins/colorable';
 
@@ -224,7 +225,7 @@ const ChartComponent = Ember.Component.extend(ColorableMixin, ResizeHandlerMixin
   init: function() {
     this._super();
     this._scheduledDrawCount = 0;
-    _.uniq(this.get('renderVars')).forEach((renderVar) => {
+    uniq(this.get('renderVars')).forEach((renderVar) => {
       this.addObserver(renderVar, this.drawOnce);
       // This is just to ensure that observers added above fire even
       // if that renderVar is not consumed elsewhere.
@@ -233,7 +234,7 @@ const ChartComponent = Ember.Component.extend(ColorableMixin, ResizeHandlerMixin
   },
 
   willDestroyElement: function() {
-    _.uniq(this.get('renderVars')).forEach((renderVar) => {
+    uniq(this.get('renderVars')).forEach((renderVar) => {
       this.removeObserver(renderVar, this, this.drawOnce);
     });
     this._super();

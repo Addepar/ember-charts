@@ -1,4 +1,5 @@
 import Ember from 'ember';
+import { assign, each, flatten, groupBy as lodashGroupBy, keys, map, max as lodashMax, min as lodashMin, sortBy, uniq, values } from 'lodash-es';
 import ChartComponent from './chart-component';
 import LegendMixin from '../mixins/legend';
 import FloatingTooltipMixin from '../mixins/floating-tooltip';
@@ -75,7 +76,7 @@ const VerticalBarChartComponent = ChartComponent.extend(LegendMixin,
     var data, group, groupData, groupObj, groupedData, key, newData, sortAscending, sortedGroups, summedGroupValues, _i, _len;
     if (this.get('stackBars')) {
       data = this.get('data');
-      groupedData = _.groupBy(data, function(d) {
+      groupedData = lodashGroupBy(data, function(d) {
         return d.group;
       });
       summedGroupValues = Ember.A();
@@ -134,15 +135,15 @@ const VerticalBarChartComponent = ChartComponent.extend(LegendMixin,
     // This could potentially be addressed with a refactor where sorting happens after
     // grouping across the board.
     // TODO(ember-charts-lodash): Use _.mapValues instead of the each loop.
-    _.each(_.keys(data), function(groupName) {
-      data[groupName] = _.sortBy(data[groupName], 'label');
+    each(keys(data), function(groupName) {
+      data[groupName] = sortBy(data[groupName], 'label');
     });
 
     return data;
   }),
 
   groupNames: Ember.computed('groupedData', function() {
-    return _.keys(this.get('groupedData'));
+    return keys(this.get('groupedData'));
   }),
 
   // We know the data is grouped because it has more than one label. If there
@@ -162,9 +163,9 @@ const VerticalBarChartComponent = ChartComponent.extend(LegendMixin,
         return Ember.A();
       }
 
-      return _.map(this.get('groupedData'), function(values, groupName) {
+      return map(this.get('groupedData'), function(values, groupName) {
         y0 = 0;
-        stackedValues = _.map(values, function(d) {
+        stackedValues = map(values, function(d) {
           return {
             y0: y0,
             y1: y0 += Math.max(d.value, 0),
@@ -190,7 +191,7 @@ const VerticalBarChartComponent = ChartComponent.extend(LegendMixin,
       // If we do not have grouped data and are drawing stacked bars, keep the
       // data in one group so it gets stacked
       y0 = 0;
-      stackedValues = _.map(this.get('data'), function(d) {
+      stackedValues = map(this.get('data'), function(d) {
         return {
           y0: y0,
           y1: y0 += Math.max(d.value, 0),
@@ -215,7 +216,7 @@ const VerticalBarChartComponent = ChartComponent.extend(LegendMixin,
       }
       // If we do NOT have grouped data and do not have stackBars turned on, split the
       // data up so it gets drawn in separate groups and labeled
-      return _.map(this.get('sortedData'), function(d) {
+      return map(this.get('sortedData'), function(d) {
         return {
           group: d.label,
           values: [d]
@@ -256,13 +257,13 @@ const VerticalBarChartComponent = ChartComponent.extend(LegendMixin,
   yDomain: Ember.computed('finishedData', 'stackBars', function() {
     var finishedData = this.get('finishedData');
     var minOfGroups = d3.min(finishedData, function(d) {
-      return _.min(d.values.map(function(dd) {
+      return lodashMin(d.values.map(function(dd) {
         return dd.value;
       }));
     });
 
     var maxOfGroups = d3.max(finishedData, function(d) {
-      return _.max(d.values.map(function(dd) {
+      return lodashMax(d.values.map(function(dd) {
         return dd.value;
       }));
     });
@@ -306,14 +307,14 @@ const VerticalBarChartComponent = ChartComponent.extend(LegendMixin,
   }),
 
   groupedIndividualBarLabels: Ember.computed('groupedData.[]', function() {
-    var groups = _.map(_.values(this.get('groupedData')), function(g) {
-      return _.map(g, 'label');
+    var groups = map(values(this.get('groupedData')), function(g) {
+      return map(g, 'label');
     });
-    return _.uniq(_.flatten(groups));
+    return uniq(flatten(groups));
   }),
 
   ungroupedIndividualBarLabels: Ember.computed('sortedData.@each.label', function() {
-    return _.map(this.get('sortedData'), 'label');
+    return map(this.get('sortedData'), 'label');
   }),
 
   // The labels of the bars in the chart.
@@ -586,7 +587,7 @@ const VerticalBarChartComponent = ChartComponent.extend(LegendMixin,
     var zeroDisplacement = 1;
     var yScale = this.get('yScale');
 
-    return _.assign({
+    return assign({
       'stroke-width': 0,
       width: () => this.get('groupWidth'),
       x: null,
@@ -603,7 +604,7 @@ const VerticalBarChartComponent = ChartComponent.extend(LegendMixin,
     var zeroDisplacement = 1;
     var yScale = this.get('yScale');
 
-    return _.assign({
+    return assign({
       'stroke-width': 0,
       width: () => this.get('barWidth'),
       x: (d) => this.get('xWithinGroupScale')(d.label),

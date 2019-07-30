@@ -1,5 +1,6 @@
 // TODO(azirbel): This needs to be an external dependency.
 import Ember from 'ember';
+import { isFunction } from 'lodash-es';
 
 export default Ember.Mixin.create({
   resizeEndDelay: 200,
@@ -14,7 +15,7 @@ export default Ember.Mixin.create({
         return;
       }
       this.set('resizing', false);
-      if (_.isFunction(this.onResizeEnd)) {
+      if (isFunction(this.onResizeEnd)) {
         this.onResizeEnd(event);
       }
     };
@@ -27,11 +28,11 @@ export default Ember.Mixin.create({
     }
     if (!this.get('resizing')) {
       this.set('resizing', true);
-      if (_.isFunction(this.onResizeStart)) {
+      if (isFunction(this.onResizeStart)) {
         this.onResizeStart(event);
       }
     }
-    if (_.isFunction(this.onResize)) {
+    if (isFunction(this.onResize)) {
       this.onResize(event);
     }
     return Ember.run.debounce(this, this.get('endResize'), event, this.get('resizeEndDelay'));

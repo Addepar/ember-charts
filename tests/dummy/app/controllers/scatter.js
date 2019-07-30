@@ -1,4 +1,5 @@
 import Ember from 'ember';
+import { keys, reduce } from 'lodash-es';
 import SlideController from './slide';
 import data from '../models/data';
 
@@ -18,7 +19,7 @@ export default SlideController.extend({
   // ---------
 
   availableDataSets: Ember.computed('rawDataHash', function() {
-    return Ember.A(_.keys(this.get('rawDataHash')));
+    return Ember.A(keys(this.get('rawDataHash')));
   }),
 
   data: Ember.computed('selectedData', 'rawDataHash', function() {
@@ -39,10 +40,10 @@ export default SlideController.extend({
     var data = this.get('data');
     return {
     	group: 'Portfolio Total',
-    	xValue: _.reduce(data, function(prev, d) {
+    	xValue: reduce(data, function(prev, d) {
     		return prev + d.xValue;
     	}, 0),
-    	yValue: _.reduce(data, function(prev, d) {
+    	yValue: reduce(data, function(prev, d) {
     		return  prev + d.yValue;
     	}, 0)
   	};

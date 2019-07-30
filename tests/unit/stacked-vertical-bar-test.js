@@ -1,4 +1,5 @@
 import Ember from "ember";
+import { cloneDeep, forEach, groupBy, isEqual, keys, map, min, mapValues, sortBy, sum, sumBy, uniq, values } from 'lodash-es';
 import { test, moduleForComponent } from 'ember-qunit';
 
 
@@ -42,7 +43,7 @@ var three_ranges = [{
 
 // Adds additional slice types to the three_ranges data for higher granularity
 // and more thorough testing of slice sorting mechanics.
-var sliceSortingData = _.cloneDeep(three_ranges).concat([{
+var sliceSortingData = cloneDeep(three_ranges).concat([{
   sliceLabel: "Label 4",
   barLabel: "Group One",
   value: -10
@@ -141,12 +142,12 @@ test('Within each bar, the stacking slices have the correct heights relative to 
     barHeight, sliceHeights, sliceIndex, expectedSliceHeights, barDatum;
   assert.expect(three_ranges.length);
 
-  dataByBarLabel = _.groupBy(_.cloneDeep(three_ranges), 'barLabel');
+  dataByBarLabel = groupBy(cloneDeep(three_ranges), 'barLabel');
 
   // Compute the expected heights of each slice as a percentage
   // of the height of the whole bar.
-  _.forEach(dataByBarLabel, function(barData) {
-    var grossBarSum = _.sumBy(barData, slice => Math.abs(slice.value));
+  forEach(dataByBarLabel, function(barData) {
+    var grossBarSum = sumBy(barData, slice => Math.abs(slice.value));
     for (sliceIndex = 0; sliceIndex < barData.length; sliceIndex++) {
       barData[sliceIndex].percentOfBar = Math.abs(barData[sliceIndex].value) / grossBarSum;
     }
@@ -168,8 +169,8 @@ test('Within each bar, the stacking slices have the correct heights relative to 
 
     // Find the actual heights of each slice in the bar,
     // and the overall height of the bar.
-    sliceHeights = _.map(slices, getHeightOfSvgSlice);
-    barHeight = _.sum(sliceHeights);
+    sliceHeights = map(slices, getHeightOfSvgSlice);
+    barHeight = sum(sliceHeights);
     sliceHeights.sort(diff);
 
     // Find the absolute expected heights of each slice
@@ -206,16 +207,16 @@ test('The bars have the correct heights relative to each other', function(assert
   var dataByBarLabel, grossBarSums, minGrossBarSum, expectedBarHeightRatios,
     actualBarHeights, minActualBarHeight, barLabel, expectedBarHeight;
 
-  dataByBarLabel = _.groupBy(three_ranges, 'barLabel');
-  assert.expect(_.keys(dataByBarLabel).length);
+  dataByBarLabel = groupBy(three_ranges, 'barLabel');
+  assert.expect(keys(dataByBarLabel).length);
 
   // Compute the expected heights of each bar as a percentage
   // of the expected height of the shortest bar.
-  grossBarSums = _.mapValues(dataByBarLabel, function(barData) {
-    return _.sumBy(barData, slice => Math.abs(slice.value));
+  grossBarSums = mapValues(dataByBarLabel, function(barData) {
+    return sumBy(barData, slice => Math.abs(slice.value));
   });
-  minGrossBarSum = _.min(_.values(grossBarSums));
-  expectedBarHeightRatios = _.mapValues(grossBarSums, function(sum) {
+  minGrossBarSum = min(values(grossBarSums));
+  expectedBarHeightRatios = mapValues(grossBarSums, function(sum) {
     return (sum / minGrossBarSum);
   });
 
@@ -227,9 +228,9 @@ test('The bars have the correct heights relative to each other', function(assert
   actualBarHeights = {};
   this.$('svg g.bars').each(function() {
     var slices = $('rect', this);
-    actualBarHeights[$(this).text()] = _.sum(_.map(slices, getHeightOfSvgSlice));
+    actualBarHeights[$(this).text()] = sum(map(slices, getHeightOfSvgSlice));
   });
-  minActualBarHeight = _.min(_.values(actualBarHeights));
+  minActualBarHeight = min(values(actualBarHeights));
 
   // Compare the expected and actual heights
   // and assert that they are approximately equal.
@@ -251,13 +252,13 @@ test('The bars have the correct heights relative to the values on the y-axis tic
   var dataByBarLabel, grossBarSums, pixelsPerDataUnit, expectedBarHeights,
     actualBarHeights, barLabel;
 
-  dataByBarLabel = _.groupBy(three_ranges, 'barLabel');
-  assert.expect(1 + _.keys(dataByBarLabel).length);
+  dataByBarLabel = groupBy(three_ranges, 'barLabel');
+  assert.expect(1 + keys(dataByBarLabel).length);
 
   // Compute the expected heights of each bar as a percentage
   // of the expected height of the shortest bar.
-  grossBarSums = _.mapValues(dataByBarLabel, function(barData) {
-    return _.sumBy(barData, slice => Math.abs(slice.value));
+  grossBarSums = mapValues(dataByBarLabel, function(barData) {
+    return sumBy(barData, slice => Math.abs(slice.value));
   });
 
   this.subject({data: three_ranges});
@@ -285,7 +286,7 @@ test('The bars have the correct heights relative to the values on the y-axis tic
   })();
 
   // Find the expected height in pixels of each SVG bar.
-  expectedBarHeights = _.mapValues(grossBarSums, function(sum) {
+  expectedBarHeights = mapValues(grossBarSums, function(sum) {
     return (sum * pixelsPerDataUnit);
   });
 
@@ -293,7 +294,7 @@ test('The bars have the correct heights relative to the values on the y-axis tic
   actualBarHeights = {};
   this.$('svg g.bars').each(function() {
     var slices = $('rect', this);
-    actualBarHeights[$(this).text()] = _.sum(_.map(slices, getHeightOfSvgSlice));
+    actualBarHeights[$(this).text()] = sum(map(slices, getHeightOfSvgSlice));
   });
 
   // Compare the expected and actual heights
@@ -316,7 +317,7 @@ test('All stacking slices with the same label have the same color as shown in th
     function(assert) {
   var component, sliceLabels, legendColorsBySliceLabel;
 
-  sliceLabels = _.keys(_.groupBy(three_ranges, 'sliceLabel'));
+  sliceLabels = keys(groupBy(three_ranges, 'sliceLabel'));
   assert.expect(1 + (3 * sliceLabels.length));
 
   component = this.subject({data: three_ranges});
@@ -350,7 +351,7 @@ test('All stacking slices with the same label have the same color as shown in th
     //
     legendColorsBySliceLabel[label] = $('path', this).css('fill');
   });
-  assert.equal(_.keys(legendColorsBySliceLabel).length, sliceLabels.length,
+  assert.equal(keys(legendColorsBySliceLabel).length, sliceLabels.length,
     'Every slice label in the data for the chart also appears in the chart legend');
 
   const getSliceColor = function() {
@@ -362,7 +363,7 @@ test('All stacking slices with the same label have the same color as shown in th
     var slices = component.$(sliceSelector);
 
     var allSliceColors = slices.map(getSliceColor);
-    var uniqueSliceColors = _.uniq(allSliceColors);
+    var uniqueSliceColors = uniq(allSliceColors);
 
     assert.equal(uniqueSliceColors.length, 1,
       "All slices for '" + label + "' have this color: " + uniqueSliceColors[0]);
@@ -384,8 +385,8 @@ test('Stacking slices within a single bar do not cover up each other', function(
   var dataByBarLabel, numExpectedAssertions;
 
   numExpectedAssertions = 0;
-  dataByBarLabel = _.groupBy(three_ranges, 'barLabel');
-  _.values(dataByBarLabel).forEach(function(barData) {
+  dataByBarLabel = groupBy(three_ranges, 'barLabel');
+  values(dataByBarLabel).forEach(function(barData) {
     numExpectedAssertions += Math.max(0, barData.length - 1);
   });
   assert.expect(numExpectedAssertions);
@@ -507,7 +508,7 @@ function assertOtherSliceIsCorrect(assert, component, expectedSliceLabels,
   $slices = $('g.bars rect'); // All slices that exist in the DOM
   otherSliceLabel = component.get('otherSliceLabel');
   $otherSliceLegendItem = $('g.legend-item:contains(' + otherSliceLabel + ')');
-  assert.ok(_.isEqual(component.get('allSliceLabels'), expectedSliceLabels),
+  assert.ok(isEqual(component.get('allSliceLabels'), expectedSliceLabels),
     'The slice labels match expectation for scenario ' + scenarioIndex);
   assert.equal($slices.length, expectedSliceCount, 'The correct number of slices are shown');
   if (expectedSliceLabels.indexOf(otherSliceLabel) === -1) {
@@ -555,7 +556,7 @@ test("'Other' slice correctly aggregates smallest slices when there are too many
   // EXPECTATION: The slice label that fails to meet the minSlicePercent would
   // normally fall into the 'Other' slice, but it is the ONLY slice in 'Other',
   // so in this case it will actually get displayed despite being < min %
-  scenarioThreeData = _.cloneDeep(three_ranges);
+  scenarioThreeData = cloneDeep(three_ranges);
   scenarioThreeData.forEach(datum => {
     if (datum.sliceLabel === 'Label 2') {
       datum.value = 0.05;
@@ -572,7 +573,7 @@ test("'Other' slice correctly aggregates smallest slices when there are too many
   // EXPECTATION: Because now two slices fail to meet the minSlicePercent
   // instead of just one, we can display the Other slice. Only the one slice
   // label that met the min slice % threshold should have its own legend item
-  scenarioFourData = _.cloneDeep(scenarioThreeData);
+  scenarioFourData = cloneDeep(scenarioThreeData);
   scenarioFourData.forEach((datum) => {
     if (datum.sliceLabel === 'Label 3') {
       datum.value = 0.05;
@@ -636,7 +637,7 @@ test('Slices are sorted in correct order for each sliceSortKey', function(assert
       positiveSlices = [];
       negativeSlices = [];
       // Sort all (positive AND negative) slice elements by 'y' value
-      _.sortBy(allSlices, slice => parseInt($(slice).attr('y'))).forEach(slice => {
+      sortBy(allSlices, slice => parseInt($(slice).attr('y'))).forEach(slice => {
         if ($(slice).attr('y') < xAxisTransformY) {
           // Populate positive slice stack from start of array so that slices
           // are ordered outward from the x-axis
@@ -728,11 +729,11 @@ test('Zero-value slices are never shown in the legend', function(assert) {
  */
 function assertBarSortingIsCorrect(assert, component, expectedBarOrder, message) {
   var sortedBarElements, sortedBarElementLabels;
-  assert.ok(_.isEqual(component.get('barNames'), expectedBarOrder),
+  assert.ok(isEqual(component.get('barNames'), expectedBarOrder),
     'Bars are logically sorted correctly (in data structure) for ' + message);
-  sortedBarElements = _.sortBy($('.bars'), bar => getFloatTransformValue($(bar), 0));
-  sortedBarElementLabels = _.map(sortedBarElements, bar => $(bar).text());
-  assert.ok(_.isEqual(sortedBarElementLabels, expectedBarOrder), 'Bars are ' +
+  sortedBarElements = sortBy($('.bars'), bar => getFloatTransformValue($(bar), 0));
+  sortedBarElementLabels = map(sortedBarElements, bar => $(bar).text());
+  assert.ok(isEqual(sortedBarElementLabels, expectedBarOrder), 'Bars are ' +
     'visually sorted correctly (in the DOM) for ' + message);
 }
 

@@ -1,4 +1,5 @@
 import Ember from 'ember';
+import { map } from 'lodash-es';
 import ChartComponent from './chart-component';
 import FormattableMixin from '../mixins/formattable';
 
@@ -7,6 +8,7 @@ import SortableChartMixin from '../mixins/sortable-chart';
 
 import LabelTrimmer from '../utils/label-trimmer';
 import AxisTitlesMixin from '../mixins/axis-titles';
+
 
 const HorizontalBarChartComponent = ChartComponent.extend(FloatingTooltipMixin,
   FormattableMixin, SortableChartMixin, AxisTitlesMixin, {
@@ -605,7 +607,7 @@ const HorizontalBarChartComponent = ChartComponent.extend(FloatingTooltipMixin,
    * @return {Number}
    */
   _maxWidthOfElements: function(elements) {
-    return d3.max(_.map(elements, (element) => {
+    return d3.max(map(elements, (element) => {
       return element.getComputedTextLength();
     }));
   },

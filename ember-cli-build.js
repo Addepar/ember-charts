@@ -8,7 +8,6 @@ module.exports = function(defaults) {
   });
   app.import(app.bowerDirectory + '/jquery-ui/themes/base/jquery-ui.css');
   app.import(app.bowerDirectory + '/d3/d3.js');
-  app.import(app.bowerDirectory + '/lodash/lodash.js');
   app.import(app.bowerDirectory + '/tinycolor/tinycolor.js');
 
   /*

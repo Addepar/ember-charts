@@ -1,4 +1,5 @@
 import Ember from 'ember';
+import { cloneDeep, drop, each, find, indexOf, last, max, min, sortBy, take, takeRight } from 'lodash-es';
 import ChartComponent from './chart-component';
 import FormattableMixin from '../mixins/formattable';
 import FloatingTooltipMixin from '../mixins/floating-tooltip';
@@ -101,7 +102,7 @@ const PieChartComponent = ChartComponent.extend(FloatingTooltipMixin,
       };
     });
 
-    return _.sortBy(data, this.get('sortKey'));
+    return sortBy(data, this.get('sortKey'));
   }),
 
   otherLabel: 'Other',
@@ -114,7 +115,7 @@ const PieChartComponent = ChartComponent.extend(FloatingTooltipMixin,
   sortedDataWithOther: Ember.computed('sortedData', 'maxNumberOfSlices', 'minSlicePercent', 'maxDecimalPlace', 'includeRoundedZeroPercentSlices', function() {
     var lastItem, overflowSlices, slicesLeft;
 
-    var data = _.cloneDeep(this.get('sortedData')).reverse();
+    var data = cloneDeep(this.get('sortedData')).reverse();
     var maxNumberOfSlices = this.get('maxNumberOfSlices');
     var minSlicePercent = this.get('minSlicePercent');
     var otherItems = [];
@@ -126,7 +127,7 @@ const PieChartComponent = ChartComponent.extend(FloatingTooltipMixin,
 
     // First make an other slice out of any slices below percent threshold
     // Find the first slice below
-    var lowPercentIndex = _.indexOf(data, _.find(data, function(d) {
+    var lowPercentIndex = indexOf(data, find(data, function(d) {
       return d.percent < minSlicePercent;
     }));
 
@@ -135,7 +136,7 @@ const PieChartComponent = ChartComponent.extend(FloatingTooltipMixin,
       lowPercentIndex = data.length;
     } else {
       // Add low percent slices to other slice
-      _.takeRight(data, data.length - lowPercentIndex).forEach(function(d) {
+      takeRight(data, data.length - lowPercentIndex).forEach(function(d) {
         otherItems.push(d);
         return otherSlice.percent += d.percent;
       });
@@ -159,16 +160,16 @@ const PieChartComponent = ChartComponent.extend(FloatingTooltipMixin,
     // Next, continue putting slices in other slice if there are too many
     // take instead of first see https://lodash.com/docs#take
     // drop instead of rest
-    slicesLeft = _.take(data, lowPercentIndex);
+    slicesLeft = take(data, lowPercentIndex);
 
-    overflowSlices = _.drop(slicesLeft, maxNumberOfSlices);
+    overflowSlices = drop(slicesLeft, maxNumberOfSlices);
 
     if (overflowSlices.length > 0) {
       overflowSlices.forEach(function(d) {
         otherItems.push(d);
         return otherSlice.percent += d.percent;
       });
-      slicesLeft = _.take(slicesLeft, maxNumberOfSlices);
+      slicesLeft = take(slicesLeft, maxNumberOfSlices);
     }
 
     // Only push other slice if there is more than one other item
@@ -212,7 +213,7 @@ const PieChartComponent = ChartComponent.extend(FloatingTooltipMixin,
   }),
 
   otherData: Ember.computed('sortedDataWithOther.[]', 'sortFunction', function() {
-    var otherSlice = _.find(this.get('sortedDataWithOther'), function(d) {
+    var otherSlice = find(this.get('sortedDataWithOther'), function(d) {
       return d._otherItems;
     });
 
@@ -223,7 +224,7 @@ const PieChartComponent = ChartComponent.extend(FloatingTooltipMixin,
       otherItems = [];
     }
 
-    return _.sortBy(otherItems, this.get('sortFunction')).reverse();
+    return sortBy(otherItems, this.get('sortFunction')).reverse();
   }),
 
   otherDataValue: Ember.computed('otherData.[]', function() {
@@ -231,7 +232,7 @@ const PieChartComponent = ChartComponent.extend(FloatingTooltipMixin,
     value = 0;
     otherItems = this.get('otherData');
     if (otherItems != null) {
-      _.each(otherItems, function(item) {
+      each(otherItems, function(item) {
         return value += item.value;
       });
     }
@@ -297,10 +298,10 @@ const PieChartComponent = ChartComponent.extend(FloatingTooltipMixin,
       // Empirically, using a sample size of 2 works very well.
       var smallSliceSampleSize = 2;
 
-      var sortedData = _.sortBy(finishedData, "percent");
+      var sortedData = sortBy(finishedData, "percent");
       var startIndex = 0;
       var endIndex = Math.min(smallSliceSampleSize, sortedData.length);
-      var largestSlicePercent = _.last(sortedData).percent;
+      var largestSlicePercent = last(sortedData).percent;
 
       var averageSmallSlicesPercent = sortedData.slice(startIndex, endIndex).reduce(function(p,d) {
         return d.percent / (endIndex - startIndex) + p;
@@ -337,7 +338,7 @@ const PieChartComponent = ChartComponent.extend(FloatingTooltipMixin,
     if (detectDenseSmallSlices(finishedData)) {
       return this.get('rotationOffset');
     } else {
-      return _.last(finishedData).percent / sum * 2 * Math.PI;
+      return last(finishedData).percent / sum * 2 * Math.PI;
     }
   }),
 
@@ -479,9 +480,7 @@ const PieChartComponent = ChartComponent.extend(FloatingTooltipMixin,
     // assumes height of all the labels are the same
     var labelOverlap = function(side, ypos, height) {
       var positions = usedLabelPositions[side];
-      return _.some(positions, function(pos) {
-        return Math.abs(ypos - pos) < height;
-      });
+      return positions.some(pos => Math.abs(ypos - pos) < height);
     };
     if (this.get('numSlices') > 1) {
       return {
@@ -535,10 +534,10 @@ const PieChartComponent = ChartComponent.extend(FloatingTooltipMixin,
 
           if (labelOverlap(side, labelYPos, labelHeight)) {
             if (side === 'right') {
-              labelYPos = _.max(usedLabelPositions[side]) + labelHeight;
+              labelYPos = max(usedLabelPositions[side]) + labelHeight;
               labelXPos = calculateXPos(labelYPos);
             } else {
-              labelYPos = _.min(usedLabelPositions[side]) - labelHeight;
+              labelYPos = min(usedLabelPositions[side]) - labelHeight;
               labelXPos = -1 * calculateXPos(labelYPos);
             }
           }

@@ -1,4 +1,5 @@
 import Ember from 'ember';
+import { head, keys, last as lodashLast, map } from 'lodash-es';
 import ChartComponent from './chart-component';
 
 import LegendMixin from '../mixins/legend';
@@ -116,7 +117,7 @@ const TimeSeriesChartComponent = ChartComponent.extend(LegendMixin,
       return this._getLabelOrDefault(datum);
     });
 
-    return _.map(groups, function(values, groupName) {
+    return map(groups, function(values, groupName) {
       return {
         group: groupName,
         values: values
@@ -139,8 +140,8 @@ const TimeSeriesChartComponent = ChartComponent.extend(LegendMixin,
       return d.time.getTime();
     });
 
-    return _.map(barTimes, (groups) => {
-      return _.map(groups, (g) => {
+    return map(barTimes, (groups) => {
+      return map(groups, (g) => {
           var label = this._getLabelOrDefault(g);
           var labelTime = g.time;
           var drawTime = this._transformCenter(g.time);
@@ -265,7 +266,7 @@ const TimeSeriesChartComponent = ChartComponent.extend(LegendMixin,
     var barGroups = groupBy(barData, (datum) => {
       return this._getLabelOrDefault(datum);
     });
-    return _.keys(barGroups);
+    return keys(barGroups);
   }),
 
   _hasLineData: Ember.computed.notEmpty('lineData'),
@@ -331,8 +332,8 @@ const TimeSeriesChartComponent = ChartComponent.extend(LegendMixin,
       return [new Date(), new Date()];
     }
 
-    var first = _.head(groupedBarData);
-    var last = _.last(groupedBarData);
+    var first = head(groupedBarData);
+    var last = lodashLast(groupedBarData);
     var startTime = new Date(first[0].time);
     var endTime = new Date(last[0].time);
 
@@ -380,7 +381,7 @@ const TimeSeriesChartComponent = ChartComponent.extend(LegendMixin,
       return [new Date(), new Date()];
     }
 
-    var extents = _.map(data, 'values').map(function(series) {
+    var extents = map(data, 'values').map(function(series) {
       return d3.extent(series.map(function(d) {
         return d.time;
       }));

@@ -1,4 +1,5 @@
 import Ember from "ember";
+import { head, last } from 'lodash-es';
 import { test, moduleForComponent } from 'ember-qunit';
 import asset_values from '../../models/single_group/asset_values';
 
@@ -166,8 +167,8 @@ test('Pie with large other slice', function(assert) {
   var finishedData = this.subject().get('finishedData');
 
   assert.equal(finishedData.length, 8, 'There are 8 slices by default');
-  assert.equal(_.last(finishedData).label, 'Other', 'Last slice is Other when the Other Slice is largest');
-  assert.equal(_.last(finishedData).percent, 35, 'Other percent equals 35');
+  assert.equal(last(finishedData).label, 'Other', 'Last slice is Other when the Other Slice is largest');
+  assert.equal(last(finishedData).percent, 35, 'Other percent equals 35');
 });
 
 test('Pie with small other slice', function(assert) {
@@ -210,8 +211,8 @@ test('Pie with small other slice', function(assert) {
   var component = this.subject(pieSmallOther);
   var finishedData = this.subject().get('finishedData');
 
-  assert.equal(_.head(finishedData).label, 'Other', 'First slice is Other when the Other Slice is not the largest');
-  assert.equal(_.head(finishedData).percent, 25.37, 'Other percent equals 25.37');
+  assert.equal(head(finishedData).label, 'Other', 'First slice is Other when the Other Slice is not the largest');
+  assert.equal(head(finishedData).percent, 25.37, 'Other percent equals 25.37');
 });
 
 test('Percentage labels can have decimal points', function(assert) {

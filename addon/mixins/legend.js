@@ -1,4 +1,5 @@
 import Ember from 'ember';
+import { isFunction, sortBy } from 'lodash-es';
 import LabelTrimmer from '../utils/label-trimmer';
 
 // Calculates maximum width of label in a row, before it gets truncated by label trimmer.
@@ -9,7 +10,7 @@ var calcMaxLabelWidth = function(labelWidthsArray, totalAvailableWidthForLabels)
   var maxLabelWidth = totalAvailableWidthForLabels / labelWidthsArray.length;
 
   // Sort label widths to exclude all the short labels during iteration
-  labelWidthsArray = _.sortBy(labelWidthsArray);
+  labelWidthsArray = sortBy(labelWidthsArray);
   for (var i = 0; i < labelWidthsArray.length; i++) {
     var curLabelWidth = labelWidthsArray[i];
     if (curLabelWidth < maxLabelWidth) {
@@ -227,16 +228,16 @@ export default Ember.Mixin.create({
         }
       },
       fill: function(d, i) {
-        return _.isFunction(d.fill) ? d.fill(d, i) : d.fill;
+        return isFunction(d.fill) ? d.fill(d, i) : d.fill;
       },
       stroke: function(d, i) {
-        return _.isFunction(d.stroke) ? d.stroke(d, i) : d.stroke;
+        return isFunction(d.stroke) ? d.stroke(d, i) : d.stroke;
       },
       'stroke-width': function(d) {
         if (!d.width) {
           return 1.5;
         }
-        if (_.isFunction(d.width)) {
+        if (isFunction(d.width)) {
           return d.width(d);
         } else {
           return d.width;

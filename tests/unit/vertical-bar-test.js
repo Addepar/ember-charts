@@ -1,4 +1,5 @@
 import Ember from "ember";
+import { cloneDeep, countBy, filter, forOwn, keys } from 'lodash-es';
 import { test, moduleForComponent } from 'ember-qunit';
 
 // tinycolor only defines itself as an AMD module if it thinks an AMD dll loader
@@ -205,11 +206,11 @@ test('Bug 172 Problem 1: When some data groups have fewer data then others, ' +
 function(assert) {
   var testData, dataPointCountsByBarLabel, component, legendColorsByBarLabel;
 
-  testData = _.filter(threeRanges, function(datum) {
+  testData = filter(threeRanges, function(datum) {
     return (datum.group !== "Group Two" || datum.label !== "Label 1");
   });
-  dataPointCountsByBarLabel = _.countBy(testData, 'label');
-  assert.expect(1 + _.keys(dataPointCountsByBarLabel).length);
+  dataPointCountsByBarLabel = countBy(testData, 'label');
+  assert.expect(1 + keys(dataPointCountsByBarLabel).length);
 
   component = this.subject({data : testData});
   this.render();
@@ -222,14 +223,14 @@ function(assert) {
   });
 
   assert.deepEqual(
-    _.keys(legendColorsByBarLabel).sort(),
-    _.keys(dataPointCountsByBarLabel).sort(),
+    keys(legendColorsByBarLabel).sort(),
+    keys(dataPointCountsByBarLabel).sort(),
     "The set of bar labels shown in the legend is the same as the one from the test data");
 
   // For each bar label in the chart legend, check that the actual number of
   // bars with that label's color equals the expected number of data points
   // with that label per the data set
-  _.forOwn(legendColorsByBarLabel, function(colorString, label) {
+  forOwn(legendColorsByBarLabel, function(colorString, label) {
     var actualBarsWithColor = component.$('svg rect').filter(function() {
       return (colorString === tinycolor($(this).css('fill')).toRgbString());
     });
@@ -247,7 +248,7 @@ test('Pull Request #182: A bar-specific color override is respected', function(a
   var testData, component, actualBarColors;
 
   assert.expect(1);
-  testData = _.cloneDeep(threeRanges);
+  testData = cloneDeep(threeRanges);
   testData[0].color = barOverrideColor;
 
   component = this.subject({

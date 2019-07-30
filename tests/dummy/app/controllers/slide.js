@@ -1,4 +1,5 @@
 import Ember from 'ember';
+import { keys } from 'lodash-es';
 
 export default Ember.Controller.extend({
 
@@ -19,7 +20,7 @@ export default Ember.Controller.extend({
   },
 
   seedColorNames: Ember.computed('seedColors', function() {
-    return Ember.A(_.keys(this.get('seedColors')));
+    return Ember.A(keys(this.get('seedColors')));
   }), 
 
   selectedSeedColorName: 'black',
