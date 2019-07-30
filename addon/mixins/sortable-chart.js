@@ -1,6 +1,8 @@
 // # This allows chart data to be displayed in ascending or descending order as specified by
 // # the data points property sortKey. The order is determined by sortAscending.
 import Ember from 'ember';
+import { sortBy } from 'lodash-es';
+
 export default Ember.Mixin.create({
   sortKey: 'value',
   sortAscending: true,
@@ -14,9 +16,9 @@ export default Ember.Mixin.create({
       return [];
     } else if (key != null) {
       if (sortAscending) {
-        return _.sortBy(data, key);
+        return sortBy(data, key);
       } else {
-        return _.sortBy(data, key).reverse();
+        return sortBy(data, key).reverse();
       }
     } else {
       return data;

@@ -7,9 +7,6 @@ module.exports = {
       {
         'name': 'd3',
         'target': '~3.5.3'
-      }, {
-        'name': 'lodash',
-        'target': '~4.17.4'
       }
     ]);
   }

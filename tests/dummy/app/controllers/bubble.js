@@ -1,4 +1,5 @@
 import Ember from 'ember';
+import { keys } from 'lodash-es';
 import SlideController from './slide';
 
 import many_values from '../models/single_group/many_values';
@@ -13,7 +14,7 @@ export default SlideController.extend({
   // ---------
 
   availableDataSets: Ember.computed('rawDataHash', function() {
-    return Ember.A (_.keys(this.get('rawDataHash') ));
+    return Ember.A(keys(this.get('rawDataHash')));
   }), 
 
   data: Ember.computed('selectedData', 'rawDataHash', function() {

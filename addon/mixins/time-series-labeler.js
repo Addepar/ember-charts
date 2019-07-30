@@ -346,11 +346,11 @@ export default Ember.Mixin.create({
     'xAxisTimeInterval', 'SPECIFICITY_RATIO', 'minTimeSpecificity', 'maxTimeSpecificity',
     function() {
       if (this.get('dynamicXAxis')) {
-        return _.bind(function(start, stop) {
+        return (start, stop) => {
           return this.dynamicXLabelling(start, stop);
-        }, this);
+        };
       } else {
-        return _.bind(function(start, stop) {
+        return (start, stop) => {
           var domain, candidateLabels;
           domain = this.get('xAxisTimeInterval');
           // So we're going to use the interval we defined as a the maxTimeSpecificity
@@ -361,7 +361,7 @@ export default Ember.Mixin.create({
             candidateLabels = this.filterLabelsForQuarters(candidateLabels);
           }
           return this.filterLabels(candidateLabels, domain);
-        }, this);
+        };
       }
     }
   ),

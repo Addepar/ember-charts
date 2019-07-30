@@ -1,4 +1,5 @@
 import Ember from "ember";
+import { every } from 'lodash-es';
 import { test, moduleForComponent } from 'ember-qunit';
 
 import sum_to_zero from '../../models/single_group/sum_to_zero';
@@ -109,7 +110,7 @@ test("Value/Grouping Labels appear on the left/right when all data is 0 or negat
   this.render();
 
   const barGroups = component.$('g.bar');
-  const allLabelsCorrectlyPositioned = _.every(barGroups, function(group) {
+  const allLabelsCorrectlyPositioned = every(barGroups, function(group) {
     const groupLabel = $('text.group', group);
     const valueLabel = $('text.value', group);
     return valueLabel.offset().left < groupLabel.offset().left;
@@ -140,7 +141,7 @@ test("Labels aren't trimmed when width is small", function(assert) {
   Ember.run(() => component.set('defaultOuterWidth', 300));
 
   const groupLabels = component.$('text.group');
-  const noLabelsTruncated = _.every(groupLabels, function(label) {
+  const noLabelsTruncated = every(groupLabels, function(label) {
     return label.textContent.indexOf('...') === -1;
   });
   assert.ok(noLabelsTruncated,
