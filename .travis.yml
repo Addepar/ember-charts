@@ -1,24 +1,54 @@
 ---
 language: node_js
 node_js:
+  # we recommend testing addons with the same minimum supported node version as Ember CLI
+  # so that your addon works for all apps
   - "8"
 
-sudo: required
+sudo: false
 dist: trusty
+
+addons:
+  chrome: stable
 
 cache:
   yarn: true
 
-global:
-  - JOBS=1
-
 env:
-  - EMBER_TRY_SCENARIO=default
-  - EMBER_TRY_SCENARIO=ember-1.12
-  - EMBER_TRY_SCENARIO=ember-1.13
+  global:
+    - JOBS=1
 
-matrix:
-  fast_finish: true
+branches:
+  only:
+    - master
+    # npm version tags
+    - /^v\d+\.\d+\.\d+/
+
+jobs:
+  fail_fast: true
+  include:
+    # runs linting and tests with current locked deps
+
+    - stage: "Tests"
+      name: "Tests"
+      install:
+        - yarn global add bower
+        - yarn install --non-interactive
+        - bower install
+      script:
+        - yarn lint:hbs
+        - yarn lint:js
+        - yarn test
+
+    - name: "Floating Dependencies"
+      script:
+        - yarn test
+
+    # we recommend new addons test the current and previous LTS
+    # as well as latest stable release (bonus points to beta/canary)
+    - stage: "Additional Tests"
+      env: EMBER_TRY_SCENARIO=ember-1.12
+    - env: EMBER_TRY_SCENARIO=ember-1.13
 
 before_install:
   - curl -o- -L https://yarnpkg.com/install.sh | bash
@@ -31,4 +61,4 @@ install:
   - bower install
 
 script:
-  - ember try:one $EMBER_TRY_SCENARIO test --skip-cleanup
+  - node_modules/.bin/ember try:one $EMBER_TRY_SCENARIO

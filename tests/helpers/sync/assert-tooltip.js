@@ -5,10 +5,9 @@
 //      name: 'Financial analytics software: ',
 //      value: '49,668.00'
 // });
-import Ember from 'ember';
 import selectorFor from '../selector-for';
 
-export default Ember.Test.registerHelper('assertTooltip', function(app, assert, expected) {
+export default function(assert, expected) {
   var toolTipInfo = {
 		isVisible: $('.chart-float-tooltip').is(":visible"),
 		label:     $('.chart-float-tooltip .tip-label').text(),
@@ -20,4 +19,4 @@ export default Ember.Test.registerHelper('assertTooltip', function(app, assert, 
   assert.ok( !expected.label || expected.label && (toolTipInfo.label === expected.label) );
   assert.ok( !expected.name  || expected.name && (toolTipInfo.name  === expected.name) );
   assert.ok( !expected.value || expected.value && (toolTipInfo.value === expected.value) );
-});
+}

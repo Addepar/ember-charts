@@ -12,7 +12,7 @@
     "d3"
   ],
   "dependencies": {
-    "ember": "1.12.1",
+    "ember": "~2.5.0",
     "ember-cli-shims": "0.1.1",
     "jquery": "1.11.3",
     "bootstrap": "3.0.0",
