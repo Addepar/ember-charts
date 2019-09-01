@@ -1,4 +1,5 @@
 import Ember from 'ember';
+import * as d3 from 'd3';
 
 /**
  * Adds axis titles to a chart and sets left/bottom margins to allow space

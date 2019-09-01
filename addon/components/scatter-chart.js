@@ -1,4 +1,5 @@
 import Ember from 'ember';
+import * as d3 from 'd3';
 import { keys, values } from 'lodash-es';
 import ChartComponent from './chart-component';
 

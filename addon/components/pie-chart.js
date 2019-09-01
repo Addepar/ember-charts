@@ -1,4 +1,5 @@
 import Ember from 'ember';
+import * as d3 from 'd3';
 import { cloneDeep, drop, each, find, indexOf, last, max, min, sortBy, take, takeRight } from 'lodash-es';
 import ChartComponent from './chart-component';
 import FormattableMixin from '../mixins/formattable';

@@ -1,3 +1,5 @@
+import * as d3 from 'd3';
+
 export default [{
     time: d3.time.format('%Y-%m-%d').parse("2012-04-16"),
     value: 142096015.71742177

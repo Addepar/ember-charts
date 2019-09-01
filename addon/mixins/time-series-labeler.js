@@ -1,6 +1,7 @@
 // Creates time series labels that are spaced reasonably.
 //  Provides this.formattedTime. Depends on this.xDomain and this.selectedInterval.
 import Ember from 'ember';
+import * as d3 from 'd3';
 
 // The labeller type used to create the labels for each domain type
 // Note that quarters uses a month labeller to create the labels

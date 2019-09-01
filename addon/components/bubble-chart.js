@@ -1,4 +1,5 @@
 import Ember from 'ember';
+import * as d3 from 'd3';
 import ChartComponent from './chart-component';
 
 import FloatingTooltipMixin from '../mixins/floating-tooltip';
