@@ -1,3 +1,5 @@
+import * as d3 from 'd3';
+
 export default [{
     label: 'Group One',
     time: d3.time.format('%Y-%m-%d').parse("2013-05-01"),

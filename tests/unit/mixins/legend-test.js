@@ -1,4 +1,5 @@
 import Ember from 'ember';
+import * as d3 from 'd3';
 import LegendMixin from 'dummy/mixins/legend';
 import { module, test } from 'qunit';
 

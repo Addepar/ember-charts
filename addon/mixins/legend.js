@@ -1,4 +1,5 @@
 import Ember from 'ember';
+import * as d3 from 'd3';
 import { isFunction, sortBy } from 'lodash-es';
 import LabelTrimmer from '../utils/label-trimmer';
 

@@ -1,4 +1,5 @@
 import Ember from 'ember';
+import * as d3 from 'd3';
 import { map } from 'lodash-es';
 import ChartComponent from './chart-component';
 import FormattableMixin from '../mixins/formattable';

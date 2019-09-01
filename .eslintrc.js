@@ -25,7 +25,6 @@ module.exports = {
     'no-empty': 'off'
   },
   globals: {
-    'd3': 'readonly',
     '_': 'readonly',
     '$': 'readonly',
     'andThen': 'readonly',

@@ -1,11 +1,12 @@
- import Ember from "ember";
- import { test, moduleForComponent } from 'ember-qunit';
+import Ember from "ember";
+import * as d3 from 'd3';
+import { test, moduleForComponent } from 'ember-qunit';
 
- moduleForComponent('time-series-chart', '[Unit] Time series component', {
-   needs: [ 'template:components/chart-component'],
-   beforeEach: function () {},
-   afterEach: function () {}
- });
+moduleForComponent('time-series-chart', '[Unit] Time series component', {
+  needs: [ 'template:components/chart-component'],
+  beforeEach: function () {},
+  afterEach: function () {}
+});
 
 var timeSeriesContentBarNonDynamic = {
   barPadding: 0,

@@ -1,4 +1,5 @@
 import Ember from 'ember';
+import * as d3 from 'd3';
 import { uniq } from 'lodash-es';
 import ResizeHandlerMixin from '../mixins/resize-handler';
 import ColorableMixin from '../mixins/colorable';

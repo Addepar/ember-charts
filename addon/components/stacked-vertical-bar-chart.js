@@ -1,4 +1,5 @@
 import Ember from 'ember';
+import * as d3 from 'd3';
 import { clone, difference, filter, groupBy, map, max, maxBy, range, reduce, sortBy, takeRight, zipObject } from 'lodash-es';
 import ChartComponent from './chart-component';
 import LegendMixin from '../mixins/legend';
