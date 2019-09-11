@@ -1,6 +1,6 @@
 {
   "name": "ember-charts",
-  "version": "2.3.1",
+  "version": "2.3.2",
   "description": "A powerful and easy to use charting library for Ember.js.",
   "keywords": [
     "ember-addon"
