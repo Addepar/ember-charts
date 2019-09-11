@@ -54,6 +54,7 @@ module.exports = function(environment) {
 
   if (environment === 'production') {
     ENV.rootURL = 'ember-charts';
+    ENV.locationType = 'hash';
   }
 
   return ENV;
