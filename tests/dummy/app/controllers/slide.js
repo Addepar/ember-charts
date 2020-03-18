@@ -25,7 +25,7 @@ export default Ember.Controller.extend({
 
   selectedSeedColorName: 'black',
 
-  selectedSeedColor: Ember.computed('selectedSeedColorName', 'seedColors.@each', function() {
+  selectedSeedColor: Ember.computed('selectedSeedColorName', 'seedColors.[]', function() {
     return this.get('seedColors')[this.get('selectedSeedColorName')];
   })
 });
