@@ -60,7 +60,7 @@
     "release-it": "^11.0.2"
   },
   "engines": {
-    "node": ">= 8"
+    "node": ">= 10"
   },
   "ember-addon": {
     "configPath": "tests/dummy/config",
