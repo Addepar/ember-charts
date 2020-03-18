@@ -82,7 +82,7 @@ const TimeSeriesChartComponent = ChartComponent.extend(LegendMixin,
   // ----------------------------------------------------------------------------
 
   // Combine all data for testing purposes
-  finishedData: Ember.computed('_groupedLineData.@each.values', '_groupedBarData.@each', function() {
+  finishedData: Ember.computed('_groupedLineData.@each.values', '_groupedBarData.[]', function() {
     return {
       lineData: this.get('_groupedLineData'),
       groupedBarData: this.get('_groupedBarData')
@@ -108,7 +108,7 @@ const TimeSeriesChartComponent = ChartComponent.extend(LegendMixin,
   // Puts lineData in a new format.
   // Resulting format is [{group: ..., values: ...}] where values are the
   // lineData values for that group.
-  _groupedLineData: Ember.computed('lineData.@each', 'ungroupedSeriesName', function() {
+  _groupedLineData: Ember.computed('lineData.[]', 'ungroupedSeriesName', function() {
     var lineData = this.get('lineData');
     if (Ember.isEmpty(lineData)) {
       return [];
@@ -130,7 +130,7 @@ const TimeSeriesChartComponent = ChartComponent.extend(LegendMixin,
   // Resulting format: [[{group: ..., time: ..., value: ..., label:
   // ...}, ...], [...]] where each internal array is an array of hashes
   // at the same time
-  _groupedBarData: Ember.computed('barData.@each', 'ungroupedSeriesName', 'barLeftOffset', function() {
+  _groupedBarData: Ember.computed('barData.[]', 'ungroupedSeriesName', 'barLeftOffset', function() {
     var barData = this.get('barData');
     if (Ember.isEmpty(barData)) {
       return [];
@@ -258,7 +258,7 @@ const TimeSeriesChartComponent = ChartComponent.extend(LegendMixin,
       .style("text-anchor", "middle");
   },
 
-  _barGroups: Ember.computed('barData.@each', 'ungroupedSeriesName', function() {
+  _barGroups: Ember.computed('barData.[]', 'ungroupedSeriesName', function() {
     var barData = this.get('barData');
     if (Ember.isEmpty(barData)) {
       return [];
@@ -326,7 +326,7 @@ const TimeSeriesChartComponent = ChartComponent.extend(LegendMixin,
 
   // this method seems very flaky to me; making padding by changing domain
   // convention is to change range
-  barDataExtent: Ember.computed('timeDelta', '_groupedBarData.@each', function() {
+  barDataExtent: Ember.computed('timeDelta', '_groupedBarData.[]', function() {
     var timeDelta = this.get('timeDelta');
     var groupedBarData = this.get('_groupedBarData');
     if (Ember.isEmpty(groupedBarData)) {

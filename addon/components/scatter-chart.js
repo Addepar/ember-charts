@@ -86,7 +86,7 @@ const ScatterChartComponent = ChartComponent.extend(LegendMixin, FloatingTooltip
   totalPointData: null,
 
   // Data with invalid/negative values removed
-  filteredData: Ember.computed('data.@each', function() {
+  filteredData: Ember.computed('data.[]', function() {
     var data;
     data = this.get('data');
     if (Ember.isEmpty(data)) {
@@ -98,7 +98,7 @@ const ScatterChartComponent = ChartComponent.extend(LegendMixin, FloatingTooltip
   }),
 
   // Aggregate the raw data by group, into separate lists of data points
-  groupedData: Ember.computed('filteredData.@each', function() {
+  groupedData: Ember.computed('filteredData.[]', function() {
     var data = this.get('filteredData');
     if (Ember.isEmpty(data)) {
       return [];
@@ -141,7 +141,7 @@ const ScatterChartComponent = ChartComponent.extend(LegendMixin, FloatingTooltip
   // Ticks and Scales
   // ----------------------------------------------------------------------------
 
-  xDomain: Ember.computed('filteredData.@each', 'isShowingTotal', 'totalPointData', function() {
+  xDomain: Ember.computed('filteredData.[]', 'isShowingTotal', 'totalPointData', function() {
     var totalData = this.get('isShowingTotal') ? [this.get('totalPointData')] : [];
     var _ref = d3.extent(totalData.concat(this.get('filteredData')), function(d) {
       return d.xValue;
@@ -157,7 +157,7 @@ const ScatterChartComponent = ChartComponent.extend(LegendMixin, FloatingTooltip
     }
   }),
 
-  yDomain: Ember.computed('filteredData.@each', 'isShowingTotal', 'totalPointData', 'graphPadding', function() {
+  yDomain: Ember.computed('filteredData.[]', 'isShowingTotal', 'totalPointData', 'graphPadding', function() {
     var totalData = this.get('isShowingTotal') ? [this.get('totalPointData')] : [];
     var _ref = d3.extent(totalData.concat(this.get('filteredData')), function(d) {
       return d.yValue;
