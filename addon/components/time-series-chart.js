@@ -414,19 +414,33 @@ const TimeSeriesChartComponent = ChartComponent.extend(LegendMixin,
   // For a dynamic x axis, let the max number of labels be the minimum of
   // the number of x ticks and the assigned value. This is to prevent
   // the assigned value from being so large that labels flood the x axis.
-  maxNumberOfLabels: Ember.computed('numXTicks', 'dynamicXAxis', 'maxNumberOfRotatedLabels', 'xAxisVertLabels', function(key, value){
-    var allowableTicks = this.get('numXTicks');
-    if (this.get('xAxisVertLabels')) {
-      allowableTicks = this.get('maxNumberOfRotatedLabels');
-    }
-
-    if (this.get('dynamicXAxis')) {
-      if (isNaN(value)) {
-        value = this.get('DEFAULT_MAX_NUMBER_OF_LABELS');
+  maxNumberOfLabels: Ember.computed('numXTicks', 'dynamicXAxis', 'maxNumberOfRotatedLabels', 'xAxisVertLabels', {
+    get() {
+      var allowableTicks = this.get('numXTicks');
+      if (this.get('xAxisVertLabels')) {
+        allowableTicks = this.get('maxNumberOfRotatedLabels');
       }
-      return Math.min(value, allowableTicks);
-    } else {
-      return allowableTicks;
+
+      if (this.get('dynamicXAxis')) {
+        return Math.min(this.get('DEFAULT_MAX_NUMBER_OF_LABELS'), allowableTicks);
+      } else {
+        return allowableTicks;
+      }
+    },
+    set(key, value) {
+      var allowableTicks = this.get('numXTicks');
+      if (this.get('xAxisVertLabels')) {
+        allowableTicks = this.get('maxNumberOfRotatedLabels');
+      }
+
+      if (this.get('dynamicXAxis')) {
+        if (isNaN(value)) {
+          value = this.get('DEFAULT_MAX_NUMBER_OF_LABELS');
+        }
+        return Math.min(value, allowableTicks);
+      } else {
+        return allowableTicks;
+      }
     }
   }),
 
