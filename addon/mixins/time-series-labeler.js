@@ -78,19 +78,36 @@ export default Ember.Mixin.create({
   // If the x axis is not dynamically labelled, then the domain type
   // is simply the selectedInterval
   MONTHS_IN_QUARTER: 3,
-  xAxisTimeInterval: Ember.computed('selectedInterval', 'dynamicXAxis', function(key, value) {
-    var domain;
-    if (this.get('dynamicXAxis')) {
-      domain = value || 'M';
-    } else {
-      domain = this.get('selectedInterval');
-    }
-    // to maintain consistency, convert the domain type into its
-    // single letter representation
-    if (domain.length > 1) {
-      return longDomainTypeToDomainType[domain];
-    } else {
-      return domain;
+  xAxisTimeInterval: Ember.computed('selectedInterval', 'dynamicXAxis', {
+    get() {
+      var domain;
+      if (this.get('dynamicXAxis')) {
+        domain = 'M';
+      } else {
+        domain = this.get('selectedInterval');
+      }
+      // to maintain consistency, convert the domain type into its
+      // single letter representation
+      if (domain.length > 1) {
+        return longDomainTypeToDomainType[domain];
+      } else {
+        return domain;
+      }
+    },
+    set(key, value) {
+      var domain;
+      if (this.get('dynamicXAxis')) {
+        domain = value || 'M';
+      } else {
+        domain = this.get('selectedInterval');
+      }
+      // to maintain consistency, convert the domain type into its
+      // single letter representation
+      if (domain.length > 1) {
+        return longDomainTypeToDomainType[domain];
+      } else {
+        return domain;
+      }
     }
   }),
 
