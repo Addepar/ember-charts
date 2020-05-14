@@ -690,7 +690,7 @@ const VerticalBarChartComponent = ChartComponent.extend(LegendMixin,
         }
       });
     }
-    return this.set('_shouldRotateLabels', rotateLabels);
+    this.set('_shouldRotateLabels', rotateLabels);
   },
 
   // Calculate the number of degrees to rotate labels based on how widely labels
