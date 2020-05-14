@@ -138,7 +138,7 @@ test("Labels aren't trimmed when width is small", function(assert) {
   this.render();
   // Charts set their defaultOuterWidth when they're rendered, so it has to be
   // set after rendering
-  Ember.run(() => component.set('defaultOuterWidth', 300));
+  Ember.run(() => { component.set('defaultOuterWidth', 300); });
 
   const groupLabels = component.$('text.group');
   const noLabelsTruncated = every(groupLabels, function(label) {
