@@ -266,3 +266,45 @@ test('Pull Request #182: A bar-specific color override is respected', function(a
     "There is a bar in the chart with the correct override color " + barOverrideColor
   );
 });
+
+test('ADPR-62603: An infinite loop based on label orientation will not occur', function(assert) {
+  let testData = [
+    {"label":"Preservation","value":0.0365451846828686},
+    {"label":"Growth","value":-0.05189082702329095},
+    {"label":"Inflation","value":0.4651320110022441}
+  ];
+
+  let container = document.querySelector('#ember-testing');
+  let oldStyle = container.getAttribute('style');
+  try {
+    container.style.width='482.39px';
+    container.style.height='176px';
+    container.style.transform='scale(1.0)';
+
+    let component = this.subject({
+      data: testData,
+      labelAngle: -1,
+      labelWidthMultiplier: 0.25,
+      portfolioVisualizationLabelHeight: 50,
+      showChartControls: true,
+      isInteractive: false,
+      isEditable: false,
+      maxBarThickness: null,
+      minBarThickness: null,
+      defaultOuterHeight: 176,
+      defaultOuterWidth: 482,
+      labelWidthOffset: 55.39,
+      axisTitleHeight: 10,
+      barWidth: 63,
+      sortKey: null,
+      maxAxisValue: 0.8,
+      minAxisValue: -0.2,
+      formatValueAxis: value => `%${Math.round(value*100)}`
+    });
+    this.render();
+
+    assert.ok(true, 'test completed');
+  } finally {
+    container.setAttribute('style', oldStyle);
+  }
+});
