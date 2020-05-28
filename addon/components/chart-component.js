@@ -271,6 +271,10 @@ const ChartComponent = Ember.Component.extend(ColorableMixin, ResizeHandlerMixin
     this.$('.chart-viewport').children().remove();
   },
 
+  getHasScheduledDraw() {
+    return this._scheduledDrawCount > 0;
+  },
+
   // Remove previous drawing
   draw: function() {
     this._scheduledDrawCount--;

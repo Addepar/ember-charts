@@ -728,6 +728,26 @@ const VerticalBarChartComponent = ChartComponent.extend(LegendMixin,
   drawChart: function() {
     this.updateData();
     this.updateLayout();
+    if (this.getHasScheduledDraw()) {
+      /*
+       * updateLayout may have caused another draw of this chart to be
+       * scheduled. Specifically in ADPR-62603 when it changes label rotation
+       * it does so via an Ember property change which eventually, via an
+       * observer, causes a new drawing to be scheduled.
+       *
+       * Subsequent method calls in this function expect the DOM to reflect
+       * updated values such as the aforementioned rotation. For example
+       * updateAxes expects the rotation to have flushed to DOM or it may
+       * update `graphicLeft` in a way that causes yet another draw to
+       * be scheduled (causing an infinite loop).
+       *
+       * So here the drawing is eagerly aborted if, after updating layout,
+       * anything has caused a re-render to be requested. That allows any
+       * state to be flushed through Ember's property change system before
+       * trying again with settled JS/DOM state.
+       */
+      return;
+    }
     this.updateAxes();
     this.updateGraphic();
     this.updateAxisTitles();
