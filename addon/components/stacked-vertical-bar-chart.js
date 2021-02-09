@@ -1008,6 +1008,7 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
       return labels.call(labelTrimmer.get('trim')).attr({
         'text-anchor': 'end',
         transform: "rotate(" + (-rotateLabelDegrees) + ")",
+        y: function() { return this.getBBox().y; },
         dy: function() { return this.getBBox().height; }
       });
 
