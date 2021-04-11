@@ -1,4 +1,4 @@
-import { alias } from '@ember/object/computed';
+import { legacyAlias } from "ember-charts/utils/legacy-alias";
 import { isEmpty, isNone } from '@ember/utils';
 import { A, isArray } from '@ember/array';
 import { computed } from '@ember/object';
@@ -256,7 +256,7 @@ const VerticalBarChartComponent = ChartComponent.extend(LegendMixin,
   }),
 
   // Chart Graphic Dimensions
-  graphicLeft: alias('labelWidthOffset'),
+  graphicLeft: legacyAlias('labelWidthOffset'),
 
   graphicWidth: computed('width', 'labelWidthOffset', function() {
      return this.get('width') - this.get('labelWidthOffset');
@@ -371,11 +371,11 @@ const VerticalBarChartComponent = ChartComponent.extend(LegendMixin,
   }),
 
   // The range of labels assigned to each group
-  xBetweenGroupDomain: alias('groupNames'),
+  xBetweenGroupDomain: legacyAlias('groupNames'),
   // xBetweenGroupDomain: [],
 
   // The range of labels assigned within each group
-  xWithinGroupDomain: alias('individualBarLabels'),
+  xWithinGroupDomain: legacyAlias('individualBarLabels'),
 
   // The space in pixels allocated to each group
   groupWidth: computed('xBetweenGroupScale', function() {
@@ -465,7 +465,7 @@ const VerticalBarChartComponent = ChartComponent.extend(LegendMixin,
   // See bug #172 : https://github.com/Addepar/ember-charts/issues/172
   // ----------------------------------------------------------------------------
 
-  numColorSeries: alias('individualBarLabels.length'),
+  numColorSeries: legacyAlias('individualBarLabels.length'),
 
   barColors: computed('individualBarLabels.[]', 'getSeriesColor', function() {
     var fnGetSeriesColor = this.get('getSeriesColor');

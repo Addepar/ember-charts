@@ -1,5 +1,6 @@
 import { isArray } from '@ember/array';
-import { alias, readOnly } from '@ember/object/computed';
+import { legacyAlias } from "ember-charts/utils/legacy-alias";
+import { readOnly } from '@ember/object/computed';
 import { isNone } from '@ember/utils';
 import { computed } from '@ember/object';
 import Ember from 'ember';
@@ -602,7 +603,7 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
   }),
 
   // Chart Graphic Dimensions
-  graphicLeft: alias('labelWidthOffset'),
+  graphicLeft: legacyAlias('labelWidthOffset'),
 
   graphicWidth: computed('width', 'labelWidthOffset', function() {
      return this.get('width') - this.get('labelWidthOffset');
@@ -712,7 +713,7 @@ const StackedVerticalBarChartComponent = ChartComponent.extend(LegendMixin,
    * using this number to create an 'even' distribution of colors.
    * @type {number}
    */
-  numColorSeries: alias('allSliceLabels.length'),
+  numColorSeries: legacyAlias('allSliceLabels.length'),
 
   /**
    * Map between sliceLabels and default slice color.

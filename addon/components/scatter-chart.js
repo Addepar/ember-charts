@@ -1,5 +1,5 @@
 import { isEmpty, isNone } from '@ember/utils';
-import { alias } from '@ember/object/computed';
+import { legacyAlias } from "ember-charts/utils/legacy-alias";
 import { computed } from '@ember/object';
 import Ember from 'ember';
 import * as d3 from 'd3';
@@ -48,7 +48,7 @@ const ScatterChartComponent = ChartComponent.extend(LegendMixin, FloatingTooltip
 
   // NoMarginChartMixin makes right margin 0 but we need that room because the
   // last label of the axis is commonly too large
-  marginRight: alias('horizontalMargin'),
+  marginRight: legacyAlias('horizontalMargin'),
 
   /**
    * A flag to indicate if the chart view should have left & right margin based
@@ -115,21 +115,21 @@ const ScatterChartComponent = ChartComponent.extend(LegendMixin, FloatingTooltip
 
   groupNames: [],
 
-  numGroups: alias('groupedData.length'),
+  numGroups: legacyAlias('groupedData.length'),
 
   isGrouped: computed('numGroups', function() {
     return this.get('numGroups') > 1;
   }),
 
-  finishedData: alias('groupedData'),
+  finishedData: legacyAlias('groupedData'),
 
   // ----------------------------------------------------------------------------
   // Layout
   // ----------------------------------------------------------------------------
 
   // Chart Graphic Dimensions
-  graphicTop: alias('axisTitleHeight'),
-  graphicLeft: alias('labelWidthOffset'),
+  graphicTop: legacyAlias('axisTitleHeight'),
+  graphicLeft: legacyAlias('labelWidthOffset'),
 
   graphicHeight: computed('height', 'legendHeight', 'legendChartPadding', function() {
     var legendSize = this.get('legendHeight') + this.get('legendChartPadding') + (this.get('marginBottom') || 0);
@@ -217,7 +217,7 @@ const ScatterChartComponent = ChartComponent.extend(LegendMixin, FloatingTooltip
     return ['circle', 'square', 'triangle-up', 'cross', 'diamond'];
   }),
 
-  numGroupShapes: alias('groupShapes.length'),
+  numGroupShapes: legacyAlias('groupShapes.length'),
 
   // Fixed number of colors for scatter plots, total different dot types is
   // numGroupsShapes * numGroupColors
@@ -269,7 +269,7 @@ const ScatterChartComponent = ChartComponent.extend(LegendMixin, FloatingTooltip
     return this.get('isGrouped') && this.get('showLegend');
   }),
 
-  legendIconRadius: alias('dotRadius'),
+  legendIconRadius: legacyAlias('dotRadius'),
 
   legendItems: computed('hasNoData', 'groupedData', 'getGroupShape', 'getGroupColor',
         'displayGroups', 'isShowingTotal', 'totalPointData', function() {

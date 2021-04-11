@@ -1,6 +1,6 @@
 import { isNone } from '@ember/utils';
 import { computed } from '@ember/object';
-import { alias } from '@ember/object/computed';
+import { legacyAlias } from "ember-charts/utils/legacy-alias";
 import Mixin from '@ember/object/mixin';
 import Ember from 'ember';
 import * as d3 from 'd3';
@@ -99,7 +99,7 @@ export default Mixin.create({
 
 
   // Outside bounds of legend
-  legendWidth: alias('width'),
+  legendWidth: legacyAlias('width'),
 
   legendHeight: computed('numLegendRows', 'legendItemHeight', function() {
     return this.get('numLegendRows') * this.get('legendItemHeight');

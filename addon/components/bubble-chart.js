@@ -1,4 +1,4 @@
-import { alias } from '@ember/object/computed';
+import { legacyAlias } from "ember-charts/utils/legacy-alias";
 import { isEmpty } from '@ember/utils';
 import { computed } from '@ember/object';
 import Ember from 'ember';
@@ -121,9 +121,9 @@ export default ChartComponent.extend(FloatingTooltipMixin, {
     return nodes;
   }),
 
-  finishedData: alias('nodeData'),
+  finishedData: legacyAlias('nodeData'),
 
-  numColorSeries: alias('finishedData.length'),
+  numColorSeries: legacyAlias('finishedData.length'),
 
   drawChart: function() {
     return this.updateVis();

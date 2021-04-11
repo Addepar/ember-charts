@@ -1,6 +1,7 @@
 import { scheduleOnce, schedule } from '@ember/runloop';
 import { isNone, isEmpty } from '@ember/utils';
-import { lt, gt, lte, gte, alias } from '@ember/object/computed';
+import { legacyAlias } from "ember-charts/utils/legacy-alias";
+import { lt, gt, lte, gte } from '@ember/object/computed';
 import { computed } from '@ember/object';
 import Component from '@ember/component';
 import * as d3 from 'd3';
@@ -125,14 +126,14 @@ const ChartComponent = Component.extend(ColorableMixin, ResizeHandlerMixin, {
     }
   }),
 
-  marginTop: alias('verticalMargin'),
-  marginBottom: alias('verticalMargin'),
+  marginTop: legacyAlias('verticalMargin'),
+  marginBottom: legacyAlias('verticalMargin'),
 
   // TODO: Rename outer to SVG?
   defaultOuterHeight: 500,
   defaultOuterWidth: 700,
-  outerHeight: alias('defaultOuterHeight'),
-  outerWidth: alias('defaultOuterWidth'),
+  outerHeight: legacyAlias('defaultOuterHeight'),
+  outerWidth: legacyAlias('defaultOuterWidth'),
 
   width: computed('outerWidth', 'marginLeft', 'marginRight', function() {
     return Math.abs(this.get('outerWidth') - this.get('marginLeft') - this.get('marginRight'));
@@ -190,8 +191,8 @@ const ChartComponent = Component.extend(ColorableMixin, ResizeHandlerMixin, {
   // ----------------------------------------------------------------------------
   graphicTop: 0,
   graphicLeft: 0,
-  graphicWidth: alias('width'),
-  graphicHeight: alias('height'),
+  graphicWidth: legacyAlias('width'),
+  graphicHeight: legacyAlias('height'),
 
   graphicBottom: computed('graphicTop', 'graphicHeight', function() {
     return this.get('graphicTop') + this.get('graphicHeight');

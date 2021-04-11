@@ -1,5 +1,6 @@
 import { isArray } from '@ember/array';
-import { notEmpty, alias } from '@ember/object/computed';
+import { legacyAlias } from "ember-charts/utils/legacy-alias";
+import { notEmpty } from '@ember/object/computed';
 import { isEmpty } from '@ember/utils';
 import { computed } from '@ember/object';
 import Ember from 'ember';
@@ -289,7 +290,7 @@ const TimeSeriesChartComponent = ChartComponent.extend(LegendMixin,
 
   // position of the left of the graphic -- we want to leave space for
   // labels
-  graphicLeft: alias('labelWidthOffset'),
+  graphicLeft: legacyAlias('labelWidthOffset'),
 
   // width of the graphic
   graphicWidth: computed('width', 'graphicLeft', function() {
@@ -354,10 +355,10 @@ const TimeSeriesChartComponent = ChartComponent.extend(LegendMixin,
   }),
 
   // The time range over which all bar groups are drawn
-  xBetweenGroupDomain: alias('barDataExtent'),
+  xBetweenGroupDomain: legacyAlias('barDataExtent'),
 
   // The range of labels assigned within each group
-  xWithinGroupDomain: alias('_barGroups'),
+  xWithinGroupDomain: legacyAlias('_barGroups'),
 
   // The space (in pixels) allocated to each bar, including padding
   barWidth: computed('xGroupScale', function() {
@@ -408,10 +409,10 @@ const TimeSeriesChartComponent = ChartComponent.extend(LegendMixin,
   }),
 
   // The set of all time series
-  xBetweenSeriesDomain: alias('lineSeriesNames'),
+  xBetweenSeriesDomain: legacyAlias('lineSeriesNames'),
 
   // The range of all time series
-  xWithinSeriesDomain: alias('lineDataExtent'),
+  xWithinSeriesDomain: legacyAlias('lineDataExtent'),
 
   // ----------------------------------------------------------------------------
   // Ticks and Scales
@@ -780,11 +781,11 @@ const TimeSeriesChartComponent = ChartComponent.extend(LegendMixin,
   // Color Configuration
   // ----------------------------------------------------------------------------
 
-  numLines: alias('xBetweenSeriesDomain.length'),
-  numBarsPerGroup: alias('xWithinGroupDomain.length'),
+  numLines: legacyAlias('xBetweenSeriesDomain.length'),
+  numBarsPerGroup: legacyAlias('xWithinGroupDomain.length'),
 
   numColorSeries: 6, // Ember.computed.alias 'numLines'
-  numSecondaryColorSeries: alias('numBarsPerGroup'),
+  numSecondaryColorSeries: legacyAlias('numBarsPerGroup'),
 
   // Use primary colors for bars if there are no lines
 

@@ -1,4 +1,4 @@
-import { alias } from '@ember/object/computed';
+import { legacyAlias } from "ember-charts/utils/legacy-alias";
 import { isEmpty } from '@ember/utils';
 import { computed } from '@ember/object';
 import Ember from 'ember';
@@ -255,7 +255,7 @@ const PieChartComponent = ChartComponent.extend(FloatingTooltipMixin,
     return value;
   }),
 
-  finishedData: alias('sortedDataWithOther'),
+  finishedData: legacyAlias('sortedDataWithOther'),
 
   // ----------------------------------------------------------------------------
   // Layout
@@ -292,7 +292,7 @@ const PieChartComponent = ChartComponent.extend(FloatingTooltipMixin,
   // Graphics Properties
   // ----------------------------------------------------------------------------
 
-  numSlices: alias('finishedData.length'),
+  numSlices: legacyAlias('finishedData.length'),
 
   // Normally, the pie chart should offset slices so that the largest slice
   // finishes at 12 o'clock

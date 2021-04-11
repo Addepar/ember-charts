@@ -1,7 +1,7 @@
 import { schedule, cancel } from '@ember/runloop';
 import { isNone } from '@ember/utils';
 import { computed } from '@ember/object';
-import { alias } from '@ember/object/computed';
+import { legacyAlias } from "ember-charts/utils/legacy-alias";
 import Ember from 'ember';
 import * as d3 from 'd3';
 import { map } from 'lodash-es';
@@ -48,7 +48,7 @@ const HorizontalBarChartComponent = ChartComponent.extend(FloatingTooltipMixin,
   // ----------------------------------------------------------------------------
   // Data
   // ----------------------------------------------------------------------------
-  finishedData: alias('sortedData'),
+  finishedData: legacyAlias('sortedData'),
 
   // ----------------------------------------------------------------------------
   // Layout
@@ -114,7 +114,7 @@ const HorizontalBarChartComponent = ChartComponent.extend(FloatingTooltipMixin,
     return d3.min([maxMinDefault, this.get('maxOuterHeight')]);
   }),
 
-  marginTop: alias('labelPadding'),
+  marginTop: legacyAlias('labelPadding'),
 
   /**
    * The margin at the bottom depends on the label and title padding and height.
@@ -130,13 +130,13 @@ const HorizontalBarChartComponent = ChartComponent.extend(FloatingTooltipMixin,
     return this.get('labelPadding');
   }),
 
-  marginLeft: alias('horizontalMarginLeft'),
+  marginLeft: legacyAlias('horizontalMarginLeft'),
 
   // ----------------------------------------------------------------------------
   // Graphics Properties
   // ----------------------------------------------------------------------------
 
-  numBars: alias('finishedData.length'),
+  numBars: legacyAlias('finishedData.length'),
 
   // Range of values used to size the graph, within which bars will be drawn
   xDomain: computed('minValue', 'maxValue', function() {
