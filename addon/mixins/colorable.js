@@ -1,7 +1,8 @@
-import Ember from 'ember';
+import { computed } from '@ember/object';
+import Mixin from '@ember/object/mixin';
 import * as d3 from 'd3';
 
-export default Ember.Mixin.create({
+export default Mixin.create({
 
   selectedSeedColor: 'rgb(65, 65, 65)',
 
@@ -18,12 +19,12 @@ export default Ember.Mixin.create({
   // colorScale is the end of the color scale pipeline so we rerender on that
   renderVars: ['colorScale'],
 
-  colorRange: Ember.computed('selectedSeedColor', 'getColorRange', function() {
+  colorRange: computed('selectedSeedColor', 'getColorRange', function() {
     var seedColor = this.get('selectedSeedColor');
     return this.get('getColorRange')(seedColor);
   }),
 
-  getColorRange: Ember.computed('minimumTint', 'maximumTint', function() {
+  getColorRange: computed('minimumTint', 'maximumTint', function() {
     var _this = this;
     return function(seedColor) {
       var interpolate, maxTintRGB, minTintRGB;
@@ -34,12 +35,12 @@ export default Ember.Mixin.create({
     };
   }),
 
-  colorScale: Ember.computed('selectedSeedColor', 'getColorScale', function() {
+  colorScale: computed('selectedSeedColor', 'getColorScale', function() {
     var seedColor = this.get('selectedSeedColor');
     return this.get('getColorScale')(seedColor);
   }),
 
-  getColorScale: Ember.computed('getColorRange', 'colorScaleType', function() {
+  getColorScale: computed('getColorRange', 'colorScaleType', function() {
     var _this = this;
     return function(seedColor) {
       var colorRange = _this.get('getColorRange')(seedColor);
@@ -51,7 +52,7 @@ export default Ember.Mixin.create({
   secondaryMaximumTint: 0.85,
   secondaryColorScaleType: d3.scale.linear,
 
-  secondaryColorRange: Ember.computed('selectedSeedColor', 'secondaryMinimumTint', 'secondaryMaximumTint', function() {
+  secondaryColorRange: computed('selectedSeedColor', 'secondaryMinimumTint', 'secondaryMaximumTint', function() {
     var seedColor = this.get('selectedSeedColor');
     var interpolate = d3.interpolateRgb(seedColor, 'rgb(255,255,255)');
     var minTintRGB = interpolate(this.get('secondaryMinimumTint'));
@@ -60,7 +61,7 @@ export default Ember.Mixin.create({
     return [d3.rgb(minTintRGB), d3.rgb(maxTintRGB)];
   }),
 
-  secondaryColorScale: Ember.computed('secondaryColorScaleType', 'secondaryColorRange', function() {
+  secondaryColorScale: computed('secondaryColorScaleType', 'secondaryColorRange', function() {
     return this.get('secondaryColorScaleType')().range(this.get('secondaryColorRange') );
   }),
 
@@ -71,18 +72,18 @@ export default Ember.Mixin.create({
   // TODO: Shouldn't this already be part of the d3 color scale stuff?
 
   // Darkest color (seed color)
-  leastTintedColor: Ember.computed('colorRange.[]', function() {
+  leastTintedColor: computed('colorRange.[]', function() {
     return this.get('colorRange')[0];
   }),
 
   // Lightest color (fully tinted color)
-  mostTintedColor: Ember.computed('colorRange.[]', function() {
+  mostTintedColor: computed('colorRange.[]', function() {
     return this.get('colorRange')[1];
   }),
 
   numColorSeries: 1,
 
-  getSeriesColor: Ember.computed('numColorSeries', 'getColorRange', 'getColorScale', 'selectedSeedColor', function() {
+  getSeriesColor: computed('numColorSeries', 'getColorRange', 'getColorScale', 'selectedSeedColor', function() {
     var numColorSeries = this.get('numColorSeries');
     var selectedSeedColor = this.get('selectedSeedColor');
 
@@ -104,7 +105,7 @@ export default Ember.Mixin.create({
 
   numSecondaryColorSeries: 1,
 
-  getSecondarySeriesColor: Ember.computed('numSecondaryColorSeries', 'secondaryColorRange', 'secondaryColorScale', function() {
+  getSecondarySeriesColor: computed('numSecondaryColorSeries', 'secondaryColorRange', 'secondaryColorScale', function() {
     var numSecondaryColorSeries = this.get('numSecondaryColorSeries');
 
     var _this = this;

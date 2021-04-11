@@ -1,9 +1,10 @@
-import Ember from 'ember';
+import { computed } from '@ember/object';
+import Mixin from '@ember/object/mixin';
 
-const LabelWidthMixin = Ember.Mixin.create({
+const LabelWidthMixin = Mixin.create({
 
   // Override maximum width of labels to be a percentage of the total width
-  labelWidth: Ember.computed('outerWidth', 'labelWidthMultiplier', function() {
+  labelWidth: computed('outerWidth', 'labelWidthMultiplier', function() {
     return this.get('labelWidthMultiplier') * this.get('outerWidth');
   }),
 

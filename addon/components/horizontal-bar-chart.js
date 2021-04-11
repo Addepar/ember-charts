@@ -1,3 +1,7 @@
+import { schedule, cancel } from '@ember/runloop';
+import { isNone } from '@ember/utils';
+import { computed } from '@ember/object';
+import { legacyAlias } from "ember-charts/utils/legacy-alias";
 import Ember from 'ember';
 import * as d3 from 'd3';
 import { map } from 'lodash-es';
@@ -44,7 +48,7 @@ const HorizontalBarChartComponent = ChartComponent.extend(FloatingTooltipMixin,
   // ----------------------------------------------------------------------------
   // Data
   // ----------------------------------------------------------------------------
-  finishedData: Ember.computed.alias('sortedData'),
+  finishedData: legacyAlias('sortedData'),
 
   // ----------------------------------------------------------------------------
   // Layout
@@ -57,10 +61,10 @@ const HorizontalBarChartComponent = ChartComponent.extend(FloatingTooltipMixin,
    *   - Since the chart axis will be close to center
    * @override
    */
-  xAxisPositionX: Ember.computed('graphicWidth',
+  xAxisPositionX: computed('graphicWidth',
       'xTitleHorizontalOffset', function() {
     var position = this.get('graphicWidth') / 2 ;
-    if (!Ember.isNone(this.get('xTitleHorizontalOffset'))) {
+    if (!isNone(this.get('xTitleHorizontalOffset'))) {
       position += this.get('xTitleHorizontalOffset');
     }
     return position;
@@ -70,21 +74,21 @@ const HorizontalBarChartComponent = ChartComponent.extend(FloatingTooltipMixin,
    * X Axis Titles needs extra padding, else will intersect with the lowest bar
    * @override
    */
-  xAxisPositionY: Ember.computed('graphicBottom', 'xTitleVerticalOffset', function(){
+  xAxisPositionY: computed('graphicBottom', 'xTitleVerticalOffset', function(){
     return this.get('graphicBottom') + this.get('xTitleVerticalOffset');
   }),
 
   /**
    * @override
    */
-  yAxisPositionY: Ember.computed('labelWidthOffset', 'yAxisTitleHeightOffset', function(){
+  yAxisPositionY: computed('labelWidthOffset', 'yAxisTitleHeightOffset', function(){
     return -(this.get('labelWidthOffset') + this.get('yAxisTitleHeightOffset'));
   }),
 
-  minOuterHeight: Ember.computed('numBars', 'minBarThickness', 'marginTop', 'marginBottom', function() {
+  minOuterHeight: computed('numBars', 'minBarThickness', 'marginTop', 'marginBottom', function() {
     const minBarThickness = this.get('minBarThickness');
     // If minBarThickness is null or undefined, do not enforce minOuterHeight.
-    if (Ember.isNone(minBarThickness)) {
+    if (isNone(minBarThickness)) {
       return null;
     } else {
       const minBarSpace = this.get('numBars') * minBarThickness;
@@ -92,10 +96,10 @@ const HorizontalBarChartComponent = ChartComponent.extend(FloatingTooltipMixin,
     }
   }),
 
-  maxOuterHeight: Ember.computed('numBars', 'maxBarThickness', 'marginTop', 'marginBottom', function() {
+  maxOuterHeight: computed('numBars', 'maxBarThickness', 'marginTop', 'marginBottom', function() {
     const maxBarThickness = this.get('maxBarThickness');
     // If maxBarThickness is null or undefined, do not enforce maxOuterHeight.
-    if (Ember.isNone(maxBarThickness)) {
+    if (isNone(maxBarThickness)) {
       return null;
     } else {
       const maxBarSpace = this.get('numBars') * maxBarThickness;
@@ -104,20 +108,20 @@ const HorizontalBarChartComponent = ChartComponent.extend(FloatingTooltipMixin,
   }),
 
   // override the default outerHeight, so the graph scrolls
-  outerHeight: Ember.computed('minOuterHeight', 'maxOuterHeight', 'defaultOuterHeight', function() {
+  outerHeight: computed('minOuterHeight', 'maxOuterHeight', 'defaultOuterHeight', function() {
     // Note: d3.max and d3.min ignore null/undefined values
     var maxMinDefault = d3.max([this.get('defaultOuterHeight'), this.get('minOuterHeight')]);
     return d3.min([maxMinDefault, this.get('maxOuterHeight')]);
   }),
 
-  marginTop: Ember.computed.alias('labelPadding'),
+  marginTop: legacyAlias('labelPadding'),
 
   /**
    * The margin at the bottom depends on the label and title padding and height.
    * @override
    * @type {Number}
    */
-  marginBottom: Ember.computed('labelPadding', 'xTitleVerticalOffset',
+  marginBottom: computed('labelPadding', 'xTitleVerticalOffset',
       'hasXAxisTitle', function() {
     if (this.get('hasXAxisTitle')) {
       return this.get('labelPadding') + this.get('xTitleVerticalOffset');
@@ -126,16 +130,16 @@ const HorizontalBarChartComponent = ChartComponent.extend(FloatingTooltipMixin,
     return this.get('labelPadding');
   }),
 
-  marginLeft: Ember.computed.alias('horizontalMarginLeft'),
+  marginLeft: legacyAlias('horizontalMarginLeft'),
 
   // ----------------------------------------------------------------------------
   // Graphics Properties
   // ----------------------------------------------------------------------------
 
-  numBars: Ember.computed.alias('finishedData.length'),
+  numBars: legacyAlias('finishedData.length'),
 
   // Range of values used to size the graph, within which bars will be drawn
-  xDomain: Ember.computed('minValue', 'maxValue', function() {
+  xDomain: computed('minValue', 'maxValue', function() {
     const minValue = this.get('minValue');
     const maxValue = this.get('maxValue');
     if (this.get('hasNegativeValues')) {
@@ -165,12 +169,12 @@ const HorizontalBarChartComponent = ChartComponent.extend(FloatingTooltipMixin,
   },
 
   // Scale to map value to horizontal length of bar
-  xScale: Ember.computed('width', 'xDomain', function() {
+  xScale: computed('width', 'xDomain', function() {
     return this._xScaleForWidth(this.get('width'));
   }),
 
   // Scale to map bar index to its horizontal position
-  yScale: Ember.computed('height', 'barPadding', function() {
+  yScale: computed('height', 'barPadding', function() {
     // Evenly split up height for bars with space between bars
     return d3.scale.ordinal()
       .domain(d3.range(this.get('numBars')))
@@ -178,7 +182,7 @@ const HorizontalBarChartComponent = ChartComponent.extend(FloatingTooltipMixin,
   }),
 
   // Space in pixels allocated to each bar + padding
-  barThickness: Ember.computed('yScale', function() {
+  barThickness: computed('yScale', function() {
     return this.get('yScale').rangeBand();
   }),
 
@@ -186,7 +190,7 @@ const HorizontalBarChartComponent = ChartComponent.extend(FloatingTooltipMixin,
   // Tooltip Configuration
   // ----------------------------------------------------------------------------
 
-  showDetails: Ember.computed('isInteractive', function() {
+  showDetails: computed('isInteractive', function() {
     if (!this.get('isInteractive')) {
       return Ember.K;
     }
@@ -206,7 +210,7 @@ const HorizontalBarChartComponent = ChartComponent.extend(FloatingTooltipMixin,
     };
   }),
 
-  hideDetails: Ember.computed('isInteractive', function() {
+  hideDetails: computed('isInteractive', function() {
     if (!this.get('isInteractive')) {
       return Ember.K;
     }
@@ -223,7 +227,7 @@ const HorizontalBarChartComponent = ChartComponent.extend(FloatingTooltipMixin,
   // Styles
   // ----------------------------------------------------------------------------
 
-  groupAttrs: Ember.computed('xScale', 'yScale', function() {
+  groupAttrs: computed('xScale', 'yScale', function() {
     var xScale = this.get('xScale');
     var yScale = this.get('yScale');
     return {
@@ -234,7 +238,7 @@ const HorizontalBarChartComponent = ChartComponent.extend(FloatingTooltipMixin,
     };
   }),
 
-  barAttrs: Ember.computed('xScale', 'mostTintedColor', 'leastTintedColor', 'barThickness', function() {
+  barAttrs: computed('xScale', 'mostTintedColor', 'leastTintedColor', 'barThickness', function() {
     var xScale = this.get('xScale');
     return {
       width: (d) => this._computeBarWidth(d.value, xScale),
@@ -269,7 +273,7 @@ const HorizontalBarChartComponent = ChartComponent.extend(FloatingTooltipMixin,
     return false;
   },
 
-  valueLabelAttrs: Ember.computed('xScale', 'barThickness', 'labelPadding', function() {
+  valueLabelAttrs: computed('xScale', 'barThickness', 'labelPadding', function() {
     var xScale = this.get('xScale');
     // Anchor the label 'labelPadding' away from the zero line
     // How to anchor the text depends on the direction of the bar
@@ -289,7 +293,7 @@ const HorizontalBarChartComponent = ChartComponent.extend(FloatingTooltipMixin,
     };
   }),
 
-  groupLabelAttrs: Ember.computed('xScale', 'barThickness', 'labelPadding', function() {
+  groupLabelAttrs: computed('xScale', 'barThickness', 'labelPadding', function() {
     var xScale = this.get('xScale');
 
     // Anchor the label 'labelPadding' away from the zero line
@@ -309,7 +313,7 @@ const HorizontalBarChartComponent = ChartComponent.extend(FloatingTooltipMixin,
     };
   }),
 
-  axisAttrs: Ember.computed('xScale', 'height', function() {
+  axisAttrs: computed('xScale', 'height', function() {
     var xScale = this.get('xScale');
 
     // Thickness, counts the padding allocated to each bar as well
@@ -329,11 +333,11 @@ const HorizontalBarChartComponent = ChartComponent.extend(FloatingTooltipMixin,
     return this.get('viewport').selectAll('.bar');
   },
 
-  groups: Ember.computed(function() {
+  groups: computed(function() {
     return this.getViewportBars().data(this.get('finishedData'));
   }).volatile(),
 
-  yAxis: Ember.computed(function() {
+  yAxis: computed(function() {
     var yAxis = this.get('viewport').select('.y.axis line');
     if (yAxis.empty()) {
       return this.get('viewport')
@@ -351,7 +355,7 @@ const HorizontalBarChartComponent = ChartComponent.extend(FloatingTooltipMixin,
 
   didInsertElement: function() {
     this._super(...arguments);
-    this._scheduledRedraw = Ember.run.schedule( 'afterRender', () => {
+    this._scheduledRedraw = schedule( 'afterRender', () => {
       if (this.isDestroying || !this.element) {
         return;
       }
@@ -370,7 +374,7 @@ const HorizontalBarChartComponent = ChartComponent.extend(FloatingTooltipMixin,
       viewportBars.on('mouseover', null);
       viewportBars.on('mouseout', null);
     }
-    Ember.run.cancel(this._scheduledRedraw);
+    cancel(this._scheduledRedraw);
     this._super(...arguments);
   },
 
@@ -647,7 +651,7 @@ const HorizontalBarChartComponent = ChartComponent.extend(FloatingTooltipMixin,
     });
 
     const maxLabelWidth = this.get('maxLabelWidth');
-    if (!Ember.isNone(maxLabelWidth)) {
+    if (!isNone(maxLabelWidth)) {
       const labelTrimmer = LabelTrimmer.create({
         getLabelSize: () => maxLabelWidth,
         getLabelText: (d) => d.label

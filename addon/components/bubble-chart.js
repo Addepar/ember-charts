@@ -1,3 +1,6 @@
+import { legacyAlias } from "ember-charts/utils/legacy-alias";
+import { isEmpty } from '@ember/utils';
+import { computed } from '@ember/object';
 import Ember from 'ember';
 import * as d3 from 'd3';
 import ChartComponent from './chart-component';
@@ -26,7 +29,7 @@ export default ChartComponent.extend(FloatingTooltipMixin, {
   // repel.
   // Dividing by 8 scales down the charge to be
   // appropriate for the visualization dimensions.
-  charge: Ember.computed(function() {
+  charge: computed(function() {
     return (d) => -Math.pow(d.radius, 2.0) / 8;
   }),
 
@@ -37,7 +40,7 @@ export default ChartComponent.extend(FloatingTooltipMixin, {
   // Tooltip Configuration
   // ----------------------------------------------------------------------------
 
-  showDetails: Ember.computed('isInteractive', function() {
+  showDetails: computed('isInteractive', function() {
     if (this.get('isInteractive')) {
       return Ember.K;
     }
@@ -56,7 +59,7 @@ export default ChartComponent.extend(FloatingTooltipMixin, {
     };
   }),
 
-  hideDetails: Ember.computed('isInteractive', function() {
+  hideDetails: computed('isInteractive', function() {
     if (this.get('isInteractive')) {
       return Ember.K;
     }
@@ -88,7 +91,7 @@ export default ChartComponent.extend(FloatingTooltipMixin, {
   renderVars: ['selectedSeedColor'],
 
   // Sqrt scaling between data and radius
-  radiusScale: Ember.computed('data', 'width', 'height', function() {
+  radiusScale: computed('data', 'width', 'height', function() {
     // use the max total_amount in the data as the max in the scale's domain
     var maxAmount = d3.max(this.get('data'), (d) => d.value);
     var maxRadius = d3.min([this.get('width'), this.get('height')]) / 7;
@@ -96,9 +99,9 @@ export default ChartComponent.extend(FloatingTooltipMixin, {
     return d3.scale.pow().exponent(0.5).domain([0, maxAmount]).range([2, maxRadius]);
   }),
 
-  nodeData: Ember.computed('radiusScale', function() {
+  nodeData: computed('radiusScale', function() {
     var data = this.get('data');
-    if (Ember.isEmpty(data)) {
+    if (isEmpty(data)) {
       return [];
     }
 
@@ -118,9 +121,9 @@ export default ChartComponent.extend(FloatingTooltipMixin, {
     return nodes;
   }),
 
-  finishedData: Ember.computed.alias('nodeData'),
+  finishedData: legacyAlias('nodeData'),
 
-  numColorSeries: Ember.computed.alias('finishedData.length'),
+  numColorSeries: legacyAlias('finishedData.length'),
 
   drawChart: function() {
     return this.updateVis();

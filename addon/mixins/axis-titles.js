@@ -1,4 +1,6 @@
-import Ember from 'ember';
+import { isNone } from '@ember/utils';
+import { computed } from '@ember/object';
+import Mixin from '@ember/object/mixin';
 import * as d3 from 'd3';
 
 /**
@@ -10,7 +12,7 @@ import * as d3 from 'd3';
  *
  * @mixin
  */
-const AxisTitlesMixin = Ember.Mixin.create({
+const AxisTitlesMixin = Mixin.create({
   /**
    * Toggle axis X title on/off
    * @type {Boolean}
@@ -28,7 +30,7 @@ const AxisTitlesMixin = Ember.Mixin.create({
    * TODO: Add ember deprecated helper function for this property.
    * @deprecated
    */
-  hasAxisTitles: Ember.computed('hasXAxisTitle', 'hasYAxisTitle', {
+  hasAxisTitles: computed('hasXAxisTitle', 'hasYAxisTitle', {
     set(key, value) {
       this.set('hasXAxisTitle', value);
       this.set('hasYAxisTitle', value);
@@ -56,7 +58,7 @@ const AxisTitlesMixin = Ember.Mixin.create({
    * axis title.
    * @type {Number}
    */
-  xTitleHorizontalOffset: Ember.computed('width', 'graphicWidth', function(){
+  xTitleHorizontalOffset: computed('width', 'graphicWidth', function(){
     return -(this.get('width') - this.get('graphicWidth')) / 2;
   }),
 
@@ -78,7 +80,7 @@ const AxisTitlesMixin = Ember.Mixin.create({
    * `xAxisTitleDisplayValue` should be an empty string
    * @type {String}
    */
-  xAxisTitleDisplayValue: Ember.computed('hasXAxisTitle', 'xValueDisplayName', function(){
+  xAxisTitleDisplayValue: computed('hasXAxisTitle', 'xValueDisplayName', function(){
     return this.get('hasXAxisTitle') ? this.get('xValueDisplayName') : '';
   }),
 
@@ -87,7 +89,7 @@ const AxisTitlesMixin = Ember.Mixin.create({
    * `yAxisTitleDisplayValue` should be an empty string
    * @type {String}
    */
-  yAxisTitleDisplayValue: Ember.computed('hasYAxisTitle', 'yValueDisplayName', function(){
+  yAxisTitleDisplayValue: computed('hasYAxisTitle', 'yValueDisplayName', function(){
     return this.get('hasYAxisTitle') ? this.get('yValueDisplayName') : '';
   }),
 
@@ -105,12 +107,12 @@ const AxisTitlesMixin = Ember.Mixin.create({
    * while if true the left margin should be the value of `horizontalMarginLeft`
    * @type {Number}
    */
-  marginLeft: Ember.computed('hasYAxisTitle', 'horizontalMarginLeft', function(){
+  marginLeft: computed('hasYAxisTitle', 'horizontalMarginLeft', function(){
     return this.get('hasYAxisTitle') ? this.get('horizontalMarginLeft') : 0;
   }),
 
   // TODO(tony): Just use axisBottomOffset here
-  legendChartPadding: Ember.computed('labelHeightOffset', 'xAxisTitleHeightOffset', function() {
+  legendChartPadding: computed('labelHeightOffset', 'xAxisTitleHeightOffset', function() {
     return this.get('xAxisTitleHeightOffset') + this.get('labelHeightOffset');
   }),
 
@@ -118,7 +120,7 @@ const AxisTitlesMixin = Ember.Mixin.create({
    * Computed title height plus label padding or 0 if `hasXAxisTitle` is false
    * @type {Number}
    */
-  xAxisTitleHeightOffset: Ember.computed('hasXAxisTitle', 'axisTitleHeight',
+  xAxisTitleHeightOffset: computed('hasXAxisTitle', 'axisTitleHeight',
       'labelPadding', function() {
     if (this.get('hasXAxisTitle')) {
       return this.get('axisTitleHeight') + this.get('labelPadding');
@@ -133,7 +135,7 @@ const AxisTitlesMixin = Ember.Mixin.create({
    * margin
    * @type {Number}
    */
-  yAxisTitleHeightOffset: Ember.computed('hasYAxisTitle', 'axisTitleHeight',
+  yAxisTitleHeightOffset: computed('hasYAxisTitle', 'axisTitleHeight',
       function() {
     if (this.get('hasYAxisTitle')) {
       return this.get('axisTitleHeight') + 10;
@@ -146,7 +148,7 @@ const AxisTitlesMixin = Ember.Mixin.create({
    * References and/or creates the d3 element for x axis title
    * @type {Object}
    */
-  xAxisTitle: Ember.computed(function() {
+  xAxisTitle: computed(function() {
     return this.selectOrCreateAxisTitle('.x.axis-title').attr('class', 'x axis-title');
   }).volatile(),
 
@@ -154,7 +156,7 @@ const AxisTitlesMixin = Ember.Mixin.create({
    * References and/or creates the d3 element for y axis title
    * @type {Object}
    */
-  yAxisTitle: Ember.computed(function() {
+  yAxisTitle: computed(function() {
     return this.selectOrCreateAxisTitle('.y.axis-title').attr('class', 'y axis-title');
   }).volatile(),
 
@@ -162,10 +164,10 @@ const AxisTitlesMixin = Ember.Mixin.create({
    * Position of x axis title on the x axis
    * @type {Number}
    */
-  xAxisPositionX: Ember.computed('graphicWidth', 'labelWidthOffset',
+  xAxisPositionX: computed('graphicWidth', 'labelWidthOffset',
       'xTitleHorizontalOffset', function() {
     var position = this.get('graphicWidth') / 2 + this.get('labelWidthOffset');
-    if (!Ember.isNone(this.get('xTitleHorizontalOffset'))) {
+    if (!isNone(this.get('xTitleHorizontalOffset'))) {
       position += this.get('xTitleHorizontalOffset');
     }
     return position;
@@ -178,7 +180,7 @@ const AxisTitlesMixin = Ember.Mixin.create({
    * to adjust the y-coordinate of the label on the graph.
    * @type {Number}
    */
-  xAxisPositionY: Ember.computed('graphicBottom', 'labelHeightOffset',
+  xAxisPositionY: computed('graphicBottom', 'labelHeightOffset',
       'labelPadding', 'xTitleVerticalOffset', function(){
     return this.get('graphicBottom') + this.get('labelHeightOffset') +
       this.get('labelPadding') + this.get('xTitleVerticalOffset');
@@ -188,10 +190,10 @@ const AxisTitlesMixin = Ember.Mixin.create({
    * Position of y axis title on the x axis
    * @type {Number}
    */
-  yAxisPositionX: Ember.computed('graphicHeight', 'yTitleVerticalOffset',
+  yAxisPositionX: computed('graphicHeight', 'yTitleVerticalOffset',
       function() {
     var position = -(this.get('graphicHeight') / 2);
-    if (!Ember.isNone(this.get('yTitleVerticalOffset'))) {
+    if (!isNone(this.get('yTitleVerticalOffset'))) {
       position += this.get('yTitleVerticalOffset');
     }
     return position;

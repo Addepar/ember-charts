@@ -1,5 +1,6 @@
-import Ember from 'ember';
-export default Ember.Mixin.create({
+import { computed } from '@ember/object';
+import Mixin from '@ember/object/mixin';
+export default Mixin.create({
 
   // # ----------------------------------------------------------------------------
   // # API -- inputs
@@ -24,7 +25,7 @@ export default Ember.Mixin.create({
   // # ----------------------------------------------------------------------------
   // # Private Methods
   // # ----------------------------------------------------------------------------
-  _tooltipId: Ember.computed(function() {
+  _tooltipId: computed(function() {
     return this.get('elementId') + '_tooltip';
   }),
 

@@ -1,6 +1,16 @@
+import { isArray } from '@ember/array';
+import { legacyAlias } from "ember-charts/utils/legacy-alias";
+import { notEmpty } from '@ember/object/computed';
+import { isEmpty } from '@ember/utils';
+import { computed } from '@ember/object';
 import Ember from 'ember';
 import * as d3 from 'd3';
-import { head, keys, last as lodashLast, map } from 'lodash-es';
+import {
+  head,
+  keys,
+  last as lodashLast,
+  map
+} from 'lodash-es';
 import ChartComponent from './chart-component';
 
 import LegendMixin from '../mixins/legend';
@@ -82,14 +92,14 @@ const TimeSeriesChartComponent = ChartComponent.extend(LegendMixin,
   // ----------------------------------------------------------------------------
 
   // Combine all data for testing purposes
-  finishedData: Ember.computed('_groupedLineData.@each.values', '_groupedBarData.[]', function() {
+  finishedData: computed('_groupedLineData.@each.values', '_groupedBarData.[]', function() {
     return {
       lineData: this.get('_groupedLineData'),
       groupedBarData: this.get('_groupedBarData')
     };
   }),
 
-  hasNoData: Ember.computed('_hasBarData', '_hasLineData', function() {
+  hasNoData: computed('_hasBarData', '_hasLineData', function() {
     return !this.get('_hasBarData') && !this.get('_hasLineData');
   }),
 
@@ -108,9 +118,9 @@ const TimeSeriesChartComponent = ChartComponent.extend(LegendMixin,
   // Puts lineData in a new format.
   // Resulting format is [{group: ..., values: ...}] where values are the
   // lineData values for that group.
-  _groupedLineData: Ember.computed('lineData.[]', 'ungroupedSeriesName', function() {
+  _groupedLineData: computed('lineData.[]', 'ungroupedSeriesName', function() {
     var lineData = this.get('lineData');
-    if (Ember.isEmpty(lineData)) {
+    if (isEmpty(lineData)) {
       return [];
     }
 
@@ -130,9 +140,9 @@ const TimeSeriesChartComponent = ChartComponent.extend(LegendMixin,
   // Resulting format: [[{group: ..., time: ..., value: ..., label:
   // ...}, ...], [...]] where each internal array is an array of hashes
   // at the same time
-  _groupedBarData: Ember.computed('barData.[]', 'ungroupedSeriesName', 'barLeftOffset', function() {
+  _groupedBarData: computed('barData.[]', 'ungroupedSeriesName', 'barLeftOffset', function() {
     var barData = this.get('barData');
-    if (Ember.isEmpty(barData)) {
+    if (isEmpty(barData)) {
       return [];
     }
 
@@ -258,9 +268,9 @@ const TimeSeriesChartComponent = ChartComponent.extend(LegendMixin,
       .style("text-anchor", "middle");
   },
 
-  _barGroups: Ember.computed('barData.[]', 'ungroupedSeriesName', function() {
+  _barGroups: computed('barData.[]', 'ungroupedSeriesName', function() {
     var barData = this.get('barData');
-    if (Ember.isEmpty(barData)) {
+    if (isEmpty(barData)) {
       return [];
     }
 
@@ -270,9 +280,9 @@ const TimeSeriesChartComponent = ChartComponent.extend(LegendMixin,
     return keys(barGroups);
   }),
 
-  _hasLineData: Ember.computed.notEmpty('lineData'),
+  _hasLineData: notEmpty('lineData'),
 
-  _hasBarData: Ember.computed.notEmpty('barData'),
+  _hasBarData: notEmpty('barData'),
 
   // ----------------------------------------------------------------------------
   // Layout
@@ -280,14 +290,14 @@ const TimeSeriesChartComponent = ChartComponent.extend(LegendMixin,
 
   // position of the left of the graphic -- we want to leave space for
   // labels
-  graphicLeft: Ember.computed.alias('labelWidthOffset'),
+  graphicLeft: legacyAlias('labelWidthOffset'),
 
   // width of the graphic
-  graphicWidth: Ember.computed('width', 'graphicLeft', function() {
+  graphicWidth: computed('width', 'graphicLeft', function() {
     return this.get('width') - this.get('graphicLeft');
   }),
 
-  graphicHeight: Ember.computed('height', 'legendHeight', 'legendChartPadding', 'marginBottom', function() {
+  graphicHeight: computed('height', 'legendHeight', 'legendChartPadding', 'marginBottom', function() {
     var legendSize = this.get('legendHeight') + this.get('legendChartPadding') + (this.get('marginBottom') || 0);
     return this.get('height') - legendSize;
   }),
@@ -297,9 +307,9 @@ const TimeSeriesChartComponent = ChartComponent.extend(LegendMixin,
   // ----------------------------------------------------------------------------
 
   // Unit of time between bar samples
-  timeDelta: Ember.computed('_groupedBarData', function() {
+  timeDelta: computed('_groupedBarData', function() {
     var groupedBarData = this.get('_groupedBarData');
-    if (Ember.isEmpty(groupedBarData) || (groupedBarData.length < 2)) {
+    if (isEmpty(groupedBarData) || (groupedBarData.length < 2)) {
       return 'month';
     }
 
@@ -326,10 +336,10 @@ const TimeSeriesChartComponent = ChartComponent.extend(LegendMixin,
 
   // this method seems very flaky to me; making padding by changing domain
   // convention is to change range
-  barDataExtent: Ember.computed('timeDelta', '_groupedBarData.[]', function() {
+  barDataExtent: computed('timeDelta', '_groupedBarData.[]', function() {
     var timeDelta = this.get('timeDelta');
     var groupedBarData = this.get('_groupedBarData');
-    if (Ember.isEmpty(groupedBarData)) {
+    if (isEmpty(groupedBarData)) {
       return [new Date(), new Date()];
     }
 
@@ -345,17 +355,17 @@ const TimeSeriesChartComponent = ChartComponent.extend(LegendMixin,
   }),
 
   // The time range over which all bar groups are drawn
-  xBetweenGroupDomain: Ember.computed.alias('barDataExtent'),
+  xBetweenGroupDomain: legacyAlias('barDataExtent'),
 
   // The range of labels assigned within each group
-  xWithinGroupDomain: Ember.computed.alias('_barGroups'),
+  xWithinGroupDomain: legacyAlias('_barGroups'),
 
   // The space (in pixels) allocated to each bar, including padding
-  barWidth: Ember.computed('xGroupScale', function() {
+  barWidth: computed('xGroupScale', function() {
     return this.get('xGroupScale').rangeBand();
   }),
 
-  paddedGroupWidth: Ember.computed('timeDelta', 'xTimeScale', 'xBetweenGroupDomain', function() {
+  paddedGroupWidth: computed('timeDelta', 'xTimeScale', 'xBetweenGroupDomain', function() {
     var timeDelta = this.get('timeDelta');
     var scale = this.get('xTimeScale');
     var t1 = this.get('xBetweenGroupDomain')[0];
@@ -366,9 +376,9 @@ const TimeSeriesChartComponent = ChartComponent.extend(LegendMixin,
   // Line Drawing Scales
   // ----------------------------------------------------------------------------
 
-  lineSeriesNames: Ember.computed('_groupedLineData', function() {
+  lineSeriesNames: computed('_groupedLineData', function() {
     var data = this.get('_groupedLineData');
-    if (Ember.isEmpty(data)) {
+    if (isEmpty(data)) {
       return [];
     }
     return data.map(function(d) {
@@ -376,9 +386,9 @@ const TimeSeriesChartComponent = ChartComponent.extend(LegendMixin,
     });
   }),
 
-  lineDataExtent: Ember.computed('_groupedLineData.@each.values', function() {
+  lineDataExtent: computed('_groupedLineData.@each.values', function() {
     var data = this.get('_groupedLineData');
-    if (Ember.isEmpty(data)) {
+    if (isEmpty(data)) {
       return [new Date(), new Date()];
     }
 
@@ -399,10 +409,10 @@ const TimeSeriesChartComponent = ChartComponent.extend(LegendMixin,
   }),
 
   // The set of all time series
-  xBetweenSeriesDomain: Ember.computed.alias('lineSeriesNames'),
+  xBetweenSeriesDomain: legacyAlias('lineSeriesNames'),
 
   // The range of all time series
-  xWithinSeriesDomain: Ember.computed.alias('lineDataExtent'),
+  xWithinSeriesDomain: legacyAlias('lineDataExtent'),
 
   // ----------------------------------------------------------------------------
   // Ticks and Scales
@@ -414,7 +424,7 @@ const TimeSeriesChartComponent = ChartComponent.extend(LegendMixin,
   // For a dynamic x axis, let the max number of labels be the minimum of
   // the number of x ticks and the assigned value. This is to prevent
   // the assigned value from being so large that labels flood the x axis.
-  maxNumberOfLabels: Ember.computed('numXTicks', 'dynamicXAxis', 'maxNumberOfRotatedLabels', 'xAxisVertLabels', {
+  maxNumberOfLabels: computed('numXTicks', 'dynamicXAxis', 'maxNumberOfRotatedLabels', 'xAxisVertLabels', {
     get() {
       var allowableTicks = this.get('numXTicks');
       if (this.get('xAxisVertLabels')) {
@@ -445,7 +455,7 @@ const TimeSeriesChartComponent = ChartComponent.extend(LegendMixin,
   }),
 
   // The footprint of a label rotated at -60 transform
-  maxNumberOfRotatedLabels: Ember.computed('_innerTickSpacingX', 'graphicWidth', 'numXTicks', function() {
+  maxNumberOfRotatedLabels: computed('_innerTickSpacingX', 'graphicWidth', 'numXTicks', function() {
     const radianVal = 30 * (Math.PI / 180);
     const tickSpacing = Math.sin(radianVal) * this.get('_innerTickSpacingX');
     const numOfTicks = Math.floor(this.get('graphicWidth') / tickSpacing);
@@ -454,7 +464,7 @@ const TimeSeriesChartComponent = ChartComponent.extend(LegendMixin,
   }),
 
   // Create a domain that spans the larger range of bar or line data
-  xDomain: Ember.computed('xBetweenGroupDomain', 'xWithinSeriesDomain',
+  xDomain: computed('xBetweenGroupDomain', 'xWithinSeriesDomain',
     '_hasBarData', '_hasLineData', 'maxNumberOfLabels', function() {
     if (!this.get('_hasBarData')) {
       return this.get('xWithinSeriesDomain');
@@ -472,7 +482,7 @@ const TimeSeriesChartComponent = ChartComponent.extend(LegendMixin,
 
   // Largest and smallest values in line and bar data
   // Use raw bar data instead of doubly grouped hashes in groupedBarData
-  yDomain: Ember.computed( '_groupedLineData', '_groupedBarData',
+  yDomain: computed( '_groupedLineData', '_groupedBarData',
     '_hasBarData', '_hasLineData', 'yAxisFromZero', function() {
 
     var lineData = this.get('_groupedLineData');
@@ -536,34 +546,34 @@ const TimeSeriesChartComponent = ChartComponent.extend(LegendMixin,
     return [min, max];
   }),
 
-  yRange: Ember.computed('graphicTop', 'graphicHeight', function() {
+  yRange: computed('graphicTop', 'graphicHeight', function() {
     return [
       this.get('graphicTop') + this.get('graphicHeight'),
       this.get('graphicTop')
     ];
   }),
 
-  yScale: Ember.computed('yDomain', 'yRange', 'numYTicks', function() {
+  yScale: computed('yDomain', 'yRange', 'numYTicks', function() {
     return d3.scale.linear()
       .domain(this.get('yDomain'))
       .range(this.get('yRange'))
       .nice(this.get('numYTicks'));
   }),
 
-  xRange: Ember.computed( 'graphicLeft', 'graphicWidth', function() {
+  xRange: computed( 'graphicLeft', 'graphicWidth', function() {
     return [
       this.get('graphicLeft'),
       this.get('graphicLeft') + this.get('graphicWidth')
     ];
   }),
 
-  xTimeScale: Ember.computed('xDomain', 'xRange', function() {
+  xTimeScale: computed('xDomain', 'xRange', function() {
     return d3.time.scale()
       .domain(this.get('xDomain'))
       .range(this.get('xRange'));
   }),
 
-  xGroupScale: Ember.computed('xWithinGroupDomain', 'paddedGroupWidth',
+  xGroupScale: computed('xWithinGroupDomain', 'paddedGroupWidth',
     'barPadding', 'barGroupPadding', function() {
     return d3.scale.ordinal()
       .domain(this.get('xWithinGroupDomain'))
@@ -572,12 +582,12 @@ const TimeSeriesChartComponent = ChartComponent.extend(LegendMixin,
   }),
 
   // Override axis mix-in min and max values to listen to the scale's domain
-  minAxisValue: Ember.computed('yScale', function() {
+  minAxisValue: computed('yScale', function() {
     var yScale = this.get('yScale');
     return yScale.domain()[0];
   }),
 
-  maxAxisValue: Ember.computed('yScale', function() {
+  maxAxisValue: computed('yScale', function() {
     var yScale = this.get('yScale');
     return yScale.domain()[1];
   }),
@@ -586,7 +596,7 @@ const TimeSeriesChartComponent = ChartComponent.extend(LegendMixin,
   // Tooltip Configuration
   // ----------------------------------------------------------------------------
 
-  showDetails: Ember.computed('isInteractive', function() {
+  showDetails: computed('isInteractive', function() {
     if (!this.get('isInteractive')) {
       return Ember.K;
     }
@@ -609,7 +619,7 @@ const TimeSeriesChartComponent = ChartComponent.extend(LegendMixin,
         content.append('<br />');
       };
 
-      if (Ember.isArray(data.values)) {
+      if (isArray(data.values)) {
         data.values.forEach(addValueLine);
       } else {
         addValueLine(data);
@@ -619,7 +629,7 @@ const TimeSeriesChartComponent = ChartComponent.extend(LegendMixin,
     };
   }),
 
-  hideDetails: Ember.computed('isInteractive', function() {
+  hideDetails: computed('isInteractive', function() {
     if (!this.get('isInteractive')) {
       return Ember.K;
     }
@@ -648,13 +658,13 @@ const TimeSeriesChartComponent = ChartComponent.extend(LegendMixin,
   // Number of pixels to shift graphics away from origin line
   zeroDisplacement: 1,
 
-  groupAttrs: Ember.computed('paddedGroupWidth', function() {
+  groupAttrs: computed('paddedGroupWidth', function() {
     return {
       transform: () => "translate(" + (-this.get('paddedGroupWidth') / 2) + ",0)"
     };
   }),
 
-  groupedBarAttrs: Ember.computed( 'xTimeScale', 'xGroupScale', 'barWidth', 'yScale',
+  groupedBarAttrs: computed( 'xTimeScale', 'xGroupScale', 'barWidth', 'yScale',
     'zeroDisplacement', 'barLeftOffset', function() {
 
     var xTimeScale = this.get('xTimeScale');
@@ -685,7 +695,7 @@ const TimeSeriesChartComponent = ChartComponent.extend(LegendMixin,
     };
   }),
 
-  line: Ember.computed( 'xTimeScale', 'yScale', 'interpolate', function() {
+  line: computed( 'xTimeScale', 'yScale', 'interpolate', function() {
     return d3.svg.line()
       .x((d) => this.get('xTimeScale')(d.time))
       .y((d) => this.get('yScale')(d.value))
@@ -701,7 +711,7 @@ const TimeSeriesChartComponent = ChartComponent.extend(LegendMixin,
   // 4th line: ~1px, 66% tinted, dotted
   // 5th line: ~3px, 33% tinted, solid
   // 6th line: ~3px, 33% tinted, dotted
-  lineColorFn: Ember.computed(function() {
+  lineColorFn: computed(function() {
     return (d, i) => {
       var ii;
       switch (i) {
@@ -730,7 +740,7 @@ const TimeSeriesChartComponent = ChartComponent.extend(LegendMixin,
     };
   }),
 
-  lineAttrs: Ember.computed('line', 'getSeriesColor', function() {
+  lineAttrs: computed('line', 'getSeriesColor', function() {
     return {
         class: (d, i) => "line series-" + i,
         d: (d) => this.get('line')(d.values),
@@ -771,19 +781,19 @@ const TimeSeriesChartComponent = ChartComponent.extend(LegendMixin,
   // Color Configuration
   // ----------------------------------------------------------------------------
 
-  numLines: Ember.computed.alias('xBetweenSeriesDomain.length'),
-  numBarsPerGroup: Ember.computed.alias('xWithinGroupDomain.length'),
+  numLines: legacyAlias('xBetweenSeriesDomain.length'),
+  numBarsPerGroup: legacyAlias('xWithinGroupDomain.length'),
 
   numColorSeries: 6, // Ember.computed.alias 'numLines'
-  numSecondaryColorSeries: Ember.computed.alias('numBarsPerGroup'),
+  numSecondaryColorSeries: legacyAlias('numBarsPerGroup'),
 
   // Use primary colors for bars if there are no lines
 
-  secondaryMinimumTint: Ember.computed('numLines', function() {
+  secondaryMinimumTint: computed('numLines', function() {
     return this.get('numLines') === 0 ? 0.0 : 0.4;
   }),
 
-  secondaryMaximumTint: Ember.computed( 'numLines', function() {
+  secondaryMaximumTint: computed( 'numLines', function() {
     return this.get('numLines') === 0 ? 0.8 : 0.85;
   }),
 
@@ -791,11 +801,11 @@ const TimeSeriesChartComponent = ChartComponent.extend(LegendMixin,
   // Legend Configuration
   // ----------------------------------------------------------------------------
 
-  hasLegend: Ember.computed( 'legendItems.length', 'showLegend', function() {
+  hasLegend: computed( 'legendItems.length', 'showLegend', function() {
     return this.get('legendItems.length') > 1 && this.get('showLegend');
   }),
 
-  legendItems: Ember.computed('xBetweenSeriesDomain', 'xWithinGroupDomain',
+  legendItems: computed('xBetweenSeriesDomain', 'xWithinGroupDomain',
     'getSeriesColor', 'getSecondarySeriesColor', function() {
 
     // getSeriesColor = this.get('getSeriesColor');
@@ -849,7 +859,7 @@ const TimeSeriesChartComponent = ChartComponent.extend(LegendMixin,
     return this.get('viewport').selectAll('.bars');
   },
 
-  groups: Ember.computed(function() {
+  groups: computed(function() {
     return this.getViewportBars().data(this.get('_groupedBarData'));
   }).volatile(),
 
@@ -857,11 +867,11 @@ const TimeSeriesChartComponent = ChartComponent.extend(LegendMixin,
     this.get('viewport').selectAll('.series').remove();
   },
 
-  series: Ember.computed(function() {
+  series: computed(function() {
     return this.get('viewport').selectAll('.series').data(this.get('_groupedLineData'));
   }).volatile(),
 
-  xAxis: Ember.computed(function() {
+  xAxis: computed(function() {
     var xAxis = this.get('viewport').select('.x.axis');
     if (xAxis.empty()) {
       return this.get('viewport')
@@ -872,7 +882,7 @@ const TimeSeriesChartComponent = ChartComponent.extend(LegendMixin,
     }
   }).volatile(),
 
-  yAxis: Ember.computed(function() {
+  yAxis: computed(function() {
     var yAxis = this.get('viewport').select('.y.axis');
     if (yAxis.empty()) {
       return this.get('viewport')

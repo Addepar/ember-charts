@@ -1,5 +1,5 @@
-import Ember from 'ember';
-export default Ember.Object.extend({
+import EmberObject, { computed } from '@ember/object';
+export default EmberObject.extend({
 
     // Reserved space for extra characters
     reservedCharLength: 0,
@@ -12,7 +12,7 @@ export default Ember.Object.extend({
       return d.label;
     },
 
-    trim: Ember.computed('getLabelSize', 'getLabelText', function() {
+    trim: computed('getLabelSize', 'getLabelText', function() {
 
       var getLabelSize = this.get('getLabelSize');
       var getLabelText = this.get('getLabelText');

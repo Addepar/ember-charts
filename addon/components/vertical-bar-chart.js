@@ -1,6 +1,22 @@
+import { legacyAlias } from "ember-charts/utils/legacy-alias";
+import { isEmpty, isNone } from '@ember/utils';
+import { A, isArray } from '@ember/array';
+import { computed } from '@ember/object';
 import Ember from 'ember';
 import * as d3 from 'd3';
-import { assign, each, flatten, groupBy as lodashGroupBy, keys, map, max as lodashMax, min as lodashMin, sortBy, uniq, values } from 'lodash-es';
+import {
+  assign,
+  each,
+  flatten,
+  groupBy as lodashGroupBy,
+  keys,
+  map,
+  max as lodashMax,
+  min as lodashMin,
+  sortBy,
+  uniq,
+  values
+} from 'lodash-es';
 import ChartComponent from './chart-component';
 import LegendMixin from '../mixins/legend';
 import FloatingTooltipMixin from '../mixins/floating-tooltip';
@@ -35,7 +51,7 @@ const VerticalBarChartComponent = ChartComponent.extend(LegendMixin,
   withinGroupPadding: 0,
 
   // Space between bar groups, as fraction of group size
-  betweenGroupPadding: Ember.computed('numBars', function() {
+  betweenGroupPadding: computed('numBars', function() {
     // Use padding to make sure bars have a maximum thickness.
     //
     // TODO(tony): Use exact padding + bar width calculation
@@ -47,7 +63,7 @@ const VerticalBarChartComponent = ChartComponent.extend(LegendMixin,
     return scale(this.get('numBars'));
   }),
 
-  numBars: Ember.computed('xBetweenGroupDomain', 'xWithinGroupDomain', function() {
+  numBars: computed('xBetweenGroupDomain', 'xWithinGroupDomain', function() {
     return this.get('xBetweenGroupDomain.length') * this.get('xWithinGroupDomain.length') || 0;
   }),
 
@@ -73,14 +89,14 @@ const VerticalBarChartComponent = ChartComponent.extend(LegendMixin,
   // Data
   // ----------------------------------------------------------------------------
 
-  sortedData: Ember.computed('data.[]', 'sortKey', 'sortAscending', 'stackBars', function() {
+  sortedData: computed('data.[]', 'sortKey', 'sortAscending', 'stackBars', function() {
     var data, group, groupData, groupObj, groupedData, key, newData, sortAscending, sortedGroups, summedGroupValues, _i, _len;
     if (this.get('stackBars')) {
       data = this.get('data');
       groupedData = lodashGroupBy(data, function(d) {
         return d.group;
       });
-      summedGroupValues = Ember.A();
+      summedGroupValues = A();
 
       const reduceByValue = (previousValue, dataObject) =>
         previousValue + dataObject.value;
@@ -96,14 +112,14 @@ const VerticalBarChartComponent = ChartComponent.extend(LegendMixin,
       }
       key = this.get('sortKey');
       sortAscending = this.get('sortAscending');
-      if (Ember.isEmpty(summedGroupValues)) {
-        return Ember.A();
+      if (isEmpty(summedGroupValues)) {
+        return A();
       } else if (key != null) {
         sortedGroups = summedGroupValues.sortBy(key);
         if (!sortAscending) {
           sortedGroups = sortedGroups.reverse();
         }
-        newData = Ember.A();
+        newData = A();
         for (_i = 0, _len = sortedGroups.length; _i < _len; _i++) {
           groupObj = sortedGroups[_i];
           newData.pushObjects(groupedData[groupObj.group]);
@@ -118,9 +134,9 @@ const VerticalBarChartComponent = ChartComponent.extend(LegendMixin,
   }),
 
   // Aggregates objects provided in `data` in a dictionary, keyed by group names
-  groupedData: Ember.computed('sortedData', 'stackBars', 'ungroupedSeriesName', function() {
+  groupedData: computed('sortedData', 'stackBars', 'ungroupedSeriesName', function() {
     var data = this.get('sortedData');
-    if (Ember.isEmpty(data)) {
+    if (isEmpty(data)) {
       // TODO(embooglement): this can't be `Ember.A()` because it needs to be an
       // actual empty array for tests to pass, and `Ember.NativeArray` adds
       // a bunch of stuff to the prototype that gets enumerated by `_.values`
@@ -143,7 +159,7 @@ const VerticalBarChartComponent = ChartComponent.extend(LegendMixin,
     return data;
   }),
 
-  groupNames: Ember.computed('groupedData', function() {
+  groupNames: computed('groupedData', function() {
     return keys(this.get('groupedData'));
   }),
 
@@ -152,16 +168,16 @@ const VerticalBarChartComponent = ChartComponent.extend(LegendMixin,
   // 'ungroupedSeriesName' as its group name and the number of group
   // labels will be 1. If we are passed ungrouped data we will display
   // each data object in its own group.
-  isGrouped: Ember.computed('groupNames.length', function() {
+  isGrouped: computed('groupNames.length', function() {
     var result = (this.get('groupNames.length') > 1);
     return result;
   }),
 
-  finishedData: Ember.computed('groupedData', 'isGrouped', 'stackBars', 'sortedData', function() {
+  finishedData: computed('groupedData', 'isGrouped', 'stackBars', 'sortedData', function() {
     var y0, stackedValues;
     if (this.get('isGrouped')) {
-      if (Ember.isEmpty(this.get('groupedData'))) {
-        return Ember.A();
+      if (isEmpty(this.get('groupedData'))) {
+        return A();
       }
 
       return map(this.get('groupedData'), function(values, groupName) {
@@ -186,8 +202,8 @@ const VerticalBarChartComponent = ChartComponent.extend(LegendMixin,
       });
 
     } else if (this.get('stackBars')) {
-      if (Ember.isEmpty(this.get('data'))) {
-        return Ember.A();
+      if (isEmpty(this.get('data'))) {
+        return A();
       }
       // If we do not have grouped data and are drawing stacked bars, keep the
       // data in one group so it gets stacked
@@ -203,7 +219,7 @@ const VerticalBarChartComponent = ChartComponent.extend(LegendMixin,
         };
       });
 
-      return Ember.A([{
+      return A([{
         group: this.get('data.firstObject.group'),
         values: this.get('data'),
         stackedValues: stackedValues,
@@ -212,8 +228,8 @@ const VerticalBarChartComponent = ChartComponent.extend(LegendMixin,
 
     } else {
 
-      if (Ember.isEmpty(this.get('data'))) {
-        return Ember.A();
+      if (isEmpty(this.get('data'))) {
+        return A();
       }
       // If we do NOT have grouped data and do not have stackBars turned on, split the
       // data up so it gets drawn in separate groups and labeled
@@ -232,7 +248,7 @@ const VerticalBarChartComponent = ChartComponent.extend(LegendMixin,
   // Layout
   // ----------------------------------------------------------------------------
 
-  labelHeightOffset: Ember.computed('_shouldRotateLabels', 'maxLabelHeight', 'labelHeight',
+  labelHeightOffset: computed('_shouldRotateLabels', 'maxLabelHeight', 'labelHeight',
     'labelPadding', function() {
 
     var labelSize = this.get('_shouldRotateLabels') ? this.get('maxLabelHeight') : this.get('labelHeight');
@@ -240,13 +256,13 @@ const VerticalBarChartComponent = ChartComponent.extend(LegendMixin,
   }),
 
   // Chart Graphic Dimensions
-  graphicLeft: Ember.computed.alias('labelWidthOffset'),
+  graphicLeft: legacyAlias('labelWidthOffset'),
 
-  graphicWidth: Ember.computed('width', 'labelWidthOffset', function() {
+  graphicWidth: computed('width', 'labelWidthOffset', function() {
      return this.get('width') - this.get('labelWidthOffset');
   }),
 
-  graphicHeight: Ember.computed('height', 'legendHeight', 'legendChartPadding', function() {
+  graphicHeight: computed('height', 'legendHeight', 'legendChartPadding', function() {
     return this.get('height') - this.get('legendHeight') - this.get('legendChartPadding');
   }),
 
@@ -255,7 +271,7 @@ const VerticalBarChartComponent = ChartComponent.extend(LegendMixin,
   // ----------------------------------------------------------------------------
 
   // Vertical position/length of each bar and its value
-  yDomain: Ember.computed('finishedData', 'stackBars', function() {
+  yDomain: computed('finishedData', 'stackBars', function() {
     var finishedData = this.get('finishedData');
     var minOfGroups = d3.min(finishedData, function(d) {
       return lodashMin(d.values.map(function(dd) {
@@ -300,21 +316,21 @@ const VerticalBarChartComponent = ChartComponent.extend(LegendMixin,
     }
   }),
 
-  yScale: Ember.computed('graphicTop', 'graphicHeight', 'yDomain', 'numYTicks', function() {
+  yScale: computed('graphicTop', 'graphicHeight', 'yDomain', 'numYTicks', function() {
     return d3.scale.linear()
       .domain(this.get('yDomain'))
       .range([ this.get('graphicTop') + this.get('graphicHeight'), this.get('graphicTop') ])
       .nice(this.get('numYTicks'));
   }),
 
-  groupedIndividualBarLabels: Ember.computed('groupedData.[]', function() {
+  groupedIndividualBarLabels: computed('groupedData.[]', function() {
     var groups = map(values(this.get('groupedData')), function(g) {
       return map(g, 'label');
     });
     return uniq(flatten(groups));
   }),
 
-  ungroupedIndividualBarLabels: Ember.computed('sortedData.@each.label', function() {
+  ungroupedIndividualBarLabels: computed('sortedData.@each.label', function() {
     return map(this.get('sortedData'), 'label');
   }),
 
@@ -334,7 +350,7 @@ const VerticalBarChartComponent = ChartComponent.extend(LegendMixin,
   // the client has the responsibility to make sure there are no dupe
   // (bar label, group label) pairs in the bar data.)
   //
-  individualBarLabels: Ember.computed(
+  individualBarLabels: computed(
     'isGrouped',
     'stackBars',
     'groupedIndividualBarLabels',
@@ -347,7 +363,7 @@ const VerticalBarChartComponent = ChartComponent.extend(LegendMixin,
     }
   }),
 
-  labelIDMapping: Ember.computed('individualBarLabels.[]', function() {
+  labelIDMapping: computed('individualBarLabels.[]', function() {
     return this.get('individualBarLabels').reduce(function(previousValue, label, index) {
       previousValue[label] = index;
       return previousValue;
@@ -355,26 +371,26 @@ const VerticalBarChartComponent = ChartComponent.extend(LegendMixin,
   }),
 
   // The range of labels assigned to each group
-  xBetweenGroupDomain: Ember.computed.alias('groupNames'),
+  xBetweenGroupDomain: legacyAlias('groupNames'),
   // xBetweenGroupDomain: [],
 
   // The range of labels assigned within each group
-  xWithinGroupDomain: Ember.computed.alias('individualBarLabels'),
+  xWithinGroupDomain: legacyAlias('individualBarLabels'),
 
   // The space in pixels allocated to each group
-  groupWidth: Ember.computed('xBetweenGroupScale', function() {
+  groupWidth: computed('xBetweenGroupScale', function() {
     return this.get('xBetweenGroupScale').rangeBand();
   }),
 
   // The space in pixels allocated to each bar
-  barWidth: Ember.computed('xWithinGroupScale', function() {
+  barWidth: computed('xWithinGroupScale', function() {
     return this.get('xWithinGroupScale').rangeBand();
   }),
 
   // The scale used to position bars within each group
   // If we do not have grouped data, use the withinGroupPadding around group
   // data since we will have constructed groups for each bar.
-  xWithinGroupScale: Ember.computed('isGrouped', 'stackBars', 'xWithinGroupDomain', 'groupWidth',
+  xWithinGroupScale: computed('isGrouped', 'stackBars', 'xWithinGroupDomain', 'groupWidth',
     'withinGroupPadding', 'betweenGroupPadding', function() {
 
     if (this.get('isGrouped') || this.get('stackBars')) {
@@ -393,7 +409,7 @@ const VerticalBarChartComponent = ChartComponent.extend(LegendMixin,
   // The scale used to position each group and label across the horizontal axis
   // If we do not have grouped data, do not add additional padding around groups
   // since this will only add whitespace to the left/right of the graph.
-  xBetweenGroupScale: Ember.computed('isGrouped', 'stackBars', 'graphicWidth', 'labelWidth',
+  xBetweenGroupScale: computed('isGrouped', 'stackBars', 'graphicWidth', 'labelWidth',
     'xBetweenGroupDomain', 'betweenGroupPadding', function() {
 
     // var labelWidth = this.get('labelWidth');
@@ -412,12 +428,12 @@ const VerticalBarChartComponent = ChartComponent.extend(LegendMixin,
   }),
 
   // Override axis mix-in min and max values to listen to the scale's domain
-  minAxisValue: Ember.computed('yScale', function() {
+  minAxisValue: computed('yScale', function() {
     var yScale = this.get('yScale');
     return yScale.domain()[0];
   }),
 
-  maxAxisValue: Ember.computed('yScale', function() {
+  maxAxisValue: computed('yScale', function() {
     var yScale = this.get('yScale');
     return yScale.domain()[1];
   }),
@@ -449,9 +465,9 @@ const VerticalBarChartComponent = ChartComponent.extend(LegendMixin,
   // See bug #172 : https://github.com/Addepar/ember-charts/issues/172
   // ----------------------------------------------------------------------------
 
-  numColorSeries: Ember.computed.alias('individualBarLabels.length'),
+  numColorSeries: legacyAlias('individualBarLabels.length'),
 
-  barColors: Ember.computed('individualBarLabels.[]', 'getSeriesColor', function() {
+  barColors: computed('individualBarLabels.[]', 'getSeriesColor', function() {
     var fnGetSeriesColor = this.get('getSeriesColor');
     var result = {};
     this.get('individualBarLabels').forEach(function(label, labelIndex) {
@@ -460,12 +476,12 @@ const VerticalBarChartComponent = ChartComponent.extend(LegendMixin,
     return result;
   }),
 
-  fnGetBarColor: Ember.computed('barColors', function() {
+  fnGetBarColor: computed('barColors', function() {
     var barColors = this.get('barColors');
     return function(d) {
-      if (!Ember.isNone(d.color)) {
+      if (!isNone(d.color)) {
         return d.color;
-      } else if (!Ember.isNone(d.label)) {
+      } else if (!isNone(d.label)) {
         return barColors[d.label];
       } else {
         return barColors[d];
@@ -477,11 +493,11 @@ const VerticalBarChartComponent = ChartComponent.extend(LegendMixin,
   // Legend Configuration
   // ----------------------------------------------------------------------------
 
-  hasLegend: Ember.computed('stackBars', 'isGrouped', 'legendItems.length', 'showLegend', function() {
+  hasLegend: computed('stackBars', 'isGrouped', 'legendItems.length', 'showLegend', function() {
     return this.get('stackBars') || this.get('isGrouped') && this.get('legendItems.length') > 1 && this.get('showLegend');
   }),
 
-  legendItems: Ember.computed('individualBarLabels.[]', 'barColors', 'stackBars', 'labelIDMapping.[]', function() {
+  legendItems: computed('individualBarLabels.[]', 'barColors', 'stackBars', 'labelIDMapping.[]', function() {
     var barColors = this.get('barColors');
     return this.get('individualBarLabels').map((label, i) => {
       var color = barColors[label];
@@ -502,14 +518,14 @@ const VerticalBarChartComponent = ChartComponent.extend(LegendMixin,
   // Tooltip Configuration
   // ----------------------------------------------------------------------------
 
-  showDetails: Ember.computed('isInteractive', function() {
+  showDetails: computed('isInteractive', function() {
     if (!this.get('isInteractive')) {
       return Ember.K;
     }
 
     return (data, i, element) => {
       // Specify whether we are on an individual bar or group
-      var isGroup = Ember.isArray(data.values);
+      var isGroup = isArray(data.values);
 
       // Do hover detail style stuff here
       element = isGroup ? element.parentNode.parentNode : element;
@@ -539,14 +555,14 @@ const VerticalBarChartComponent = ChartComponent.extend(LegendMixin,
     };
   }),
 
-  hideDetails: Ember.computed('isInteractive', function() {
+  hideDetails: computed('isInteractive', function() {
     if (!this.get('isInteractive')) {
       return Ember.K;
     }
 
     return (data, i, element) => {
       // if we exited the group label undo for the group
-      if (Ember.isArray(data.values)) {
+      if (isArray(data.values)) {
         element = element.parentNode.parentNode;
       }
       // Undo hover style stuff
@@ -562,7 +578,7 @@ const VerticalBarChartComponent = ChartComponent.extend(LegendMixin,
   // Styles
   // ----------------------------------------------------------------------------
 
-  groupAttrs: Ember.computed('graphicLeft', 'graphicTop', 'xBetweenGroupScale', function() {
+  groupAttrs: computed('graphicLeft', 'graphicTop', 'xBetweenGroupScale', function() {
     var xBetweenGroupScale = this.get('xBetweenGroupScale');
 
     return {
@@ -575,7 +591,7 @@ const VerticalBarChartComponent = ChartComponent.extend(LegendMixin,
     };
   }),
 
-  commonBarAttrs: Ember.computed('labelIDMapping.[]', function() {
+  commonBarAttrs: computed('labelIDMapping.[]', function() {
     return {
       class: (d) => {
         var id = this.get('labelIDMapping')[d.label];
@@ -584,7 +600,7 @@ const VerticalBarChartComponent = ChartComponent.extend(LegendMixin,
     };
   }),
 
-  stackedBarAttrs: Ember.computed('commonBarAttrs', 'yScale', 'groupWidth', function() {
+  stackedBarAttrs: computed('commonBarAttrs', 'yScale', 'groupWidth', function() {
     var zeroDisplacement = 1;
     var yScale = this.get('yScale');
 
@@ -601,7 +617,7 @@ const VerticalBarChartComponent = ChartComponent.extend(LegendMixin,
     }, this.get('commonBarAttrs'));
   }),
 
-  groupedBarAttrs: Ember.computed('commonBarAttrs', 'yScale', 'barWidth', 'xWithinGroupScale', function() {
+  groupedBarAttrs: computed('commonBarAttrs', 'yScale', 'barWidth', 'xWithinGroupScale', function() {
     var zeroDisplacement = 1;
     var yScale = this.get('yScale');
 
@@ -622,7 +638,7 @@ const VerticalBarChartComponent = ChartComponent.extend(LegendMixin,
     }, this.get('commonBarAttrs'));
   }),
 
-  labelAttrs: Ember.computed('barWidth', 'isGrouped', 'stackBars', 'groupWidth',
+  labelAttrs: computed('barWidth', 'isGrouped', 'stackBars', 'groupWidth',
     'xWithinGroupScale', 'graphicTop', 'graphicHeight', 'labelPadding', function() {
     return {
       'stroke-width': 0,
@@ -647,11 +663,11 @@ const VerticalBarChartComponent = ChartComponent.extend(LegendMixin,
     return this.get('viewport').selectAll('.bars');
   },
 
-  groups: Ember.computed(function() {
+  groups: computed(function() {
     return this.getViewportBars().data(this.get('finishedData'));
   }).volatile(),
 
-  yAxis: Ember.computed(function() {
+  yAxis: computed(function() {
     var yAxis = this.get('viewport').select('.y.axis');
     if (yAxis.empty()) {
       return this.get('viewport')
@@ -668,7 +684,7 @@ const VerticalBarChartComponent = ChartComponent.extend(LegendMixin,
 
   // Space available for labels that are horizontally displayed. This is either
   // the unpadded group width or bar width depending on whether data is grouped
-  maxLabelWidth: Ember.computed('isGrouped', 'stackBars', 'groupWidth', 'barWidth', function() {
+  maxLabelWidth: computed('isGrouped', 'stackBars', 'groupWidth', 'barWidth', function() {
     if (this.get('isGrouped') || this.get('stackBars')) {
       return this.get('groupWidth');
     } else {
@@ -695,13 +711,13 @@ const VerticalBarChartComponent = ChartComponent.extend(LegendMixin,
 
   // Calculate the number of degrees to rotate labels based on how widely labels
   // will be spaced, but never rotate the labels less than 20 degrees
-  rotateLabelDegrees: Ember.computed('labelHeight', 'maxLabelWidth', function() {
+  rotateLabelDegrees: computed('labelHeight', 'maxLabelWidth', function() {
     var radians = Math.atan(this.get('labelHeight') / this.get('maxLabelWidth'));
     var degrees = radians * 180 / Math.PI;
     return Math.max(degrees, 20);
   }),
 
-  rotatedLabelLength: Ember.computed('maxLabelHeight', 'rotateLabelDegrees', function() {
+  rotatedLabelLength: computed('maxLabelHeight', 'rotateLabelDegrees', function() {
     var rotateLabelRadians = Math.PI / 180 * this.get('rotateLabelDegrees');
     return Math.abs(this.get('maxLabelHeight') / Math.sin(rotateLabelRadians));
   }),

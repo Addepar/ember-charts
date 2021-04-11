@@ -1,5 +1,6 @@
-import Ember from 'ember';
-const PieLegendMixin = Ember.Mixin.create({
+import { computed } from '@ember/object';
+import Mixin from '@ember/object/mixin';
+const PieLegendMixin = Mixin.create({
 
   // ----------------------------------------------------------------------------
   // Legend settings
@@ -13,12 +14,12 @@ const PieLegendMixin = Ember.Mixin.create({
   legendVerticalPadding: 30,
 
   // Padding on left and right of legend text is a percentage of total width
-  legendHorizontalPadding: Ember.computed('outerWidth', function() {
+  legendHorizontalPadding: computed('outerWidth', function() {
     return 0.2 * this.get('outerWidth');
   }),
 
   // Maximum height of the actual text in the legend
-  maxLabelHeight: Ember.computed('outerHeight', function() {
+  maxLabelHeight: computed('outerHeight', function() {
     return 0.05 * this.get('outerHeight');
   }),
 
@@ -40,13 +41,13 @@ const PieLegendMixin = Ember.Mixin.create({
   // Layout
   // ----------------------------------------------------------------------------
 
-  legendWidth: Ember.computed('outerWidth', 'legendHorizontalPadding', function() {
+  legendWidth: computed('outerWidth', 'legendHorizontalPadding', function() {
     return this.get('outerWidth') - this.get('legendHorizontalPadding');
   }),
 
   // Height of max possible text height + padding. This is not the height of the
   // actual legend displayed just the total amount of room the legend might need
-  legendHeight: Ember.computed('maxLabelHeight', 'legendVerticalPadding', function() {
+  legendHeight: computed('maxLabelHeight', 'legendVerticalPadding', function() {
     return this.get('maxLabelHeight') + this.get('legendVerticalPadding') * 2;
   }),
 
@@ -58,7 +59,7 @@ const PieLegendMixin = Ember.Mixin.create({
   // is inside the chart viewport, which has already been centered only consider
   // the height of the chart.
 
-  legendAttrs: Ember.computed('outerHeight', 'marginTop', 'marginBottom', function() {
+  legendAttrs: computed('outerHeight', 'marginTop', 'marginBottom', function() {
     var dx = 0;
     // This will leave a bit of padding due to the fact that marginBottom is
     // larger than marginTop which centers the pie above the middle of the chart
@@ -74,7 +75,7 @@ const PieLegendMixin = Ember.Mixin.create({
     };
   }),
 
-  legendLabelAttrs: Ember.computed(function() {
+  legendLabelAttrs: computed(function() {
     return {
       style: "text-anchor:middle;",
       y: '-.35em'
@@ -85,7 +86,7 @@ const PieLegendMixin = Ember.Mixin.create({
   // Selections
   // ----------------------------------------------------------------------------
 
-  legend: Ember.computed(function() {
+  legend: computed(function() {
     var legend = this.get('viewport').select('.legend');
     if (legend.empty()) {
       return this.get('viewport').append('g').attr('class', 'legend');
