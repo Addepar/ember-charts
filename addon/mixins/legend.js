@@ -1,3 +1,7 @@
+import { isNone } from '@ember/utils';
+import { computed } from '@ember/object';
+import { alias } from '@ember/object/computed';
+import Mixin from '@ember/object/mixin';
 import Ember from 'ember';
 import * as d3 from 'd3';
 import { isFunction, sortBy } from 'lodash-es';
@@ -55,7 +59,7 @@ var calcLegendRowWidth = function(legendItems, startIdx, endIdx, legendLabelPadd
   return rowWidth;
 };
 
-export default Ember.Mixin.create({
+export default Mixin.create({
 
   // ----------------------------------------------------------------------------
   // Legend settings
@@ -95,24 +99,24 @@ export default Ember.Mixin.create({
 
 
   // Outside bounds of legend
-  legendWidth: Ember.computed.alias('width'),
+  legendWidth: alias('width'),
 
-  legendHeight: Ember.computed('numLegendRows', 'legendItemHeight', function() {
+  legendHeight: computed('numLegendRows', 'legendItemHeight', function() {
     return this.get('numLegendRows') * this.get('legendItemHeight');
   }),
 
   // Bottom margin is equal to the total amount of space the legend needs,
-  _marginBottom: Ember.computed('legendHeight', 'hasLegend', 'marginTop', function() {
+  _marginBottom: computed('legendHeight', 'hasLegend', 'marginTop', function() {
     // If the legend is enabled then we need some extra breathing room
     return this.get('hasLegend') ? this.get('legendHeight') : this.get('marginBottom');
   }),
 
-  marginBottom: Ember.computed('_marginBottom', 'minimumTopBottomMargin', function() {
+  marginBottom: computed('_marginBottom', 'minimumTopBottomMargin', function() {
     return Math.max(this.get('_marginBottom'), this.get('minimumTopBottomMargin'));
   }),
 
   // Dynamically calculate the size of each legend item
-  legendItemWidth: Ember.computed('legendWidth', 'minLegendItemWidth', 'maxLegendItemWidth',
+  legendItemWidth: computed('legendWidth', 'minLegendItemWidth', 'maxLegendItemWidth',
     'legendItems.length', function() {
 
     var itemWidth = this.get('legendWidth') / this.get('legendItems.length');
@@ -127,19 +131,19 @@ export default Ember.Mixin.create({
 
   // Dynamically calculate the number of legend items in each row.
   // This is only an approximate value to estimate the maximum required space for legends
-  numLegendItemsPerRow: Ember.computed('legendWidth', 'legendItemWidth', function() {
+  numLegendItemsPerRow: computed('legendWidth', 'legendItemWidth', function() {
     // There's always at least 1 legend item per row
     return Math.max(Math.floor(this.get('legendWidth') / this.get('legendItemWidth')), 1);
   }),
 
   // Dynamically calculate the number of rows needed
   // This is only an approximate value to estimate the maximum required space for legends
-  numLegendRows: Ember.computed('legendItems.length', 'numLegendItemsPerRow', function() {
+  numLegendRows: computed('legendItems.length', 'numLegendItemsPerRow', function() {
     return Math.ceil(this.get('legendItems.length') / this.get('numLegendItemsPerRow'));
   }),
 
   // Maximum width of each label before it gets truncated
-  legendLabelWidth: Ember.computed('legendItemWidth', 'legendIconRadius', 'legendLabelPadding', function() {
+  legendLabelWidth: computed('legendItemWidth', 'legendIconRadius', 'legendLabelPadding', function() {
     return this.get('legendItemWidth') - this.get('legendIconRadius') - this.get('legendLabelPadding') * 2;
   }),
 
@@ -164,7 +168,7 @@ export default Ember.Mixin.create({
   // Center the legend beneath the chart. Since the legend is inside the chart
   // viewport, which has already been positioned with regards to margins,
   // only consider the height of the chart.
-  legendAttrs: Ember.computed('outerWidth', 'graphicBottom', 'legendTopPadding', 'legendChartPadding', function() {
+  legendAttrs: computed('outerWidth', 'graphicBottom', 'legendTopPadding', 'legendChartPadding', function() {
     var dx, dy, offsetToLegend;
     dx = this.get('width') / 2;
     offsetToLegend = this.get('legendChartPadding') + this.get('legendTopPadding');
@@ -176,7 +180,7 @@ export default Ember.Mixin.create({
 
   // Place each legend item such that the legend rows appear centered to the graph.
   // Spacing between legend items must be constant and equal to 2*legendLabelPadding = 20px.
-  legendItemAttrs: Ember.computed('legendItemWidth', 'legendItemHeight', 'legendIconRadius',
+  legendItemAttrs: computed('legendItemWidth', 'legendItemHeight', 'legendIconRadius',
      'legendLabelPadding', 'legendRowWidths', 'numLegendItemsByRows', function() {
 
     var legendRowWidths = this.get('legendRowWidths');
@@ -217,7 +221,7 @@ export default Ember.Mixin.create({
     };
   }),
 
-  legendIconAttrs: Ember.computed('legendIconRadius', function() {
+  legendIconAttrs: computed('legendIconRadius', function() {
     var iconRadius = this.get('legendIconRadius');
 
     return {
@@ -252,7 +256,7 @@ export default Ember.Mixin.create({
     };
   }),
 
-  legendLabelAttrs: Ember.computed('legendIconRadius', 'legendLabelPadding', function() {
+  legendLabelAttrs: computed('legendIconRadius', 'legendLabelPadding', function() {
     return {
       x: this.get('legendIconRadius')/2 + this.get('legendLabelPadding'),
       y: '.35em'
@@ -263,7 +267,7 @@ export default Ember.Mixin.create({
   // Tooltip Configuration
   // ----------------------------------------------------------------------------
 
-  showLegendDetails: Ember.computed('isInteractive', function() {
+  showLegendDetails: computed('isInteractive', function() {
     if (!this.get('isInteractive')) {
       return Ember.K;
     }
@@ -277,15 +281,15 @@ export default Ember.Mixin.create({
 
       var content = $("<span />");
       content.append($("<span class=\"tip-label\">").text(data.label));
-      if (!Ember.isNone(data.xValue)) {
+      if (!isNone(data.xValue)) {
         var formatXValue = _this.get('formatXValue');
         content.append($('<span class="name" />').text(_this.get('tooltipXValueDisplayName') + ': '));
         content.append($('<span class="value" />').text(formatXValue(data.xValue)));
-        if (!Ember.isNone(data.yValue)) {
+        if (!isNone(data.yValue)) {
           content.append('<br />');
         }
       }
-      if (!Ember.isNone(data.yValue)) {
+      if (!isNone(data.yValue)) {
         var formatYValue = _this.get('formatYValue');
         content.append($('<span class="name" />').text(_this.get('tooltipYValueDisplayName') + ': '));
         content.append($('<span class="value" />').text(formatYValue(data.yValue)));
@@ -295,7 +299,7 @@ export default Ember.Mixin.create({
     };
   }),
 
-  hideLegendDetails: Ember.computed('isInteractive', function() {
+  hideLegendDetails: computed('isInteractive', function() {
     if (!this.get('isInteractive')) {
       return Ember.K;
     }
@@ -320,7 +324,7 @@ export default Ember.Mixin.create({
       .remove();
   },
 
-  legend: Ember.computed(function() {
+  legend: computed(function() {
     var legend = this.get('viewport').select('.legend-container');
     if (legend.empty()) {
       return this.get('viewport').append('g').attr('class', 'legend-container');

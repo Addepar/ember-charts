@@ -1,10 +1,11 @@
-import Ember from 'ember';
+import { computed } from '@ember/object';
+import Mixin from '@ember/object/mixin';
 import * as d3 from 'd3';
 
-export default Ember.Mixin.create({
+export default Mixin.create({
 
   // # Getters for formatting human-readable labels from provided data
-  formatLabelFunction: Ember.computed('formatLabel', function() {
+  formatLabelFunction: computed('formatLabel', function() {
     return d3.format("," + this.get('formatLabel'));
   }),
 

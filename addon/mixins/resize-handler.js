@@ -1,15 +1,19 @@
 // TODO(azirbel): This needs to be an external dependency.
-import Ember from 'ember';
+import $ from 'jquery';
+
+import { debounce } from '@ember/runloop';
+import { computed } from '@ember/object';
+import Mixin from '@ember/object/mixin';
 import { isFunction } from 'lodash-es';
 
-export default Ember.Mixin.create({
+export default Mixin.create({
   resizeEndDelay: 200,
   resizing: false,
   onResizeStart() {},
   onResizeEnd() {},
   onResize() {},
 
-  endResize: Ember.computed(function() {
+  endResize: computed(function() {
     return function(event) {
       if (this.isDestroyed) {
         return;
@@ -35,7 +39,7 @@ export default Ember.Mixin.create({
     if (isFunction(this.onResize)) {
       this.onResize(event);
     }
-    return Ember.run.debounce(this, this.get('endResize'), event, this.get('resizeEndDelay'));
+    return debounce(this, this.get('endResize'), event, this.get('resizeEndDelay'));
   },
 
   didInsertElement: function() {
@@ -52,12 +56,12 @@ export default Ember.Mixin.create({
     if (this._resizeHandler) {
       return;
     }
-    this._resizeHandler = Ember.$.proxy(this.get('handleWindowResize'), this);
-    return Ember.$(window).on("resize." + this.elementId, this._resizeHandler);
+    this._resizeHandler = $.proxy(this.get('handleWindowResize'), this);
+    return $(window).on("resize." + this.elementId, this._resizeHandler);
   },
 
   _removeDocumentHandlers: function() {
-    Ember.$(window).off("resize." + this.elementId, this._resizeHandler);
+    $(window).off("resize." + this.elementId, this._resizeHandler);
     return this._resizeHandler = null;
   }
 });

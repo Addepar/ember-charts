@@ -1,10 +1,14 @@
-import Ember from 'ember';
+import { scheduleOnce, schedule } from '@ember/runloop';
+import { isNone, isEmpty } from '@ember/utils';
+import { lt, gt, lte, gte, alias } from '@ember/object/computed';
+import { computed } from '@ember/object';
+import Component from '@ember/component';
 import * as d3 from 'd3';
 import { uniq } from 'lodash-es';
 import ResizeHandlerMixin from '../mixins/resize-handler';
 import ColorableMixin from '../mixins/colorable';
 
-const ChartComponent = Ember.Component.extend(ColorableMixin, ResizeHandlerMixin, {
+const ChartComponent = Component.extend(ColorableMixin, ResizeHandlerMixin, {
   layoutName: 'components/chart-component',
   classNames: ['chart-frame', 'scroll-y'],
   isInteractive: true,
@@ -33,7 +37,7 @@ const ChartComponent = Ember.Component.extend(ColorableMixin, ResizeHandlerMixin
    * An array of the values in the data that is passed into the chart
    * @type {Array.<Number>}
    */
-  allFinishedDataValues: Ember.computed('finishedData.@each.value', function() {
+  allFinishedDataValues: computed('finishedData.@each.value', function() {
     return this.get('finishedData').map((d) => d.value);
   }),
 
@@ -41,7 +45,7 @@ const ChartComponent = Ember.Component.extend(ColorableMixin, ResizeHandlerMixin
    * The minimum value of the data in the chart
    * @type {Number}
    */
-  minValue: Ember.computed('allFinishedDataValues.[]', function() {
+  minValue: computed('allFinishedDataValues.[]', function() {
     return d3.min(this.get('allFinishedDataValues'));
   }),
 
@@ -49,7 +53,7 @@ const ChartComponent = Ember.Component.extend(ColorableMixin, ResizeHandlerMixin
    * The maximum value of the data in the chart
    * @type {Number}
    */
-  maxValue: Ember.computed('allFinishedDataValues.[]', function() {
+  maxValue: computed('allFinishedDataValues.[]', function() {
     return d3.max(this.get('allFinishedDataValues'));
   }),
 
@@ -57,7 +61,7 @@ const ChartComponent = Ember.Component.extend(ColorableMixin, ResizeHandlerMixin
    * An array of the values which are at least 0
    * @type {Array<Number>}
    */
-  positiveValues: Ember.computed('allFinishedDataValues.[]', function() {
+  positiveValues: computed('allFinishedDataValues.[]', function() {
     return this.get('allFinishedDataValues').filter((val) => val >= 0);
   }),
 
@@ -65,7 +69,7 @@ const ChartComponent = Ember.Component.extend(ColorableMixin, ResizeHandlerMixin
    * An array of the values which are less than 0
    * @type {Array<Number>}
    */
-  negativeValues: Ember.computed('allFinishedDataValues.[]', function() {
+  negativeValues: computed('allFinishedDataValues.[]', function() {
     return this.get('allFinishedDataValues').filter((val) => val < 0);
   }),
 
@@ -73,34 +77,34 @@ const ChartComponent = Ember.Component.extend(ColorableMixin, ResizeHandlerMixin
    * Whether or not the data contains negative values.
    * @type {Boolean}
    */
-  hasNegativeValues: Ember.computed.lt('minValue', 0),
+  hasNegativeValues: lt('minValue', 0),
 
   /**
    * Whether or not the data contains positive values.
    * @type {Boolean}
    */
-  hasPositiveValues: Ember.computed.gt('maxValue', 0),
+  hasPositiveValues: gt('maxValue', 0),
 
   /**
    * Whether or not the data contains only positive values.
    * @type {Boolean}
    */
-  hasAllNegativeValues: Ember.computed.lte('maxValue', 0),
+  hasAllNegativeValues: lte('maxValue', 0),
 
   /**
    * Whether or not the data contains only negative values.
    * @type {Boolean}
    */
-  hasAllPositiveValues: Ember.computed.gte('minValue', 0),
+  hasAllPositiveValues: gte('minValue', 0),
 
   /**
    * Either a passed in value from `horizontalMarginRight`
    * or the default value from `horizontalMargin`
    * @type {Number}
    */
-  marginRight: Ember.computed('horizontalMarginRight', 'horizontalMargin', function(){
+  marginRight: computed('horizontalMarginRight', 'horizontalMargin', function(){
     const horizontalMarginRight = this.get('horizontalMarginRight');
-    if (Ember.isNone(horizontalMarginRight)) {
+    if (isNone(horizontalMarginRight)) {
       return this.get('horizontalMargin');
     } else {
       return horizontalMarginRight;
@@ -112,29 +116,29 @@ const ChartComponent = Ember.Component.extend(ColorableMixin, ResizeHandlerMixin
    * or the default value from `horizontalMargin`
    * @type {Number}
    */
-  marginLeft: Ember.computed('horizontalMarginLeft', 'horizontalMargin', function(){
+  marginLeft: computed('horizontalMarginLeft', 'horizontalMargin', function(){
     const horizontalMarginLeft = this.get('horizontalMarginLeft');
-    if (Ember.isNone(horizontalMarginLeft)) {
+    if (isNone(horizontalMarginLeft)) {
       return this.get('horizontalMargin');
     } else {
       return horizontalMarginLeft;
     }
   }),
 
-  marginTop: Ember.computed.alias('verticalMargin'),
-  marginBottom: Ember.computed.alias('verticalMargin'),
+  marginTop: alias('verticalMargin'),
+  marginBottom: alias('verticalMargin'),
 
   // TODO: Rename outer to SVG?
   defaultOuterHeight: 500,
   defaultOuterWidth: 700,
-  outerHeight: Ember.computed.alias('defaultOuterHeight'),
-  outerWidth: Ember.computed.alias('defaultOuterWidth'),
+  outerHeight: alias('defaultOuterHeight'),
+  outerWidth: alias('defaultOuterWidth'),
 
-  width: Ember.computed('outerWidth', 'marginLeft', 'marginRight', function() {
+  width: computed('outerWidth', 'marginLeft', 'marginRight', function() {
     return Math.abs(this.get('outerWidth') - this.get('marginLeft') - this.get('marginRight'));
   }),
 
-  height: Ember.computed('outerHeight', 'marginBottom', 'marginTop', function() {
+  height: computed('outerHeight', 'marginBottom', 'marginTop', function() {
     return Math.max(1, this.get('outerHeight') - this.get('marginBottom') - this.get('marginTop'));
   }),
 
@@ -142,16 +146,16 @@ const ChartComponent = Ember.Component.extend(ColorableMixin, ResizeHandlerMixin
   // 1 Outside most element is div.chart-frame
   // 2 Next element is svg
   // 3 Finally, g.chart-viewport
-  $viewport: Ember.computed(function() {
+  $viewport: computed(function() {
     return this.$('.chart-viewport')[0];
   }),
 
-  viewport: Ember.computed(function() {
+  viewport: computed(function() {
     return d3.select(this.get('$viewport'));
   }),
 
   // Transform the view commonly displaced by the margin
-  transformViewport: Ember.computed('marginLeft', 'marginTop', function() {
+  transformViewport: computed('marginLeft', 'marginTop', function() {
     const left = this.get('marginLeft');
     const top = this.get('marginTop');
     return `translate(${left},${top})`;
@@ -167,11 +171,11 @@ const ChartComponent = Ember.Component.extend(ColorableMixin, ResizeHandlerMixin
   labelWidth: 30,
   labelHeight: 15,
 
-  labelWidthOffset: Ember.computed('labelWidth', 'labelPadding', function() {
+  labelWidthOffset: computed('labelWidth', 'labelPadding', function() {
     return this.get('labelWidth') + this.get('labelPadding');
   }),
 
-  labelHeightOffset: Ember.computed('labelHeight', 'labelPadding', function() {
+  labelHeightOffset: computed('labelHeight', 'labelPadding', function() {
     return this.get('labelHeight') + this.get('labelPadding');
   }),
 
@@ -186,14 +190,14 @@ const ChartComponent = Ember.Component.extend(ColorableMixin, ResizeHandlerMixin
   // ----------------------------------------------------------------------------
   graphicTop: 0,
   graphicLeft: 0,
-  graphicWidth: Ember.computed.alias('width'),
-  graphicHeight: Ember.computed.alias('height'),
+  graphicWidth: alias('width'),
+  graphicHeight: alias('height'),
 
-  graphicBottom: Ember.computed('graphicTop', 'graphicHeight', function() {
+  graphicBottom: computed('graphicTop', 'graphicHeight', function() {
     return this.get('graphicTop') + this.get('graphicHeight');
   }),
 
-  graphicRight: Ember.computed('graphicLeft', 'graphicWidth', function() {
+  graphicRight: computed('graphicLeft', 'graphicWidth', function() {
     return this.get('graphicLeft') + this.get('graphicWidth');
   }),
 
@@ -201,8 +205,8 @@ const ChartComponent = Ember.Component.extend(ColorableMixin, ResizeHandlerMixin
   // Data
   // ----------------------------------------------------------------------------
 
-  hasNoData: Ember.computed('finishedData', function() {
-    return Ember.isEmpty(this.get('finishedData'));
+  hasNoData: computed('finishedData', function() {
+    return isEmpty(this.get('finishedData'));
   }),
 
   // ----------------------------------------------------------------------------
@@ -243,7 +247,7 @@ const ChartComponent = Ember.Component.extend(ColorableMixin, ResizeHandlerMixin
 
   didInsertElement: function() {
     this._super();
-    Ember.run.scheduleOnce('afterRender', this, function() {
+    scheduleOnce('afterRender', this, function() {
       if (this.isDestroying || !this.element) {
         return;
       }
@@ -254,7 +258,7 @@ const ChartComponent = Ember.Component.extend(ColorableMixin, ResizeHandlerMixin
 
   drawOnce: function() {
     this._scheduledDrawCount++;
-    Ember.run.schedule('afterRender', this, this.draw);
+    schedule('afterRender', this, this.draw);
   },
 
   onResizeEnd: function() {

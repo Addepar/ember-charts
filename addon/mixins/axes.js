@@ -1,7 +1,9 @@
-import Ember from 'ember';
+import { isNone } from '@ember/utils';
+import { computed } from '@ember/object';
+import Mixin from '@ember/object/mixin';
 import * as d3 from 'd3';
 
-export default Ember.Mixin.create({
+export default Mixin.create({
 
   // # ------------------------------------------------------------------------
   // # API -- Inputs
@@ -49,10 +51,10 @@ export default Ember.Mixin.create({
    * @type {number}
    * @private
    */
-  _innerTickSpacingX: Ember.computed('tickSpacingX', 'tickSpacing',
+  _innerTickSpacingX: computed('tickSpacingX', 'tickSpacing',
     function() {
       const tickSpacingX = this.get('tickSpacingX');
-      if (Ember.isNone(tickSpacingX)){
+      if (isNone(tickSpacingX)){
         return this.get('tickSpacing');
       }
       return tickSpacingX;
@@ -64,10 +66,10 @@ export default Ember.Mixin.create({
    * @type {number}
    * @private
    */
-  _innerTickSpacingY: Ember.computed('tickSpacingY', 'tickSpacing',
+  _innerTickSpacingY: computed('tickSpacingY', 'tickSpacing',
     function() {
       const tickSpacingY = this.get('tickSpacingY');
-      if (Ember.isNone(tickSpacingY)) {
+      if (isNone(tickSpacingY)) {
         return this.get('tickSpacing');
       }
       return tickSpacingY;
@@ -80,21 +82,21 @@ export default Ember.Mixin.create({
   // # numYTicks: Number of ticks on the Y axis
   // # formatValueAxis: Overridable formatter for numeric values along an axis
   // # ------------------------------------------------------------------------
-  numXTicks: Ember.computed('graphicWidth', '_innerTickSpacingX', 'minXTicks',
+  numXTicks: computed('graphicWidth', '_innerTickSpacingX', 'minXTicks',
     function() {
       const tickSpacing = this.get('_innerTickSpacingX');
       const numOfTicks = Math.floor(this.get('graphicWidth') / tickSpacing);
       return Math.max(numOfTicks, this.get('minXTicks'));
     }),
 
-  numYTicks: Ember.computed('graphicHeight', '_innerTickSpacingY', 'minYTicks',
+  numYTicks: computed('graphicHeight', '_innerTickSpacingY', 'minYTicks',
     function() {
       const tickSpacing = this.get('_innerTickSpacingY');
       const numOfTicks = Math.floor(this.get('graphicHeight') / tickSpacing);
       return Math.max(numOfTicks, this.get('minYTicks'));
     }),
 
-  formatValueAxis: Ember.computed('minAxisValue', 'maxAxisValue', function() {
+  formatValueAxis: computed('minAxisValue', 'maxAxisValue', function() {
     // # Base the format prefix on largest magnitude (e.g. if we cross from
     // # hundreds of thousands into millions, use millions)
     const absMinAxisValue = Math.abs(this.get('minAxisValue'));

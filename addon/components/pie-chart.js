@@ -1,6 +1,21 @@
+import { alias } from '@ember/object/computed';
+import { isEmpty } from '@ember/utils';
+import { computed } from '@ember/object';
 import Ember from 'ember';
 import * as d3 from 'd3';
-import { cloneDeep, drop, each, find, indexOf, last, max, min, sortBy, take, takeRight } from 'lodash-es';
+import {
+  cloneDeep,
+  drop,
+  each,
+  find,
+  indexOf,
+  last,
+  max,
+  min,
+  sortBy,
+  take,
+  takeRight
+} from 'lodash-es';
 import ChartComponent from './chart-component';
 import FormattableMixin from '../mixins/formattable';
 import FloatingTooltipMixin from '../mixins/floating-tooltip';
@@ -63,10 +78,10 @@ const PieChartComponent = ChartComponent.extend(FloatingTooltipMixin,
   // ----------------------------------------------------------------------------
 
   // Data with invalid/negative values removed
-  filteredData: Ember.computed('data.[]', function() {
+  filteredData: computed('data.[]', function() {
     var data;
     data = this.get('data');
-    if (Ember.isEmpty(data)) {
+    if (isEmpty(data)) {
       return [];
     }
     return data.filter(function(child) {
@@ -75,17 +90,17 @@ const PieChartComponent = ChartComponent.extend(FloatingTooltipMixin,
   }),
 
   // Negative values that have been discarded from the data
-  rejectedData: Ember.computed('data.[]', function() {
+  rejectedData: computed('data.[]', function() {
     var data;
     data = this.get('data');
-    if (Ember.isEmpty(data)) {
+    if (isEmpty(data)) {
       return [];
     }
     return data.filter((child) => child.value < 0);
   }),
 
   // Valid data points that have been sorted by selectedSortType
-  sortedData: Ember.computed('filteredData', 'sortKey', function() {
+  sortedData: computed('filteredData', 'sortKey', function() {
     var data = this.get('filteredData');
     var total = data.reduce(function(p, child) {
       return child.value + p;
@@ -113,7 +128,7 @@ const PieChartComponent = ChartComponent.extend(FloatingTooltipMixin,
   //
   // When Other is the largest slice, Other is last and the data is sorted in order
   // When Other is not the largest slice, Other is the first and the data after it is sorted in order
-  sortedDataWithOther: Ember.computed('sortedData', 'maxNumberOfSlices', 'minSlicePercent', 'maxDecimalPlace', 'includeRoundedZeroPercentSlices', function() {
+  sortedDataWithOther: computed('sortedData', 'maxNumberOfSlices', 'minSlicePercent', 'maxDecimalPlace', 'includeRoundedZeroPercentSlices', function() {
     var lastItem, overflowSlices, slicesLeft;
 
     var data = cloneDeep(this.get('sortedData')).reverse();
@@ -213,7 +228,7 @@ const PieChartComponent = ChartComponent.extend(FloatingTooltipMixin,
     return slicesLeft.reverse();
   }),
 
-  otherData: Ember.computed('sortedDataWithOther.[]', 'sortFunction', function() {
+  otherData: computed('sortedDataWithOther.[]', 'sortFunction', function() {
     var otherSlice = find(this.get('sortedDataWithOther'), function(d) {
       return d._otherItems;
     });
@@ -228,7 +243,7 @@ const PieChartComponent = ChartComponent.extend(FloatingTooltipMixin,
     return sortBy(otherItems, this.get('sortFunction')).reverse();
   }),
 
-  otherDataValue: Ember.computed('otherData.[]', function() {
+  otherDataValue: computed('otherData.[]', function() {
     var otherItems, value;
     value = 0;
     otherItems = this.get('otherData');
@@ -240,7 +255,7 @@ const PieChartComponent = ChartComponent.extend(FloatingTooltipMixin,
     return value;
   }),
 
-  finishedData: Ember.computed.alias('sortedDataWithOther'),
+  finishedData: alias('sortedDataWithOther'),
 
   // ----------------------------------------------------------------------------
   // Layout
@@ -251,25 +266,25 @@ const PieChartComponent = ChartComponent.extend(FloatingTooltipMixin,
 
   // For the pie chart, horizontalMargin and verticalMargin are used to center
   // the graphic in the middle of the viewport
-  horizontalMargin: Ember.computed('labelPadding', 'labelWidth', function() {
+  horizontalMargin: computed('labelPadding', 'labelWidth', function() {
     return this.get('labelPadding') + this.get('labelWidth');
   }),
 
   // Bottom margin is equal to the total amount of space the legend needs,
   // or 10% of the viewport if there is no legend
-  _marginBottom: Ember.computed('legendHeight', 'hasLegend', 'marginTop', function() {
+  _marginBottom: computed('legendHeight', 'hasLegend', 'marginTop', function() {
     return this.get('hasLegend') ? this.get('legendHeight') : this.get('marginTop');
   }),
 
-  marginBottom: Ember.computed('_marginBottom', 'minimumTopBottomMargin', function() {
+  marginBottom: computed('_marginBottom', 'minimumTopBottomMargin', function() {
     return Math.max(this.get('_marginBottom'), this.get('minimumTopBottomMargin'));
   }),
 
-  _marginTop: Ember.computed('outerHeight', function() {
+  _marginTop: computed('outerHeight', function() {
     return Math.max(1, this.get('outerHeight') * 0.1);
   }),
 
-  marginTop: Ember.computed('_marginTop', 'minimumTopBottomMargin', function() {
+  marginTop: computed('_marginTop', 'minimumTopBottomMargin', function() {
     return Math.max(this.get('_marginTop'), this.get('minimumTopBottomMargin'));
   }),
 
@@ -277,7 +292,7 @@ const PieChartComponent = ChartComponent.extend(FloatingTooltipMixin,
   // Graphics Properties
   // ----------------------------------------------------------------------------
 
-  numSlices: Ember.computed.alias('finishedData.length'),
+  numSlices: alias('finishedData.length'),
 
   // Normally, the pie chart should offset slices so that the largest slice
   // finishes at 12 o'clock
@@ -290,7 +305,7 @@ const PieChartComponent = ChartComponent.extend(FloatingTooltipMixin,
   // Therefore, rotate the pie and concentrate all small slices at 8 to 10 o'clock
   // if there is a high density of small slices inside the pie. This will ensure
   // that there is plenty of space for labels
-  startOffset: Ember.computed('finishedData', 'sortKey', 'rotationOffset', function() {
+  startOffset: computed('finishedData', 'sortKey', 'rotationOffset', function() {
     var detectDenseSmallSlices = function (finishedData) {
       // This constant determines how many slices to use to calculate the
       // average small slice percentage. The smaller the constant, the more it
@@ -323,7 +338,7 @@ const PieChartComponent = ChartComponent.extend(FloatingTooltipMixin,
     };
 
     var finishedData = this.get('finishedData');
-    if (Ember.isEmpty(finishedData)) {
+    if (isEmpty(finishedData)) {
       return 0;
     }
 
@@ -344,13 +359,13 @@ const PieChartComponent = ChartComponent.extend(FloatingTooltipMixin,
   }),
 
   // Radius of the pie graphic, resized to fit the viewport.
-  pieRadius: Ember.computed('maxRadius', 'width', 'height', function() {
+  pieRadius: computed('maxRadius', 'width', 'height', function() {
     return d3.min([this.get('maxRadius'), this.get('width') / 2, this.get('height') / 2]);
   }),
 
 
   // Radius at which labels will be positioned
-  labelRadius: Ember.computed('pieRadius', 'labelPadding', function() {
+  labelRadius: computed('pieRadius', 'labelPadding', function() {
     return this.get('pieRadius') + this.get('labelPadding');
   }),
 
@@ -358,7 +373,7 @@ const PieChartComponent = ChartComponent.extend(FloatingTooltipMixin,
   // Color Configuration
   // ----------------------------------------------------------------------------
 
-  getSliceColor: Ember.computed('numSlices', 'colorScale', function() {
+  getSliceColor: computed('numSlices', 'colorScale', function() {
     return (d, i) => {
       var index, numSlices;
       if (d.data && d.data.color) {
@@ -377,11 +392,11 @@ const PieChartComponent = ChartComponent.extend(FloatingTooltipMixin,
   // Legend Configuration
   // ----------------------------------------------------------------------------
 
-  legendItems: Ember.computed('otherData', 'rejectedData', function() {
+  legendItems: computed('otherData', 'rejectedData', function() {
     return this.get('otherData').concat(this.get('rejectedData'));
   }),
 
-  hasLegend: Ember.computed('legendItems.length', 'showLegend', function() {
+  hasLegend: computed('legendItems.length', 'showLegend', function() {
     return this.get('legendItems.length') > 0 && this.get('showLegend');
   }),
 
@@ -389,7 +404,7 @@ const PieChartComponent = ChartComponent.extend(FloatingTooltipMixin,
   // Tooltip Configuration
   // ----------------------------------------------------------------------------
 
-  showDetails: Ember.computed('isInteractive', function() {
+  showDetails: computed('isInteractive', function() {
     if (!this.get('isInteractive')) {
       return Ember.K;
     }
@@ -412,7 +427,7 @@ const PieChartComponent = ChartComponent.extend(FloatingTooltipMixin,
     };
   }),
 
-  hideDetails: Ember.computed('isInteractive', function() {
+  hideDetails: computed('isInteractive', function() {
     if (!this.get('isInteractive')) {
       return Ember.K;
     }
@@ -433,27 +448,27 @@ const PieChartComponent = ChartComponent.extend(FloatingTooltipMixin,
   // ----------------------------------------------------------------------------
 
   // SVG transform to center pie in the viewport
-  transformViewport: Ember.computed('marginLeft', 'marginTop', 'width', 'height', function() {
+  transformViewport: computed('marginLeft', 'marginTop', 'width', 'height', function() {
     var cx = this.get('marginLeft') + this.get('width') / 2;
     var cy = this.get('marginTop') + this.get('height') / 2;
     return "translate(" + cx + "," + cy + ")";
   }),
 
   // Arc drawing function for pie with specified pieRadius
-  arc: Ember.computed('pieRadius', function() {
+  arc: computed('pieRadius', function() {
     return d3.svg.arc().outerRadius(this.get('pieRadius')).innerRadius(0);
   }),
 
   // Pie layout function starting with the largest slice at zero degrees or
   // 12 oclock. Since the data is already sorted, this goes largest to smallest
   // counter clockwise
-  pie: Ember.computed('startOffset', function() {
+  pie: computed('startOffset', function() {
     return d3.layout.pie().startAngle(this.get('startOffset')).endAngle(this.get('startOffset') + Math.PI * 2).sort(null).value(function(d) {
       return d.percent;
     });
   }),
 
-  groupAttrs: Ember.computed(function() {
+  groupAttrs: computed(function() {
     return {
       'class': function(d) {
         return d.data._otherItems ? 'arc other-slice' : 'arc';
@@ -461,7 +476,7 @@ const PieChartComponent = ChartComponent.extend(FloatingTooltipMixin,
     };
   }),
 
-  sliceAttrs: Ember.computed('arc', 'getSliceColor', function() {
+  sliceAttrs: computed('arc', 'getSliceColor', function() {
     return {
       d: this.get('arc'),
       fill: this.get('getSliceColor'),
@@ -469,7 +484,7 @@ const PieChartComponent = ChartComponent.extend(FloatingTooltipMixin,
     };
   }),
 
-  labelAttrs: Ember.computed('arc', 'labelRadius', 'numSlices', 'mostTintedColor', function() {
+  labelAttrs: computed('arc', 'labelRadius', 'numSlices', 'mostTintedColor', function() {
     var mostTintedColor;
     var arc = this.get('arc');
     var labelRadius = this.get('labelRadius');
@@ -570,7 +585,7 @@ const PieChartComponent = ChartComponent.extend(FloatingTooltipMixin,
     return this.get('viewport').selectAll('.arc');
   },
 
-  groups: Ember.computed(function() {
+  groups: computed(function() {
     var data = this.get('pie')(this.get('finishedData'));
     return this.getViewportArc().data(data);
   }).volatile(),

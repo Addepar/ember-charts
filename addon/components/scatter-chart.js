@@ -1,3 +1,6 @@
+import { isEmpty, isNone } from '@ember/utils';
+import { alias } from '@ember/object/computed';
+import { computed } from '@ember/object';
 import Ember from 'ember';
 import * as d3 from 'd3';
 import { keys, values } from 'lodash-es';
@@ -27,7 +30,7 @@ const ScatterChartComponent = ChartComponent.extend(LegendMixin, FloatingTooltip
   // Size of each icon on the scatter plot
   dotRadius: 7,
 
-  dotShapeArea: Ember.computed('dotRadius', function() {
+  dotShapeArea: computed('dotRadius', function() {
     return Math.pow(this.get('dotRadius'), 2);
   }),
 
@@ -45,7 +48,7 @@ const ScatterChartComponent = ChartComponent.extend(LegendMixin, FloatingTooltip
 
   // NoMarginChartMixin makes right margin 0 but we need that room because the
   // last label of the axis is commonly too large
-  marginRight: Ember.computed.alias('horizontalMargin'),
+  marginRight: alias('horizontalMargin'),
 
   /**
    * A flag to indicate if the chart view should have left & right margin based
@@ -86,10 +89,10 @@ const ScatterChartComponent = ChartComponent.extend(LegendMixin, FloatingTooltip
   totalPointData: null,
 
   // Data with invalid/negative values removed
-  filteredData: Ember.computed('data.[]', function() {
+  filteredData: computed('data.[]', function() {
     var data;
     data = this.get('data');
-    if (Ember.isEmpty(data)) {
+    if (isEmpty(data)) {
       return [];
     }
     return data.filter(function(d) {
@@ -98,9 +101,9 @@ const ScatterChartComponent = ChartComponent.extend(LegendMixin, FloatingTooltip
   }),
 
   // Aggregate the raw data by group, into separate lists of data points
-  groupedData: Ember.computed('filteredData.[]', function() {
+  groupedData: computed('filteredData.[]', function() {
     var data = this.get('filteredData');
-    if (Ember.isEmpty(data)) {
+    if (isEmpty(data)) {
       return [];
     }
 
@@ -112,28 +115,28 @@ const ScatterChartComponent = ChartComponent.extend(LegendMixin, FloatingTooltip
 
   groupNames: [],
 
-  numGroups: Ember.computed.alias('groupedData.length'),
+  numGroups: alias('groupedData.length'),
 
-  isGrouped: Ember.computed('numGroups', function() {
+  isGrouped: computed('numGroups', function() {
     return this.get('numGroups') > 1;
   }),
 
-  finishedData: Ember.computed.alias('groupedData'),
+  finishedData: alias('groupedData'),
 
   // ----------------------------------------------------------------------------
   // Layout
   // ----------------------------------------------------------------------------
 
   // Chart Graphic Dimensions
-  graphicTop: Ember.computed.alias('axisTitleHeight'),
-  graphicLeft: Ember.computed.alias('labelWidthOffset'),
+  graphicTop: alias('axisTitleHeight'),
+  graphicLeft: alias('labelWidthOffset'),
 
-  graphicHeight: Ember.computed('height', 'legendHeight', 'legendChartPadding', function() {
+  graphicHeight: computed('height', 'legendHeight', 'legendChartPadding', function() {
     var legendSize = this.get('legendHeight') + this.get('legendChartPadding') + (this.get('marginBottom') || 0);
     return this.get('height') - legendSize;
   }),
 
-  graphicWidth: Ember.computed('width', 'labelWidthOffset', function() {
+  graphicWidth: computed('width', 'labelWidthOffset', function() {
     return this.get('width') - this.get('labelWidthOffset');
   }),
 
@@ -141,7 +144,7 @@ const ScatterChartComponent = ChartComponent.extend(LegendMixin, FloatingTooltip
   // Ticks and Scales
   // ----------------------------------------------------------------------------
 
-  xDomain: Ember.computed('filteredData.[]', 'isShowingTotal', 'totalPointData', function() {
+  xDomain: computed('filteredData.[]', 'isShowingTotal', 'totalPointData', function() {
     var totalData = this.get('isShowingTotal') ? [this.get('totalPointData')] : [];
     var _ref = d3.extent(totalData.concat(this.get('filteredData')), function(d) {
       return d.xValue;
@@ -157,7 +160,7 @@ const ScatterChartComponent = ChartComponent.extend(LegendMixin, FloatingTooltip
     }
   }),
 
-  yDomain: Ember.computed('filteredData.[]', 'isShowingTotal', 'totalPointData', 'graphPadding', function() {
+  yDomain: computed('filteredData.[]', 'isShowingTotal', 'totalPointData', 'graphPadding', function() {
     var totalData = this.get('isShowingTotal') ? [this.get('totalPointData')] : [];
     var _ref = d3.extent(totalData.concat(this.get('filteredData')), function(d) {
       return d.yValue;
@@ -175,7 +178,7 @@ const ScatterChartComponent = ChartComponent.extend(LegendMixin, FloatingTooltip
   }),
 
   // The X axis scale spans the range of Y values plus any graphPadding
-  xScale: Ember.computed('xDomain', 'graphPadding', 'graphicLeft', 'graphicWidth', 'numXTicks', function() {
+  xScale: computed('xDomain', 'graphPadding', 'graphicLeft', 'graphicWidth', 'numXTicks', function() {
     var xDomain = this.get('xDomain');
     var graphicLeft = this.get('graphicLeft');
     var graphicWidth = this.get('graphicWidth');
@@ -190,7 +193,7 @@ const ScatterChartComponent = ChartComponent.extend(LegendMixin, FloatingTooltip
   }),
 
   // The Y axis scale spans the range of Y values plus any graphPadding
-  yScale: Ember.computed('yDomain', 'graphPadding', 'graphicTop', 'graphicHeight', 'numYTicks', function() {
+  yScale: computed('yDomain', 'graphPadding', 'graphicTop', 'graphicHeight', 'numYTicks', function() {
     var yDomain = this.get('yDomain');
     var graphicTop = this.get('graphicTop');
     var graphicHeight = this.get('graphicHeight');
@@ -210,29 +213,29 @@ const ScatterChartComponent = ChartComponent.extend(LegendMixin, FloatingTooltip
 
   // Scatterplots handle different groups by varying shape of dot first and then
   // vary color or tint of seed color.
-  groupShapes: Ember.computed(function() {
+  groupShapes: computed(function() {
     return ['circle', 'square', 'triangle-up', 'cross', 'diamond'];
   }),
 
-  numGroupShapes: Ember.computed.alias('groupShapes.length'),
+  numGroupShapes: alias('groupShapes.length'),
 
   // Fixed number of colors for scatter plots, total different dot types is
   // numGroupsShapes * numGroupColors
   numGroupColors: 2,
 
-  maxNumGroups: Ember.computed('numGroupColors', 'numGroupShapes', function() {
+  maxNumGroups: computed('numGroupColors', 'numGroupShapes', function() {
     return this.get('numGroupColors') * this.get('numGroupShapes');
   }),
 
   // Only display a different icon for each group if the number of groups is less
   // than or equal to the maximum number of groups
-  displayGroups: Ember.computed('isGrouped', 'numGroups', 'numGroupShapes', function() {
+  displayGroups: computed('isGrouped', 'numGroups', 'numGroupShapes', function() {
     return this.get('isGrouped') && this.get('numGroups') <= this.get('maxNumGroups');
   }),
 
   // Since we are only provided with the index of each dot within its <g>, we
   // decide the shape and color of the dot using the index of its group property
-  getGroupShape: Ember.computed(function() {
+  getGroupShape: computed(function() {
     return (d, i) => {
       i = this.get('groupNames').indexOf(d.group);
       if (!this.get('displayGroups')) {
@@ -242,11 +245,11 @@ const ScatterChartComponent = ChartComponent.extend(LegendMixin, FloatingTooltip
     };
   }),
 
-  getGroupColor: Ember.computed(function() {
+  getGroupColor: computed(function() {
     return (d, i) => {
       // If there is an overriding color assigned to the group, we use that
       // color.
-      if (!Ember.isNone(d.color)) {
+      if (!isNone(d.color)) {
         return d.color;
       }
       var colorIndex = 0;
@@ -262,13 +265,13 @@ const ScatterChartComponent = ChartComponent.extend(LegendMixin, FloatingTooltip
   // Legend Configuration
   // ----------------------------------------------------------------------------
 
-  hasLegend: Ember.computed('isGrouped', 'showLegend', function() {
+  hasLegend: computed('isGrouped', 'showLegend', function() {
     return this.get('isGrouped') && this.get('showLegend');
   }),
 
-  legendIconRadius: Ember.computed.alias('dotRadius'),
+  legendIconRadius: alias('dotRadius'),
 
-  legendItems: Ember.computed('hasNoData', 'groupedData', 'getGroupShape', 'getGroupColor',
+  legendItems: computed('hasNoData', 'groupedData', 'getGroupShape', 'getGroupColor',
         'displayGroups', 'isShowingTotal', 'totalPointData', function() {
 
     if (this.get('hasNoData')) {
@@ -319,7 +322,7 @@ const ScatterChartComponent = ChartComponent.extend(LegendMixin, FloatingTooltip
   xValueDisplayName: 'X Factor',
   yValueDisplayName: 'Y Factor',
 
-  showDetails: Ember.computed('isInteractive', function() {
+  showDetails: computed('isInteractive', function() {
     if (!this.get('isInteractive')) {
       return Ember.K;
     }
@@ -344,7 +347,7 @@ const ScatterChartComponent = ChartComponent.extend(LegendMixin, FloatingTooltip
     };
   }),
 
-  hideDetails: Ember.computed('isInteractive', function() {
+  hideDetails: computed('isInteractive', function() {
     if (!this.get('isInteractive')) {
       return Ember.K;
     }
@@ -359,7 +362,7 @@ const ScatterChartComponent = ChartComponent.extend(LegendMixin, FloatingTooltip
   // Styles
   // ----------------------------------------------------------------------------
 
-  groupAttrs: Ember.computed(function() {
+  groupAttrs: computed(function() {
     return {
       "class": function(d, i) {
         return "group group-" + i;
@@ -367,7 +370,7 @@ const ScatterChartComponent = ChartComponent.extend(LegendMixin, FloatingTooltip
     };
   }),
 
-  pointAttrs: Ember.computed('dotShapeArea', 'getGroupShape', 'xScale',
+  pointAttrs: computed('dotShapeArea', 'getGroupShape', 'xScale',
     'yScale', 'displayGroups', 'getGroupColor', function() {
     return {
       d: d3.svg.symbol().size(this.get('dotShapeArea')).type(this.get('getGroupShape')),
@@ -390,7 +393,7 @@ const ScatterChartComponent = ChartComponent.extend(LegendMixin, FloatingTooltip
     return this.get('viewport').selectAll('.group');
   },
 
-  groups: Ember.computed(function() {
+  groups: computed(function() {
     return this.getViewportGroups().data(this.get('finishedData'));
   }).volatile(),
 
@@ -403,11 +406,11 @@ const ScatterChartComponent = ChartComponent.extend(LegendMixin, FloatingTooltip
     }
   },
 
-  xAxis: Ember.computed(function() {
+  xAxis: computed(function() {
     return this.selectOrCreateAxis('.x.axis').attr('class', 'x axis');
   }).volatile(),
 
-  yAxis: Ember.computed(function() {
+  yAxis: computed(function() {
     return this.selectOrCreateAxis('.y.axis').attr('class', 'y axis');
   }).volatile(),
 
@@ -442,7 +445,7 @@ const ScatterChartComponent = ChartComponent.extend(LegendMixin, FloatingTooltip
     }
   },
 
-  totalPointShape: Ember.computed(function() {
+  totalPointShape: computed(function() {
     var dotShapeArea = this.get('dotShapeArea');
 
     return (selection) => {

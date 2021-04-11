@@ -1,7 +1,9 @@
-import Ember from 'ember';
+import { isEmpty } from '@ember/utils';
+import { run } from '@ember/runloop';
+import Mixin from '@ember/object/mixin';
 import * as d3 from 'd3';
 
-export default Ember.Mixin.create({
+export default Mixin.create({
 
   // # ----------------------------------------------------------------------
   // # HasTimeSeriesRule -- Overview
@@ -106,7 +108,7 @@ export default Ember.Mixin.create({
       }
       // # Check if we are within the domain/range of the data
       if (_this._isEventWithinValidRange()) {
-        Ember.run(_this, _this.get('updateLineMarkers'));
+        run(_this, _this.get('updateLineMarkers'));
       }
     });
   },
@@ -144,7 +146,7 @@ export default Ember.Mixin.create({
   // # To locate each marker for the given location of the rule on the x-axis
   _lineMarkerData: function() {
     var mousePosition = this._mousePosition();
-    if (Ember.isEmpty(mousePosition)) {
+    if (isEmpty(mousePosition)) {
       return [];
     }
 

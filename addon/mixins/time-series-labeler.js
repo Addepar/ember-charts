@@ -1,6 +1,8 @@
 // Creates time series labels that are spaced reasonably.
 //  Provides this.formattedTime. Depends on this.xDomain and this.selectedInterval.
-import Ember from 'ember';
+import { computed } from '@ember/object';
+
+import Mixin from '@ember/object/mixin';
 import * as d3 from 'd3';
 
 // The labeller type used to create the labels for each domain type
@@ -37,7 +39,7 @@ domainTypeToLongDomainType = {
 // Creates time series labels that are spaced reasonably.
 // Provides @formattedTime.
 // Depends on @xDomain, @selectedInterval, and @tickFilter.
-export default Ember.Mixin.create({
+export default Mixin.create({
 
   // When set to true, ticks are drawn in the middle of an interval. By default,
   // they are drawn at the start of an interval.
@@ -78,7 +80,7 @@ export default Ember.Mixin.create({
   // If the x axis is not dynamically labelled, then the domain type
   // is simply the selectedInterval
   MONTHS_IN_QUARTER: 3,
-  xAxisTimeInterval: Ember.computed('selectedInterval', 'dynamicXAxis', {
+  xAxisTimeInterval: computed('selectedInterval', 'dynamicXAxis', {
     get() {
       var domain;
       if (this.get('dynamicXAxis')) {
@@ -172,7 +174,7 @@ export default Ember.Mixin.create({
   },
 
   // A candidate set of ticks on which labels can appear.
-  unfilteredLabelledTicks: Ember.computed('xDomain', 'centerAxisLabels', 'xAxisTimeInterval', function() {
+  unfilteredLabelledTicks: computed('xDomain', 'centerAxisLabels', 'xAxisTimeInterval', function() {
     var count, domain, interval, j, len, results, tick, ticks;
     domain = this.get('xDomain');
     ticks = this.get('tickLabelerFn')(domain[0], domain[1]);
@@ -204,19 +206,19 @@ export default Ember.Mixin.create({
    *
    * @type {function}
    */
-  tickFilter: Ember.computed(function() {
+  tickFilter: computed(function() {
     return function() {
       return true;
     };
   }),
 
   //  This is the set of ticks on which labels appear.
-  labelledTicks: Ember.computed('unfilteredLabelledTicks', 'tickFilter', function() {
+  labelledTicks: computed('unfilteredLabelledTicks', 'tickFilter', function() {
     return this.get('unfilteredLabelledTicks').filter(this.get('tickFilter'));
   }),
 
   // We need a method to figure out the interval specifity
-  intervalSpecificity: Ember.computed('times', 'minTimeSpecificity', function(){
+  intervalSpecificity: computed('times', 'minTimeSpecificity', function(){
     var ind1, ind2, domainTypes, maxNumberOfLabels, i, len, timeBetween;
 
     // Now the real trick is if there is any allowance for minor ticks we should
@@ -245,7 +247,7 @@ export default Ember.Mixin.create({
     return this.get('maxTimeSpecificity');
   }),
 
-  times: Ember.computed('xDomain', function() {
+  times: computed('xDomain', function() {
     var ret, domain, start, stop, types, len, i;
 
     ret = {};
@@ -360,7 +362,7 @@ export default Ember.Mixin.create({
 
   // Returns the function which returns the labelled intervals between
   // start and stop for the selected interval.
-  tickLabelerFn: Ember.computed('dynamicXAxis', 'maxNumberOfLabels', 'maxNumberOfMinorTicks', 'xAxisVertLabels',
+  tickLabelerFn: computed('dynamicXAxis', 'maxNumberOfLabels', 'maxNumberOfMinorTicks', 'xAxisVertLabels',
     'xAxisTimeInterval', 'SPECIFICITY_RATIO', 'minTimeSpecificity', 'maxTimeSpecificity',
     function() {
       if (this.get('dynamicXAxis')) {
@@ -402,7 +404,7 @@ export default Ember.Mixin.create({
   },
 
   // See https://github.com/mbostock/d3/wiki/Time-Formatting
-  formattedTime: Ember.computed('xAxisTimeInterval', function() {
+  formattedTime: computed('xAxisTimeInterval', function() {
     switch (this.get('xAxisTimeInterval')) {
       case 'years':
       case 'Y':
